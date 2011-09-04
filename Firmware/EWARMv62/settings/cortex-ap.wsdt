@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+  <CurrentConfigs><Project>cortex-ap/cortex-ap</Project></CurrentConfigs></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>18</ColumnWidth0><ColumnWidth1>741</ColumnWidth1><ColumnWidth2>592</ColumnWidth2><ColumnWidth3>49</ColumnWidth3></Build>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>257</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+    <Debug-Log><ColumnWidth0>18</ColumnWidth0><ColumnWidth1>1102</ColumnWidth1></Debug-Log><TerminalIO/><Find-in-Files><ColumnWidth0>402</ColumnWidth0><ColumnWidth1>57</ColumnWidth1><ColumnWidth2>689</ColumnWidth2></Find-in-Files></Static>
+    <Windows>
+      
+      
+    <Wnd0>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-30050-23742</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        <Tab><Identity>TabID-18513-10785</Identity><TabName>Debug Log</TabName><Factory>Debug-Log</Factory><Session/></Tab><Tab><Identity>TabID-19130-19660</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab></Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd0><Wnd1>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-8031-23745</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>cortex-ap</ExpandedNode><ExpandedNode>cortex-ap/CMSIS</ExpandedNode><ExpandedNode>cortex-ap/Doc</ExpandedNode><ExpandedNode>cortex-ap/EWARMv5</ExpandedNode><ExpandedNode>cortex-ap/StdPeriph_Driver</ExpandedNode><ExpandedNode>cortex-ap/User</ExpandedNode><ExpandedNode>cortex-ap/stm32vldiscovery</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd1></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\Libraries\CMSIS\CM3\CoreSupport\core_cm3.h</Filename><XPos>0</XPos><YPos>120</YPos><SelStart>562</SelStart><SelEnd>562</SelEnd></Tab><ActiveTab>0</ActiveTab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-01365e08><key>iaridepm.enu1</key></Toolbar-01365e08></Sizes></Row0></Top><Left><Row0><Sizes><Wnd1><Rect><Top>-2</Top><Left>-2</Left><Bottom>750</Bottom><Right>331</Right><x>-2</x><y>-2</y><xscreen>206</xscreen><yscreen>204</yscreen><sizeHorzCX>179599</sizeHorzCX><sizeHorzCY>204819</sizeHorzCY><sizeVertCX>290323</sizeVertCX><sizeVertCY>755020</sizeVertCY></Rect></Wnd1></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>202</Bottom><Right>1149</Right><x>-2</x><y>-2</y><xscreen>1151</xscreen><yscreen>204</yscreen><sizeHorzCX>1003487</sizeHorzCX><sizeHorzCY>204819</sizeHorzCY><sizeVertCX>179599</sizeVertCX><sizeVertCY>204819</sizeVertCY></Rect></Wnd0></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+
