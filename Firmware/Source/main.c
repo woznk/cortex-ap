@@ -22,11 +22,11 @@
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
 
-/** @addtogroup STM32F10x_StdPeriph_Examples
+/** @addtogroup cortex-ap
   * @{
   */
 
-/** @addtogroup TIM_PWM_Output
+/** @addtogroup main
   * @{
   */
 
