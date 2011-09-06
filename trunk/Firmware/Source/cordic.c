@@ -1,8 +1,8 @@
 //============================================================================+
 //
 // $RCSfile: cordic.c,v $ (SOURCE FILE)
-// $Revision: 1.1 $
-// $Date: 2009/10/12 17:04:18 $
+// $Revision: 1.3 $
+// $Date: 2009/12/20 16:21:37 $
 // $Author: Lorenz $
 //
 //  LANGUAGE    C
@@ -10,9 +10,7 @@
 /// \file
 ///             
 //
-//  CHANGES     cordic_rotate(): input coords multiplied by 4, output coords divided by 4
-//              cordic_rotate(): corrected inital adjustment of theta 
-//              cordic_rotate(): change of y sign moved after rotation
+//  CHANGES     cosmetics
 //              
 //
 //============================================================================*/
@@ -38,21 +36,23 @@
 
 /*---------------------------------- Constants -------------------------------*/
 
-VAR_STATIC const int Phase_Table[13] = 
+VAR_STATIC const long Phase_Table[15] = 
 {           // degrees    
-    4500,   // 45         
-    2656,   // 26,56505118
-    1403,   // 14,03624347
-     712,   // 7,125016349
-     357,   // 3,576334375
-     178,   // 1,789910608
-      89,   // 0,89517371 
-      44,   // 0,447614171
-      22,   // 0,2238105  
-      11,   // 0,111905677
-       5,   // 0,055952892
-       2,   // 0,027976453
-       1    // 0,013988226
+   45000,   // 45         
+   26565,   // 26,56505118
+   14036,   // 14,03624347
+    7125,   // 7,125016349
+    3576,   // 3,576334375
+    1789,   // 1,789910608
+     895,   // 0,89517371 
+     447,   // 0,447614171
+     223,   // 0,2238105  
+     111,   // 0,111905677
+      55,   // 0,055952892
+      27,   // 0,027976453
+      13,   // 0,013988226
+       7,   // 0,006994113
+       3    // 0,0034970565
 };
 
 /*---------------------------------- Globals ---------------------------------*/
@@ -69,56 +69,45 @@ VAR_STATIC const int Phase_Table[13] =
 /// \remarks 
 ///
 //----------------------------------------------------------------------------
-int cordic_atan(int I, int Q)
+long cordic_atan(long I, long Q)
 {
-  int step, tmp_I, acc_phase;
+  int step;
+  long tmp_I, acc_phase;
 
   acc_phase = 0;
 
-  if (I < 0) 
-  {                                     // rotate by an initial +/- 90°
+  if (I < 0)   {                        // rotate by an initial +/- 90°
     tmp_I = I;
-    if (Q > 0)
-    {
+    if (Q > 0) {
        I = Q;		                    // +90°
        Q = -tmp_I;
-       acc_phase = -9000;
-    }
-    else 
-    {
+       acc_phase = -90000;
+    } else  {
        I = -Q;		                    // -90°
        Q = tmp_I;
-       acc_phase = 9000;
+       acc_phase = 90000;
     }
   } 
 
-  if (Q < 0)
-  {
+  if (Q < 0) {
      tmp_I = (I > -Q) ? I : -Q;
-  }
-  else 
-  {
+  } else {
      tmp_I = (I > Q) ? I : Q;
   }
 
-  while ((tmp_I < 2048) && (tmp_I > 0)) // Scale to reach at least 11 bits
-  {
+  while ((tmp_I < 8192) && (tmp_I > 0)) { // Scale to reach at least 13 bits
       tmp_I *= 2;
       I *= 2;
       Q *= 2;
   }
 
-  for (step = 0; step <= 12; step++)    // rotate using "1 + jK" factors
-  {
+  for (step = 0; step < 15; step++) {    // rotate using "1 + jK" factors
     tmp_I = I;
-    if (Q >= 0)
-    {                                   // phase is positive: do negative rotation
+    if (Q >= 0)  {                      // phase is positive: do negative rotation
       I += (Q >> step);
       Q -= (tmp_I >> step);
       acc_phase -= Phase_Table[step];
-    }
-    else
-    {                                   // phase is negative: do positive rotation
+    } else {                                   // phase is negative: do positive rotation
       I -= (Q >> step);
       Q += (tmp_I >> step);
       acc_phase += Phase_Table[step];

@@ -1,52 +1,94 @@
 //============================================================================+
 //
 // $RCSfile: adcdriver.c,v $ (SOURCE FILE)
-// $Revision: 1.9 $
-// $Date: 2009/10/31 15:10:39 $
+// $Revision: 1.15 $
+// $Date: 2011/01/23 17:48:52 $
 // $Author: Lorenz $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
+/// \brief adc driver
+///
 /// \file
-///             adc driver
-//              ADC 0 : accel X
-//              ADC 1 : accel Z
-//              ADC 2 : accel Y
-//              ADC 3 : gyro X
-//              ADC 4 : gyro Y
-//              ADC 5 : gyro Z
-//                                                    SLP  V+  X   Y   Z  GND
-//                        +-----------------+       +-----------------------+
-//                        |   +-------+   o | ST    |                       |
-//                        |   | LISY  |   o | PD    |  O   O   O   O   O   O|
-//                        |   | 300   |   o | OUT   |                       |
-//                        |   | AL    |   o | GND   |                       |
-//                        |   +-------+   o | 3V3   |                       |
-//                        +-----------------+       |                       |
-//                                                  |                       |
-//                   +----------------------+       |                       |
-//                   |                      |       |                       |
-//               3V3 | o  +-------+       o | Y     |                       |
-//               GND | o  |  LPR  |  +-+  o | X     |                       |
-//                4Y | o  |  530  |  | |  o | ST    |       +-------+       |
-//                4X | o  |  AL   |  +-+  o | PD    |       |  MMA  |       |
-//              VREF | o  +-------+       o | HP    |       |  7260 |       |
-//                   |                      |       |       |  QT   |       |
-//                   +----------------------+       |       +-------+       |
-//                             -         -          |                       |
-//                     Y+    /       Z+    \        |                       |
-//                     <----|------(x)      | YAW+  |                       |
-//                           \      |      /        |                       |
-//                             - >  |  < -          |                       |
-//                        PITCH+    |               |                       |
-//                                  |   ^           +-----------------------+
-//                              \   |   / ROLL+  
-//                                -___-                  
-//                                  |
-//                                  |
-//                                  V  X+
-//              
-//  CHANGES     corrected naming of reference axes
+/// Allocazione degli ingressi dell'ADC
+///                                                                      \code
+/// Input   EK-LM3S1968     EK-LM3S9B90
+/// -----------------------------------
+/// ADC 0   accel X         accel X
+/// ADC 1   accel Z         accel Y
+/// ADC 2   accel Y         accel Z
+/// ADC 3   gyro X          gyro X
+/// ADC 4   gyro Y          gyro Y
+/// ADC 5   gyro Z          gyro Z
+///                                                                     \endcode
+/// Orientamento degli assi di riferimento:
+/// - EK-LM3S1968 expansion board
+///                                                                      \code
+///                                      SLP  V+  X   Y   Z  GND
+///           +-----------------+       +-----------------------+
+///           |   +-------+   o | ST    |                       |
+///           |   | LISY  |   o | PD    | O   O   O   O   O   O |
+///           |   | 300   |   o | OUT   |                       |
+///           |   | AL    |   o | GND   |                       |
+///           |   +-------+   o | 3V3   |                       |
+///           +-----------------+       |                       |
+///                                     |                       |
+///      +----------------------+       |                       |
+///      |                      |       |                       |
+///  3V3 | o  +-------+       o | Y     |                       |
+///  GND | o  |  LPR  |  +-+  o | X     |                       |
+///   4Y | o  |  530  |  | |  o | ST    |       +-------+       |
+///   4X | o  |  AL   |  +-+  o | PD    |       |  MMA  |       |
+/// VREF | o  +-------+       o | HP    |       |  7260 |       |
+///      |                      |       |       |  QT   |       |
+///      +----------------------+       |       +-------+       |
+///                                     |                       |
+///                                     |                       |
+///                                     |                       |
+///                                     |                       |
+///                                     |                       |
+///                                     |                       |
+///                                     +-----------------------+
+///                                -         -        
+///                        Y+    /       Z+    \      
+///                        <----|------(x)      | YAW+
+///                              \      |      /      
+///                                - >  |  < -        
+///                           PITCH+    |             
+///                                     |   ^         
+///                                 \   |   / ROLL+   
+///                                   -___-           
+///                                     |             
+///                                     |                    
+///                                     V  X+         
+///                                                                     \endcode
+/// - EK-LM3S9B90 expansion board        
+///                                                                     \code
+///    +-----------------------+        
+///    |                       |        
+///    |                       |        
+///    |                       |        
+///    |                       |        
+///    |                       |         PITCH+
+///    |                       |             -         -           
+///    |                       |      Y+   /       Z+    \         
+///    |                       |      <---|------(X)      | YAW+
+///    |                       |           \      |      /         
+///    |                       |             - >  |  < -           
+///    |                       |                  |                
+///    |                       |              ^   |                                           
+///    |                       |        ROLL+ \   |   /                                       
+///    |                       |                -___-                                         
+///    |                       |                  |                                           
+///    |                       |                  |                                           
+///    |                       |                  V  X+                                       
+///    |                       |                                   
+///    |       +-------+       |                                   
+///    |       |       |       |                                   
+///    |       |       |       |                                   
+///    |       |       |       |                                   
+///    +-------+-------+-------+
+///                                                                     \endcode
+///  
+//  CHANGES corretto segno accelerazione Z. aumentato tempo di assestamento
 //
 //============================================================================*/
 
@@ -59,6 +101,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/interrupt.h"
 
+#include "config.h"
 #include "adcdriver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -84,7 +127,7 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
-unsigned char ucADCsample;              // Sample counter
+unsigned int uiADCsample;               // Sample counter
 unsigned long ulSeq1DataBuffer[8];      // Sample buffer
 unsigned long ulFiltDataBuffer[8];      // Filtered data buffer
 
@@ -92,12 +135,12 @@ unsigned long ulFiltDataBuffer[8];      // Filtered data buffer
 // Used to change the polarity of the sensors
 //
 long SensorSign[] = {
-   1, // ADC 0 : accel X
-  -1, // ADC 1 : accel Z
-   1, // ADC 2 : accel Y
-   1, // ADC 3 : gyro X 
-  -1, // ADC 4 : gyro Y 
-   1, // ADC 5 : gyro Z 
+  -1, // accel X        ( 1 LM1968, -1 LM9B90)
+  -1, // accel Y        (-1 LM1968, -1 LM9B90)
+  -1, // accel Z        ( 1 LM1968, -1 LM9B90)
+  -1, // gyro X / roll  (-1 LM1968, -1 LM9B90)
+   1, // gyro Y / pitch ( 1 LM1968,  1 LM9B90)
+   1, // gyro Z / yaw   ( 1 LM1968,  1 LM9B90)
 };
 
 //
@@ -118,25 +161,39 @@ void
 ADCInit(void)
 {
     //
-    // Enable Timer 0 (ADC trigger)
+    // Enable Timer 2 (ADC trigger)
     //
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); 
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); 
 
     //
-    // Initialize Timer 0 
+    // Initialize Timer 2 
     //
-    TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);
+    TimerConfigure(TIMER2_BASE, TIMER_CFG_32_BIT_PER);
 
     //
-    // trigger an ADC conversion once every x milliseconds
+    // Trigger an ADC conversion once every x milliseconds
     //
-    TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet() / SAMPLES_PER_SECOND);
-    TimerControlTrigger(TIMER0_BASE, TIMER_A, true);
+    TimerLoadSet(TIMER2_BASE, TIMER_A, SysCtlClockGet() / SAMPLES_PER_SECOND);
+    TimerControlTrigger(TIMER2_BASE, TIMER_A, true);
 
     //
     // Enable ADC
     //
     SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC);
+
+#if defined(PART_LM3S9B90)
+    //
+    // Enable GPIO ports D, E for ADC.
+    //
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE); 
+
+    //
+    // Set GPIO PD5, PD6, PD7, PE4, PE5, PE6, PE7 as ADC pins.
+    //
+    GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7);
+    GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7);
+#endif
 
     //
     // Enable 8 x oversample
@@ -202,12 +259,12 @@ ADCInit(void)
     //
     // Enable timer and start conversion
     //
-    TimerEnable(TIMER0_BASE, TIMER_A);
+    TimerEnable(TIMER2_BASE, TIMER_A);
 
     //
     // Clear ADC sample counter
     //
-    ucADCsample = 0;
+    uiADCsample = 0;
 }
 
 ///----------------------------------------------------------------------------
@@ -264,7 +321,7 @@ ADCS0IntHandler(void)
     //
     // Increase sample counter
     //
-    ucADCsample ++;
+    uiADCsample ++;
 }
 
 ///----------------------------------------------------------------------------
@@ -283,25 +340,21 @@ ADCSettled(void)
     // 
     // Wait some ADC conversions
     //
-    if (ucADCsample == 100)
-    {
+    if (uiADCsample == 500) {
         //
         // Get offset
         // 
-        for (c = 0; c < 6; c++)
-        {
+        for (c = 0; c < 6; c++) {
             SensorOffset[c] = (long)ulFiltDataBuffer[c];
         }
 
         //
         // Subtract gravity from Z axis
         // 
-        SensorOffset[1] += GRAVITY;
+        SensorOffset[2] += GRAVITY;
 
         return 1;
-    }
-    else
-    {
+    } else {
         return 0;
     }
 }
@@ -316,7 +369,7 @@ ADCSettled(void)
 unsigned char
 ADCSamples(void)
 {
-    return ucADCsample;
+    return uiADCsample;
 }
 
 ///----------------------------------------------------------------------------

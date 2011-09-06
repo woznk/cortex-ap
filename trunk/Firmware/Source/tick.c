@@ -1,17 +1,15 @@
 //============================================================================+
 //
 // $RCSfile: tick.c,v $ (SOURCE FILE)
-// $Revision: 1.2 $
-// $Date: 2009/10/21 20:22:15 $
+// $Revision: 1.4 $
+// $Date: 2010/04/05 09:05:52 $
 // $Author: Lorenz $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
-/// \file
-///             Tick manager
+//  LANGUAGE C
+/// \brief   Tick manager
 //
-//  CHANGES     added TickInit function
-//              added management of 20 ms tick flag
+//  CHANGES  accorciata routine di interrupt tick: spostata lettura pulsanti
+//           nella funzione Logic().
 //
 //============================================================================*/
 
@@ -87,8 +85,7 @@ VAR_STATIC unsigned long g_ulTickCount = 0;
 ///
 //----------------------------------------------------------------------------
 void
-TickInit(void)
-{
+TickInit(void) {
     //
     // Configure SysTick for a 100Hz interrupt
     //
@@ -97,55 +94,79 @@ TickInit(void)
     SysTickIntEnable();
 
     //
-    // Enable I/O port G.
+    // Enable I/O port for push buttons.
     //
+#if defined(PART_LM3S1968)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG); 
+#elif defined(PART_LM3S9B90)
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); 
+#else
+#error Microcontroller type not defined
+#endif
 
     //
     // Configure the GPIOs used to read the push buttons.
     //
-    GPIOPinTypeGPIOInput(GPIO_PORTG_BASE,
-                         GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 |
-                         GPIO_PIN_7);
-    GPIOPadConfigSet(GPIO_PORTG_BASE,
-                     GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 |
-                     GPIO_PIN_7, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+#if defined(PART_LM3S1968)
+    GPIOPinTypeGPIOInput(GPIO_PORTG_BASE, GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7);
+    GPIOPadConfigSet(GPIO_PORTG_BASE, GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 
+                     GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+#elif defined(PART_LM3S9B90)
+    GPIOPinTypeGPIOInput(GPIO_PORTB_BASE, GPIO_PIN_4);
+    GPIOPadConfigSet(GPIO_PORTB_BASE, GPIO_PIN_4, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+#else
+#error Microcontroller type not defined
+#endif
 }
 
 //----------------------------------------------------------------------------
 //
 /// \brief   Handles the SysTick timeout interrupt.
 ///
-/// \remarks 
+/// \remarks Duration ~3 us @50 MHz
 ///
 //----------------------------------------------------------------------------
 void
-SysTickIntHandler(void)
-{
-    unsigned long ulData, ulDelta;
+SysTickIntHandler(void) {
 
     //
-    // Call the FatFs tick timer.
+    // Indicate that a 10 ms tick has occurred.
     //
-    disk_timerproc();
+    HWREGBITW(&g_ulFlags, FLAG_CLOCK_TICK_10) = 1;
 
     //
     // Increment the tick count.
     //
-    if ((g_ulTickCount++ % 2) == 0)
-    {
+    if ((g_ulTickCount++ % 2) == 0) {
         //
         // Indicate that a 20 ms tick has occurred.
         //
-        HWREGBITW(&g_ulFlags, FLAG_CLOCK_TICK) = 1;
+        HWREGBITW(&g_ulFlags, FLAG_CLOCK_TICK_20) = 1;
     }
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Manages Logic and I/O
+/// \remarks 
+///
+//----------------------------------------------------------------------------
+void
+Logic(void) {
+
+    unsigned long ulData, ulDelta;
 
     //
     // Read the state of the push buttons.
     //
-    ulData = ((GPIOPinRead(GPIO_PORTG_BASE, (GPIO_PIN_3 | GPIO_PIN_4 |
-                                            GPIO_PIN_5 | GPIO_PIN_6)) >> 3) |
+#if defined(PART_LM3S1968)
+    ulData = ((GPIOPinRead(GPIO_PORTG_BASE, (GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6)) >> 3) |
               (GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_7) >> 3));
+#elif defined(PART_LM3S9B90)
+    ulData = GPIOPinRead(GPIO_PORTB_BASE, GPIO_PIN_4);
+#else
+#error Microcontroller type not defined
+#endif
 
     //
     // Determine the switches that are at a different state than the debounced
@@ -179,7 +200,7 @@ SysTickIntHandler(void)
     //
     // See if the select button was just pressed.
     //
-    if((ulDelta & 0x10) && !(g_ucSwitches & 0x10))
+    if ((ulDelta & 0x10) && !(g_ucSwitches & 0x10))
     {
         //
         // Set a flag to indicate that the select button was just pressed.
@@ -187,3 +208,4 @@ SysTickIntHandler(void)
         HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 1;
     }
 }
+
