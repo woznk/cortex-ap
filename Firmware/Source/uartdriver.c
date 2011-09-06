@@ -1,16 +1,15 @@
 //============================================================================+
 //
 // $RCSfile: uartdriver.c,v $ (SOURCE FILE)
-// $Revision: 1.7 $
-// $Date: 2009/10/31 15:12:58 $
+// $Revision: 1.11 $
+// $Date: 2011/01/19 18:33:45 $
 // $Author: Lorenz $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
+/// \brief    uart driver
+///
 /// \file
-///             uart driver
-//
-//  CHANGES     UART 0 configured with 7 bit data length
+///
+//  CHANGES Baud rate della UART 1 ridotto a 4800 per invio tramite radio
 //
 //============================================================================*/
 
@@ -47,6 +46,9 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
+VAR_STATIC unsigned char s_ucBuffWrite0;    // 
+VAR_STATIC unsigned char s_ucBuffRead0;     // 
+VAR_STATIC unsigned char s_pucBuffer0[256]; // 
 VAR_STATIC unsigned char s_ucBuffWrite1;    // 
 VAR_STATIC unsigned char s_ucBuffRead1;     // 
 VAR_STATIC unsigned char s_pucBuffer1[256]; // 
@@ -72,30 +74,62 @@ UARTInit(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_UART1);
 
     //
-    // Enable I/O port A, D.
+    // Enable GPIO port A, D for UART 0, 1.
     //
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD); 
 
     //
-    // Set GPIO A0, A1, D2, D3 as UART pins.
+    // Set GPIO A0, A1 as UART 0 pins.
     //
     GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+
+    //
+    // Set GPIO D2, D3 as UART 1 pins.
+    //
     GPIOPinTypeUART(GPIO_PORTD_BASE, GPIO_PIN_2 | GPIO_PIN_3);
 
     //
-    // Configure UART 0 for 115,200, 7-N-1 operation.
+    // Select pin's alternate function 
+    //
+#if defined(PART_LM3S9B90)
+    GPIOPinConfigure(GPIO_PD2_U1RX);
+    GPIOPinConfigure(GPIO_PD3_U1TX);
+#endif
+
+    //
+    // Configure UART 0 for 115,200, 8-N-1 operation.
     //
     UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200,
-                        (UART_CONFIG_WLEN_7 | UART_CONFIG_STOP_ONE |
+                        (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
                          UART_CONFIG_PAR_NONE));
 
     //
-    // Configure UART 1 for 115,200, 7-N-1 operation.
+    // Configure UART 1 for 115,200, 8-N-1 operation.
     //
-    UARTConfigSetExpClk(UART1_BASE, SysCtlClockGet(), 115200,
-                        (UART_CONFIG_WLEN_7 | UART_CONFIG_STOP_ONE |
+    UARTConfigSetExpClk(UART1_BASE, SysCtlClockGet(), 4800,
+                        (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
                          UART_CONFIG_PAR_NONE));
+
+    //
+    // Enable UART 0 FIFO.
+    //
+    UARTFIFOEnable(UART0_BASE);
+
+    //
+    // Enable UART 1 FIFO.
+    //
+    UARTFIFOEnable(UART1_BASE);
+
+    //
+    // Set UART 0 FIFO level for TX / RX interrupt.
+    //
+    UARTFIFOLevelSet(UART0_BASE, UART_FIFO_TX7_8, UART_FIFO_RX7_8);
+
+    //
+    // Set UART 1 FIFO level for TX / RX interrupt.
+    //
+    UARTFIFOLevelSet(UART1_BASE, UART_FIFO_TX7_8, UART_FIFO_RX7_8);
 
     //
     // Enable UART 0 interrupt.
@@ -179,8 +213,8 @@ UART1Send(const unsigned char *pucBuffer, unsigned long ulCount)
 ///
 ///  DESCRIPTION The UART interrupt handler.
 /// \RETURN      -
-/// \REMARKS     
-///              
+/// \REMARKS     Duration ~2 us with system clock = 50 MHz
+///              Periodicity ~1 ms with 115200 baud continuous data
 ///              
 ///
 ///----------------------------------------------------------------------------
@@ -202,12 +236,13 @@ UART0IntHandler(void)
     //
     // Loop while there are characters in the receive FIFO.
     //
-    while(UARTCharsAvail(UART0_BASE))
+    while (UARTCharsAvail(UART0_BASE))
     {
         //
-        // Read the next character from the UART and write it back to the UART.
+        // Read the next character from the UART and write it to the buffer
         //
-        UARTCharPutNonBlocking(UART0_BASE, UARTCharGetNonBlocking(UART0_BASE));
+        s_pucBuffer0[s_ucBuffWrite0] = UARTCharGetNonBlocking(UART0_BASE);
+        s_ucBuffWrite0++;
     }
 }
 
@@ -266,6 +301,30 @@ UART1GetChar ( char *ch )
    {
       *ch = s_pucBuffer1[s_ucBuffRead1];                   // Return data
       s_ucBuffRead1++; // Update buffer index
+      return true;
+   }
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   get a character from uart 0 buffer
+///
+/// \returns 
+/// \remarks 
+///          
+///
+//----------------------------------------------------------------------------
+tBoolean 
+UART0GetChar ( char *ch )
+{
+   if (s_ucBuffWrite0 == s_ucBuffRead0) 
+   {                  // buffer empty
+      return false;
+   } 
+   else
+   {
+      *ch = s_pucBuffer0[s_ucBuffRead0];                   // Return data
+      s_ucBuffRead0++; // Update buffer index
       return true;
    }
 }

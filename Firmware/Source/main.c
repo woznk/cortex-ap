@@ -1,235 +1,275 @@
-/**
-  ******************************************************************************
-  * @file TIM/PWM_Output/main.c
-  * @author  MCD Application Team
-  * @version V3.1.2
-  * @date    09/28/2009
-  * @brief   Main program body
-  ******************************************************************************
-  * @copy
-  *
-  * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
-  * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
-  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
-  * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
-  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-  *
-  * <h2><center>&copy; COPYRIGHT 2009 STMicroelectronics</center></h2>
-  */
+//============================================================================+
+//
+// $RCSfile: main.c,v $ (SOURCE FILE)
+// $Revision: 1.19 $
+// $Date: 2011/01/23 17:54:06 $
+// $Author: Lorenz $
+//
+/// \brief IMU + AHRS based on Luminary LM3S1968 / LM3S9B90 evaluation boards
+///
+/// \file
+///
+//  CHANGES Simulation.h sostituito da Telemetry.h
+//
+//============================================================================*/
 
-/* Includes ------------------------------------------------------------------*/
-#include "stm32f10x.h"
-#include "STM32vldiscovery.h"
+#include "math.h"
+#include "inc/hw_ints.h"
+#include "inc/hw_gpio.h"
+#include "inc/hw_types.h"
+#include "inc/hw_memmap.h"
+#include "driverlib/gpio.h"
+#include "driverlib/debug.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/systick.h"
+#include "driverlib/interrupt.h"
 
-/** @addtogroup cortex-ap
-  * @{
-  */
+#include "config.h"
+#include "log.h"
+#include "DCM.h"
+#include "gps.h"
+#include "nav.h"
+#include "tick.h"
+#include "diskio.h"
+#include "adcdriver.h"
+#include "ppmdriver.h"
+#include "uartdriver.h"
+#include "telemetry.h"
+#include "servodriver.h"
+#include "aileronctrl.h"
+#include "elevatorctrl.h"
 
-/** @addtogroup main
-  * @{
-  */
+/*--------------------------------- Definitions ------------------------------*/
 
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-TIM_OCInitTypeDef  TIM_OCInitStructure;
-int16_t CCR1_Val = 1500;
-int16_t CCR2_Val = 1000;
-int16_t CCR3_Val = 1500;
-int16_t CCR4_Val = 2000;
-int16_t CCR1_Delta = 10;
-ErrorStatus HSEStartUpStatus;
+#ifdef VAR_STATIC
+#undef VAR_STATIC
+#endif
+#define VAR_STATIC static
+#ifdef VAR_GLOBAL
+#undef VAR_GLOBAL
+#endif
+#define VAR_GLOBAL
 
-/* Private function prototypes -----------------------------------------------*/
-void RCC_Configuration(void);
-void GPIO_Configuration(void);
-void Delay(__IO uint32_t nCount);
+#if defined(PART_LM3S1968)
+#   define LED_ON()     GPIOPinWrite(GPIO_PORTG_BASE, GPIO_PIN_2,   0x04)
+#   define LED_OFF()    GPIOPinWrite(GPIO_PORTG_BASE, GPIO_PIN_2, ~(0x04))
+#   define LED_TOGGLE() GPIOPinWrite(GPIO_PORTG_BASE, GPIO_PIN_2, \
+                        GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_2) ^ (0x04))
+#elif defined(PART_LM3S9B90)
+#   define LED_ON()     GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0,   0x01)
+#   define LED_OFF()    GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, ~(0x01))
+#   define LED_TOGGLE() GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, \
+                        GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_0) ^ (0x01))
+#else
+#   error Microcontroller type not defined
+#endif
 
-/* Private functions ---------------------------------------------------------*/
+/*----------------------------------- Macros ---------------------------------*/
 
-/**
-  * @brief   Main program.
-  * @param  None
-  * @retval None
-  */
-int main(void)
+/*-------------------------------- Enumerations ------------------------------*/
+
+/*----------------------------------- Types ----------------------------------*/
+
+/*---------------------------------- Constants -------------------------------*/
+
+/*---------------------------------- Globals ---------------------------------*/
+
+/*----------------------------------- Locals ---------------------------------*/
+
+/*--------------------------------- Prototypes -------------------------------*/
+
+#ifdef DEBUG
+///----------------------------------------------------------------------------
+///
+/// Error routine
+/// \return  -
+/// \remarks It is called if the driver library encounters an error.
+///
+///
+///----------------------------------------------------------------------------
+void
+__error__(char *pcFilename, unsigned long ulLine)
 {
-  /*!< At this stage the microcontroller clock setting is already configured,
-       this is done through SystemInit() function which is called from startup
-       file (startup_stm32f10x_xx.s) before to branch to application main.
-       To reconfigure the default setting of SystemInit() function, refer to
-       system_stm32f10x.c file
-     */
-
-  /* System Clocks Configuration */
-  RCC_Configuration();
-
-  /* GPIO Configuration */
-  GPIO_Configuration();
-
-  /* Initialize Leds LD3 and LD4 mounted on STM32VLDISCOVERY board */
-  STM32vldiscovery_LEDInit(LED3);
-  STM32vldiscovery_LEDInit(LED4);
-
-  /* -----------------------------------------------------------------------
-    TIM3 Configuration: generate 4 PWM signals with 4 different duty cycles:
-    TIM3CLK = 36 MHz, Prescaler = 0x0, TIM3 counter clock = 36 MHz
-    TIM3 ARR Register = 999 => TIM3 Frequency = TIM3 counter clock/(ARR + 1)
-    TIM3 Frequency = 36 KHz.
-    TIM3 Channel1 duty cycle = (TIM3_CCR1/ TIM3_ARR)* 100 = 50%
-    TIM3 Channel2 duty cycle = (TIM3_CCR2/ TIM3_ARR)* 100 = 37.5%
-    TIM3 Channel3 duty cycle = (TIM3_CCR3/ TIM3_ARR)* 100 = 25%
-    TIM3 Channel4 duty cycle = (TIM3_CCR4/ TIM3_ARR)* 100 = 12.5%
-  ----------------------------------------------------------------------- */
-
-  /* Time base configuration */
-  TIM_TimeBaseStructure.TIM_Period = 19999;
-  TIM_TimeBaseStructure.TIM_Prescaler = 3;
-  TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-
-  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
-
-  /* PWM1 Mode configuration: Channel1 */
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = CCR1_Val;
-  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-
-  TIM_OC1Init(TIM3, &TIM_OCInitStructure);
-
-  TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
-
-  /* PWM1 Mode configuration: Channel2 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = CCR2_Val;
-
-  TIM_OC2Init(TIM3, &TIM_OCInitStructure);
-
-  TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
-
-  /* PWM1 Mode configuration: Channel3 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = CCR3_Val;
-
-  TIM_OC3Init(TIM3, &TIM_OCInitStructure);
-
-  TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
-
-  /* PWM1 Mode configuration: Channel4 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = CCR4_Val;
-
-  TIM_OC4Init(TIM3, &TIM_OCInitStructure);
-
-  TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
-
-  TIM_ARRPreloadConfig(TIM3, ENABLE);
-
-  /* TIM3 enable counter */
-  TIM_Cmd(TIM3, ENABLE);
-
-  while (1)
-  {
-    if (CCR1_Val > 1999) {
-      CCR1_Delta = -10;
-    } else if (CCR1_Val < 999) {
-      CCR1_Delta = 10;
-    }
-    CCR1_Val += CCR1_Delta;
-    TIM_SetCompare1(TIM3, CCR1_Val);
-
-    if (CCR1_Delta == 10) {
-      STM32vldiscovery_LEDOn(LED3);       /* Turn on LD3 */
-      Delay(0x57FE);                      /* Insert delay */
-      STM32vldiscovery_LEDOff(LED3);      /* Turn off LD3 */
-      Delay(0x57FE);                      /* Insert delay */
-    } else {
-      STM32vldiscovery_LEDOn(LED4);       /* Turn on LD4 */
-      Delay(0x57FE);                      /* Insert delay */
-      STM32vldiscovery_LEDOff(LED4);      /* Turn off LD4 */
-      Delay(0x57FE);                      /* Insert delay */
-    }
-  }
-}
-
-/**
-  * @brief  Inserts a delay time.
-  * @param  nCount: specifies the delay time length.
-  * @retval None
-  */
-void Delay(__IO uint32_t nCount)
-{
-  for(; nCount != 0; nCount--);
-}
-
-/**
-  * @brief  Configures the different system clocks.
-  * @param  None
-  * @retval None
-  */
-void RCC_Configuration(void)
-{
-  /* PCLK1 = HCLK/4 */
-  RCC_PCLK1Config(RCC_HCLK_Div4);
-
-  /* TIM3 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-
-  /* GPIOA and GPIOB clock enable */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
-                         RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, ENABLE);
-}
-
-/**
-  * @brief  Configure the TIM3 Ouput Channels.
-  * @param  None
-  * @retval None
-  */
-void GPIO_Configuration(void)
-{
-  GPIO_InitTypeDef GPIO_InitStructure;
-
-  /* GPIOA Configuration:TIM3 Channel1, 2, 3 and 4 as alternate function push-pull */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-}
-
-#ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *   where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t* file, uint32_t line)
-{
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-
-  /* Infinite loop */
-  while (1)
-  {
-  }
 }
 #endif
 
-/**
-  * @}
-  */
 
-/**
-  * @}
-  */
+///----------------------------------------------------------------------------
+///
+///  DESCRIPTION main program
+/// \return      -
+/// \remarks
+///
+///    rmat[0] rmat[1] rmat[2]       0          0          0
+///    rmat[3] rmat[4] rmat[5] =     0      cos(Ya^Ye)     0
+///    rmat[6] rmat[7] rmat[8]   cos(Xa^Ze) cos(Ya^Ze)     0
+///
+///    rmat[4] = cosine of the angle between aircraft Y axis and earth Y axis.
+///    It is equal to one when aircraft Y axis is aligned with earth Y axis.
+///
+///    rmat[6] = cosine of the angle between aircraft X axis and earth Z axis.
+///    It is equal to zero when aircraft X axis is level with earth XY plane.
+///
+///    rmat[7] = cosine of the angle between aircraft Y axis and earth Z axis.
+///    It is equal to zero when aircraft Y axis is level with earth XY plane.
+///
+///----------------------------------------------------------------------------
+int
+main(void)
+{
+    //
+    // Set the clocking source.
+    //
+#if defined(PART_LM3S1968)
+    SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ);
+#elif defined(PART_LM3S9B90)
+    SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
+#else
+#error Microcontroller type not defined
+#endif
 
-/******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/
+    //
+    // Enable GPIO port for LED.
+    //
+#if defined(PART_LM3S1968)
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);  // GPIO G
+#elif defined(PART_LM3S9B90)
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);  // GPIO D
+#else
+#error Microcontroller type not defined
+#endif
+
+    //
+    // Set LED pin as output, SW controlled.
+    //
+#if defined(PART_LM3S1968)
+    GPIOPinTypeGPIOOutput(GPIO_PORTG_BASE, GPIO_PIN_2);
+#elif defined(PART_LM3S9B90)
+    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, GPIO_PIN_0);
+#else
+#error Microcontroller type not defined
+#endif
+
+    //
+    // Enable SSI 0
+    //
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0);
+
+    //
+    // Initialize drivers
+    //
+    UARTInit();             // UART 0, 1
+    ADCInit();              // Sensors (ADC)
+    ServoInit();            // Servos (PWM)
+    PPMInit();              // PPM input (Timer 1)
+    TickInit();             // Push buttons and disktimerproc (System tick)
+    GPSInit();              // GPS
+
+    //
+    // Enable processor interrupts.
+    //
+    IntMasterEnable();
+
+    //
+    // Initialize state machines.
+    //
+    while (Nav_Init() == false);  // Navigation
+    Log_Init();                   // Logging
+
+    //
+    // Wait for sensor input settling
+    //
+#if (SIMULATOR == SIM_NONE)
+    while (ADCSettled() == false) {
+    }
+#else
+    while (Sim_Settled() == false) {
+      Telemetry_Parse();
+    }
+#endif
+
+    //
+    // Throw away any button presses that may have occurred so far.
+    //
+    HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;
+
+    //
+    // Loop forever.
+    //
+    while ( 1 ) {
+
+        //
+        // Wait until a 10 ms Tick has occurred.
+        //
+        if (HWREGBITW(&g_ulFlags, FLAG_CLOCK_TICK_10)) {
+
+            //
+            // Clear the 10 ms Tick flag.
+            //
+            HWREGBITW(&g_ulFlags, FLAG_CLOCK_TICK_10) = 0;
+
+            //
+            // Call the FatFs tick timer.
+            //
+            disk_timerproc();
+        }
+
+        //
+        // Wait until a 20 ms Tick has occurred.
+        //
+        if (HWREGBITW(&g_ulFlags, FLAG_CLOCK_TICK_20)) {
+
+            //
+            // Clear the 20 ms Tick flag.
+            //
+            HWREGBITW(&g_ulFlags, FLAG_CLOCK_TICK_20) = 0;
+
+            //
+            // Toggle green LED.
+            //
+            LED_TOGGLE();
+
+            //
+            // Update logic and I/O.
+            //
+            Logic();
+
+            //
+            // Actual IMU and AHRS computation.
+            //
+            MatrixUpdate();       //
+            CompensateDrift();    //
+            Normalize();          //
+            Aileron_Control();    //
+            Elevator_Control();   //
+
+            //
+            // Send DCM to serial.
+            //
+            Log_DCM();            //
+
+            //
+            // Update aircraft controls
+            //
+            Telemetry_Send_Controls();  // Update simulator controls
+            ServoUpdate();              // Update servos
+        }
+
+        //
+        // Navigation
+        //
+#if (SIMULATOR == SIM_NONE)
+        if (GPSParse()) {               // Parse GPS sentence
+            Navigate();                 // Compute direction
+            Telemetry_Send_Waypoint();  // Update waypoint number
+        }
+        Telemetry_Parse();              // Parse telemetry data
+#else
+        if (Telemetry_Parse()) {        // Parse telemetry data
+            Navigate();                 // Compute direction
+            Telemetry_Send_Waypoint();  // Update waypoint number
+        }
+#endif
+    }
+}
+
