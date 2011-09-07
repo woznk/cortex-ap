@@ -18,8 +18,5 @@ typedef signed long		LONG;
 typedef unsigned long	ULONG;
 typedef unsigned long	DWORD;
 
-/* Boolean type */
-//typedef enum { FALSE = 0, TRUE } BOOL;
-
 #define _INTEGER
 #endif
