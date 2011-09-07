@@ -36,14 +36,12 @@
 /---------------------------------------------------------------------------*/
 
 #include <string.h>
-#include "tff.h"		/* Tiny-FatFs declarations */
-#include "diskio.h"		/* Include file for user provided disk functions */
+#include "stm32f10x.h"
+#include "tff.h"         /* Tiny-FatFs declarations */
+#include "diskio.h"      /* Include file for user provided disk functions */
 
-
-static
-FATFS *FatFs;			/* Pointer to the file system objects (logical drive) */
-static
-WORD fsid;				/* File system mount ID */
+static FATFS *FatFs;     /* Pointer to the file system objects (logical drive) */
+static WORD fsid;        /* File system mount ID */
 
 
 /*-------------------------------------------------------------------------
@@ -57,10 +55,9 @@ WORD fsid;				/* File system mount ID */
 /* Change window offset                                                  */
 /*-----------------------------------------------------------------------*/
 
-static
-BOOL move_window (		/* TRUE: successful, FALSE: failed */
-	DWORD sector		/* Sector number to make apperance in the FatFs->win */
-)						/* Move to zero only writes back dirty window */
+static bool move_window (      /* TRUE: successful, FALSE: failed */
+	DWORD sector           /* Sector number to make apperance in the FatFs->win */
+)                              /* Move to zero only writes back dirty window */
 {
 	DWORD wsect;
 	FATFS *fs = FatFs;
@@ -175,10 +172,9 @@ CLUST get_cluster (		/* 0,>=2: successful, 1: failed */
 /*-----------------------------------------------------------------------*/
 
 #if !_FS_READONLY
-static
-BOOL put_cluster (		/* TRUE: successful, FALSE: failed */
-	CLUST clust,		/* Cluster# to change */
-	CLUST val			/* New value to mark the cluster */
+static bool put_cluster ( /* TRUE: successful, FALSE: failed */
+	CLUST clust,      /* Cluster# to change */
+	CLUST val         /* New value to mark the cluster */
 )
 {
 	WORD bc;
@@ -227,9 +223,8 @@ BOOL put_cluster (		/* TRUE: successful, FALSE: failed */
 /*-----------------------------------------------------------------------*/
 
 #if !_FS_READONLY
-static
-BOOL remove_chain (		/* TRUE: successful, FALSE: failed */
-	CLUST clust			/* Cluster# to remove chain from */
+static bool remove_chain ( /* TRUE: successful, FALSE: failed */
+	CLUST clust        /* Cluster# to remove chain from */
 )
 {
 	CLUST nxt;
@@ -336,9 +331,8 @@ DWORD clust2sect (	/* !=0: sector number, 0: failed - invalid cluster# */
 /* Move directory pointer to next                                        */
 /*-----------------------------------------------------------------------*/
 
-static
-BOOL next_dir_entry (	/* TRUE: successful, FALSE: could not move next */
-	DIR *dirobj			/* Pointer to directory object */
+static bool next_dir_entry ( /* TRUE: successful, FALSE: could not move next */
+	DIR *dirobj          /* Pointer to directory object */
 )
 {
 	CLUST clust;
