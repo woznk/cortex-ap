@@ -1,16 +1,12 @@
 //============================================================================+
 //
-// $RCSfile: servodriver.h,v $ (SOURCE FILE)
-// $Revision: 1.4 $
-// $Date: 2010/04/02 16:29:48 $
-// $Author: Lorenz $
+// $RCSfile: $
+// $Revision: $
+// $Date: $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
-/// \file
-///             Servo driver header file
-//
-//  CHANGES     aggiunto underscore ai nomi delle funzioni
+/// \brief  Servo driver header file
+//  CHANGES Modified for STM32F100RB
 //
 //============================================================================*/
 
@@ -31,6 +27,13 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
+typedef enum {
+    SERVO_AILERON,
+    SERVO_RUDDER,
+    SERVO_ELEVATOR,
+    SERVO_THROTTLE
+} SERVO_TYPE;
+
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
@@ -39,5 +42,5 @@
 
 /*--------------------------------- Interface --------------------------------*/
 
-void ServoInit(void);
-void ServoUpdate(void);
+void Servo_Init(void);
+void Servo_Set(SERVO_TYPE servo, int16_t position);
