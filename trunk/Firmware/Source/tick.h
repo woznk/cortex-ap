@@ -1,17 +1,14 @@
-//============================================================================
+//============================================================================+
 //
-// $RCSfile: tick.h,v $ (HEADER FILE)
-// $Revision: 1.3 $
-// $Date: 2010/04/05 09:07:34 $
-// $Author: Lorenz $
+// $RCSfile: $
+// $Revision: $
+// $Date: $
+// $Author: $
 //
-//  LANGUAGE C
-/// \file
-///          Tick manager header file
-//  CHANGES  aggiunta funzione Logic() per lettura pulsanti
-//           sdoppiato flag di tick: 10 ms e 20 ms
+/// \brief  Tick manager
+//  CHANGES Modified for STM32F100RB
 //
-//============================================================================
+//============================================================================*/
 
 /*--------------------------------- Definitions ------------------------------*/
 
@@ -20,8 +17,8 @@
 #endif
 #define VAR_GLOBAL extern
 
-#define FLAG_CLOCK_TICK_10      0           // 
-#define FLAG_CLOCK_TICK_20      1           // 
+#define FLAG_CLOCK_TICK_10      0           //
+#define FLAG_CLOCK_TICK_20      1           //
 #define FLAG_CLOCK_COUNT_LOW    2           // The low bit of the clock count
 #define FLAG_CLOCK_COUNT_HIGH   3           // The high bit of the clock count
 #define FLAG_BUTTON             4           // Debounced state of the button
@@ -46,5 +43,4 @@ VAR_GLOBAL unsigned long g_ulFlags;
 
 /*---------------------------------- Interface -------------------------------*/
 
-void TickInit( void );
 void Logic( void );
