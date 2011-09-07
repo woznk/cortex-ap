@@ -6,13 +6,14 @@
 // $Author: $
 //
 /// \brief  Servo driver header file
-//  CHANGES Moved servo management to servodriver.c
+//  CHANGES Timebase given by systick.
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
 #include "servodriver.h"
+#include "tick.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -77,48 +78,35 @@ int main(void)
   /* GPIO Configuration */
   GPIO_Configuration();
 
-  /* Initialize Leds LD3 and LD4 mounted on STM32VLDISCOVERY board */
+  /* Initialize Leds LD3 and LD4 of STM32VLDISCOVERY board */
   STM32vldiscovery_LEDInit(LED3);
   STM32vldiscovery_LEDInit(LED4);
+
+  /* Setup SysTick Timer  (10ms) */
+  SysTick_Config(SystemCoreClock / 100);
 
   /* Initialize PWM timers as servo outputs */
   Servo_Init();
 
-  while (1)
-  {
-    if (Servo_Position > 1999) {
-      Servo_Delta = -10;
-    } else if (Servo_Position < 999) {
-      Servo_Delta = 10;
-    }
-    Servo_Position += Servo_Delta;
-    Servo_Set(SERVO_RUDDER, Servo_Position);
-
-    if (Servo_Delta == 10) {
-      STM32vldiscovery_LEDOn(LED3);       /* Turn on LD3 */
-      Delay(0x57FE);                      /* Insert delay */
-      STM32vldiscovery_LEDOff(LED3);      /* Turn off LD3 */
-      Delay(0x57FE);                      /* Insert delay */
-    } else {
-      STM32vldiscovery_LEDOn(LED4);       /* Turn on LD4 */
-      Delay(0x57FE);                      /* Insert delay */
-      STM32vldiscovery_LEDOff(LED4);      /* Turn off LD4 */
-      Delay(0x57FE);                      /* Insert delay */
+  while (1) {
+    if (g_ulFlags && FLAG_CLOCK_TICK_10) {
+        g_ulFlags &= !FLAG_CLOCK_TICK_10;
+        STM32vldiscovery_LEDOff(LED3);      /* Turn off LD3 */
+        STM32vldiscovery_LEDOff(LED4);      /* Turn off LD4 */
+        if (Servo_Delta == 10) {
+            STM32vldiscovery_LEDOn(LED3);   /* Turn on LD3 */
+        } else {
+            STM32vldiscovery_LEDOn(LED4);   /* Turn on LD4 */
+        }
+        if (Servo_Position > 1999) {
+            Servo_Delta = -10;
+        } else if (Servo_Position < 999) {
+            Servo_Delta = 10;
+        }
+        Servo_Position += Servo_Delta;
+        Servo_Set(SERVO_RUDDER, Servo_Position);
     }
   }
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief   Inserts a delay time.
-/// \param   nCount: time
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void Delay(__IO uint32_t nCount)
-{
-  for(; nCount != 0; nCount--);
 }
 
 ///----------------------------------------------------------------------------
