@@ -89,7 +89,7 @@ int main(void)
   Servo_Init();
 
   while (1) {
-    if (g_ulFlags && FLAG_CLOCK_TICK_10) {
+    if ((g_ulFlags & FLAG_CLOCK_TICK_10) != 0) {
         g_ulFlags &= !FLAG_CLOCK_TICK_10;
         STM32vldiscovery_LEDOff(LED3);      /* Turn off LD3 */
         STM32vldiscovery_LEDOff(LED4);      /* Turn off LD4 */
