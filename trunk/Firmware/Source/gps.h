@@ -5,11 +5,9 @@
 // $Date: 2010/01/25 21:39:47 $
 // $Author: Lorenz $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
 /// \file
-///             GPS manager header file
-//  CHANGES     navigazione e gestione waypoints spostata in nav.c
+/// \brief  GPS manager header file
+//  CHANGES tBoolean replaced with bool
 //
 //============================================================================
 
@@ -42,9 +40,9 @@ VAR_GLOBAL unsigned char Gps_Status;    //
 /*---------------------------------- Interface -------------------------------*/
 
 void GPSInit ( void );
-tBoolean GPSFix ( void );
-tBoolean GPSParse( void );
-tBoolean GPSPosition ( void );
+bool GPSFix ( void );
+bool GPSParse( void );
+bool GPSPosition ( void );
 int GPSHeading ( void );
 int GPSNorth ( void );
 unsigned int GPSSpeed ( void );
