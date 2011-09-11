@@ -5,15 +5,17 @@
 // $Date: $
 // $Author: $
 //
-/// \brief  Servo driver header file
-//  CHANGES Timebase given by systick.
+/// \brief  main program
+//  CHANGES Included navigation initialization.
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
 #include "servodriver.h"
+#include "diskio.h"
 #include "tick.h"
+#include "nav.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -48,7 +50,6 @@
 
 VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
-VAR_STATIC ErrorStatus HSEStartUpStatus;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -88,9 +89,17 @@ int main(void)
   /* Initialize PWM timers as servo outputs */
   Servo_Init();
 
+  while (!Nav_Init());  // Navigation init
+
   while (1) {
     if ((g_ulFlags & FLAG_CLOCK_TICK_10) != 0) {
         g_ulFlags &= !FLAG_CLOCK_TICK_10;
+
+        //
+        // Call the FatFs tick timer.
+        //
+        disk_timerproc();
+
         STM32vldiscovery_LEDOff(LED3);      /* Turn off LD3 */
         STM32vldiscovery_LEDOff(LED4);      /* Turn off LD4 */
         if (Servo_Delta == 10) {
@@ -118,8 +127,14 @@ int main(void)
 ///----------------------------------------------------------------------------
 void RCC_Configuration(void)
 {
-  /* PCLK1 = HCLK/4 */
-  RCC_PCLK1Config(RCC_HCLK_Div4);
+  /* HCLK = SYSCLK */
+  RCC_HCLKConfig(RCC_SYSCLK_Div1);
+
+  /* PCLK1 = HCLK/2 */
+  RCC_PCLK1Config(RCC_HCLK_Div2);
+
+  /* PCLK2 = HCLK */
+  RCC_PCLK2Config(RCC_HCLK_Div1);
 
   /* TIM3 clock enable */
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
@@ -144,12 +159,10 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   /* GPIOC Configuration:TIM3 Channel 3, 4 as alternate function push-pull */
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
-
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
 
