@@ -431,6 +431,11 @@
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_rcc.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -470,6 +475,16 @@
               <FileName>tff.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\tff.c</FilePath>
+            </File>
+            <File>
+              <FileName>mmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\mmc.c</FilePath>
+            </File>
+            <File>
+              <FileName>nav.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\nav.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -762,8 +777,8 @@
               </OCR_RVCT3>
               <OCR_RVCT4>
                 <Type>1</Type>
-                <StartAddress>0x8000000</StartAddress>
-                <Size>0x10000</Size>
+                <StartAddress>0x20000000</StartAddress>
+                <Size>0x1000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -900,6 +915,11 @@
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_rcc.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -939,6 +959,16 @@
               <FileName>tff.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\tff.c</FilePath>
+            </File>
+            <File>
+              <FileName>mmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\mmc.c</FilePath>
+            </File>
+            <File>
+              <FileName>nav.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\nav.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1369,6 +1399,11 @@
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_rcc.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1408,6 +1443,16 @@
               <FileName>tff.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\tff.c</FilePath>
+            </File>
+            <File>
+              <FileName>mmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\mmc.c</FilePath>
+            </File>
+            <File>
+              <FileName>nav.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\nav.c</FilePath>
             </File>
           </Files>
         </Group>
