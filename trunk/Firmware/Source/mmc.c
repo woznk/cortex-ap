@@ -7,16 +7,11 @@
 
 /*
  * This file was modified from a sample available from the FatFs
- * web site. It was modified to work with a Luminary Micro
- * EK-LM3S3748 evaluation board.
+ * web site. It was modified to work with STM32 Discovery board.
  */
 
-#include "inc/hw_memmap.h"
-#include "inc/hw_types.h"
-#include "driverlib/gpio.h"
-#include "driverlib/rom.h"
-#include "driverlib/ssi.h"
-#include "driverlib/sysctl.h"
+#include "stm32f10x.h"
+#include "stm32f10x_spi.h"
 #include "diskio.h"
 
 /* Definitions for MMC/SDC command */
@@ -24,46 +19,35 @@
 #define CMD1    (0x40+1)    /* SEND_OP_COND */
 #define CMD8    (0x40+8)    /* SEND_IF_COND */
 #define CMD9    (0x40+9)    /* SEND_CSD */
-#define CMD10    (0x40+10)    /* SEND_CID */
-#define CMD12    (0x40+12)    /* STOP_TRANSMISSION */
-#define CMD16    (0x40+16)    /* SET_BLOCKLEN */
-#define CMD17    (0x40+17)    /* READ_SINGLE_BLOCK */
-#define CMD18    (0x40+18)    /* READ_MULTIPLE_BLOCK */
-#define CMD23    (0x40+23)    /* SET_BLOCK_COUNT */
-#define CMD24    (0x40+24)    /* WRITE_BLOCK */
-#define CMD25    (0x40+25)    /* WRITE_MULTIPLE_BLOCK */
-#define CMD41    (0x40+41)    /* SEND_OP_COND (ACMD) */
-#define CMD55    (0x40+55)    /* APP_CMD */
-#define CMD58    (0x40+58)    /* READ_OCR */
+#define CMD10   (0x40+10)   /* SEND_CID */
+#define CMD12   (0x40+12)   /* STOP_TRANSMISSION */
+#define CMD16   (0x40+16)   /* SET_BLOCKLEN */
+#define CMD17   (0x40+17)   /* READ_SINGLE_BLOCK */
+#define CMD18   (0x40+18)   /* READ_MULTIPLE_BLOCK */
+#define CMD23   (0x40+23)   /* SET_BLOCK_COUNT */
+#define CMD24   (0x40+24)   /* WRITE_BLOCK */
+#define CMD25   (0x40+25)   /* WRITE_MULTIPLE_BLOCK */
+#define CMD41   (0x40+41)   /* SEND_OP_COND (ACMD) */
+#define CMD55   (0x40+55)   /* APP_CMD */
+#define CMD58   (0x40+58)   /* READ_OCR */
 
 /* Peripheral definitions for EK-LM3S3748 board */
-// SSI port
-#define SDC_SSI_BASE            SSI0_BASE
-#define SDC_SSI_SYSCTL_PERIPH   SYSCTL_PERIPH_SSI0
+// SPI port
+#define GPIO_SD_PORT            GPIOB
+#define RCC_APB2Periph_GPIO_CS  RCC_APB2Periph_GPIOB
 
-// GPIO for SSI pins
-#define SDC_GPIO_PORT_BASE      GPIO_PORTA_BASE
-#define SDC_GPIO_SYSCTL_PERIPH  SYSCTL_PERIPH_GPIOA
-#define SDC_SSI_CLK             GPIO_PIN_2
-#define SDC_SSI_TX              GPIO_PIN_5
-#define SDC_SSI_RX              GPIO_PIN_4
-#define SDC_SSI_FSS             GPIO_PIN_3
-#define SDC_SSI_PINS            (SDC_SSI_TX | SDC_SSI_RX | SDC_SSI_CLK |      \
-                                 SDC_SSI_FSS)
+// GPIO for SPI pins
+#define GPIO_CS_PIN             GPIO_Pin_12
+#define GPIO_CK_PIN             GPIO_Pin_13
+#define GPIO_RX_PIN             GPIO_Pin_14
+#define GPIO_TX_PIN             GPIO_Pin_15
 
 // asserts the CS pin to the card
-static
-void SELECT (void)
-{
-    GPIOPinWrite(SDC_GPIO_PORT_BASE, SDC_SSI_FSS, ~SDC_SSI_FSS);
-}
+#define SELECT()    GPIO_ResetBits(GPIO_SD_PORT, GPIO_CS_PIN)
 
 // de-asserts the CS pin to the card
-static
-void DESELECT (void)
-{
-    GPIOPinWrite(SDC_GPIO_PORT_BASE, SDC_SSI_FSS, SDC_SSI_FSS);
-}
+#define DESELECT()  GPIO_SetBits(GPIO_SD_PORT, GPIO_CS_PIN)
+
 
 /*--------------------------------------------------------------------------
 
@@ -71,52 +55,43 @@ void DESELECT (void)
 
 ---------------------------------------------------------------------------*/
 
-static volatile
-DSTATUS Stat = STA_NOINIT;    /* Disk status */
+static volatile DSTATUS Stat = STA_NOINIT;  /* Disk status */
 
-static volatile
-BYTE Timer1, Timer2;    /* 100Hz decrement timer */
+static volatile BYTE Timer1, Timer2;        /* 100Hz decrement timer */
 
-static
-BYTE CardType;            /* b0:MMC, b1:SDC, b2:Block addressing */
+static BYTE CardType;                       /* 0:MMC, 1:SDC, 2:Block addressing */
 
-static
-BYTE PowerFlag = 0;     /* indicates if "power" is on */
+static BYTE PowerFlag = 0;                  /* indicates if "power" is on */
 
 /*-----------------------------------------------------------------------*/
 /* Transmit a byte to MMC via SPI  (Platform dependent)                  */
 /*-----------------------------------------------------------------------*/
-
-static
-void xmit_spi(BYTE dat)
+static void xmit_spi(BYTE dat)
 {
-    DWORD rcvdat;
+    BYTE rcvdat;
 
-    SSIDataPut(SDC_SSI_BASE, dat); /* Write the data to the tx fifo */
-
-    SSIDataGet(SDC_SSI_BASE, &rcvdat); /* flush data read during the write */
+    while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET);
+    SPI_I2S_SendData(SPI2, dat);        /* Write the data to the tx fifo */
+    rcvdat = SPI_I2S_ReceiveData(SPI2); /* flush data read during the write */
 }
 
 
 /*-----------------------------------------------------------------------*/
 /* Receive a byte from MMC via SPI  (Platform dependent)                 */
 /*-----------------------------------------------------------------------*/
-
-static
-BYTE rcvr_spi (void)
+static BYTE rcvr_spi (void)
 {
-    DWORD rcvdat;
+    BYTE rcvdat;
 
-    SSIDataPut(SDC_SSI_BASE, 0xFF); /* write dummy data */
-
-    SSIDataGet(SDC_SSI_BASE, &rcvdat); /* read data frm rx fifo */
+    while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET);
+    SPI_I2S_SendData(SPI2, 0xFF);       /* write dummy data */
+    rcvdat = SPI_I2S_ReceiveData(SPI2); /* read data frm rx fifo */
 
     return (BYTE)rcvdat;
 }
 
 
-static
-void rcvr_spi_m (BYTE *dst)
+static void rcvr_spi_m (BYTE *dst)
 {
     *dst = rcvr_spi();
 }
@@ -124,12 +99,9 @@ void rcvr_spi_m (BYTE *dst)
 /*-----------------------------------------------------------------------*/
 /* Wait for card ready                                                   */
 /*-----------------------------------------------------------------------*/
-
-static
-BYTE wait_ready (void)
+static BYTE wait_ready (void)
 {
     BYTE res;
-
 
     Timer2 = 50;    /* Wait for ready in timeout of 500ms */
     rcvr_spi();
@@ -144,33 +116,36 @@ BYTE wait_ready (void)
 /* Send 80 or so clock transitions with CS and DI held high. This is     */
 /* required after card power up to get it into SPI mode                  */
 /*-----------------------------------------------------------------------*/
-static
-void send_initial_clock_train(void)
+static void send_initial_clock_train(void)
 {
-    unsigned int i;
-    DWORD dat;
+  unsigned int i;
+  GPIO_InitTypeDef GPIO_InitStructure;
 
-    /* Ensure CS is held high. */
-    DESELECT();
+  /* Configure SPI1 pins: SCK, MISO and MOSI */
+  GPIO_InitStructure.GPIO_Pin = GPIO_TX_PIN;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-    /* Switch the SSI TX line to a GPIO and drive it high too. */
-    GPIOPinTypeGPIOOutput(SDC_GPIO_PORT_BASE, SDC_SSI_TX);
-    GPIOPinWrite(SDC_GPIO_PORT_BASE, SDC_SSI_TX, SDC_SSI_TX);
+  /* Ensure CS is held high. */
+  DESELECT();
 
-    /* Send 10 bytes over the SSI. This causes the clock to wiggle the */
-    /* required number of times. */
-    for(i = 0 ; i < 10 ; i++)
-    {
-        /* Write DUMMY data. SSIDataPut() waits until there is room in the */
-        /* FIFO. */
-        SSIDataPut(SDC_SSI_BASE, 0xFF);
+  /* Switch the TX line to a GPIO and drive it high too. */
+  GPIO_SetBits(GPIO_SD_PORT, GPIO_TX_PIN);
 
-        /* Flush data read during data write. */
-        SSIDataGet(SDC_SSI_BASE, &dat);
-    }
+  /* Send 10 bytes over the SSI. This causes the clock to wiggle the */
+  /* required number of times. */
+  for (i = 0 ; i < 10 ; i++) {
+      /* Write DUMMY data, wait until end of transmission */
+      while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET);
+      SPI_I2S_SendData(SPI2, 0xFF);       /* write dummy data */
+  }
 
-    /* Revert to hardware control of the SSI TX line. */
-    GPIOPinTypeSSI(SDC_GPIO_PORT_BASE, SDC_SSI_TX);
+  /* Revert to hardware control of the TX line. */
+  GPIO_InitStructure.GPIO_Pin = GPIO_TX_PIN;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
 
 /*-----------------------------------------------------------------------*/
@@ -179,79 +154,90 @@ void send_initial_clock_train(void)
 /* When the target system does not support socket power control, there   */
 /* is nothing to do in these functions and chk_power always returns 1.   */
 
-static
-void power_on (void)
+static void power_on (void)
 {
-    /*
-     * This doesn't really turn the power on, but initializes the
-     * SSI port and pins needed to talk to the card.
-     */
+  uint8_t dummyread;
+  SPI_InitTypeDef  SPI_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure;
 
-    /* Enable the peripherals used to drive the SDC on SSI */
-    SysCtlPeripheralEnable(SDC_SSI_SYSCTL_PERIPH);
-    SysCtlPeripheralEnable(SDC_GPIO_SYSCTL_PERIPH);
+  /* Enable SPI2 clock */
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
 
-    /*
-     * Configure the appropriate pins to be SSI instead of GPIO. The FSS (CS)
-     * signal is directly driven to ensure that we can hold it low through a
-     * complete transaction with the SD card.
-     */
-    GPIOPinTypeSSI(SDC_GPIO_PORT_BASE, SDC_SSI_TX | SDC_SSI_RX | SDC_SSI_CLK);
-    GPIOPinTypeGPIOOutput(SDC_GPIO_PORT_BASE, SDC_SSI_FSS);
+  /* Enable GPIO clock for CS */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIO_CS, ENABLE);
 
-    /*
-     * Set the SSI output pins to 4MA drive strength and engage the
-     * pull-up on the receive line.
-     */
-    GPIOPadConfigSet(SDC_GPIO_PORT_BASE, SDC_SSI_RX, GPIO_STRENGTH_4MA,
-                         GPIO_PIN_TYPE_STD_WPU);
-    GPIOPadConfigSet(SDC_GPIO_PORT_BASE, SDC_SSI_CLK | SDC_SSI_TX | SDC_SSI_FSS,
-                         GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD);
+  /* Configure SPI2 pins: SCK, MISO and MOSI */
+  GPIO_InitStructure.GPIO_Pin = GPIO_CK_PIN | GPIO_RX_PIN | GPIO_TX_PIN;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-    /* Configure the SSI0 port */
-    SSIConfigSetExpClk(SDC_SSI_BASE, SysCtlClockGet(),
-                           SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, 400000, 8);
-    SSIEnable(SDC_SSI_BASE);
+  /* Configure I/O for Chip select */
+  GPIO_InitStructure.GPIO_Pin = GPIO_CS_PIN;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIO_SD_PORT, &GPIO_InitStructure);
 
-    /* Set DI and CS high and apply more than 74 pulses to SCLK for the card */
-    /* to be able to accept a native command. */
-    send_initial_clock_train();
+  /* Deselect the SD: Chip Select high */
+  DESELECT();
 
-    PowerFlag = 1;
+  /* SPI2 configuration */
+  SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+  SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
+  SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+  SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+  SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+  SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
+  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_128;
+  SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+  SPI_InitStructure.SPI_CRCPolynomial = 7;
+  SPI_Init(SPI2, &SPI_InitStructure);
+
+  SPI_CalculateCRC(SPI2, DISABLE);
+
+  /* Enable SPI2  */
+  SPI_Cmd(SPI2, ENABLE);
+
+  /* Set DI and CS high and apply more than 74 pulses to SCLK for the card */
+  /* to be able to accept a native command. */
+//  send_initial_clock_train();
+  while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET) { ; }
+  dummyread = SPI_I2S_ReceiveData(SPI2);
+
+  PowerFlag = 1;
 }
+
 
 // set the SSI speed to the max setting
-static
-void set_max_speed(void)
+static void set_max_speed(void)
 {
-    unsigned long i;
+  SPI_InitTypeDef  SPI_InitStructure;
 
-    /* Disable the SSI */
-    SSIDisable(SDC_SSI_BASE);
+  /* Disable the SSI */
+  SPI_Cmd(SPI2, DISABLE);
 
-    /* Set the maximum speed as half the system clock, with a max of 12.5 MHz. */
-    i = SysCtlClockGet() / 2;
-    if(i > 12500000)
-    {
-        i = 12500000;
-    }
+  /* SPI1 configuration */
+  SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+  SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
+  SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+  SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+  SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+  SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
+  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+  SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+  SPI_InitStructure.SPI_CRCPolynomial = 7;
+  SPI_Init(SPI2, &SPI_InitStructure);
 
-    /* Configure the SSI0 port to run at 12.5MHz */
-    SSIConfigSetExpClk(SDC_SSI_BASE, SysCtlClockGet(),
-                           SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, i, 8);
-
-    /* Enable the SSI */
-    SSIEnable(SDC_SSI_BASE);
+  /* Enable SPI2  */
+  SPI_Cmd(SPI2, ENABLE);
 }
 
-static
-void power_off (void)
+static void power_off (void)
 {
     PowerFlag = 0;
 }
 
-static
-int chk_power(void)        /* Socket power state: 0=off, 1=on */
+static int chk_power(void)        /* Socket power state: 0=off, 1=on */
 {
     return PowerFlag;
 }
@@ -261,15 +247,12 @@ int chk_power(void)        /* Socket power state: 0=off, 1=on */
 /*-----------------------------------------------------------------------*/
 /* Receive a data packet from MMC                                        */
 /*-----------------------------------------------------------------------*/
-
-static
-BOOL rcvr_datablock (
-    BYTE *buff,            /* Data buffer to store received data */
+static bool rcvr_datablock (
+    BYTE *buff,         /* Data buffer to store received data */
     UINT btr            /* Byte count (must be even number) */
 )
 {
     BYTE token;
-
 
     Timer1 = 100;
     do {                            /* Wait for data packet in timeout of 100ms */
@@ -292,10 +275,8 @@ BOOL rcvr_datablock (
 /*-----------------------------------------------------------------------*/
 /* Send a data packet to MMC                                             */
 /*-----------------------------------------------------------------------*/
-
 #if _READONLY == 0
-static
-BOOL xmit_datablock (
+static bool xmit_datablock (
     const BYTE *buff,    /* 512 byte data block to be transmitted */
     BYTE token            /* Data/Stop token */
 )
@@ -328,9 +309,7 @@ BOOL xmit_datablock (
 /*-----------------------------------------------------------------------*/
 /* Send a command packet to MMC                                          */
 /*-----------------------------------------------------------------------*/
-
-static
-BYTE send_cmd (
+static BYTE send_cmd (
     BYTE cmd,        /* Command byte */
     DWORD arg        /* Argument */
 )
@@ -373,13 +352,11 @@ BYTE send_cmd (
 /*-----------------------------------------------------------------------*/
 /* Initialize Disk Drive                                                 */
 /*-----------------------------------------------------------------------*/
-
 DSTATUS disk_initialize (
     BYTE drv        /* Physical drive nmuber (0) */
 )
 {
     BYTE n, ty, ocr[4];
-
 
     if (drv) return STA_NOINIT;            /* Supports only single drive */
     if (Stat & STA_NODISK) return Stat;    /* No card in the socket */
@@ -434,7 +411,6 @@ DSTATUS disk_initialize (
 /*-----------------------------------------------------------------------*/
 /* Get Disk Status                                                       */
 /*-----------------------------------------------------------------------*/
-
 DSTATUS disk_status (
     BYTE drv        /* Physical drive nmuber (0) */
 )
@@ -448,7 +424,6 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
-
 DRESULT disk_read (
     BYTE drv,            /* Physical drive nmuber (0) */
     BYTE *buff,            /* Pointer to the data buffer to store read data */
@@ -648,7 +623,6 @@ void disk_timerproc (void)
 {
 //    BYTE n, s;
     BYTE n;
-
 
     n = Timer1;                        /* 100Hz decrement timer */
     if (n) Timer1 = --n;
