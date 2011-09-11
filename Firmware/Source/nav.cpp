@@ -20,21 +20,18 @@
 /// In assenza di waypoints disponibili, la funzione calcola la direzione e la
 /// distanza rispetto al punto di partenza (RTL).
 ///
-//  CHANGES Simulation.h sostituito da Telemetry.h
+//  CHANGES tBoolean replaced with bool, Navigate() temporarily commented out
 //
 //============================================================================*/
 
-#include "stdafx.h"
 
+#include "stm32f10x.h"
 #include "math.h"
-#include "inc/hw_types.h"
 #include "telemetry.h"
 #include "config.h"
 #include "gps.h"
-#ifndef _WINDOWS
-#   include "tff.h"
-#   include "tick.h"
-#endif
+#include "tff.h"
+#include "tick.h"
 #include "nav.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -131,7 +128,7 @@ VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];      // waypoints array
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-tBoolean Parse_Waypoint(char * pszLine);
+bool Parse_Waypoint(char * pszLine);
 
 
 //----------------------------------------------------------------------------
@@ -141,14 +138,14 @@ tBoolean Parse_Waypoint(char * pszLine);
 /// \remarks
 ///
 //----------------------------------------------------------------------------
-tBoolean
+bool
 Nav_Init( void ) {
 
     char c;
     static char cCounter;
     char * pcBufferPointer;
     static char * pszLinePointer;
-    tBoolean bError = FALSE, bResult = FALSE;
+    bool bError = FALSE, bResult = FALSE;
 
 #ifdef _WINDOWS
 
@@ -212,7 +209,7 @@ Nav_Init( void ) {
             break;
 
         case NAV_END:
-            bResult = true;
+            bResult = TRUE;
             break;
     }
 #endif
@@ -252,7 +249,7 @@ Nav_Init( void ) {
 //----------------------------------------------------------------------------
 void
 Navigate( void ) {
-
+/*
    float temp, dlat, dlon;
 
     //
@@ -303,6 +300,7 @@ Navigate( void ) {
         fDestLon = Waypoint[uiWptIndex].Lon;
         fDestLat = Waypoint[uiWptIndex].Lat;
     }
+*/
 }
 
 
@@ -367,7 +365,7 @@ Nav_Distance ( void ) {
 ///          [.[a]] is an optional decimal point with an optional decimal data
 ///
 //----------------------------------------------------------------------------
-tBoolean
+bool
 Parse_Waypoint ( char * pszLine ) {
     char c;
     float fTemp, fDiv;
@@ -384,7 +382,7 @@ Parse_Waypoint ( char * pszLine ) {
         }
         // start of integer part
         if (( c < '0' ) || ( c > '9' )) {           //
-            return true;                            // first char not numeric
+            return TRUE;                            // first char not numeric
         }
         // integer part
         while (( c >= '0' ) && ( c <= '9' ) && ( ucCounter > 0 )) {
@@ -394,7 +392,7 @@ Parse_Waypoint ( char * pszLine ) {
         }
         // decimal point
         if (( c != '.' ) && ( ucField != 2 )) {     // altitude may lack decimal
-            return true;
+            return TRUE;
         } else {
             c = *pszLine++;                         // skip decimal point
             ucCounter--;                            // count characters
@@ -410,7 +408,7 @@ Parse_Waypoint ( char * pszLine ) {
         }
         // delimiter
         if (( c != ',' ) && ( c != 0 )) {
-            return true;                            // error
+            return TRUE;                            // error
         } else {
             fTemp = fTemp / fDiv;                   // convert
         }
