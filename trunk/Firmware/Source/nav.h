@@ -5,11 +5,9 @@
 // $Date: 2010/01/25 21:42:02 $
 // $Author: Lorenz $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
 /// \file
-///             Navigation manager header file
-//  CHANGES     
+/// \brief  Navigation manager header file
+//  CHANGES tBoolean replaced with bool
 //
 //============================================================================
 
@@ -32,7 +30,7 @@
 
 /*---------------------------------- Interface -------------------------------*/
 
-tBoolean Nav_Init ( void );
+bool Nav_Init ( void );
 void Navigate ( void );
 int Nav_Bearing ( void );
 unsigned int Nav_Distance ( void );
