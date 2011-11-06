@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief  Tick manager
-//  CHANGES Modified for STM32F100RB
+//  CHANGES disktimerproc() called inside SysTick_Handler()
 //
 //============================================================================*/
 
@@ -82,8 +82,8 @@ void TickInit(void) {
 /// \remarks
 ///
 //----------------------------------------------------------------------------
-void SysTick_Handler (void) {
-
+RAMFUNC void SysTick_Handler(void)
+{
   static uint32_t ticks;
 
     //
@@ -100,6 +100,10 @@ void SysTick_Handler (void) {
         //
         g_ulFlags |= FLAG_CLOCK_TICK_20;
     }
+    //
+    // disk timer to be called every 10ms
+    //
+    disk_timerproc();
 }
 
 //----------------------------------------------------------------------------
