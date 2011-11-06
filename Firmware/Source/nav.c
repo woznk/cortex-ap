@@ -20,7 +20,7 @@
 /// In assenza di waypoints disponibili, la funzione calcola la direzione e la
 /// distanza rispetto al punto di partenza (RTL).
 ///
-//  CHANGES tBoolean replaced with bool, Navigate() temporarily commented out
+//  CHANGES moved from tff (tiny fat filesystem) to ff (fat filesystem)
 //
 //============================================================================*/
 
@@ -30,7 +30,7 @@
 #include "telemetry.h"
 #include "config.h"
 #include "gps.h"
-#include "tff.h"
+#include "ff.h"
 #include "tick.h"
 #include "nav.h"
 
@@ -116,7 +116,7 @@ VAR_STATIC char pcBuffer[FILE_BUFFER_LENGTH];       // File data buffer
 #ifndef _WINDOWS
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // File object
-VAR_STATIC WORD wFileBytes;                         // Counter of read bytes
+VAR_STATIC UINT wFileBytes;                         // Counter of read bytes
 #endif
 VAR_STATIC int Bearing;                             // angle to destination [°]
 VAR_STATIC unsigned int Distance;                   // distance to destination [m]
@@ -158,9 +158,8 @@ Nav_Init( void ) {
 
     switch (eNavStatus) {
 
-        // Mount the file system.
-        case NAV_OPEN_FILE:
-            if (FR_OK == f_mount(0, &stFat)) {
+        case NAV_OPEN_FILE:                             // Open waypoint file.
+            if (FR_OK == f_mount(0, &stFat)) {          // Mount the file system.
                 if (FR_OK == f_open(&stFile, szFileName, FA_READ)) {
                     pszLinePointer = szLine;            // Init line pointer
                     cCounter = MAX_LINE_LENGTH - 1;     // Init char counter
@@ -175,8 +174,7 @@ Nav_Init( void ) {
             }
             break;
 
-        // Read waypoint file.
-        case NAV_READ_FILE:
+        case NAV_READ_FILE:                             // Read waypoint file.
             if ( bError ||
                ( FR_OK != f_read(&stFile, pcBuffer, FILE_BUFFER_LENGTH, &wFileBytes))) {
                 f_close(&stFile);                       // Error reading file
