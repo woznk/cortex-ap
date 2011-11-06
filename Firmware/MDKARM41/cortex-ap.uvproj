@@ -346,7 +346,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER STM32F10X_LD_VL</Define>
               <Undefine></Undefine>
-              <IncludePath>.\;..\Utilities;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\STM32F10x_StdPeriph_Driver\inc</IncludePath>
+              <IncludePath>.\;..\Utilities;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Libraries\fat_sd</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -472,19 +472,34 @@
               <FilePath>..\Source\tick.c</FilePath>
             </File>
             <File>
-              <FileName>tff.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Source\tff.c</FilePath>
-            </File>
-            <File>
-              <FileName>mmc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Source\mmc.c</FilePath>
-            </File>
-            <File>
               <FileName>nav.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\nav.c</FilePath>
+            </File>
+            <File>
+              <FileName>log.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\log.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Libraries</GroupName>
+          <Files>
+            <File>
+              <FileName>sd_spi_stm32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\sd_spi_stm32.c</FilePath>
+            </File>
+            <File>
+              <FileName>fattime.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\fattime.c</FilePath>
+            </File>
+            <File>
+              <FileName>ff.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\ff.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -956,19 +971,34 @@
               <FilePath>..\Source\tick.c</FilePath>
             </File>
             <File>
-              <FileName>tff.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Source\tff.c</FilePath>
-            </File>
-            <File>
-              <FileName>mmc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Source\mmc.c</FilePath>
-            </File>
-            <File>
               <FileName>nav.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\nav.c</FilePath>
+            </File>
+            <File>
+              <FileName>log.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\log.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Libraries</GroupName>
+          <Files>
+            <File>
+              <FileName>sd_spi_stm32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\sd_spi_stm32.c</FilePath>
+            </File>
+            <File>
+              <FileName>fattime.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\fattime.c</FilePath>
+            </File>
+            <File>
+              <FileName>ff.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\ff.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1440,19 +1470,34 @@
               <FilePath>..\Source\tick.c</FilePath>
             </File>
             <File>
-              <FileName>tff.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Source\tff.c</FilePath>
-            </File>
-            <File>
-              <FileName>mmc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Source\mmc.c</FilePath>
-            </File>
-            <File>
               <FileName>nav.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\nav.c</FilePath>
+            </File>
+            <File>
+              <FileName>log.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\log.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Libraries</GroupName>
+          <Files>
+            <File>
+              <FileName>sd_spi_stm32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\sd_spi_stm32.c</FilePath>
+            </File>
+            <File>
+              <FileName>fattime.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\fattime.c</FilePath>
+            </File>
+            <File>
+              <FileName>ff.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\fat_sd\ff.c</FilePath>
             </File>
           </Files>
         </Group>
