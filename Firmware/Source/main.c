@@ -6,16 +6,17 @@
 // $Author: $
 //
 /// \brief  main program
-//  CHANGES Included navigation initialization.
+//  CHANGES Included log initialization
+//          disk_timerproc() moved to Sys_Tick handler.
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
 #include "servodriver.h"
-#include "diskio.h"
 #include "tick.h"
 #include "nav.h"
+#include "log.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -90,15 +91,11 @@ int main(void)
   Servo_Init();
 
   while (!Nav_Init());  // Navigation init
+  Log_Init();
 
   while (1) {
     if ((g_ulFlags & FLAG_CLOCK_TICK_10) != 0) {
         g_ulFlags &= !FLAG_CLOCK_TICK_10;
-
-        //
-        // Call the FatFs tick timer.
-        //
-        disk_timerproc();
 
         STM32vldiscovery_LEDOff(LED3);      /* Turn off LD3 */
         STM32vldiscovery_LEDOff(LED4);      /* Turn off LD4 */
