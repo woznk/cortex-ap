@@ -1,34 +1,27 @@
 //============================================================================+
 //
-// $RCSfile: log.c,v $ (SOURCE FILE)
-// $Revision: 1.10 $
-// $Date: 2011/01/19 18:31:28 $
+// $RCSfile: $ (SOURCE FILE)
+// $Revision: $
+// $Date: $
 // $Author: Lorenz $
 //
-/// \brief    Log manager
+/// \brief  Log manager
 ///
 /// \file
 ///
-//  CHANGES funzione Log_DCM(): resa non sospensiva, semplificato il formato 
-//          per l'invio della matrice DCM 
+//  CHANGES moved from tiny fat filesystem to fat filesystem,
+//          tentatively added USART 1 initalization (compiles, not tested),
+//          temporarily disabled reading of user button.
 //
 //============================================================================*/
 
+#include "stm32f10x.h"
 #include "math.h"
-
-#include "inc/hw_ints.h"
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "driverlib/gpio.h"
-#include "driverlib/uart.h"
-#include "driverlib/debug.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/interrupt.h"
-
-#include "tff.h"
+//#include "telemetry.h"
+//#include "config.h"
+//#include "gps.h"
+#include "ff.h"
 #include "DCM.h"
-#include "tick.h"
-#include "uartdriver.h"
 #include "ppmdriver.h"
 #include "log.h"
 
@@ -61,10 +54,10 @@
 VAR_STATIC unsigned char szString[48];
 VAR_STATIC const char szFileName[16] = "log.txt";   // File name
 VAR_STATIC FATFS stFat;                             // FAT
-VAR_STATIC FIL stFile;                              // File object 
+VAR_STATIC FIL stFile;                              // File object
 VAR_STATIC char pcBuffer[FILE_BUFFER_LENGTH];       // File data buffer
 VAR_STATIC WORD wWriteIndex = 0;                    // File buffer write index
-VAR_STATIC tBoolean bFileOk = false;                // File status
+VAR_STATIC bool bFileOk = FALSE;                    // File status
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -72,48 +65,75 @@ VAR_STATIC tBoolean bFileOk = false;                // File status
 //
 /// \brief   Initialize log manager
 ///
-/// \remarks opens log file for writing
+/// \remarks opens log file for writing, configures USART1.
 ///
 //----------------------------------------------------------------------------
-void 
+void
 Log_Init( void ) {
 
-    if (FR_OK == f_mount(0, &stFat)) { 
-        if (FR_OK == f_open(&stFile, szFileName, FA_WRITE)) { 
-            bFileOk = true;                     // File succesfully open
+    USART_InitTypeDef USART_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    // Open log file
+    if (FR_OK == f_mount(0, &stFat)) {
+        if (FR_OK == f_open(&stFile, szFileName, FA_WRITE|FA_CREATE_ALWAYS)) {
+            bFileOk = TRUE;                     // File succesfully open
         } else {                                // Error opening file
-            bFileOk = false;                    // Halt file logging
+            bFileOk = FALSE;                    // Halt file logging
         }
     } else {                                    // Error mounting FS
-        bFileOk = false;                        // Halt file logging
+        bFileOk = FALSE;                        // Halt file logging
     }
+
+    // Configure the RX pin as input floating
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 ;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    // Initialize USART1 structure
+    USART_InitStructure.USART_BaudRate = 9600;
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_Parity = USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+
+    // Configure USART1
+    USART_Init(USART1, &USART_InitStructure);
+
+    // Enable USART1 interrupt
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    //USART_ITConfig(USART1,USART_IT_TXE,ENABLE);
+
+    // Enable the USART1
+    USART_Cmd(USART1, ENABLE);
 }
 
 //----------------------------------------------------------------------------
 //
 /// \brief   Put characters to log file
 ///
-/// \remarks Characters are saved in a buffer and written to file when EOL is 
+/// \remarks Characters are saved in a buffer and written to file when EOL is
 ///          received
 ///
 //----------------------------------------------------------------------------
-void 
-Log_PutChar( char c ) {
-  
-    WORD wWritten;
+void
+Log_PutChar ( char c ) {
+
+    UINT wWritten;
     static unsigned long ulSamples;
-    
+
     if (wWriteIndex < FILE_BUFFER_LENGTH) { // Provided buffer is not full
         pcBuffer[wWriteIndex++] = c;        // Save character in buffer
     }
     if ((c == '\r') && bFileOk) {                           // End of line
         f_write(&stFile, pcBuffer, wWriteIndex, &wWritten); // Write
-        if ((wWriteIndex != wWritten) ||                    // No file space
-            (ulSamples >= MAX_SAMPLES) ||                   // Too many samples
-            (HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS))) {   // button pressed
-            bFileOk = false;                                // Halt file logging
+        if (/* (HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS)) || */// button pressed
+            (wWriteIndex != wWritten) ||                    // No file space
+            (ulSamples >= MAX_SAMPLES)) {                   // Too many samples
             f_close(&stFile);                               // close file
-            HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;   // clear button flag
+            bFileOk = FALSE;                                // Halt file logging
+/*            HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;   // clear button flag*/
         } else {                                            // Write successfull
             ulSamples++;                                    // Update sample counter
             wWriteIndex = 0;                                // Empty buffer
@@ -126,20 +146,20 @@ Log_PutChar( char c ) {
 ///
 ///  DESCRIPTION Outputs DCM matrix
 /// \RETURN      -
-/// \REMARKS     
+/// \REMARKS
 ///
 ///
 ///----------------------------------------------------------------------------
 void
 Log_DCM(void)
-{   
+{
     static int j = 47;
     unsigned char ucDigit;
     long lTemp;
     int x, y;
-    
-    while ((j < 47) && UARTSpaceAvail(UART1_BASE)) {
-      UARTCharPutNonBlocking(UART1_BASE, szString[j++]);
+
+    while ((USART_GetFlagStatus(USART1, USART_FLAG_TXE) == SET) && (j < 47)) {
+      USART_SendData(USART1, szString[j++]);
     }
     if (j == 47) {
       j = 0;
@@ -151,29 +171,30 @@ Log_DCM(void)
             szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
             ucDigit = ((lTemp >> 8) & 0x0000000F);
             szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-            ucDigit = ((lTemp >> 4) & 0x0000000F); 
+            ucDigit = ((lTemp >> 4) & 0x0000000F);
             szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-            ucDigit = (lTemp & 0x0000000F);        
+            ucDigit = (lTemp & 0x0000000F);
             szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
         }
       }
       szString[j++] = '\n';
       szString[j] = '\r';
       j = 0;
-    } 
+    }
 }
 
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION Outputs PPM input values
 /// \RETURN      -
-/// \REMARKS     
+/// \REMARKS
 ///
 ///
 ///----------------------------------------------------------------------------
 void
 Log_PPM(void)
 {
+/*
     unsigned char szString[64];
     unsigned long ulTemp;
     int j = 0, chan = 0;
@@ -183,12 +204,13 @@ Log_PPM(void)
         szString[j++] = ' ';
         szString[j++] = '0' + ((ulTemp / 10000) % 10);
         szString[j++] = '0' + ((ulTemp / 1000) % 10);
-        szString[j++] = '0' + ((ulTemp / 100) % 10); 
-        szString[j++] = '0' + ((ulTemp / 10) % 10);  
-        szString[j++] = '0' +  (ulTemp % 10);        
+        szString[j++] = '0' + ((ulTemp / 100) % 10);
+        szString[j++] = '0' + ((ulTemp / 10) % 10);
+        szString[j++] = '0' +  (ulTemp % 10);
     }
     szString[j] = '\r';
     UART1Send((const unsigned char *)szString, RC_CHANNELS * 6 + 1);
+*/
 }
 
 /*
