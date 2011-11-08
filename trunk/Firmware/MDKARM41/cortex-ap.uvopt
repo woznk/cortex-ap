@@ -533,8 +533,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>146</TopLine>
-      <CurrentLine>146</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\startup\arm\startup_stm32f10x_ld_vl.s</PathWithFileName>
       <FilenameWithoutPath>startup_stm32f10x_ld_vl.s</FilenameWithoutPath>
@@ -568,8 +568,8 @@
       <Focus>0</Focus>
       <ColumnNumber>34</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>214</TopLine>
-      <CurrentLine>214</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_tim.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_tim.c</FilenameWithoutPath>
@@ -608,7 +608,7 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>78</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>0</TopLine>
       <CurrentLine>0</CurrentLine>
@@ -636,10 +636,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>37</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>197</TopLine>
+      <CurrentLine>221</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_spi.c</FilenameWithoutPath>
@@ -652,11 +652,39 @@
       <Focus>0</Focus>
       <ColumnNumber>28</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1</TopLine>
-      <CurrentLine>22</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_usart.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>2</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>47</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>765</TopLine>
+      <CurrentLine>800</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\L3G4200_Driver\l3g4200d_driver.c</PathWithFileName>
+      <FilenameWithoutPath>l3g4200d_driver.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>2</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>55</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>1125</TopLine>
+      <CurrentLine>1153</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</PathWithFileName>
+      <FilenameWithoutPath>stm32f10x_i2c.c</FilenameWithoutPath>
     </File>
   </Group>
 
@@ -706,10 +734,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>60</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>171</TopLine>
-      <CurrentLine>183</CurrentLine>
+      <TopLine>64</TopLine>
+      <CurrentLine>82</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -750,8 +778,8 @@
       <Focus>0</Focus>
       <ColumnNumber>11</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>321</TopLine>
-      <CurrentLine>341</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -762,10 +790,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>46</ColumnNumber>
+      <ColumnNumber>36</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>67</TopLine>
-      <CurrentLine>77</CurrentLine>
+      <TopLine>141</TopLine>
+      <CurrentLine>141</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\log.c</PathWithFileName>
       <FilenameWithoutPath>log.c</FilenameWithoutPath>
@@ -783,10 +811,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>22</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>610</TopLine>
+      <CurrentLine>623</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\fat_sd\sd_spi_stm32.c</PathWithFileName>
       <FilenameWithoutPath>sd_spi_stm32.c</FilenameWithoutPath>
@@ -822,9 +850,9 @@
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_usart.h</PathWithFilename>
-    <TopLine>310</TopLine>
-    <CurrentLine>323</CurrentLine>
+    <PathWithFilename>D:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\l3g4200d_driver.h</PathWithFilename>
+    <TopLine>318</TopLine>
+    <CurrentLine>340</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -852,37 +880,49 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>1</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
-          <Name>..\Source\main.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>171</TopLine>
-          <CurrentLine>183</CurrentLine>
+          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</Name>
+          <ColumnNumber>55</ColumnNumber>
+          <TopLine>1125</TopLine>
+          <CurrentLine>1153</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\fat_sd\sd_spi_stm32.c</Name>
+          <ColumnNumber>22</ColumnNumber>
+          <TopLine>610</TopLine>
+          <CurrentLine>623</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\L3G4200_Driver\l3g4200d_driver.c</Name>
+          <ColumnNumber>47</ColumnNumber>
+          <TopLine>765</TopLine>
+          <CurrentLine>800</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\L3G4200_Driver\l3g4200d_driver.h</Name>
+          <ColumnNumber>18</ColumnNumber>
+          <TopLine>318</TopLine>
+          <CurrentLine>340</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\log.c</Name>
-          <ColumnNumber>46</ColumnNumber>
-          <TopLine>67</TopLine>
-          <CurrentLine>77</CurrentLine>
+          <ColumnNumber>36</ColumnNumber>
+          <TopLine>141</TopLine>
+          <CurrentLine>141</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\nav.c</Name>
-          <ColumnNumber>11</ColumnNumber>
-          <TopLine>321</TopLine>
-          <CurrentLine>341</CurrentLine>
+          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</Name>
+          <ColumnNumber>37</ColumnNumber>
+          <TopLine>197</TopLine>
+          <CurrentLine>221</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</Name>
-          <ColumnNumber>28</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>22</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_usart.h</Name>
-          <ColumnNumber>25</ColumnNumber>
-          <TopLine>310</TopLine>
-          <CurrentLine>323</CurrentLine>
+          <Name>..\Source\main.c</Name>
+          <ColumnNumber>60</ColumnNumber>
+          <TopLine>64</TopLine>
+          <CurrentLine>82</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
