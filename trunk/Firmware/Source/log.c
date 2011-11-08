@@ -9,9 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES moved from tiny fat filesystem to fat filesystem,
-//          tentatively added USART 1 initalization (compiles, not tested),
-//          temporarily disabled reading of user button.
+//  CHANGES temporarily disabled reference to DCMMatrix[][].
 //
 //============================================================================*/
 
@@ -165,7 +163,7 @@ Log_DCM(void)
       j = 0;
       for (y = 0; y < 3; y++) {
         for (x = 0; x < 3; x++) {
-            lTemp = (long)ceil(DCM_Matrix[y][x] * 32767.0f);
+            lTemp = (long)ceil(/*DCM_Matrix[y][x] * */32767.0f);
             szString[j++] = ' ';
             ucDigit = ((lTemp >> 12) & 0x0000000F);
             szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
