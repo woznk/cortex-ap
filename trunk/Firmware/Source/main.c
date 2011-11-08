@@ -6,14 +6,14 @@
 // $Author: $
 //
 /// \brief  main program
-//  CHANGES Included log initialization
-//          disk_timerproc() moved to Sys_Tick handler.
+//  CHANGES Added call to L3G4200 initialization functions.
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
 #include "servodriver.h"
+#include "l3g4200d_driver.h"
 #include "tick.h"
 #include "nav.h"
 #include "log.h"
@@ -68,6 +68,10 @@ void Delay(__IO uint32_t nCount);
 ///----------------------------------------------------------------------------
 int main(void)
 {
+
+  uint8_t status = 0;
+  AngRateRaw_t buff;
+
   /*!< At this stage the microcontroller clock setting is already configured,
        this is done through SystemInit() function which is called from startup
        file (startup_stm32f10x_xx.s) before to branch to application main.
@@ -90,19 +94,53 @@ int main(void)
   /* Initialize PWM timers as servo outputs */
   Servo_Init();
 
+  //SPI peripheral initialization
+//  SPI_Mems_Init();
+
+  //set the ODR and Bandwith
+  SetODR(ODR_100Hz_BW_12_5);
+  //enable all axis  
+  SetAxis(X_ENABLE | Y_ENABLE | Z_ENABLE);  
+  //set the fullscale
+  SetFullScale(FULLSCALE_250);
+  //set sensor mode
+  SetMode(NORMAL);
+  //interrupt pin mode configuration: PUSH PULL
+  SetIntPinMode(PUSH_PULL);  
+  //enable interrutp 1 on INT1 pin and set interrupt active high
+  SetInt1Pin(I1_ON_PIN_INT1_ENABLE | INT1_ACTIVE_HIGH);  
+  //X and Y high threshold interrutps 
+  SetIntConfiguration(INT1_OR | INT1_ZHIE_ENABLE | INT1_XHIE_ENABLE);  
+  //interrupt latch disable
+  Int1LatchEnable(MEMS_DISABLE);
+  //set the threshold only on the Z axis  
+  SetInt1Threshold(THS_Z, 500);
+  //set the duration to 2 odr
+  SetInt1Duration(2);  
+  
+  //set the fifo mode
+  FIFOModeEnable(FIFO_MODE);
+
+  //set watermark to 5
+  SetWaterMark(5);
+
+  //enable watermark interrupt on interrupt2 
+  //when the fifo contains more than 5 elements, the interrupt raises
+  SetInt2Pin(WTM_ON_INT2_ENABLE);
+/*
   while (!Nav_Init());  // Navigation init
   Log_Init();
-
+*/
   while (1) {
     if ((g_ulFlags & FLAG_CLOCK_TICK_10) != 0) {
         g_ulFlags &= !FLAG_CLOCK_TICK_10;
 
-        STM32vldiscovery_LEDOff(LED3);      /* Turn off LD3 */
-        STM32vldiscovery_LEDOff(LED4);      /* Turn off LD4 */
+        STM32vldiscovery_LEDOff(LED3);      // Turn off LD3
+        STM32vldiscovery_LEDOff(LED4);      // Turn off LD4
         if (Servo_Delta == 10) {
-            STM32vldiscovery_LEDOn(LED3);   /* Turn on LD3 */
+            STM32vldiscovery_LEDOn(LED3);   // Turn on LD3
         } else {
-            STM32vldiscovery_LEDOn(LED4);   /* Turn on LD4 */
+            STM32vldiscovery_LEDOn(LED4);   // Turn on LD4
         }
         if (Servo_Position > 1999) {
             Servo_Delta = -10;
@@ -111,6 +149,13 @@ int main(void)
         }
         Servo_Position += Servo_Delta;
         Servo_Set(SERVO_RUDDER, Servo_Position);
+    }
+
+    //check if there is some data available
+    GetStatusReg(&status);
+    if (ValBit(status, DATAREADY_BIT)) {      
+      //get x, y, z angular rate raw data
+      GetAngRateRaw(&buff);
     }
   }
 }
