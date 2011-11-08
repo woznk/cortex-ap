@@ -1,16 +1,16 @@
-/**
-************ ********* ********* ********* ********* ********* ********* ********* ***
-* @file lis3l_i2c.c
+/********************************************************************************
+* @file lis3l_i2c.h
 * @author Peter Lanius
 * @version V0.10
 * @date 09/12/2009
 * @brief This file provides functions to operate the LIS3LV02DQ 3-axis
-accelerometer in I2C bus mode.
-************ ********* ********* ********* ********* ********* ********* ********* ***
+         accelerometer in I2C bus mode.
+******************************************************************************
 * @copy
 */
 
-/* Includes ------------ --------- --------- --------- --------- --------- -*/
+/* Includes ----------------------------------------------------------*/
+
 #include "stm32f10x.h"
 
 /* Defines for the GPIO pins used for the I2C communication */
@@ -56,6 +56,7 @@ typedef struct {
 #define LIS3L_OUTZ_H 0x2D
 
 /* Function Definitions ------------------------------------------------------- */
+
 void I2C_LIS3L_Init( void);
 uint8_t I2C_LIS3L_ReadByte( uint8_t ReadAddr);
 void I2C_LIS3L_ReadAccel (uint8_t ReadAddr, LIS3L_Accel_t* LIS3L_AccelStruct) ;
