@@ -1,33 +1,43 @@
 /******************** (C) COPYRIGHT 2011 STMicroelectronics ********************
-* File Name          : l3g4200d_driver.h
-* Author             : MSH Application Team
-* Author             : Andrea Labombarda
-* Version            : $Revision:$
-* Date               : $Date:$
-* Description        : Descriptor Header for l3g4200d driver file
-*
-* HISTORY:
-* Date        | Modification                                | Author
-* 22/03/2011  | Initial Revision                            | Andrea Labombarda
-
-********************************************************************************
-* THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-* WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
-* AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
-* INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
-* CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
-* INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-*
-* THIS SOFTWARE IS SPECIFICALLY DESIGNED FOR EXCLUSIVE USE WITH ST PARTS.
-*
+* File Name          : L3G4200D.c
+* $Revision:$
+* $Date:$
+* L3G4200D driver file
+* Change: Added some defines for MEMS sensors, added function I2C_Init()
 *******************************************************************************/
 
 /* Define to prevent recursive inclusion -------------------------------------*/
+
 #ifndef __L3G4200D_DRIVER__H
 #define __L3G4200D_DRIVER__H
 
 /* Includes ------------------------------------------------------------------*/
+
+#include "stm32f10x.h"
+
 /* Exported types ------------------------------------------------------------*/
+
+/* Defines for the GPIO pins used for the I2C communication */
+
+#define I2C_MEMS I2C1
+#define I2C_MEMS_CLK RCC_APB1Periph_I2C1
+#define I2C_MEMS_GPIO GPIOB
+#define I2C_MEMS_GPIO_CLK RCC_APB2Periph_GPIOB
+#define I2C_MEMS_SCL GPIO_Pin_6
+#define I2C_MEMS_SDA GPIO_Pin_7
+
+// Physical Device Address - Factory Assigned to 0x3A for L3G4200
+//#define L3G4200_SLAVE_ADDR 0x3A
+// The Who Am I register contains the physical device address
+//#define L3G4200_WHO_AM_I 0x0F
+// Define the Initialisation code as per the data sheet
+//#define L3G4200_INIT_CODE 0xC7
+// Set CTRL_REG1 to Run Mode, 640Hz data rate and X,Y,Z enabled
+//#define L3G4200_RUN_CODE 0xE7
+
+// Control registers
+//#define L3G4200_CTRL_REG1 0x20
+//#define L3G4200_CTRL_REG2 0x21
 
 typedef enum {
   MEMS_SUCCESS          =        0x01,
@@ -358,9 +368,10 @@ unsigned char ReadReg(unsigned char Reg, unsigned char* Data);
 unsigned char WriteReg(unsigned char Reg, unsigned char Data);
 
 
+void I2C_Init(void);
+
 #endif /* __L3G4200D_H */
 
-/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
 
 
 
