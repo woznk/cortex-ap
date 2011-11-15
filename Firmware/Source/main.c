@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief  main program
-//  CHANGES Added call to L3G4200 initialization functions.
+// Change: SPI_MEMS_Init() replaced with I2C_MEMS_Init()
 //
 //============================================================================*/
 
@@ -68,7 +68,6 @@ void Delay(__IO uint32_t nCount);
 ///----------------------------------------------------------------------------
 int main(void)
 {
-
   uint8_t status = 0;
   AngRateRaw_t buff;
 
@@ -95,7 +94,7 @@ int main(void)
   Servo_Init();
 
   //SPI peripheral initialization
-//  SPI_Mems_Init();
+  I2C_MEMS_Init();
 
   //set the ODR and Bandwith
   SetODR(ODR_100Hz_BW_12_5);
@@ -117,13 +116,10 @@ int main(void)
   SetInt1Threshold(THS_Z, 500);
   //set the duration to 2 odr
   SetInt1Duration(2);  
-  
   //set the fifo mode
   FIFOModeEnable(FIFO_MODE);
-
   //set watermark to 5
   SetWaterMark(5);
-
   //enable watermark interrupt on interrupt2 
   //when the fifo contains more than 5 elements, the interrupt raises
   SetInt2Pin(WTM_ON_INT2_ENABLE);
