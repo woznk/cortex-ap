@@ -1,9 +1,11 @@
-/******************** (C) COPYRIGHT 2011 STMicroelectronics ********************
+/*******************************************************************************
+*
 * File Name          : L3G4200D.c
 * $Revision:$
 * $Date:$
 * L3G4200D driver file
-* Change: Added some defines for MEMS sensors, added function I2C_Init()
+* Change: Added missing defines, I2C_Init() renamed I2c_MEMS_Init()
+*
 *******************************************************************************/
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -26,18 +28,13 @@
 #define I2C_MEMS_SCL GPIO_Pin_6
 #define I2C_MEMS_SDA GPIO_Pin_7
 
-// Physical Device Address - Factory Assigned to 0x3A for L3G4200
-//#define L3G4200_SLAVE_ADDR 0x3A
-// The Who Am I register contains the physical device address
-//#define L3G4200_WHO_AM_I 0x0F
-// Define the Initialisation code as per the data sheet
-//#define L3G4200_INIT_CODE 0xC7
-// Set CTRL_REG1 to Run Mode, 640Hz data rate and X,Y,Z enabled
-//#define L3G4200_RUN_CODE 0xE7
+#define I2C_MEMS_Speed      100000  // 100kHz bus speed (up to 400kHz is ok)
+#define I2C_SLAVE_ADDRESS7  0xA0    // I2C own address if in slave mode
 
-// Control registers
-//#define L3G4200_CTRL_REG1 0x20
-//#define L3G4200_CTRL_REG2 0x21
+// Physical Device Address - Factory Assigned to 0x3A for L3G4200
+// Verificare se pin SDO si porta a GND o a VCC
+#define L3G4200_SLAVE_ADDR 0x68     // SDO a GND
+//#define L3G4200_SLAVE_ADDR 0x69   // SDO a VCC
 
 typedef enum {
   MEMS_SUCCESS          =        0x01,
@@ -321,6 +318,7 @@ typedef enum {
 #define INT1_DURATION           0x38
 
 /* Exported macro ------------------------------------------------------------*/
+
 #define ValBit(VAR,Place)       (VAR & (1<<Place))
 
 /* Exported functions --------------------------------------------------------*/
@@ -366,9 +364,7 @@ status_t GetFifoSourceReg(unsigned char* buff);
 //Generic
 unsigned char ReadReg(unsigned char Reg, unsigned char* Data);
 unsigned char WriteReg(unsigned char Reg, unsigned char Data);
-
-
-void I2C_Init(void);
+void I2C_MEMS_Init(void);
 
 #endif /* __L3G4200D_H */
 
