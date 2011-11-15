@@ -3,12 +3,11 @@
 * $Revision:$
 * $Date:$
 * L3G4200D driver file
-* Change: Completed WriteReg() function, added functions GPIO_Configuration(), 
-*         I2C_Configuration(), I2C_Init( )
+* Change: Suffixes _LIS3L replaced with _MEMS
 *
 ********************************************************************************/
 
-#include "stm32f10x_i2c. h"
+#include "stm32f10x_i2c.h"
 #include "l3g4200d_driver.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,19 +48,19 @@ unsigned char ReadReg(unsigned char Reg, unsigned char* Data) {
 */
 uint8_t WriteReg(uint8_t reg, uint8_t data)
 {
-    I2C_GenerateSTART(I2C_LIS3L, ENABLE);                                           /* Send START condition */
-    while (!I2C_CheckEvent(I2C_LIS3L, I2C_EVENT_MASTER_MODE_SELECT));               /* Test on EV5 and clear it */
+    I2C_GenerateSTART(I2C_MEMS, ENABLE);                                           /* Send START condition */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));               /* Test on EV5 and clear it */
 
-    I2C_Send7bitAddress(I2C_LIS3L, LIS3L_SLAVE_ADDR, I2C_Direction_Transmitter);    /* Send LIS3L address for write */
-    while (!I2C_CheckEvent(I2C_LIS3L, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); /* Test on EV6 and clear it */
+    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Transmitter);  /* Send LIS3L address for write */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); /* Test on EV6 and clear it */
 
-    I2C_SendData(I2C_LIS3L, reg);                                                  /* Send the sensor internal register address to write to */
-    while (!I2C_CheckEvent(I2C_LIS3L, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
+    I2C_SendData(I2C_MEMS, reg);                                                   /* Send the sensor internal register address to write to */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
 
-    I2C_SendData(I2C_LIS3L, data);                                                  /* Send the byte to be written */
-    while (!I2C_CheckEvent(I2C_LIS3L, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
+    I2C_SendData(I2C_MEMS, data);                                                  /* Send the byte to be written */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
 
-    I2C_GenerateSTOP(I2C_LIS3L, ENABLE);                                            /* Send STOP condition */
+    I2C_GenerateSTOP(I2C_MEMS, ENABLE);                                            /* Send STOP condition */
   return 1;
 }
 
@@ -812,7 +811,7 @@ status_t SetSPIInterface(SPIMode_t spi) {
 * @param None
 * @retval None
 */
-void GPIO_Configuration( void)
+void GPIO_MEMS_Configuration( void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -820,7 +819,7 @@ void GPIO_Configuration( void)
     GPIO_InitStructure. GPIO_Pin = I2C_MEMS_SCL | I2C_MEMS_SDA;
     GPIO_InitStructure. GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure. GPIO_Mode = GPIO_Mode_AF_OD;
-    GPIO_Init(I2C_LIS3L_GPIO, &GPIO_InitStructure );
+    GPIO_Init(I2C_MEMS_GPIO, &GPIO_InitStructure );
 }
 
 /**
@@ -837,8 +836,8 @@ void I2C_Configuration( void)
     I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;
     I2C_InitStructure.I2C_OwnAddress1 = I2C_SLAVE_ADDRESS7;
     I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
-    I2C_InitStructure.I2C_Acknowledged Address = I2C_AcknowledgedAddress_7bit;
-    I2C_InitStructure.I2C_ClockSpeed = I2C_Speed;
+    I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+    I2C_InitStructure.I2C_ClockSpeed = I2C_MEMS_Speed;
 
     /* I2C Peripheral Enable */
     I2C_Cmd(I2C_MEMS, ENABLE);
@@ -848,14 +847,12 @@ void I2C_Configuration( void)
 }
 
 /**
-* @brief Initializes peripherals used by the I2C LIS3L driver.
+* @brief Initializes peripherals used by the I2C driver.
 * @param None
 * @retval None
 */
-void I2C_Init( )
+void I2C_MEMS_Init( )
 {
-    uint8_t TxCounter = 0;
-
     /* I2C Periph clock enable */
     RCC_APB1PeriphClockCmd(I2C_MEMS_CLK, ENABLE);
 
@@ -863,7 +860,7 @@ void I2C_Init( )
     RCC_APB2PeriphClockCmd(I2C_MEMS_GPIO_CLK, ENABLE);
 
     /* GPIO configuration */
-    GPIO_Configuration( );
+    GPIO_MEMS_Configuration( );
 
     /* I2C configuration */
     I2C_Configuration( );
