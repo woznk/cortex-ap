@@ -664,10 +664,10 @@
       <FileType>1</FileType>
       <tvExp>1</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>68</ColumnNumber>
+      <ColumnNumber>31</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>30</TopLine>
-      <CurrentLine>47</CurrentLine>
+      <CurrentLine>41</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\L3G4200_Driver\l3g4200d_driver.c</PathWithFileName>
       <FilenameWithoutPath>l3g4200d_driver.c</FilenameWithoutPath>
@@ -678,10 +678,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>61</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>381</TopLine>
-      <CurrentLine>394</CurrentLine>
+      <TopLine>994</TopLine>
+      <CurrentLine>1011</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_i2c.c</FilenameWithoutPath>
@@ -736,8 +736,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>95</TopLine>
-      <CurrentLine>97</CurrentLine>
+      <TopLine>61</TopLine>
+      <CurrentLine>70</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -850,61 +850,35 @@
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>D:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\l3g4200d_driver.h</PathWithFilename>
-    <TopLine>18</TopLine>
-    <CurrentLine>37</CurrentLine>
-    <Constant>0</Constant>
-    <WindowPosition>
-      <length>0</length>
-      <flags>0</flags>
-      <showCmd>0</showCmd>
-      <MinPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MinPosition>
-      <MaxPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MaxPosition>
-      <NormalPosition>
-        <Top>0</Top>
-        <Left>0</Left>
-        <Right>0</Right>
-        <Bottom>0</Bottom>
-      </NormalPosition>
-    </WindowPosition>
-  </AlienFiles>
-
-  <AlienFiles>
-    <PathWithFilename>D:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\lis3l_i2c.c</PathWithFilename>
-    <TopLine>59</TopLine>
-    <CurrentLine>59</CurrentLine>
-    <Constant>0</Constant>
-    <WindowPosition>
-      <length>0</length>
-      <flags>0</flags>
-      <showCmd>0</showCmd>
-      <MinPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MinPosition>
-      <MaxPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MaxPosition>
-      <NormalPosition>
-        <Top>0</Top>
-        <Left>0</Left>
-        <Right>0</Right>
-        <Bottom>0</Bottom>
-      </NormalPosition>
-    </WindowPosition>
-  </AlienFiles>
-
-  <AlienFiles>
-    <PathWithFilename>D:\Work\cortex-ap\Firmware\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_i2c.h</PathWithFilename>
+    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_i2c.h</PathWithFilename>
     <TopLine>515</TopLine>
     <CurrentLine>520</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
+  <AlienFiles>
+    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\l3g4200d_driver.h</PathWithFilename>
+    <TopLine>18</TopLine>
+    <CurrentLine>37</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -932,31 +906,25 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>3</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
           <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</Name>
-          <ColumnNumber>61</ColumnNumber>
-          <TopLine>381</TopLine>
-          <CurrentLine>394</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>D:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\lis3l_i2c.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>59</TopLine>
-          <CurrentLine>59</CurrentLine>
+          <TopLine>994</TopLine>
+          <CurrentLine>1011</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\main.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>95</TopLine>
-          <CurrentLine>97</CurrentLine>
+          <TopLine>61</TopLine>
+          <CurrentLine>70</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Libraries\L3G4200_Driver\l3g4200d_driver.c</Name>
-          <ColumnNumber>68</ColumnNumber>
+          <ColumnNumber>31</ColumnNumber>
           <TopLine>30</TopLine>
-          <CurrentLine>47</CurrentLine>
+          <CurrentLine>41</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Libraries\L3G4200_Driver\l3g4200d_driver.h</Name>
