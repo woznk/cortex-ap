@@ -3,7 +3,7 @@
 * $Revision:$
 * $Date:$
 * L3G4200D driver file
-* Change: Suffixes _LIS3L replaced with _MEMS
+* Change: tentatively filled ReadReg() function
 *
 ********************************************************************************/
 
@@ -18,24 +18,38 @@
 
 /*******************************************************************************
 * Function Name	: ReadReg
-* Description	: Generic Reading function. It must be filled with either
-*		        : I2C or SPI reading functions
+* Description	: Generic Reading function.
 * Input		: Register Address
 * Output	: Data REad
 * Return	: None
 *******************************************************************************/
-unsigned char ReadReg(unsigned char Reg, unsigned char* Data) {
+uint8_t ReadReg(uint8_t reg, uint8_t* data)
+{
+    I2C_GenerateSTART(I2C_MEMS, ENABLE);                                           /* Send START condition */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));               /* Test on EV5 and clear it */
 
-  //To be completed with either I2c or SPI reading function
-  //i.e.: *Data = SPI_Mems_Read_Reg(Reg );
+    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Transmitter);  /* Send address for write */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); /* Test on EV6 and clear it */
 
+    I2C_SendData(I2C_MEMS, reg);                                                   /* Send the sensor register address to read from */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
+
+    I2C_GenerateSTART(I2C_MEMS, ENABLE);                                           /* Send repeated START condition */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));               /* Test on EV5 and clear it */
+
+    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Receiver);     /* Send address for READ */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED));    /* Test on EV6 and clear it */
+
+    data = I2C_ReceiveData(I2C_MEMS);                                              /* Receive the byte to be read */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_RECEIVED));             /* Test on EV8 and clear it */
+
+    I2C_GenerateSTOP(I2C_MEMS, ENABLE);                                            /* Send STOP condition */
   return 1;
 }
 
 /*******************************************************************************
 * Function Name	: WriteReg
-* Description	: Generic Writing function. It must be filled with either
-*		        : I2C or SPI writing function
+* Description	: Generic Writing function.
 * Input		: Register Address, Data to be written
 * Output	: None
 * Return	: None
@@ -51,10 +65,10 @@ uint8_t WriteReg(uint8_t reg, uint8_t data)
     I2C_GenerateSTART(I2C_MEMS, ENABLE);                                           /* Send START condition */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));               /* Test on EV5 and clear it */
 
-    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Transmitter);  /* Send LIS3L address for write */
+    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Transmitter);  /* Send address for write */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); /* Test on EV6 and clear it */
 
-    I2C_SendData(I2C_MEMS, reg);                                                   /* Send the sensor internal register address to write to */
+    I2C_SendData(I2C_MEMS, reg);                                                   /* Send the sensor register address to write to */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
 
     I2C_SendData(I2C_MEMS, data);                                                  /* Send the byte to be written */
