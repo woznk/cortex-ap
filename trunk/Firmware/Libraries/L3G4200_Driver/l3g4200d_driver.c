@@ -3,8 +3,7 @@
 * $Revision:$
 * $Date:$
 * L3G4200D driver file
-* Change: modified sequence of ReadReg() function
-*         added links to I2C code for STM32
+* Change: corrected error in parameter of ReadREg()
 *
 ********************************************************************************/
 
@@ -66,7 +65,7 @@ uint8_t ReadReg(uint8_t reg, uint8_t* data)
     /* Test on EV8 and clear it */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_RECEIVED));
     /* Receive the byte to be read */
-    data = I2C_ReceiveData(I2C_MEMS);
+    *data = I2C_ReceiveData(I2C_MEMS);
 
     return 1;
 }
