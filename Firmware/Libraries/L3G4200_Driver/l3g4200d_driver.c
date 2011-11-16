@@ -3,7 +3,8 @@
 * $Revision:$
 * $Date:$
 * L3G4200D driver file
-* Change: tentatively filled ReadReg() function
+* Change: modified sequence of ReadReg() function
+*         added links to I2C code for STM32
 *
 ********************************************************************************/
 
@@ -22,30 +23,54 @@
 * Input		: Register Address
 * Output	: Data REad
 * Return	: None
+* Remarks   : see https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/DispForm.aspx?ID=13303&Source=/public/STe2ecommunities/Tags.aspx?tags=i2c
+*                 http://read.pudn.com/downloads124/sourcecode/embed/527821/7.1%20-%20I2C/Application/I2C.c__.htm
+                  http://corvusm3.googlecode.com/svn-history/r251/CorvusM3_FC/CorvusM3_Firmware/trunk/i2c.c
 *******************************************************************************/
 uint8_t ReadReg(uint8_t reg, uint8_t* data)
 {
-    I2C_GenerateSTART(I2C_MEMS, ENABLE);                                           /* Send START condition */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));               /* Test on EV5 and clear it */
+	/* While the bus is busy */
+	while (I2C_GetFlagStatus(I2C_MEMS, I2C_FLAG_BUSY));
 
-    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Transmitter);  /* Send address for write */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); /* Test on EV6 and clear it */
+    /* Send START condition */
+    I2C_GenerateSTART(I2C_MEMS, ENABLE);
+    /* Test on EV5 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));
 
-    I2C_SendData(I2C_MEMS, reg);                                                   /* Send the sensor register address to read from */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
+    /* Send address for read */
+    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Transmitter);
+    /* Test on EV6 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
 
-    I2C_GenerateSTART(I2C_MEMS, ENABLE);                                           /* Send repeated START condition */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));               /* Test on EV5 and clear it */
+    /* Send the sensor register address to read from */
+    I2C_SendData(I2C_MEMS, reg);
+    /* Test on EV8 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
 
-    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Receiver);     /* Send address for READ */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED));    /* Test on EV6 and clear it */
+    /* Send START condition */
+    I2C_GenerateSTART(I2C_MEMS, ENABLE);
+    /* Test on EV5 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));
 
-    data = I2C_ReceiveData(I2C_MEMS);                                              /* Receive the byte to be read */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_RECEIVED));             /* Test on EV8 and clear it */
+    /* Send address for read */
+    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Receiver);
+    /* Test on EV6 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED));
 
-    I2C_GenerateSTOP(I2C_MEMS, ENABLE);                                            /* Send STOP condition */
-  return 1;
+    /* Only one byte to read */
+    I2C_AcknowledgeConfig(I2C_MEMS, DISABLE);
+
+    /* Send STOP condition */
+    I2C_GenerateSTOP(I2C_MEMS, ENABLE);
+
+    /* Test on EV8 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_RECEIVED));
+    /* Receive the byte to be read */
+    data = I2C_ReceiveData(I2C_MEMS);
+
+    return 1;
 }
+
 
 /*******************************************************************************
 * Function Name	: WriteReg
@@ -62,20 +87,29 @@ uint8_t ReadReg(uint8_t reg, uint8_t* data)
 */
 uint8_t WriteReg(uint8_t reg, uint8_t data)
 {
-    I2C_GenerateSTART(I2C_MEMS, ENABLE);                                           /* Send START condition */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));               /* Test on EV5 and clear it */
+    /* Send START condition */
+    I2C_GenerateSTART(I2C_MEMS, ENABLE);
+    /* Test on EV5 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));
 
-    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Transmitter);  /* Send address for write */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); /* Test on EV6 and clear it */
+    /* Send address for write */
+    I2C_Send7bitAddress(I2C_MEMS, L3G4200_SLAVE_ADDR, I2C_Direction_Transmitter);
+    /* Test on EV6 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
 
-    I2C_SendData(I2C_MEMS, reg);                                                   /* Send the sensor register address to write to */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
+    /* Send the sensor register address to write to */
+    I2C_SendData(I2C_MEMS, reg);
+    /* Test on EV8 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
 
-    I2C_SendData(I2C_MEMS, data);                                                  /* Send the byte to be written */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));          /* Test on EV8 and clear it */
+    /* Send the byte to be written */
+    I2C_SendData(I2C_MEMS, data);
+    /* Test on EV8 and clear it */
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
 
-    I2C_GenerateSTOP(I2C_MEMS, ENABLE);                                            /* Send STOP condition */
-  return 1;
+    /* Send STOP condition */
+    I2C_GenerateSTOP(I2C_MEMS, ENABLE);
+    return 1;
 }
 
 /* Private functions ---------------------------------------------------------*/
