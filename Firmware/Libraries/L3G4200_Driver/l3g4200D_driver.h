@@ -4,8 +4,7 @@
 * $Revision:$
 * $Date:$
 * L3G4200D driver file
-* Change: modified slave address of L3G4200, 
-*         added slave addresses for BMP085 and ADXL345
+* Change: changed slave address of L3G4200 to 0x69
 *
 *******************************************************************************/
 
@@ -159,8 +158,8 @@ typedef enum {
 
 // L3G4200 Physical Device Address
 // Verificare se pin SDO si porta a GND o a VCC
-#define L3G4200_SLAVE_ADDR      (0x68 << 1)     // SDO a GND
-//#define L3G4200_SLAVE_ADDR    (0x69 << 1)       // SDO a VCC
+//#define L3G4200_SLAVE_ADDR      (0x68 << 1)     // SDO a GND
+#define L3G4200_SLAVE_ADDR      (0x69 << 1)       // SDO a VCC
 
 // BMP085 Physical Device Address
 #define BMP085_SLAVE_ADDR       (0xEE << 1)     //
