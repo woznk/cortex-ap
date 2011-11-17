@@ -678,10 +678,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>34</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>994</TopLine>
-      <CurrentLine>1011</CurrentLine>
+      <CurrentLine>1022</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_i2c.c</FilenameWithoutPath>
@@ -850,7 +850,7 @@
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_i2c.h</PathWithFilename>
+    <PathWithFilename>D:\Work\cortex-ap\Firmware\Libraries\STM32F10x_StdPeriph_Driver\inc\stm32f10x_i2c.h</PathWithFilename>
     <TopLine>515</TopLine>
     <CurrentLine>520</CurrentLine>
     <Constant>0</Constant>
@@ -876,7 +876,7 @@
   </AlienFiles>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\l3g4200d_driver.h</PathWithFilename>
+    <PathWithFilename>D:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\l3g4200d_driver.h</PathWithFilename>
     <TopLine>18</TopLine>
     <CurrentLine>37</CurrentLine>
     <Constant>0</Constant>
@@ -910,9 +910,9 @@
       <Documents>
         <Doc>
           <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</Name>
-          <ColumnNumber>0</ColumnNumber>
+          <ColumnNumber>34</ColumnNumber>
           <TopLine>994</TopLine>
-          <CurrentLine>1011</CurrentLine>
+          <CurrentLine>1022</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\main.c</Name>
