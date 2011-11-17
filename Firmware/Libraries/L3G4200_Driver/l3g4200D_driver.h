@@ -4,7 +4,8 @@
 * $Revision:$
 * $Date:$
 * L3G4200D driver file
-* Change: Added missing defines, I2C_Init() renamed I2c_MEMS_Init()
+* Change: modified slave address of L3G4200, 
+*         added slave addresses for BMP085 and ADXL345
 *
 *******************************************************************************/
 
@@ -18,23 +19,6 @@
 #include "stm32f10x.h"
 
 /* Exported types ------------------------------------------------------------*/
-
-/* Defines for the GPIO pins used for the I2C communication */
-
-#define I2C_MEMS I2C1
-#define I2C_MEMS_CLK RCC_APB1Periph_I2C1
-#define I2C_MEMS_GPIO GPIOB
-#define I2C_MEMS_GPIO_CLK RCC_APB2Periph_GPIOB
-#define I2C_MEMS_SCL GPIO_Pin_6
-#define I2C_MEMS_SDA GPIO_Pin_7
-
-#define I2C_MEMS_Speed      100000  // 100kHz bus speed (up to 400kHz is ok)
-#define I2C_SLAVE_ADDRESS7  0xA0    // I2C own address if in slave mode
-
-// Physical Device Address - Factory Assigned to 0x3A for L3G4200
-// Verificare se pin SDO si porta a GND o a VCC
-#define L3G4200_SLAVE_ADDR 0x68     // SDO a GND
-//#define L3G4200_SLAVE_ADDR 0x69   // SDO a VCC
 
 typedef enum {
   MEMS_SUCCESS          =        0x01,
@@ -162,12 +146,34 @@ typedef enum {
 
 /* Exported constants --------------------------------------------------------*/
 
+// Defines for the GPIO pins used for the I2C communication
+#define I2C_MEMS                I2C1
+#define I2C_MEMS_CLK            RCC_APB1Periph_I2C1
+#define I2C_MEMS_GPIO           GPIOB
+#define I2C_MEMS_GPIO_CLK       RCC_APB2Periph_GPIOB
+#define I2C_MEMS_SCL            GPIO_Pin_6
+#define I2C_MEMS_SDA            GPIO_Pin_7
+
+#define I2C_MEMS_Speed          100000  // 100kHz bus speed (up to 400kHz is ok)
+#define I2C_SLAVE_ADDRESS7      0xA0    // I2C own address if in slave mode
+
+// L3G4200 Physical Device Address
+// Verificare se pin SDO si porta a GND o a VCC
+#define L3G4200_SLAVE_ADDR      (0x68 << 1)     // SDO a GND
+//#define L3G4200_SLAVE_ADDR    (0x69 << 1)       // SDO a VCC
+
+// BMP085 Physical Device Address
+#define BMP085_SLAVE_ADDR       (0xEE << 1)     //
+
+// ADXL345 Physical Device Address
+#define ADXL345_SLAVE_ADDR      (0x1D << 1)     //
+
 //#define BIT(x) ( 1<<(x) )
 #define BIT(x) ( (x) )
 #define MEMS_SET                0x01
 #define MEMS_RESET              0x00
 
-//Register Definition
+//Register definition
 #define WHO_AM_I                0x0F // device identification register
 
 // CONTROL REGISTER 1
