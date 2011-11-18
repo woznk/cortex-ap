@@ -736,7 +736,7 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>61</TopLine>
+      <TopLine>59</TopLine>
       <CurrentLine>70</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
@@ -850,7 +850,7 @@
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\l3g4200d_driver.h</PathWithFilename>
+    <PathWithFilename>D:\Work\cortex-ap\Firmware\Libraries\L3G4200_Driver\l3g4200d_driver.h</PathWithFilename>
     <TopLine>148</TopLine>
     <CurrentLine>161</CurrentLine>
     <Constant>0</Constant>
@@ -880,12 +880,12 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>1</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
           <Name>..\Source\main.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>61</TopLine>
+          <TopLine>59</TopLine>
           <CurrentLine>70</CurrentLine>
         </Doc>
         <Doc>

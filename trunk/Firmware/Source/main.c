@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief  main program
-// Change: SPI_MEMS_Init() replaced with I2C_MEMS_Init()
+// Change: L3G4200 read once every second
 //
 //============================================================================*/
 
@@ -145,13 +145,13 @@ int main(void)
         }
         Servo_Position += Servo_Delta;
         Servo_Set(SERVO_RUDDER, Servo_Position);
-    }
 
-    //check if there is some data available
-    GetStatusReg(&status);
-    if (ValBit(status, DATAREADY_BIT)) {      
-      //get x, y, z angular rate raw data
-      GetAngRateRaw(&buff);
+        //check if there is some data available
+        GetStatusReg(&status);
+        if (ValBit(status, DATAREADY_BIT)) {      
+           //get x, y, z angular rate raw data
+           GetAngRateRaw(&buff);
+        }
     }
   }
 }
