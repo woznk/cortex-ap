@@ -9,11 +9,12 @@
 ///
 /// \file
 ///
-//  CHANGES temporarily disabled reference to DCMMatrix[][].
+//  CHANGES Added Log_Send() function to transmit an int over USART 1
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
+#include "stm32f10x_usart.h"
 #include "math.h"
 //#include "telemetry.h"
 //#include "config.h"
@@ -64,29 +65,14 @@ VAR_STATIC bool bFileOk = FALSE;                    // File status
 /// \brief   Initialize log manager
 ///
 /// \remarks opens log file for writing, configures USART1.
+///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
+///          for direct register initialization of USART 1
 ///
 //----------------------------------------------------------------------------
 void
 Log_Init( void ) {
 
     USART_InitTypeDef USART_InitStructure;
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    // Open log file
-    if (FR_OK == f_mount(0, &stFat)) {
-        if (FR_OK == f_open(&stFile, szFileName, FA_WRITE|FA_CREATE_ALWAYS)) {
-            bFileOk = TRUE;                     // File succesfully open
-        } else {                                // Error opening file
-            bFileOk = FALSE;                    // Halt file logging
-        }
-    } else {                                    // Error mounting FS
-        bFileOk = FALSE;                        // Halt file logging
-    }
-
-    // Configure the RX pin as input floating
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 ;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
 
     // Initialize USART1 structure
     USART_InitStructure.USART_BaudRate = 9600;
@@ -105,6 +91,53 @@ Log_Init( void ) {
 
     // Enable the USART1
     USART_Cmd(USART1, ENABLE);
+
+/*
+    // Open log file
+    if (FR_OK == f_mount(0, &stFat)) {
+        if (FR_OK == f_open(&stFile, szFileName, FA_WRITE|FA_CREATE_ALWAYS)) {
+            bFileOk = TRUE;                     // File succesfully open
+        } else {                                // Error opening file
+            bFileOk = FALSE;                    // Halt file logging
+        }
+    } else {                                    // Error mounting FS
+        bFileOk = FALSE;                        // Halt file logging
+    }
+*/
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   sends data via USART 1
+/// \remarks 
+///
+///
+///----------------------------------------------------------------------------
+void
+Log_Send(int data)
+{
+    long lTemp;
+    unsigned char ucDigit;
+	int j = 0;
+
+    lTemp = (long)data;
+    szString[j++] = ' ';
+    ucDigit = ((lTemp >> 12) & 0x0000000F);
+    szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+    ucDigit = ((lTemp >> 8) & 0x0000000F);
+    szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+    ucDigit = ((lTemp >> 4) & 0x0000000F);
+    szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+    ucDigit = (lTemp & 0x0000000F);
+    szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+    szString[j++] = '\n';
+    szString[j] = '\r';
+
+    for (j = 0; j < 7; j++) {
+      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
+      }
+      USART_SendData(USART1, szString[j]);
+    }
 }
 
 //----------------------------------------------------------------------------
