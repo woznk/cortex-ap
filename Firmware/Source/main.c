@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief  main program
-// Change: L3G4200 read once every second
+// Change: Added transmission of gyro data over USART 1
 //
 //============================================================================*/
 
@@ -93,7 +93,7 @@ int main(void)
   /* Initialize PWM timers as servo outputs */
   Servo_Init();
 
-  //SPI peripheral initialization
+  // I2C peripheral initialization
   I2C_MEMS_Init();
 
   //set the ODR and Bandwith
@@ -123,10 +123,12 @@ int main(void)
   //enable watermark interrupt on interrupt2 
   //when the fifo contains more than 5 elements, the interrupt raises
   SetInt2Pin(WTM_ON_INT2_ENABLE);
+		
 /*
   while (!Nav_Init());  // Navigation init
-  Log_Init();
 */
+  Log_Init();
+
   while (1) {
     if ((g_ulFlags & FLAG_CLOCK_TICK_10) != 0) {
         g_ulFlags &= !FLAG_CLOCK_TICK_10;
@@ -151,6 +153,9 @@ int main(void)
         if (ValBit(status, DATAREADY_BIT)) {      
            //get x, y, z angular rate raw data
            GetAngRateRaw(&buff);
+           Log_Send(buff.x);
+           Log_Send(buff.y);
+           Log_Send(buff.z);
         }
     }
   }
@@ -179,7 +184,8 @@ void RCC_Configuration(void)
 
   /* GPIOA and GPIOB clock enable */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
-                         RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, ENABLE);
+                         RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO |
+						 RCC_APB2Periph_USART1, ENABLE);
 }
 
 ///----------------------------------------------------------------------------
@@ -193,13 +199,29 @@ void GPIO_Configuration(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
 
-  /* GPIOA Configuration:TIM3 Channel 1, 2 as alternate function push-pull */
+  // GPIOA Configuration
+
+  // TIM3 Channel 1, 2 as alternate function push-pull (6, 7)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-  /* GPIOC Configuration:TIM3 Channel 3, 4 as alternate function push-pull */
+  // USART 1 TX pin as alternate function push pull (9)
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  // USART 1 RX pin as input floating (10)
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  // GPIOC Configuration
+
+  // TIM3 Channel 3, 4 as alternate function push-pull */
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
