@@ -7,7 +7,7 @@
 //
 //  LANGUAGE C
 /// \brief   Log manager header file
-//  CHANGES  Aggiunta funzione Log_PutChar
+//  CHANGES  Added Log_Send() function to transmit an int over USART 1
 //
 //============================================================================
 
@@ -34,3 +34,4 @@ void Log_Init ( void );
 void Log_DCM ( void );
 void Log_PPM ( void );
 void Log_PutChar( char c );
+void Log_Send(int data);
