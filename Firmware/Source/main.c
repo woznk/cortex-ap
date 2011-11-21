@@ -6,13 +6,14 @@
 // $Author: $
 //
 /// \brief  main program
-// Change: Added transmission of gyro data over USART 1
+// Change: gyro initialization functions replaced by L3G4200_Init()
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
 #include "servodriver.h"
+#include "i2c_mems_driver.h"
 #include "l3g4200d_driver.h"
 #include "tick.h"
 #include "nav.h"
@@ -87,7 +88,7 @@ int main(void)
   STM32vldiscovery_LEDInit(LED3);
   STM32vldiscovery_LEDInit(LED4);
 
-  /* Setup SysTick Timer  (10ms) */
+  /* Setup SysTick Timer (10ms) */
   SysTick_Config(SystemCoreClock / 100);
 
   /* Initialize PWM timers as servo outputs */
@@ -96,33 +97,8 @@ int main(void)
   // I2C peripheral initialization
   I2C_MEMS_Init();
 
-  //set the ODR and Bandwith
-  SetODR(ODR_100Hz_BW_12_5);
-  //enable all axis  
-  SetAxis(X_ENABLE | Y_ENABLE | Z_ENABLE);  
-  //set the fullscale
-  SetFullScale(FULLSCALE_250);
-  //set sensor mode
-  SetMode(NORMAL);
-  //interrupt pin mode configuration: PUSH PULL
-  SetIntPinMode(PUSH_PULL);  
-  //enable interrutp 1 on INT1 pin and set interrupt active high
-  SetInt1Pin(I1_ON_PIN_INT1_ENABLE | INT1_ACTIVE_HIGH);  
-  //X and Y high threshold interrutps 
-  SetIntConfiguration(INT1_OR | INT1_ZHIE_ENABLE | INT1_XHIE_ENABLE);  
-  //interrupt latch disable
-  Int1LatchEnable(MEMS_DISABLE);
-  //set the threshold only on the Z axis  
-  SetInt1Threshold(THS_Z, 500);
-  //set the duration to 2 odr
-  SetInt1Duration(2);  
-  //set the fifo mode
-  FIFOModeEnable(FIFO_MODE);
-  //set watermark to 5
-  SetWaterMark(5);
-  //enable watermark interrupt on interrupt2 
-  //when the fifo contains more than 5 elements, the interrupt raises
-  SetInt2Pin(WTM_ON_INT2_ENABLE);
+  // L3G4200 gyro sensor initialization
+  L3G4200_Init();
 		
 /*
   while (!Nav_Init());  // Navigation init

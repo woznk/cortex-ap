@@ -346,7 +346,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER STM32F10X_LD_VL</Define>
               <Undefine></Undefine>
-              <IncludePath>.\;..\Utilities;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Libraries\fat_sd;..\Libraries\L3G4200_Driver</IncludePath>
+              <IncludePath>.\;..\Utilities;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Libraries\fat_sd;..\Libraries\L3G4200_Driver;..\Libraries\I2C_MEMS_Driver</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -450,6 +450,11 @@
               <FileName>stm32f10x_i2c.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c_mems_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -965,6 +970,11 @@
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c_mems_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1478,6 +1488,11 @@
               <FileName>stm32f10x_i2c.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c_mems_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</FilePath>
             </File>
           </Files>
         </Group>
