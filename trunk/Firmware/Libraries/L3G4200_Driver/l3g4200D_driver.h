@@ -1,10 +1,11 @@
 /*******************************************************************************
 *
 * File Name          : L3G4200D.c
-* $Revision:$
-* $Date:$
+* $Revision: $
+* $Date: $
 * L3G4200D driver file
-* Change: changed slave address of L3G4200 to 0x69
+* Change: basic I2C interface functions moved to i2c_mems_driver,
+*         added function L3G4200_Init()
 *
 *******************************************************************************/
 
@@ -144,17 +145,6 @@ typedef enum {
 
 
 /* Exported constants --------------------------------------------------------*/
-
-// Defines for the GPIO pins used for the I2C communication
-#define I2C_MEMS                I2C1
-#define I2C_MEMS_CLK            RCC_APB1Periph_I2C1
-#define I2C_MEMS_GPIO           GPIOB
-#define I2C_MEMS_GPIO_CLK       RCC_APB2Periph_GPIOB
-#define I2C_MEMS_SCL            GPIO_Pin_6
-#define I2C_MEMS_SDA            GPIO_Pin_7
-
-#define I2C_MEMS_Speed          100000  // 100kHz bus speed (up to 400kHz is ok)
-#define I2C_SLAVE_ADDRESS7      0xA0    // I2C own address if in slave mode
 
 // L3G4200 Physical Device Address
 // Verificare se pin SDO si porta a GND o a VCC
@@ -366,10 +356,8 @@ status_t GetAngRateRaw(AngRateRaw_t* buff);
 status_t GetInt1Src(unsigned char* buff);
 status_t GetFifoSourceReg(unsigned char* buff);
 
-//Generic
-unsigned char ReadReg(unsigned char Reg, unsigned char* Data);
-unsigned char WriteReg(unsigned char Reg, unsigned char Data);
-void I2C_MEMS_Init(void);
+// Generic
+void L3G4200_Init( void ) 
 
 #endif /* __L3G4200D_H */
 
