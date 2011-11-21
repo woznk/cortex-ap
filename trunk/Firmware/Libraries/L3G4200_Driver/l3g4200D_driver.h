@@ -357,7 +357,7 @@ status_t GetInt1Src(unsigned char* buff);
 status_t GetFifoSourceReg(unsigned char* buff);
 
 // Generic
-void L3G4200_Init( void ) 
+void L3G4200_Init( void );
 
 #endif /* __L3G4200D_H */
 
