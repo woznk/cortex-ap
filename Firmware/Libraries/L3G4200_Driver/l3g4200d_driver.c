@@ -27,7 +27,7 @@
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-status_t SetODR(ODR_t ov){
+status_t SetODR(ODR_t ov) {
   unsigned char value;
 
   if (!ReadReg(L3G4200_SLAVE_ADDR,CTRL_REG1, &value) )
