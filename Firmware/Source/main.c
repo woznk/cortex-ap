@@ -5,8 +5,8 @@
 // $Date: $
 // $Author: $
 //
-/// \brief  main program
-// Change: gyro initialization functions replaced by L3G4200_Init()
+/// \brief main program
+// Change: added adxl345 driver
 //
 //============================================================================*/
 
@@ -15,6 +15,7 @@
 #include "servodriver.h"
 #include "i2c_mems_driver.h"
 #include "l3g4200d_driver.h"
+#include "adxl345_driver.h"
 #include "tick.h"
 #include "nav.h"
 #include "log.h"
@@ -70,7 +71,7 @@ void Delay(__IO uint32_t nCount);
 int main(void)
 {
   uint8_t status = 0;
-  AngRateRaw_t buff;
+  AccelRaw_t buff;
 
   /*!< At this stage the microcontroller clock setting is already configured,
        this is done through SystemInit() function which is called from startup
@@ -98,11 +99,13 @@ int main(void)
   I2C_MEMS_Init();
 
   // L3G4200 gyro sensor initialization
-  L3G4200_Init();
+//  L3G4200_Init();
 		
-/*
-  while (!Nav_Init());  // Navigation init
-*/
+  // ADXL345 accelerometer sensor initialization
+  ADXL345_Init();
+
+//  while (!Nav_Init());  // Navigation init
+
   Log_Init();
 
   while (1) {
@@ -128,7 +131,7 @@ int main(void)
         GetStatusReg(&status);
         if (ValBit(status, DATAREADY_BIT)) {      
            //get x, y, z angular rate raw data
-           GetAngRateRaw(&buff);
+           GetAccelRaw(&buff);
            Log_Send(buff.x);
            Log_Send(buff.y);
            Log_Send(buff.z);
