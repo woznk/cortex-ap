@@ -1,37 +1,26 @@
-/*******************************************************************************
-*
-* File Name          : L3G4200D.c
-* $Revision: $
-* $Date: $
-* L3G4200D driver file
-* Change: basic I2C interface functions moved to i2c_mems_driver,
-*         added function L3G4200_Init()
-*
-*******************************************************************************/
+//============================================================================
+//
+// fILE NAME
+// $Revision: $
+// $Date: $
+// $Author: $
+/// \file
+/// \brief  ADXL345 driver
+//  Changes added definition of type AccelRaw_t, added function GetAccelRaw()
+//
+//============================================================================
 
-/* Define to prevent recursive inclusion -------------------------------------*/
+/*-------------------------- Prevent recursive inclusion ---------------------*/
 
 #ifndef __ADXL345_DRIVER__H
 #define __ADXL345_DRIVER__H
 
-/* Includes ------------------------------------------------------------------*/
+/*--------------------------------- Definitions ------------------------------*/
 
-#include "stm32f10x.h"
-
-/* Exported types ------------------------------------------------------------*/
-
-typedef enum {
-  MEMS_SUCCESS = 0x01,
-  MEMS_ERROR   = 0x00
-} status_t;
-
-typedef enum {
-  MEMS_ENABLE  = 0x01,
-  MEMS_DISABLE = 0x00
-} State_t;
-
-
-/* Exported constants --------------------------------------------------------*/
+#ifdef VAR_GLOBAL
+#undef VAR_GLOBAL
+#endif
+#define VAR_GLOBAL extern
 
 // ADXL345 Physical Device Address
 #define ADXL345_SLAVE_ADDR  (0x1D << 1)     //
@@ -148,11 +137,11 @@ typedef enum {
 
 // Data format control, R/W, reset value = 00000000
 #define DATA_FORMAT     0x31
-#define SELF_TEST       BIT(7)
-#define SPI             BIT(6)
-#define INT_INVERT      BIT(5)
-#define FULL_RES        BIT(3)
-#define Justify         BIT(2)
+#define ADXL_SELF_TEST  BIT(7)
+#define ADXL_SPI        BIT(6)
+#define ADXL_INT_INVERT BIT(5)
+#define ADXL_FULL_RES   BIT(3)
+#define ADXL_JUSTIFY    BIT(2)
 //#define Range           BIT(1)
 //#define Range           BIT(0)
 
@@ -195,14 +184,29 @@ typedef enum {
 //#define Entries         BIT(1)
 //#define Entries         BIT(0)
 
-/* Exported macro ------------------------------------------------------------*/
+/*----------------------------------- Macros ---------------------------------*/
 
-/* Exported functions --------------------------------------------------------*/
+/*-------------------------------- Enumerations ------------------------------*/
+
+/*----------------------------------- Types ----------------------------------*/
+
+typedef struct{
+  short int x;
+  short int y;
+  short int z;
+} AccelRaw_t;
+
+/*---------------------------------- Constants -------------------------------*/
+
+/*----------------------------------- Globals --------------------------------*/
+
+/*---------------------------------- Interface -------------------------------*/
 
 // Generic
 void ADXL345_Init( void );
+status_t GetAccelRaw(AccelRaw_t* buff);
 
-#endif /* __L3G4200D_H */
+#endif /* __ADXL345_DRIVER__H */
 
 
 
