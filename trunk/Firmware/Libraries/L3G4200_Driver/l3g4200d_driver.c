@@ -1,10 +1,9 @@
-/******************** (C) COPYRIGHT 2011 STMicroelectronics ********************
-* File Name          : L3G4200D.c
+/*******************************************************************************
+* File Name: L3G4200D_Driver.c
 * $Revision:$
 * $Date:$
 * L3G4200D driver file
-* Change: basic I2C interface functions moved to i2c_mems_driver,
-*         added function L3G4200_Init()
+* Change: header updated
 *
 ********************************************************************************/
 
