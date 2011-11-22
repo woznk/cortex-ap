@@ -4,8 +4,7 @@
 * $Revision: $
 * $Date: $
 * L3G4200D driver file
-* Change: basic I2C interface functions moved to i2c_mems_driver,
-*         added function L3G4200_Init()
+* Change: moved type definition of status_t to I2C_mems_driver.h
 *
 *******************************************************************************/
 
@@ -19,11 +18,6 @@
 #include "stm32f10x.h"
 
 /* Exported types ------------------------------------------------------------*/
-
-typedef enum {
-  MEMS_SUCCESS          =        0x01,
-  MEMS_ERROR            =        0x00
-} status_t;
 
 typedef enum {
   MEMS_ENABLE           =        0x01,
