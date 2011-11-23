@@ -1,10 +1,10 @@
 /*******************************************************************************
 *
-* File Name          : L3G4200D.c
+* File Name: L3G4200D_driver.h
 * $Revision: $
 * $Date: $
-* L3G4200D driver file
-* Change: moved type definition of status_t to I2C_mems_driver.h
+* L3G4200D driver header file
+* Change: macros MEMS_SET and MEMS_RESET moved to I2C_mems_driver.h
 *
 *******************************************************************************/
 
@@ -140,21 +140,14 @@ typedef enum {
 
 /* Exported constants --------------------------------------------------------*/
 
+#define BIT(x)                  (x)
+
 // L3G4200 Physical Device Address
-// Verificare se pin SDO si porta a GND o a VCC
-//#define L3G4200_SLAVE_ADDR      (0x68 << 1)     // SDO a GND
-#define L3G4200_SLAVE_ADDR      (0x69 << 1)       // SDO a VCC
+//#define L3G4200_SLAVE_ADDR      (0x68 << 1)     // SDO @ GND
+#define L3G4200_SLAVE_ADDR      (0x69 << 1)       // SDO @ VCC
 
 // BMP085 Physical Device Address
 #define BMP085_SLAVE_ADDR       (0xEE << 1)     //
-
-// ADXL345 Physical Device Address
-#define ADXL345_SLAVE_ADDR      (0x1D << 1)     //
-
-//#define BIT(x) ( 1<<(x) )
-#define BIT(x) ( (x) )
-#define MEMS_SET                0x01
-#define MEMS_RESET              0x00
 
 //Register definition
 #define WHO_AM_I                0x0F // device identification register
