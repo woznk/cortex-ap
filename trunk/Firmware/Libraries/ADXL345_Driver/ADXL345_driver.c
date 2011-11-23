@@ -5,7 +5,7 @@
 // $Date: $
 // $Author: $
 /// \brief I2C driver for MEMS sensors
-//  Change: Added function GetAccelRaw(), filled function ADXL345_Init()
+//  Change: added function Set_Fifo_Mode(), function GetAccelRaw() returns bool
 //
 //============================================================================*/
 
@@ -86,15 +86,46 @@ static status_t Start_Measurement( void )
 
 ///----------------------------------------------------------------------------
 ///
+/// \brief   Set FIFO mode
+/// \return  MEMS_SUCCESS / MEMS_ERROR
+/// \param   mode, FIFO mode
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+static status_t Set_Fifo_Mode(uint8_t mode)
+{
+  uint8_t value;
+
+  if (!ReadReg(ADXL345_SLAVE_ADDR, FIFO_CTL, &value))
+    return MEMS_ERROR;
+
+  value &= 0x3F;            // clear FIFO mode
+  value |= (mode & 0xC0);   // set new FIFO mode
+
+  if (!WriteReg(ADXL345_SLAVE_ADDR, FIFO_CTL, value))
+    return MEMS_ERROR;
+
+  return MEMS_SUCCESS;
+}
+
+
+///----------------------------------------------------------------------------
+///
 /// \brief   Initialization of ADXL345 accelerometer
 /// \return  -
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void ADXL345_Init( void )
+bool ADXL345_Init( void )
 {
-  Set_Output_Rate(0x09);    // Set Output Rate to 100 Hz
-  Start_Measurement( );     // Start measurement
+  uint8_t id;
+
+  if (!ReadReg(ADXL345_SLAVE_ADDR, DEVID, &id))
+      id = 0;
+  Set_Fifo_Mode(BYPASS_MODE);   // Disable FIFO
+  Set_Output_Rate(0x09);        // Set output rate to 100 Hz
+  Start_Measurement( );         // Start measurement
+  return (bool)(id == I_AM_ADXL345);
 }
 
 ///----------------------------------------------------------------------------
@@ -105,33 +136,40 @@ void ADXL345_Init( void )
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-status_t GetAccelRaw(AccelRaw_t* buff) {
-  unsigned char valueL;
-  unsigned char valueH;
+bool GetAccelRaw(AccelRaw_t* buff) {
+  uint8_t valueL;
+  uint8_t valueH;
+
+  if (!ReadReg(ADXL345_SLAVE_ADDR, INT_SOURCE, &valueL) )
+      return FALSE;
+
+   if ((valueL & DATA_READY) == 0)
+      return FALSE;
 
   if (!ReadReg(ADXL345_SLAVE_ADDR, DATAX0, &valueL) )
-      return MEMS_ERROR;
+      return FALSE;
 
   if (!ReadReg(ADXL345_SLAVE_ADDR, DATAX1, &valueH) )
-      return MEMS_ERROR;
+      return FALSE;
 
   buff->x = (short int)((valueH << 8) | valueL );
 
   if (!ReadReg(ADXL345_SLAVE_ADDR, DATAY0, &valueL) )
-      return MEMS_ERROR;
+      return FALSE;
 
   if (!ReadReg(ADXL345_SLAVE_ADDR, DATAY1, &valueH) )
-      return MEMS_ERROR;
+      return FALSE;
 
   buff->y = (short int)((valueH << 8) | valueL );
 
    if (!ReadReg(ADXL345_SLAVE_ADDR, DATAZ0, &valueL) )
-      return MEMS_ERROR;
+      return FALSE;
 
   if (!ReadReg(ADXL345_SLAVE_ADDR, DATAZ1, &valueH) )
-      return MEMS_ERROR;
+      return FALSE;
 
   buff->z = (short int)((valueH << 8) | valueL );
 
-  return MEMS_SUCCESS;
+  return TRUE;
 }
+
