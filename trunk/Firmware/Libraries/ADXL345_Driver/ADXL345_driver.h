@@ -6,7 +6,8 @@
 // $Author: $
 /// \file
 /// \brief  ADXL345 driver
-//  Changes added definition of type AccelRaw_t, added function GetAccelRaw()
+//  Changes macros BIT(x) replaced with explicit byte values,
+//          all interface functions return bool
 //
 //============================================================================
 
@@ -24,11 +25,6 @@
 
 // ADXL345 Physical Device Address
 #define ADXL345_SLAVE_ADDR  (0x1D << 1)     //
-
-//#define BIT(x) ( 1<<(x) )
-#define BIT(x) ( (x) )
-#define MEMS_SET        0x01
-#define MEMS_RESET      0x00
 
 #define I_AM_ADXL345    0xE5
 
@@ -71,14 +67,14 @@
 
 // Axis enable control for activity and inactivity detection, R/W, reset value = 00000000
 #define ACT_INACT_CTL   0x27
-#define ACT_ACDC        BIT(7)
-#define ACT_X_ENABLE    BIT(6)
-#define ACT_Y_ENABLE    BIT(5)
-#define ACT_Z_ENABLE    BIT(4)
-#define INACT_ACDC      BIT(3)
-#define INACT_X_ENABLE  BIT(2)
-#define INACT_Y_ENABLE  BIT(1)
-#define INACT_Z_ENABLE  BIT(0)
+#define ACT_ACDC        0x80
+#define ACT_X_ENABLE    0x40
+#define ACT_Y_ENABLE    0x20
+#define ACT_Z_ENABLE    0x10
+#define INACT_ACDC      0x08
+#define INACT_X_ENABLE  0x04
+#define INACT_Y_ENABLE  0x02
+#define INACT_Z_ENABLE  0x01
 
 // Free-fall threshold, R/W, reset value = 00000000
 #define THRESH_FF       0x28
@@ -88,37 +84,37 @@
 
 // Axis control for tap/double tap, R/W, reset value = 00000000
 #define TAP_AXES        0x2A
-#define SUPPRESS        BIT(3)
-#define TAP_X ENABLE    BIT(2)
-#define TAP_Y ENABLE    BIT(1)
-#define TAP_Z ENABLE    BIT(0)
+#define SUPPRESS        0x08
+#define TAP_X ENABLE    0x04
+#define TAP_Y ENABLE    0x02
+#define TAP_Z ENABLE    0x01
 
 // Source of tap/double tap, R, reset value = 00000000
 #define ACT_TAP_STATUS  0x2B
-#define ACT_X_SOURCE    BIT(6)
-#define ACT_Y_SOURCE    BIT(5)
-#define ACT_Z_SOURCE    BIT(4)
-#define ASLEEP          BIT(3)
-#define TAP_X_SOURCE    BIT(2)
-#define TAP_Y_SOURCE    BIT(1)
-#define TAP_Z_SOURCE    BIT(0)
+#define ACT_X_SOURCE    0x40
+#define ACT_Y_SOURCE    0x20
+#define ACT_Z_SOURCE    0x10
+#define ASLEEP          0x08
+#define TAP_X_SOURCE    0x04
+#define TAP_Y_SOURCE    0x02
+#define TAP_Z_SOURCE    0x01
 
 // Data rate and power mode control, R/W, reset value = 00001010
 #define BW_RATE         0x2C
-#define LOW_POWER       BIT(4)
-//#define RATE            BIT(3)
-//#define RATE            BIT(2)
-//#define RATE            BIT(1)
-//#define RATE            BIT(0)
+#define LOW_POWER       0x10
+//#define RATE          0x08
+//#define RATE          0x04
+//#define RATE          0x02
+//#define RATE          0x01
 
 // Power-saving features control, R/W, reset value = 00000000
 #define POWER_CTL       0x2D
-#define LINK            BIT(5)
-#define AUTO_SLEEP      BIT(4)
-#define MEASURE         BIT(3)
-#define SLEEP           BIT(2)
-//#define WAKEUP          BIT(1)
-//#define WAKEUP          BIT(0)
+#define LINK            0x20
+#define AUTO_SLEEP      0x10
+#define MEASURE         0x08
+#define SLEEP           0x04
+//#define WAKEUP        0x02
+//#define WAKEUP        0x01
 
 // Interrupt enable control, R/W, reset value = 00000000
 #define INT_ENABLE      0x2E
@@ -126,24 +122,24 @@
 #define INT_MAP         0x2F
 // Interrupt source, R, reset value = 00000010
 #define INT_SOURCE      0x30
-#define DATA_READY      BIT(7)
-#define SINGLE_TAP      BIT(6)
-#define DOUBLE_TAP      BIT(5)
-#define ACTIVITY        BIT(4)
-#define INACTIVITY      BIT(3)
-#define FREE_FALL       BIT(2)
-#define WATERMARK       BIT(1)
-#define OVERRUN         BIT(0)
+#define DATA_READY      0x80
+#define SINGLE_TAP      0x40
+#define DOUBLE_TAP      0x20
+#define ACTIVITY        0x10
+#define INACTIVITY      0x08
+#define FREE_FALL       0x04
+#define WATERMARK       0x02
+#define OVERRUN         0x01
 
 // Data format control, R/W, reset value = 00000000
 #define DATA_FORMAT     0x31
-#define ADXL_SELF_TEST  BIT(7)
-#define ADXL_SPI        BIT(6)
-#define ADXL_INT_INVERT BIT(5)
-#define ADXL_FULL_RES   BIT(3)
-#define ADXL_JUSTIFY    BIT(2)
-//#define Range           BIT(1)
-//#define Range           BIT(0)
+#define ADXL_SELF_TEST  0x80
+#define ADXL_SPI        0x40
+#define ADXL_INT_INVERT 0x20
+#define ADXL_FULL_RES   0x08
+#define ADXL_JUSTIFY    0x04
+//#define Range         0x02
+//#define Range         0x01
 
 // X-Axis Data 0, R, reset value = 00000000
 #define DATAX0          0x32
@@ -165,24 +161,26 @@
 
 // FIFO control, R/W, reset value = 00000000
 #define FIFO_CTL        0x38
-//#define FIFO_MODE       BIT(7)
-//#define FIFO_MODE       BIT(6)
-//#define Trigger         BIT(5)
-//#define Samples         BIT(4)
-//#define Samples         BIT(3)
-//#define Samples         BIT(2)
-//#define Samples         BIT(1)
-//#define Samples         BIT(0)
+#define BYPASS_MODE     0x00
+#define FIFO_MODE       0x40
+#define STREAM_MODE     0x80
+#define TRIGGER_MODE    0xC0
+#define TRIGGER         0x20
+//#define Samples       0x10
+//#define Samples       0x08
+//#define Samples       0x04
+//#define Samples       0x02
+//#define Samples       0x01
 
 // FIFO status, R, reset value = 00000000
 #define FIFO_STATUS     0x39
-#define FIFO_TRIG       BIT(7)
-//#define Entries         BIT(5)
-//#define Entries         BIT(4)
-//#define Entries         BIT(3)
-//#define Entries         BIT(2)
-//#define Entries         BIT(1)
-//#define Entries         BIT(0)
+#define FIFO_TRIG       0x80
+//#define Entries       0x20
+//#define Entries       0x10
+//#define Entries       0x08
+//#define Entries       0x04
+//#define Entries       0x02
+//#define Entries       0x01
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -203,8 +201,8 @@ typedef struct{
 /*---------------------------------- Interface -------------------------------*/
 
 // Generic
-void ADXL345_Init( void );
-status_t GetAccelRaw(AccelRaw_t* buff);
+bool ADXL345_Init( void );
+bool GetAccelRaw(AccelRaw_t* buff);
 
 #endif /* __ADXL345_DRIVER__H */
 
