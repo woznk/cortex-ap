@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: added adxl345 driver
+// Change: corrected call to GetAccelRaw()
 //
 //============================================================================*/
 
@@ -100,7 +100,7 @@ int main(void)
 
   // L3G4200 gyro sensor initialization
 //  L3G4200_Init();
-		
+
   // ADXL345 accelerometer sensor initialization
   ADXL345_Init();
 
@@ -126,12 +126,19 @@ int main(void)
         }
         Servo_Position += Servo_Delta;
         Servo_Set(SERVO_RUDDER, Servo_Position);
-
+/*
         //check if there is some data available
         GetStatusReg(&status);
-        if (ValBit(status, DATAREADY_BIT)) {      
+        if (ValBit(status, DATAREADY_BIT)) {
            //get x, y, z angular rate raw data
-           GetAccelRaw(&buff);
+           GetAngRateRaw(&buff);
+           Log_Send(buff.x);
+           Log_Send(buff.y);
+           Log_Send(buff.z);
+        }
+*/
+           //get x, y, z acceleration raw data
+        if (GetAccelRaw(&buff)) {
            Log_Send(buff.x);
            Log_Send(buff.y);
            Log_Send(buff.z);
