@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// CHANGES moved type definition of status_t to I2C_mems_driver.h
+/// Changes: removed macro BIT(x)
 //
 //============================================================================
 
@@ -38,8 +38,6 @@
 #define I2C_MEMS_Speed          100000  // 100kHz bus speed (up to 400kHz is ok)
 #define I2C_SLAVE_ADDRESS7      0xA0    // I2C own address if in slave mode
 
-//#define BIT(x) ( 1<<(x) )
-#define BIT(x) ( (x) )
 #define MEMS_SET                0x01
 #define MEMS_RESET              0x00
 
