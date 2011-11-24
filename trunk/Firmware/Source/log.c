@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-//  CHANGES Added Log_Send() function to transmit an int over USART 1
+//  CHANGES Log_Send() argumento changed from int to uint16_t
+//          baud rate changed into 38400.
 //
 //============================================================================*/
 
@@ -75,7 +76,7 @@ Log_Init( void ) {
     USART_InitTypeDef USART_InitStructure;
 
     // Initialize USART1 structure
-    USART_InitStructure.USART_BaudRate = 9600;
+    USART_InitStructure.USART_BaudRate = 38400;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -114,7 +115,7 @@ Log_Init( void ) {
 ///
 ///----------------------------------------------------------------------------
 void
-Log_Send(int data)
+Log_Send(uint16_t data)
 {
     long lTemp;
     unsigned char ucDigit;
