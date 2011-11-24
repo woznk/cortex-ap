@@ -7,7 +7,7 @@
 //
 //  LANGUAGE C
 /// \brief   Log manager header file
-//  CHANGES  Added Log_Send() function to transmit an int over USART 1
+//  CHANGES  Log_Send() argumento changed from int to uint16_t
 //
 //============================================================================
 
@@ -34,4 +34,4 @@ void Log_Init ( void );
 void Log_DCM ( void );
 void Log_PPM ( void );
 void Log_PutChar( char c );
-void Log_Send(int data);
+void Log_Send(uint16_t data);
