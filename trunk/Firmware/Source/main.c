@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: corrected call to GetAccelRaw()
+// Change: first try to use ReadBuff()
 //
 //============================================================================*/
 
@@ -70,9 +70,13 @@ void Delay(__IO uint32_t nCount);
 ///----------------------------------------------------------------------------
 int main(void)
 {
+  int8_t buff[8];
+  uint16_t temp;
+/*
   uint8_t status = 0;
-  AccelRaw_t buff;
-
+  AngRateRaw_t rate;
+  AccelRaw_t accel;
+*/
   /*!< At this stage the microcontroller clock setting is already configured,
        this is done through SystemInit() function which is called from startup
        file (startup_stm32f10x_xx.s) before to branch to application main.
@@ -131,18 +135,29 @@ int main(void)
         GetStatusReg(&status);
         if (ValBit(status, DATAREADY_BIT)) {
            //get x, y, z angular rate raw data
-           GetAngRateRaw(&buff);
-           Log_Send(buff.x);
-           Log_Send(buff.y);
-           Log_Send(buff.z);
+           GetAngRateRaw(&rate);
+           Log_Send(rate.x);
+           Log_Send(rate.y);
+           Log_Send(rate.z);
         }
 */
-           //get x, y, z acceleration raw data
-        if (GetAccelRaw(&buff)) {
-           Log_Send(buff.x);
-           Log_Send(buff.y);
-           Log_Send(buff.z);
+/*
+        //get x, y, z acceleration raw data
+        if (GetAccelRaw(&accel)) {
+           Log_Send(accel.x);
+           Log_Send(accel.y);
+           Log_Send(accel.z);
         }
+*/
+        ReadBuff(L3G4200_SLAVE_ADDR, STATUS_REG, (uint8_t *)buff, 7);
+        if (ValBit(buff[0], DATAREADY_BIT)) {
+           temp = (uint16_t)buff[1] + 256 * (uint16_t)buff[2];
+           Log_Send(temp);
+           temp = (uint16_t)buff[3] + 256 * (uint16_t)buff[4];
+           Log_Send(temp);
+           temp = (uint16_t)buff[5] + 256 * (uint16_t)buff[6];
+           Log_Send(temp);
+       }
     }
   }
 }
