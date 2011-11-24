@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Changes: removed macro BIT(x)
+/// Changes: added tentative function ReadBuff()
 //
 //============================================================================
 
@@ -60,6 +60,7 @@ typedef enum {
 
 uint8_t ReadReg(uint8_t slave, uint8_t Reg, uint8_t* Data);
 uint8_t WriteReg(uint8_t slave, uint8_t Reg, uint8_t Data);
+uint8_t ReadBuff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length);
 void I2C_MEMS_Init( void );
 
 #endif /* __I2C_MEMS_DRIVER_H */
