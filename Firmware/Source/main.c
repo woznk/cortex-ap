@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: first try to use ReadBuff()
+// Change: re-enabled initialization for L3G4200: ReadBuff() still doesn't work
 //
 //============================================================================*/
 
@@ -53,6 +53,7 @@
 
 VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
+VAR_STATIC uint8_t buff[8];
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -70,7 +71,6 @@ void Delay(__IO uint32_t nCount);
 ///----------------------------------------------------------------------------
 int main(void)
 {
-  int8_t buff[8];
   uint16_t temp;
 /*
   uint8_t status = 0;
@@ -103,10 +103,10 @@ int main(void)
   I2C_MEMS_Init();
 
   // L3G4200 gyro sensor initialization
-//  L3G4200_Init();
+  L3G4200_Init();
 
   // ADXL345 accelerometer sensor initialization
-  ADXL345_Init();
+//  ADXL345_Init();
 
 //  while (!Nav_Init());  // Navigation init
 
@@ -151,11 +151,11 @@ int main(void)
 */
         ReadBuff(L3G4200_SLAVE_ADDR, STATUS_REG, (uint8_t *)buff, 7);
         if (ValBit(buff[0], DATAREADY_BIT)) {
-           temp = (uint16_t)buff[1] + 256 * (uint16_t)buff[2];
+           temp = buff[1] + 256 * (uint16_t)buff[2];
            Log_Send(temp);
-           temp = (uint16_t)buff[3] + 256 * (uint16_t)buff[4];
+           temp = buff[3] + 256 * (uint16_t)buff[4];
            Log_Send(temp);
-           temp = (uint16_t)buff[5] + 256 * (uint16_t)buff[6];
+           temp = buff[5] + 256 * (uint16_t)buff[6];
            Log_Send(temp);
        }
     }
