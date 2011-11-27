@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief I2C driver for MEMS sensors
-/// Changes: removed waiting for EV7 for n-2 th and n-1 th bytes in ReadBuff()
+/// Changes: modified reading sequence in ReadBuff()
 //
 //============================================================================*/
 
@@ -109,64 +109,67 @@ uint8_t ReadReg(uint8_t slave, uint8_t reg, uint8_t* data)
 ///----------------------------------------------------------------------------
 uint8_t ReadBuff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length)
 {
-	/* Wait while the bus is busy */
-	while (I2C_GetFlagStatus(I2C_MEMS, I2C_FLAG_BUSY));
+    uint8_t byte_num;
+
+    /* Wait while the bus is busy */
+    while (I2C_GetFlagStatus(I2C_MEMS, I2C_FLAG_BUSY));
 
     /* Send START condition */
     I2C_GenerateSTART(I2C_MEMS, ENABLE);
-    /* Test on EV5 and clear it */
+    /* EV5: test and clear SB flag */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));
 
     /* Send slave address + WRITE */
     I2C_Send7bitAddress(I2C_MEMS, slave, I2C_Direction_Transmitter);
-    /* Test on EV6 and clear it */
+    /* EV6: test and clear TX mode selected flag */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
 
     /* Send the sensor register address */
     I2C_SendData(I2C_MEMS, reg);
-    /* Test on EV8 and clear it */
+    /* EV8: test and clear byte transmitted flag */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
 
-    /* Send START condition */
+    /* Send START condition again */
     I2C_GenerateSTART(I2C_MEMS, ENABLE);
-    /* Test on EV5 and clear it */
+    /* EV5: test and clear SB flag */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_MODE_SELECT));
 
     /* Send slave address + READ */
     I2C_Send7bitAddress(I2C_MEMS, slave, I2C_Direction_Receiver);
-    /* Test on EV6 and clear it */
+    /* EV6: test and clear TX mode selected flag */
     while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED));
 
-    while (length > 3) {
-        /* Receive byte: test on EV7 and clear it */
+    for (byte_num = 0; byte_num < length; byte_num++) {
+
+        /* EV7: test and clear received byte flag */
         while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_RECEIVED));
 
-        /* Read the byte from data register */
-        *data++ = I2C_ReceiveData(I2C_MEMS);
-
-        /* Update number of bytes to be read */
-        length--;
+	    if (byte_num == (length - 3)) {
+           /* Do nothing */
+        } else if (byte_num == (length - 2)) {
+           /* Disable ACK */
+           I2C_AcknowledgeConfig(I2C_MEMS, DISABLE);
+           /* Read (n-2)th byte from data register */
+           *data++ = I2C_ReceiveData(I2C_MEMS);
+        } else if (byte_num == (length - 1)) {
+           /* Send STOP condition */
+           I2C_GenerateSTOP(I2C_MEMS, ENABLE);
+           /* Read (n-1)th byte from data register */
+           *data++ = I2C_ReceiveData(I2C_MEMS);
+           /* EV7: test and clear received byte flag */
+           while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_RECEIVED));
+           /* Read (n)th byte from data register */
+           *data++ = I2C_ReceiveData(I2C_MEMS);
+        } else {
+           /* Read the byte from data register */
+           *data++ = I2C_ReceiveData(I2C_MEMS);
+        }
     }
 
-    /* Disable ACK */
-    I2C_AcknowledgeConfig(I2C_MEMS, DISABLE);
+    /* Enable ACK */
+    I2C_AcknowledgeConfig(I2C_MEMS, ENABLE);
 
-    /* Read N-2 th byte and start reception of N th byte */
-    *data++ = I2C_ReceiveData(I2C_MEMS);
-
-    /* Send STOP condition */
-    I2C_GenerateSTOP(I2C_MEMS, ENABLE);
-
-    /* Read N-1 th byte */
-    *data++ = I2C_ReceiveData(I2C_MEMS);
-
-    /* Receive N th byte: test on EV7 and clear it */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_RECEIVED));
-
-    /* Read N th byte */
-    *data = I2C_ReceiveData(I2C_MEMS);
-
-    return 1;
+    return byte_num;
 }
 
 ///----------------------------------------------------------------------------
@@ -275,3 +278,4 @@ void I2C_MEMS_Init( void )
     /* I2C configuration */
     I2C_Configuration( );
 }
+
