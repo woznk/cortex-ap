@@ -4,7 +4,7 @@
 * $Revision: $
 * $Date: $
 * L3G4200D driver header file
-* Change: added definition of AUTO_INCR, for multiple byte reading
+* Change: removed definitions for BMP085 pressure sensor
 *
 *******************************************************************************/
 
@@ -145,9 +145,6 @@ typedef enum {
 // L3G4200 Physical Device Address
 //#define L3G4200_SLAVE_ADDR      (0x68 << 1)     // SDO @ GND
 #define L3G4200_SLAVE_ADDR      (0x69 << 1)       // SDO @ VCC
-
-// BMP085 Physical Device Address
-#define BMP085_SLAVE_ADDR       (0xEE << 1)     //
 
 //Register definition
 #define WHO_AM_I                0x0F // device identification register
@@ -298,9 +295,6 @@ typedef enum {
 #define INT1_TSH_ZH             0x36
 #define INT1_TSH_ZL             0x37
 #define INT1_DURATION           0x38
-
-// Auto increment for multiple byte reading
-#define AUTO_INCR               0x80
 
 /* Exported macro ------------------------------------------------------------*/
 
