@@ -6,7 +6,8 @@
 // $Author: $
 //
 /// \brief I2C driver for MEMS sensors
-/// Changes: function ReadBuff(): added wait for flag BTF before disabling ACK
+/// Changes: corrected mask to check RXNE and BTF flags
+///          re-enabled ACK before exiting ReadBuff()
 //
 //============================================================================*/
 
@@ -149,7 +150,7 @@ uint8_t ReadBuff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length)
     }
 
     /* Test RXNE and BTF flags (wait reception of bytes N-2 and N-1) */
-    while (!I2C_CheckEvent(I2C_MEMS, I2C_EVENT_MASTER_BYTE_RECEIVED | I2C_FLAG_BTF));
+    while (!I2C_CheckEvent(I2C_MEMS, I2C_RXNE_BTF_FLAGS));
 
     /* Disable ACK */
     I2C_AcknowledgeConfig(I2C_MEMS, DISABLE);
@@ -168,6 +169,9 @@ uint8_t ReadBuff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length)
 
     /* Read byte N */
     *data = I2C_ReceiveData(I2C_MEMS);
+
+    /* Re-enable ACK */
+    I2C_AcknowledgeConfig(I2C_MEMS, ENABLE);
 
     return 1;
 }
