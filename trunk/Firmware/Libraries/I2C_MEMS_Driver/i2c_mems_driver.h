@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Changes: added tentative function ReadBuff()
+/// Changes: added mask to check RXNE and BTF flags
 //
 //============================================================================
 
@@ -40,6 +40,9 @@
 
 #define MEMS_SET                0x01
 #define MEMS_RESET              0x00
+
+// Mask to check both RXNE and BTF flags (definitions of ST library don't work)
+#define I2C_RXNE_BTF_FLAGS      ((uint32_t)0x00030044)
 
 /*----------------------------------- Macros ---------------------------------*/
 
