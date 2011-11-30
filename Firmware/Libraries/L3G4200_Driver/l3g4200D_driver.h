@@ -4,7 +4,7 @@
 * $Revision: $
 * $Date: $
 * L3G4200D driver header file
-* Change: removed definitions for BMP085 pressure sensor
+* Change: restored definition of AUTO_INCR
 *
 *******************************************************************************/
 
@@ -295,6 +295,9 @@ typedef enum {
 #define INT1_TSH_ZH             0x36
 #define INT1_TSH_ZL             0x37
 #define INT1_DURATION           0x38
+
+// Auto increment for multiple byte reading
+#define AUTO_INCR               0x80
 
 /* Exported macro ------------------------------------------------------------*/
 
