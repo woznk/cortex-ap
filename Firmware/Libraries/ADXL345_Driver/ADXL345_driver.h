@@ -6,8 +6,7 @@
 // $Author: $
 /// \file
 /// \brief  ADXL345 driver
-//  Changes macros BIT(x) replaced with explicit byte values,
-//          all interface functions return bool
+//  Change: GetAccelRaw() now expects a pointer to uint8_t buffer 
 //
 //============================================================================
 
@@ -202,7 +201,7 @@ typedef struct{
 
 // Generic
 bool ADXL345_Init( void );
-bool GetAccelRaw(AccelRaw_t* buff);
+bool GetAccelRaw(uint8_t* buff);
 
 #endif /* __ADXL345_DRIVER__H */
 
