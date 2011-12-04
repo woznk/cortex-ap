@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Changes: added mask to check RXNE and BTF flags
+/// Changes: Added prefix I2C_MEMS_ to all functions
 //
 //============================================================================
 
@@ -61,9 +61,9 @@ typedef enum {
 
 /*---------------------------------- Interface -------------------------------*/
 
-uint8_t ReadReg(uint8_t slave, uint8_t Reg, uint8_t* Data);
-uint8_t WriteReg(uint8_t slave, uint8_t Reg, uint8_t Data);
-uint8_t ReadBuff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length);
+uint8_t I2C_MEMS_Read_Reg(uint8_t slave, uint8_t Reg, uint8_t* Data);
+uint8_t I2C_MEMS_Write_Reg(uint8_t slave, uint8_t Reg, uint8_t Data);
+uint8_t I2C_MEMS_Read_Buff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length);
 void I2C_MEMS_Init( void );
 
 #endif /* __I2C_MEMS_DRIVER_H */
