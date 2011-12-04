@@ -6,8 +6,7 @@
 // $Author: $
 //
 /// \brief I2C driver for MEMS sensors
-/// Changes: corrected mask to check RXNE and BTF flags
-///          re-enabled ACK before exiting ReadBuff()
+/// Changes: Added prefix I2C_MEMS_ to all functions
 //
 //============================================================================*/
 
@@ -41,7 +40,7 @@
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   ReadReg
+/// \brief   Reads a register
 /// \return  1
 /// \param   slave, address of slave device
 /// \param   reg, register address
@@ -52,7 +51,7 @@
 ///          http://corvusm3.googlecode.com/svn-history/r251/CorvusM3_FC/CorvusM3_Firmware/trunk/i2c.c
 ///
 ///----------------------------------------------------------------------------
-uint8_t ReadReg(uint8_t slave, uint8_t reg, uint8_t* data)
+uint8_t I2C_MEMS_Read_Reg(uint8_t slave, uint8_t reg, uint8_t* data)
 {
 	/* Wait while the bus is busy */
 	while (I2C_GetFlagStatus(I2C_MEMS, I2C_FLAG_BUSY));
@@ -99,7 +98,7 @@ uint8_t ReadReg(uint8_t slave, uint8_t reg, uint8_t* data)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   ReadBuff
+/// \brief   Read a sequence of registers
 /// \return  1
 /// \param   slave, address of slave device
 /// \param   reg, address of starting register
@@ -108,7 +107,7 @@ uint8_t ReadReg(uint8_t slave, uint8_t reg, uint8_t* data)
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-uint8_t ReadBuff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length)
+uint8_t I2C_MEMS_Read_Buff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length)
 {
 	/* Wait while the bus is busy */
 	while (I2C_GetFlagStatus(I2C_MEMS, I2C_FLAG_BUSY));
@@ -178,7 +177,7 @@ uint8_t ReadBuff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   WriteReg
+/// \brief   Write a register
 /// \return  1
 /// \param   slave, address of slave device
 /// \param   reg, register address
@@ -186,7 +185,7 @@ uint8_t ReadBuff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length)
 /// \remarks see
 ///
 ///----------------------------------------------------------------------------
-uint8_t WriteReg(uint8_t slave, uint8_t reg, uint8_t data)
+uint8_t I2C_MEMS_Write_Reg(uint8_t slave, uint8_t reg, uint8_t data)
 {
     /* Send START condition */
     I2C_GenerateSTART(I2C_MEMS, ENABLE);
