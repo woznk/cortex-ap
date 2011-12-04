@@ -1,12 +1,12 @@
-/*******************************************************************************
-*
-* File Name: L3G4200D_driver.h
-* $Revision: $
-* $Date: $
-* L3G4200D driver header file
-* Change: restored definition of AUTO_INCR
-*
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///
+/// File Name: L3G4200D_driver.h
+/// $Revision: $
+/// $Date: $
+/// L3G4200D driver header file
+/// Change: GetAngRateRaw() now expects a pointer to uint8_t buffer 
+///
+///----------------------------------------------------------------------------
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 
@@ -339,7 +339,7 @@ status_t SetWaterMark(unsigned char wtm);
 
 //Reading Functions
 status_t GetStatusReg(unsigned char* buff);
-status_t GetAngRateRaw(AngRateRaw_t* buff);
+bool GetAngRateRaw(uint8_t* buff);
 status_t GetInt1Src(unsigned char* buff);
 status_t GetFifoSourceReg(unsigned char* buff);
 
