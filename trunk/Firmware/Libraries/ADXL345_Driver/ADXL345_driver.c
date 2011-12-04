@@ -5,7 +5,9 @@
 // $Date: $
 // $Author: $
 /// \brief I2C driver for MEMS sensors
-//  Change: added function Set_Fifo_Mode(), function GetAccelRaw() returns bool
+//  Change: GetAccelRaw() now uses I2C_MEMS_Read_Buff() instead of single 
+//          register read.
+//          Added prefix I2C_MEMS_ to all MEMS drive rfunctions
 //
 //============================================================================*/
 
@@ -49,13 +51,13 @@ static status_t Set_Output_Rate( uint8_t rate_code )
 {
   uint8_t value;
 
-  if (!ReadReg(ADXL345_SLAVE_ADDR, BW_RATE, &value))
+  if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, BW_RATE, &value))
     return MEMS_ERROR;
 
   value &= 0xF0;                // Clear rate field
   value |= (rate_code & 0x0F);  // New rate value
 
-  if (!WriteReg(ADXL345_SLAVE_ADDR, BW_RATE, value))
+  if (!I2C_MEMS_Write_Reg(ADXL345_SLAVE_ADDR, BW_RATE, value))
     return MEMS_ERROR;
 
   return MEMS_SUCCESS;
@@ -73,12 +75,12 @@ static status_t Start_Measurement( void )
 {
   uint8_t value;
 
-  if (!ReadReg(ADXL345_SLAVE_ADDR, POWER_CTL, &value))
+  if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, POWER_CTL, &value))
     return MEMS_ERROR;
 
   value |= MEASURE;         // Start measure
 
-  if (!WriteReg(ADXL345_SLAVE_ADDR, POWER_CTL, value))
+  if (!I2C_MEMS_Write_Reg(ADXL345_SLAVE_ADDR, POWER_CTL, value))
     return MEMS_ERROR;
 
   return MEMS_SUCCESS;
@@ -96,13 +98,13 @@ static status_t Set_Fifo_Mode(uint8_t mode)
 {
   uint8_t value;
 
-  if (!ReadReg(ADXL345_SLAVE_ADDR, FIFO_CTL, &value))
+  if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, FIFO_CTL, &value))
     return MEMS_ERROR;
 
   value &= 0x3F;            // clear FIFO mode
   value |= (mode & 0xC0);   // set new FIFO mode
 
-  if (!WriteReg(ADXL345_SLAVE_ADDR, FIFO_CTL, value))
+  if (!I2C_MEMS_Write_Reg(ADXL345_SLAVE_ADDR, FIFO_CTL, value))
     return MEMS_ERROR;
 
   return MEMS_SUCCESS;
@@ -120,7 +122,7 @@ bool ADXL345_Init( void )
 {
   uint8_t id;
 
-  if (!ReadReg(ADXL345_SLAVE_ADDR, DEVID, &id))
+  if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, DEVID, &id))
       id = 0;
   Set_Fifo_Mode(BYPASS_MODE);   // Disable FIFO
   Set_Output_Rate(0x09);        // Set output rate to 100 Hz
@@ -136,39 +138,21 @@ bool ADXL345_Init( void )
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-bool GetAccelRaw(AccelRaw_t* buff) {
-  uint8_t valueL;
-  uint8_t valueH;
+bool GetAccelRaw(uint8_t* buff) {
 
-  if (!ReadReg(ADXL345_SLAVE_ADDR, INT_SOURCE, &valueL) )
+  uint8_t status;
+
+  if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, INT_SOURCE, &status)) {
       return FALSE;
+  }
 
-   if ((valueL & DATA_READY) == 0)
-      return FALSE;
+  if ((status & DATA_READY) == 0) {
+     return FALSE;
+  }
 
-  if (!ReadReg(ADXL345_SLAVE_ADDR, DATAX0, &valueL) )
-      return FALSE;
-
-  if (!ReadReg(ADXL345_SLAVE_ADDR, DATAX1, &valueH) )
-      return FALSE;
-
-  buff->x = (short int)((valueH << 8) | valueL );
-
-  if (!ReadReg(ADXL345_SLAVE_ADDR, DATAY0, &valueL) )
-      return FALSE;
-
-  if (!ReadReg(ADXL345_SLAVE_ADDR, DATAY1, &valueH) )
-      return FALSE;
-
-  buff->y = (short int)((valueH << 8) | valueL );
-
-   if (!ReadReg(ADXL345_SLAVE_ADDR, DATAZ0, &valueL) )
-      return FALSE;
-
-  if (!ReadReg(ADXL345_SLAVE_ADDR, DATAZ1, &valueH) )
-      return FALSE;
-
-  buff->z = (short int)((valueH << 8) | valueL );
+  if (!I2C_MEMS_Read_Buff(ADXL345_SLAVE_ADDR, DATAX0, buff, 7)) {
+     return FALSE;
+  }
 
   return TRUE;
 }
