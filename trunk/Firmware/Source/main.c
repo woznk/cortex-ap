@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Modified call to Log_Send()
+// Change: Modified call to GetAngRateRaw() and GetAccelRaw()
 //
 //============================================================================*/
 
@@ -54,6 +54,7 @@
 VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
 VAR_STATIC uint8_t buff[8];
+VAR_STATIC uint8_t timer = 0;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -112,42 +113,36 @@ int main(void)
 
   while (1) {
     if ((g_ulFlags & FLAG_CLOCK_TICK_10) != 0) {
-        g_ulFlags &= !FLAG_CLOCK_TICK_10;
+       g_ulFlags &= !FLAG_CLOCK_TICK_10;
 
-        STM32vldiscovery_LEDOff(LED3);      // Turn off LD3
-        STM32vldiscovery_LEDOff(LED4);      // Turn off LD4
-        if (Servo_Delta == 10) {
-            STM32vldiscovery_LEDOn(LED3);   // Turn on LD3
-        } else {
-            STM32vldiscovery_LEDOn(LED4);   // Turn on LD4
-        }
-        if (Servo_Position > 1999) {
-            Servo_Delta = -10;
-        } else if (Servo_Position < 999) {
-            Servo_Delta = 10;
-        }
-        Servo_Position += Servo_Delta;
-        Servo_Set(SERVO_RUDDER, Servo_Position);
-/*
-        //check if there is some data available
-        GetStatusReg(&status);
-        if (ValBit(status, DATAREADY_BIT)) {
-           //get x, y, z angular rate raw data
-           GetAngRateRaw(&rate);
-           Log_Send(rate.x);
-           Log_Send(rate.y);
-           Log_Send(rate.z);
+       STM32vldiscovery_LEDOff(LED3);     // Turn off LD3
+       STM32vldiscovery_LEDOff(LED4);     // Turn off LD4
+       if (Servo_Delta == 10) {
+          STM32vldiscovery_LEDOn(LED3);   // Turn on LD3
+       } else {
+          STM32vldiscovery_LEDOn(LED4);   // Turn on LD4
+       }
+       if (Servo_Position > 1999) {
+          Servo_Delta = -10;
+       } else if (Servo_Position < 999) {
+          Servo_Delta = 10;
+       }
+       Servo_Position += Servo_Delta;
+       Servo_Set(SERVO_RUDDER, Servo_Position);
+
+       if (++timer > 10) {
+          timer = 0;
+
+        //get x, y, z angular rate raw data
+        if (GetAngRateRaw(buff)) {
+           Log_Send((uint16_t *)buff, 3);
         }
 
         //get x, y, z acceleration raw data
-        if (GetAccelRaw(&accel)) {
-           Log_Send(accel.x);
-           Log_Send(accel.y);
-           Log_Send(accel.z);
+        if (GetAccelRaw(buff)) {
+           Log_Send((uint16_t *)buff, 3);
         }
-*/
-        ReadBuff(L3G4200_SLAVE_ADDR, (STATUS_REG | AUTO_INCR), buff, 7);
-		Log_Send((uint16_t *)&buff[1], 3);
+      }
     }
   }
 }
