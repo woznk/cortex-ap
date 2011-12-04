@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: ReadBuff() called with AUTO_INCR bit set: works
+// Change: Modified call to Log_Send()
 //
 //============================================================================*/
 
@@ -147,9 +147,7 @@ int main(void)
         }
 */
         ReadBuff(L3G4200_SLAVE_ADDR, (STATUS_REG | AUTO_INCR), buff, 7);
-		Log_Send(*(uint16_t *)&buff[1]);
-		Log_Send(*(uint16_t *)&buff[3]);
-		Log_Send(*(uint16_t *)&buff[5]);
+		Log_Send((uint16_t *)&buff[1], 3);
     }
   }
 }
