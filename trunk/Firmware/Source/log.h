@@ -7,7 +7,7 @@
 //
 //  LANGUAGE C
 /// \brief   Log manager header file
-//  CHANGES  Log_Send() argumento changed from int to uint16_t
+//  CHANGES  Log_Send() modified to send multiple words
 //
 //============================================================================
 
@@ -34,4 +34,4 @@ void Log_Init ( void );
 void Log_DCM ( void );
 void Log_PPM ( void );
 void Log_PutChar( char c );
-void Log_Send(uint16_t data);
+void Log_Send(uint16_t *data, uint8_t num);

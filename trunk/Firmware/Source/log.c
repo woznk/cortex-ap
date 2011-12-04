@@ -9,8 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES Log_Send() argumento changed from int to uint16_t
-//          baud rate changed into 38400.
+//  CHANGES Log_Send() modified to send multiple words
 //
 //============================================================================*/
 
@@ -110,31 +109,32 @@ Log_Init( void ) {
 ///----------------------------------------------------------------------------
 ///
 /// \brief   sends data via USART 1
-/// \remarks 
+/// \remarks
 ///
 ///
 ///----------------------------------------------------------------------------
 void
-Log_Send(uint16_t data)
+Log_Send(uint16_t *data, uint8_t num)
 {
-    long lTemp;
-    unsigned char ucDigit;
-	int j = 0;
+    long l_temp;
+    uint8_t digit, i, j = 0;
 
-    lTemp = (long)data;
-    szString[j++] = ' ';
-    ucDigit = ((lTemp >> 12) & 0x0000000F);
-    szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-    ucDigit = ((lTemp >> 8) & 0x0000000F);
-    szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-    ucDigit = ((lTemp >> 4) & 0x0000000F);
-    szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-    ucDigit = (lTemp & 0x0000000F);
-    szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+    for (i = 0; i < num; i++) {
+        l_temp = *data++;
+        szString[j++] = ' ';
+        digit = ((l_temp >> 12) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = ((l_temp >> 8) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = ((l_temp >> 4) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = (l_temp & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+    }
     szString[j++] = '\n';
     szString[j] = '\r';
 
-    for (j = 0; j < 7; j++) {
+    for (j = 0; j < (i * 5) + 2; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
       USART_SendData(USART1, szString[j]);
