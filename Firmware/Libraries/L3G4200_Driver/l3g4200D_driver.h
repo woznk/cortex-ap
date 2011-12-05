@@ -4,7 +4,7 @@
 /// $Revision: $
 /// $Date: $
 /// L3G4200D driver header file
-/// Change: GetAngRateRaw() now expects a pointer to uint8_t buffer 
+/// Change: GetAngRateRaw() now expects a pointer to uint8_t buffer
 ///
 ///----------------------------------------------------------------------------
 
@@ -339,7 +339,7 @@ status_t SetWaterMark(unsigned char wtm);
 
 //Reading Functions
 status_t GetStatusReg(unsigned char* buff);
-bool GetAngRateRaw(uint8_t* buff);
+bool GetAngRateRaw(uint8_t* data);
 status_t GetInt1Src(unsigned char* buff);
 status_t GetFifoSourceReg(unsigned char* buff);
 
