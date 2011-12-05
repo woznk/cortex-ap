@@ -5,9 +5,7 @@
 // $Date: $
 // $Author: $
 /// \brief I2C driver for MEMS sensors
-//  Change: GetAccelRaw() now uses I2C_MEMS_Read_Buff() instead of single 
-//          register read.
-//          Added prefix I2C_MEMS_ to all MEMS drive rfunctions
+//  Change: changed number of bytes read by GetAccelRaw() to 6.
 //
 //============================================================================*/
 
@@ -138,19 +136,19 @@ bool ADXL345_Init( void )
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-bool GetAccelRaw(uint8_t* buff) {
+bool GetAccelRaw(uint8_t* data) {
 
   uint8_t status;
 
   if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, INT_SOURCE, &status)) {
-      return FALSE;
+     return FALSE;
   }
 
   if ((status & DATA_READY) == 0) {
      return FALSE;
   }
 
-  if (!I2C_MEMS_Read_Buff(ADXL345_SLAVE_ADDR, DATAX0, buff, 7)) {
+  if (!I2C_MEMS_Read_Buff(ADXL345_SLAVE_ADDR, DATAX0, data, 6)) {
      return FALSE;
   }
 
