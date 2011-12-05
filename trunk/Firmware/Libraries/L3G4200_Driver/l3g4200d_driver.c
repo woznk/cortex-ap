@@ -3,9 +3,7 @@
 /// $Revision:$
 /// $Date:$
 /// L3G4200D driver file
-/// Changes: GetAngRateRaw() now uses I2C_MEMS_Read_Buff() instead of single 
-///          register read.
-///          Added prefix I2C_MEMS_ to all MEMS driver functions
+/// Changes: GetAngRateRaw(): temporarily removed reading of status register 
 ///
 ///----------------------------------------------------------------------------
 
@@ -570,7 +568,8 @@ status_t GetStatusReg(unsigned char* buff) {
 * Output         : Angular Rate Registers buffer
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-bool GetAngRateRaw(uint8_t* buff) {
+bool GetAngRateRaw(uint8_t* data) {
+/*
   uint8_t status;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR, STATUS_REG, &status)) {
@@ -580,8 +579,8 @@ bool GetAngRateRaw(uint8_t* buff) {
   if (!ValBit(status, DATAREADY_BIT)) {
      return FALSE;
   }
-
-  if (!I2C_MEMS_Read_Buff(L3G4200_SLAVE_ADDR, (STATUS_REG | AUTO_INCR), buff, 7)) {
+*/
+  if (!I2C_MEMS_Read_Buff(L3G4200_SLAVE_ADDR, (STATUS_REG | AUTO_INCR), data, 7)) {
      return FALSE;
   }
 
