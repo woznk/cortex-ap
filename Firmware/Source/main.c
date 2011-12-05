@@ -6,7 +6,8 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Modified call to GetAngRateRaw() and GetAccelRaw()
+// Change: modified argument of LogSend(), because GetAngRateRaw() first byte 
+//         read by GetAccelRaw() is status register.
 //
 //============================================================================*/
 
@@ -72,10 +73,6 @@ void Delay(__IO uint32_t nCount);
 ///----------------------------------------------------------------------------
 int main(void)
 {
-  uint8_t status = 0;
-  AngRateRaw_t rate;
-  AccelRaw_t accel;
-
   /*!< At this stage the microcontroller clock setting is already configured,
        this is done through SystemInit() function which is called from startup
        file (startup_stm32f10x_xx.s) before to branch to application main.
@@ -135,13 +132,14 @@ int main(void)
 
         //get x, y, z angular rate raw data
         if (GetAngRateRaw(buff)) {
-           Log_Send((uint16_t *)buff, 3);
+           Log_Send((uint16_t *)&buff[1], 3);
         }
-
+/*
         //get x, y, z acceleration raw data
         if (GetAccelRaw(buff)) {
            Log_Send((uint16_t *)buff, 3);
         }
+*/		
       }
     }
   }
