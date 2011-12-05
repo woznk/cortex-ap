@@ -6,7 +6,7 @@
 // $Author: $
 /// \file
 /// \brief  ADXL345 driver
-//  Change: GetAccelRaw() now expects a pointer to uint8_t buffer 
+//  Change: GetAccelRaw() now expects a pointer to uint8_t buffer
 //
 //============================================================================
 
@@ -201,7 +201,7 @@ typedef struct{
 
 // Generic
 bool ADXL345_Init( void );
-bool GetAccelRaw(uint8_t* buff);
+bool GetAccelRaw(uint8_t* data);
 
 #endif /* __ADXL345_DRIVER__H */
 
