@@ -5,7 +5,7 @@
 // $Date: $
 // $Author: $
 /// \brief I2C driver for MEMS sensors
-//  Change: changed number of bytes read by GetAccelRaw() to 6.
+//  Change: GetAccelRaw() removed reading of status register.
 //
 //============================================================================*/
 
@@ -137,7 +137,7 @@ bool ADXL345_Init( void )
 ///
 ///----------------------------------------------------------------------------
 bool GetAccelRaw(uint8_t* data) {
-
+/*
   uint8_t status;
 
   if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, INT_SOURCE, &status)) {
@@ -147,7 +147,7 @@ bool GetAccelRaw(uint8_t* data) {
   if ((status & DATA_READY) == 0) {
      return FALSE;
   }
-
+*/
   if (!I2C_MEMS_Read_Buff(ADXL345_SLAVE_ADDR, DATAX0, data, 6)) {
      return FALSE;
   }
