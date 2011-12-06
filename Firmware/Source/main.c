@@ -6,8 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: modified argument of LogSend(), because GetAngRateRaw() first byte 
-//         read by GetAccelRaw() is status register.
+// Change: Angular rate and acceleration read consecutively on buff[] array
 //
 //============================================================================*/
 
@@ -54,7 +53,7 @@
 
 VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
-VAR_STATIC uint8_t buff[8];
+VAR_STATIC uint8_t buff[16];
 VAR_STATIC uint8_t timer = 0;
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -130,17 +129,14 @@ int main(void)
        if (++timer > 10) {
           timer = 0;
 
-        //get x, y, z angular rate raw data
-        if (GetAngRateRaw(buff)) {
-           Log_Send((uint16_t *)&buff[1], 3);
-        }
-/*
-        //get x, y, z acceleration raw data
-        if (GetAccelRaw(buff)) {
-           Log_Send((uint16_t *)buff, 3);
-        }
-*/		
-      }
+          //get x, y, z angular rate raw data
+          if (GetAngRateRaw(buff)) {
+             //get x, y, z acceleration raw data
+             if (GetAccelRaw((uint8_t *)&buff[6])) {
+                Log_Send((uint16_t *)buff, 6);
+             }
+          }
+       }
     }
   }
 }
