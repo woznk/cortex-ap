@@ -3,7 +3,7 @@
 /// $Revision:$
 /// $Date:$
 /// L3G4200D driver file
-/// Changes: GetAngRateRaw(): temporarily removed reading of status register 
+/// Changes: GetAngRateRaw(): removed reading of status register. 
 ///
 ///----------------------------------------------------------------------------
 
@@ -580,7 +580,7 @@ bool GetAngRateRaw(uint8_t* data) {
      return FALSE;
   }
 */
-  if (!I2C_MEMS_Read_Buff(L3G4200_SLAVE_ADDR, (STATUS_REG | AUTO_INCR), data, 7)) {
+  if (!I2C_MEMS_Read_Buff(L3G4200_SLAVE_ADDR, (OUT_X_L | AUTO_INCR), data, 6)) {
      return FALSE;
   }
 
