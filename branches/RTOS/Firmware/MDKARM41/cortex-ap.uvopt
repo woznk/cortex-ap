@@ -180,8 +180,8 @@
         <newCpu>0</newCpu>
         <uProt>0</uProt>
       </DebugFlag>
-      <LintExecutable></LintExecutable>
-      <LintConfigFile></LintConfigFile>
+      <LintExecutable>C:\Programmi\Lint\LINT-NT.EXE</LintExecutable>
+      <LintConfigFile>C:\Programmi\Lint\env-keil.lnt</LintConfigFile>
     </TargetOption>
   </Target>
 
@@ -666,8 +666,8 @@
       <Focus>0</Focus>
       <ColumnNumber>53</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>563</TopLine>
-      <CurrentLine>575</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\L3G4200_Driver\l3g4200d_driver.c</PathWithFileName>
       <FilenameWithoutPath>l3g4200d_driver.c</FilenameWithoutPath>
@@ -762,10 +762,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>65</ColumnNumber>
+      <ColumnNumber>41</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>107</TopLine>
-      <CurrentLine>132</CurrentLine>
+      <TopLine>190</TopLine>
+      <CurrentLine>204</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -792,8 +792,8 @@
       <Focus>0</Focus>
       <ColumnNumber>61</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>80</TopLine>
-      <CurrentLine>80</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\tick.c</PathWithFileName>
       <FilenameWithoutPath>tick.c</FilenameWithoutPath>
@@ -806,8 +806,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>1</TopLine>
+      <CurrentLine>1</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -818,10 +818,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>9</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>245</TopLine>
-      <CurrentLine>256</CurrentLine>
+      <TopLine>1</TopLine>
+      <CurrentLine>1</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\log.c</PathWithFileName>
       <FilenameWithoutPath>log.c</FilenameWithoutPath>
@@ -877,12 +877,89 @@
     </File>
   </Group>
 
+  <Group>
+    <GroupName>FreeRTOS</GroupName>
+    <tvExp>1</tvExp>
+    <tvExpOptDlg>0</tvExpOptDlg>
+    <cbSel>0</cbSel>
+    <File>
+      <GroupNumber>0</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\FreeRTOS\list.c</PathWithFileName>
+      <FilenameWithoutPath>list.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>0</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\FreeRTOS\queue.c</PathWithFileName>
+      <FilenameWithoutPath>queue.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>0</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>21</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>247</TopLine>
+      <CurrentLine>265</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\FreeRTOS\tasks.c</PathWithFileName>
+      <FilenameWithoutPath>tasks.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>0</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\FreeRTOS\portable\RVDS\ARM_CM3\port.c</PathWithFileName>
+      <FilenameWithoutPath>port.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>0</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\FreeRTOS\portable\MemMang\heap_1.c</PathWithFileName>
+      <FilenameWithoutPath>heap_1.c</FilenameWithoutPath>
+    </File>
+  </Group>
+
   <MDIGroups>
     <Orientation>1</Orientation>
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>1</ActiveTab>
+      <ActiveTab>3</ActiveTab>
       <Documents>
         <Doc>
           <Name>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</Name>
@@ -892,27 +969,21 @@
         </Doc>
         <Doc>
           <Name>..\Source\main.c</Name>
-          <ColumnNumber>65</ColumnNumber>
-          <TopLine>107</TopLine>
-          <CurrentLine>132</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\ADXL345_Driver\ADXL345_driver.c</Name>
-          <ColumnNumber>38</ColumnNumber>
-          <TopLine>122</TopLine>
-          <CurrentLine>141</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\startup\arm\startup_stm32f10x_ld_vl.s</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>146</TopLine>
-          <CurrentLine>146</CurrentLine>
+          <ColumnNumber>41</ColumnNumber>
+          <TopLine>190</TopLine>
+          <CurrentLine>204</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\log.c</Name>
-          <ColumnNumber>9</ColumnNumber>
-          <TopLine>245</TopLine>
-          <CurrentLine>256</CurrentLine>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>1</TopLine>
+          <CurrentLine>1</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\FreeRTOS\tasks.c</Name>
+          <ColumnNumber>21</ColumnNumber>
+          <TopLine>247</TopLine>
+          <CurrentLine>265</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
