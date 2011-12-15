@@ -6,16 +6,23 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Angular rate and acceleration read consecutively on buff[] array
+// Change: included FreeRTOS files, added a task for reading sensors 
 //
 //============================================================================*/
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
-#include "servodriver.h"
+
 #include "i2c_mems_driver.h"
 #include "l3g4200d_driver.h"
 #include "adxl345_driver.h"
+#include "servodriver.h"
+
 #include "tick.h"
 #include "nav.h"
 #include "log.h"
@@ -55,13 +62,14 @@ VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
 VAR_STATIC uint8_t buff[16];
 VAR_STATIC uint8_t timer = 0;
+VAR_STATIC uint16_t Sampling_Frequency = 10;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
 void RCC_Configuration(void);
 void GPIO_Configuration(void);
 void Delay(__IO uint32_t nCount);
-
+void Read_Sensors_Task(void *pvParameters);
 
 ///----------------------------------------------------------------------------
 ///
@@ -107,37 +115,10 @@ int main(void)
 
   Log_Init();
 
+  xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 256, NULL, 5, NULL);
+  vTaskStartScheduler();
+
   while (1) {
-    if ((g_ulFlags & FLAG_CLOCK_TICK_10) != 0) {
-       g_ulFlags &= !FLAG_CLOCK_TICK_10;
-
-       STM32vldiscovery_LEDOff(LED3);     // Turn off LD3
-       STM32vldiscovery_LEDOff(LED4);     // Turn off LD4
-       if (Servo_Delta == 10) {
-          STM32vldiscovery_LEDOn(LED3);   // Turn on LD3
-       } else {
-          STM32vldiscovery_LEDOn(LED4);   // Turn on LD4
-       }
-       if (Servo_Position > 1999) {
-          Servo_Delta = -10;
-       } else if (Servo_Position < 999) {
-          Servo_Delta = 10;
-       }
-       Servo_Position += Servo_Delta;
-       Servo_Set(SERVO_RUDDER, Servo_Position);
-
-       if (++timer > 10) {
-          timer = 0;
-
-          //get x, y, z angular rate raw data
-          if (GetAngRateRaw(buff)) {
-             //get x, y, z acceleration raw data
-             if (GetAccelRaw((uint8_t *)&buff[6])) {
-                Log_Send((uint16_t *)buff, 6);
-             }
-          }
-       }
-    }
   }
 }
 
@@ -165,7 +146,7 @@ void RCC_Configuration(void)
   /* GPIOA and GPIOB clock enable */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
                          RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO |
-						 RCC_APB2Periph_USART1, ENABLE);
+                         RCC_APB2Periph_USART1, ENABLE);
 }
 
 ///----------------------------------------------------------------------------
@@ -205,6 +186,42 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
+
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Configure pins.
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Read_Sensors_Task(void *pvParameters)
+{
+    portTickType Last_Wake_Time;
+    uint8_t Blink_Counter = 0;
+    bool Led_On = FALSE;
+
+    Last_Wake_Time = xTaskGetTickCount();
+
+    while (1) {
+        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
+        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
+        Log_Send((uint16_t *)buff, 6);      // output data
+
+        if (++Blink_Counter == 10) {
+            Blink_Counter = 0;
+            if (Led_On) {
+                Led_On = FALSE;
+                STM32vldiscovery_LEDOn(LED3);   // Turn on LD3
+            } else {
+                Led_On = TRUE;
+                STM32vldiscovery_LEDOff(LED3);  // Turn off LD3
+            }
+        }
+        vTaskDelayUntil(&Last_Wake_Time,(1000/Sampling_Frequency)/portTICK_RATE_MS);
+    }
+}
+
 
 #ifdef  USE_FULL_ASSERT
 ///----------------------------------------------------------------------------
