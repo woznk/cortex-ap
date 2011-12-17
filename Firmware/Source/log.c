@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES Log_Send() modified to send multiple words
+//  CHANGES Removed '\r' termination in Log_Send() 
 //
 //============================================================================*/
 
@@ -132,9 +132,8 @@ Log_Send(uint16_t *data, uint8_t num)
         szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
     }
     szString[j++] = '\n';
-    szString[j] = '\r';
 
-    for (j = 0; j < (i * 5) + 2; j++) {
+    for (j = 0; j < (i * 5) + 1; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
       USART_SendData(USART1, szString[j]);
