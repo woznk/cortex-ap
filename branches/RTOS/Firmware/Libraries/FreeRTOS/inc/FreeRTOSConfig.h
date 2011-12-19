@@ -84,12 +84,12 @@
 #define configUSE_MUTEXES               1
 
 /* Runtime stats macros */
-#define configGENERATE_RUN_TIME_STATS   1
+#define configGENERATE_RUN_TIME_STATS   0
 
-extern void vConfigureTimerForRunTimeStats(void);
-extern u16 TIM6_MSB;
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()    vConfigureTimerForRunTimeStats()
-#define portGET_RUN_TIME_COUNTER_VALUE()            TIM6_MSB<<16|TIM6->CNT
+//extern void vConfigureTimerForRunTimeStats(void);
+//extern u16 TIM6_MSB;
+//#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()    vConfigureTimerForRunTimeStats()
+//#define portGET_RUN_TIME_COUNTER_VALUE()            TIM6_MSB<<16|TIM6->CNT
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES           0
