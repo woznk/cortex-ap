@@ -6,7 +6,8 @@
 // $Author: $
 //
 /// \brief main program
-// Change: included FreeRTOS files, added a task for reading sensors 
+// Change: temporarily removed all sensor drivers
+//         Read_Sensors_Task() should only toggle LED 3
 //
 //============================================================================*/
 
@@ -100,22 +101,22 @@ int main(void)
   SysTick_Config(SystemCoreClock / 100);
 
   /* Initialize PWM timers as servo outputs */
-  Servo_Init();
+//  Servo_Init();
 
   // I2C peripheral initialization
-  I2C_MEMS_Init();
+//  I2C_MEMS_Init();
 
   // L3G4200 gyro sensor initialization
-  L3G4200_Init();
+//  L3G4200_Init();
 
   // ADXL345 accelerometer sensor initialization
-  ADXL345_Init();
+//  ADXL345_Init();
 
 //  while (!Nav_Init());  // Navigation init
 
-  Log_Init();
+//  Log_Init();
 
-  xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 256, NULL, 5, NULL);
+  xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 16, NULL, 5, NULL);
   vTaskStartScheduler();
 
   while (1) {
@@ -199,24 +200,17 @@ void Read_Sensors_Task(void *pvParameters)
 {
     portTickType Last_Wake_Time;
     uint8_t Blink_Counter = 0;
-    bool Led_On = FALSE;
 
     Last_Wake_Time = xTaskGetTickCount();
 
     while (1) {
-        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
-        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
-        Log_Send((uint16_t *)buff, 6);      // output data
+//        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
+//        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
+//        Log_Send((uint16_t *)buff, 6);      // output data
 
         if (++Blink_Counter == 10) {
             Blink_Counter = 0;
-            if (Led_On) {
-                Led_On = FALSE;
-                STM32vldiscovery_LEDOn(LED3);   // Turn on LD3
-            } else {
-                Led_On = TRUE;
-                STM32vldiscovery_LEDOff(LED3);  // Turn off LD3
-            }
+            STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
         }
         vTaskDelayUntil(&Last_Wake_Time,(1000/Sampling_Frequency)/portTICK_RATE_MS);
     }
