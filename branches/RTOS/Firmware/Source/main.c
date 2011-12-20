@@ -6,8 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: temporarily removed all sensor drivers
-//         Read_Sensors_Task() should only toggle LED 3
+// Change: call to SysTick_Config() commented  out
 //
 //============================================================================*/
 
@@ -98,7 +97,7 @@ int main(void)
   STM32vldiscovery_LEDInit(LED4);
 
   /* Setup SysTick Timer (10ms) */
-  SysTick_Config(SystemCoreClock / 100);
+//  SysTick_Config(SystemCoreClock / 100);
 
   /* Initialize PWM timers as servo outputs */
 //  Servo_Init();
