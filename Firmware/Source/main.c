@@ -6,7 +6,8 @@
 // $Author: $
 //
 /// \brief main program
-// Change: call to SysTick_Config() commented  out
+// Change: Read_Sensors_Task(): replaced delay with 1000, 
+//         added LED toggle before entering endless loop
 //
 //============================================================================*/
 
@@ -202,6 +203,8 @@ void Read_Sensors_Task(void *pvParameters)
 
     Last_Wake_Time = xTaskGetTickCount();
 
+    STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
+
     while (1) {
 //        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
 //        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
@@ -211,7 +214,7 @@ void Read_Sensors_Task(void *pvParameters)
             Blink_Counter = 0;
             STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
         }
-        vTaskDelayUntil(&Last_Wake_Time,(1000/Sampling_Frequency)/portTICK_RATE_MS);
+        vTaskDelayUntil(&Last_Wake_Time,1000);
     }
 }
 
