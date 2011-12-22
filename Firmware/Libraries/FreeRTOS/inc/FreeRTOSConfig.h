@@ -75,8 +75,8 @@
 #define configCPU_CLOCK_HZ              ( ( unsigned long ) 24000000 )   // original: 72000000
 #define configTICK_RATE_HZ              ( ( portTickType ) 100 )
 #define configMAX_PRIORITIES            ( ( unsigned portBASE_TYPE ) 5 )
-#define configMINIMAL_STACK_SIZE        ( ( unsigned short ) 32 )      // original: 128
-#define configTOTAL_HEAP_SIZE           ( ( size_t ) ( 1024 ) )         // original: 17 * 1024
+#define configMINIMAL_STACK_SIZE        ( ( unsigned short ) 128 )      // original: 128
+#define configTOTAL_HEAP_SIZE           ( ( size_t ) ( 2 * 1024 ) )         // original: 17 * 1024
 #define configMAX_TASK_NAME_LEN         ( 16 )                          // original: 32
 #define configUSE_TRACE_FACILITY        0
 #define configUSE_16_BIT_TICKS          0
@@ -96,9 +96,9 @@
 #define configMAX_CO_ROUTINE_PRIORITIES ( 2 )
 
 /* Set the following definitions to 1 / 0 to include / exclude the API function */
-#define INCLUDE_vTaskPrioritySet        1
-#define INCLUDE_uxTaskPriorityGet       1
-#define INCLUDE_vTaskDelete             1
+#define INCLUDE_vTaskPrioritySet        0
+#define INCLUDE_uxTaskPriorityGet       0
+#define INCLUDE_vTaskDelete             0
 #define INCLUDE_vTaskCleanUpResources   0
 #define INCLUDE_vTaskSuspend            1
 #define INCLUDE_vTaskDelayUntil         1
