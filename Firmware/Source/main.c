@@ -6,8 +6,8 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Read_Sensors_Task(): replaced delay with 1000, 
-//         added LED toggle before entering endless loop
+// Change: Added second task Dummy_Task()
+//         Read_Sensors_Task(): moved vTaskDelayUntil at beginning
 //
 //============================================================================*/
 
@@ -70,6 +70,8 @@ VAR_STATIC uint16_t Sampling_Frequency = 10;
 void RCC_Configuration(void);
 void GPIO_Configuration(void);
 void Delay(__IO uint32_t nCount);
+
+void Dummy_Task(void *pvParameters);
 void Read_Sensors_Task(void *pvParameters);
 
 ///----------------------------------------------------------------------------
@@ -117,6 +119,8 @@ int main(void)
 //  Log_Init();
 
   xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 16, NULL, 5, NULL);
+  xTaskCreate(Dummy_Task, ( signed portCHAR * ) "Dummy", 16, NULL, 5, NULL);
+
   vTaskStartScheduler();
 
   while (1) {
@@ -188,6 +192,12 @@ void GPIO_Configuration(void)
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
 
+void Dummy_Task(void *pvParameters)
+{
+	while(1){
+	}
+}
+
 
 ///----------------------------------------------------------------------------
 ///
@@ -199,22 +209,20 @@ void GPIO_Configuration(void)
 void Read_Sensors_Task(void *pvParameters)
 {
     portTickType Last_Wake_Time;
-    uint8_t Blink_Counter = 0;
 
     Last_Wake_Time = xTaskGetTickCount();
 
     STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
 
     while (1) {
+
+        vTaskDelayUntil(&Last_Wake_Time,100);
+
 //        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
 //        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
 //        Log_Send((uint16_t *)buff, 6);      // output data
 
-        if (++Blink_Counter == 10) {
-            Blink_Counter = 0;
-            STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
-        }
-        vTaskDelayUntil(&Last_Wake_Time,1000);
+          STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
     }
 }
 
