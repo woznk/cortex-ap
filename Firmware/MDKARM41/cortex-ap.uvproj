@@ -500,11 +500,6 @@
               <FilePath>..\Utilities\stm32f10x_it.c</FilePath>
             </File>
             <File>
-              <FileName>STM32vldiscovery.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Utilities\STM32vldiscovery.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f10x_tim.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_tim.c</FilePath>
@@ -1042,11 +1037,6 @@
               <FilePath>..\Utilities\stm32f10x_it.c</FilePath>
             </File>
             <File>
-              <FileName>STM32vldiscovery.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Utilities\STM32vldiscovery.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f10x_tim.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_tim.c</FilePath>
@@ -1582,11 +1572,6 @@
               <FileName>stm32f10x_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Utilities\stm32f10x_it.c</FilePath>
-            </File>
-            <File>
-              <FileName>STM32vldiscovery.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Utilities\STM32vldiscovery.c</FilePath>
             </File>
             <File>
               <FileName>stm32f10x_tim.c</FileName>
