@@ -6,16 +6,24 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Angular rate and acceleration read consecutively on buff[] array
+// Change: Added second task Dummy_Task()
+//         Read_Sensors_Task(): moved vTaskDelayUntil at beginning
 //
 //============================================================================*/
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
-#include "servodriver.h"
+
 #include "i2c_mems_driver.h"
 #include "l3g4200d_driver.h"
 #include "adxl345_driver.h"
+#include "servodriver.h"
+
 #include "tick.h"
 #include "nav.h"
 #include "log.h"
@@ -55,6 +63,7 @@ VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
 VAR_STATIC uint8_t buff[16];
 VAR_STATIC uint8_t timer = 0;
+VAR_STATIC uint16_t Sampling_Frequency = 10;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -62,6 +71,8 @@ void RCC_Configuration(void);
 void GPIO_Configuration(void);
 void Delay(__IO uint32_t nCount);
 
+void Dummy_Task(void *pvParameters);
+void Read_Sensors_Task(void *pvParameters);
 
 ///----------------------------------------------------------------------------
 ///
@@ -89,55 +100,30 @@ int main(void)
   STM32vldiscovery_LEDInit(LED4);
 
   /* Setup SysTick Timer (10ms) */
-  SysTick_Config(SystemCoreClock / 100);
+//  SysTick_Config(SystemCoreClock / 100);
 
   /* Initialize PWM timers as servo outputs */
-  Servo_Init();
+//  Servo_Init();
 
   // I2C peripheral initialization
-  I2C_MEMS_Init();
+//  I2C_MEMS_Init();
 
   // L3G4200 gyro sensor initialization
-  L3G4200_Init();
+//  L3G4200_Init();
 
   // ADXL345 accelerometer sensor initialization
-  ADXL345_Init();
+//  ADXL345_Init();
 
 //  while (!Nav_Init());  // Navigation init
 
-  Log_Init();
+//  Log_Init();
+
+  xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 16, NULL, 5, NULL);
+  xTaskCreate(Dummy_Task, ( signed portCHAR * ) "Dummy", 16, NULL, 5, NULL);
+
+  vTaskStartScheduler();
 
   while (1) {
-    if ((g_ulFlags & FLAG_CLOCK_TICK_10) != 0) {
-       g_ulFlags &= !FLAG_CLOCK_TICK_10;
-
-       STM32vldiscovery_LEDOff(LED3);     // Turn off LD3
-       STM32vldiscovery_LEDOff(LED4);     // Turn off LD4
-       if (Servo_Delta == 10) {
-          STM32vldiscovery_LEDOn(LED3);   // Turn on LD3
-       } else {
-          STM32vldiscovery_LEDOn(LED4);   // Turn on LD4
-       }
-       if (Servo_Position > 1999) {
-          Servo_Delta = -10;
-       } else if (Servo_Position < 999) {
-          Servo_Delta = 10;
-       }
-       Servo_Position += Servo_Delta;
-       Servo_Set(SERVO_RUDDER, Servo_Position);
-
-       if (++timer > 10) {
-          timer = 0;
-
-          //get x, y, z angular rate raw data
-          if (GetAngRateRaw(buff)) {
-             //get x, y, z acceleration raw data
-             if (GetAccelRaw((uint8_t *)&buff[6])) {
-                Log_Send((uint16_t *)buff, 6);
-             }
-          }
-       }
-    }
   }
 }
 
@@ -165,7 +151,7 @@ void RCC_Configuration(void)
   /* GPIOA and GPIOB clock enable */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
                          RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO |
-						 RCC_APB2Periph_USART1, ENABLE);
+                         RCC_APB2Periph_USART1, ENABLE);
 }
 
 ///----------------------------------------------------------------------------
@@ -205,6 +191,41 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
+
+void Dummy_Task(void *pvParameters)
+{
+	while(1){
+	}
+}
+
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Configure pins.
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Read_Sensors_Task(void *pvParameters)
+{
+    portTickType Last_Wake_Time;
+
+    Last_Wake_Time = xTaskGetTickCount();
+
+    STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
+
+    while (1) {
+
+        vTaskDelayUntil(&Last_Wake_Time,100);
+
+//        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
+//        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
+//        Log_Send((uint16_t *)buff, 6);      // output data
+
+          STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
+    }
+}
+
 
 #ifdef  USE_FULL_ASSERT
 ///----------------------------------------------------------------------------
