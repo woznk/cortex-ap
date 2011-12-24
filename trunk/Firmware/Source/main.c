@@ -6,8 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Added second task Dummy_Task()
-//         Read_Sensors_Task(): moved vTaskDelayUntil at beginning
+// Change: Added LED functions, removed STM32Discovery functions
 //
 //============================================================================*/
 
@@ -17,7 +16,6 @@
 #include "semphr.h"
 
 #include "stm32f10x.h"
-#include "STM32vldiscovery.h"
 
 #include "i2c_mems_driver.h"
 #include "l3g4200d_driver.h"
@@ -47,13 +45,24 @@
 #endif
 #define VAR_GLOBAL
 
+#define GREEN_PIN    GPIO_Pin_9
+#define BLUE_PIN     GPIO_Pin_8
+
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
 
 /*----------------------------------- Types ----------------------------------*/
 
+typedef enum {
+  GREEN = 0,
+  BLUE = 1,
+  LED_NUM
+} Led_TypeDef;
+
 /*---------------------------------- Constants -------------------------------*/
+
+const uint16_t GPIO_PIN[LED_NUM] = {GREEN_PIN, BLUE_PIN};
 
 /*---------------------------------- Globals ---------------------------------*/
 
@@ -95,13 +104,6 @@ int main(void)
   /* GPIO Configuration */
   GPIO_Configuration();
 
-  /* Initialize Leds LD3 and LD4 of STM32VLDISCOVERY board */
-  STM32vldiscovery_LEDInit(LED3);
-  STM32vldiscovery_LEDInit(LED4);
-
-  /* Setup SysTick Timer (10ms) */
-//  SysTick_Config(SystemCoreClock / 100);
-
   /* Initialize PWM timers as servo outputs */
 //  Servo_Init();
 
@@ -126,6 +128,43 @@ int main(void)
   while (1) {
   }
 }
+
+///----------------------------------------------------------------------------
+///
+/// \brief
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void LEDOn(Led_TypeDef Led)
+{
+  GPIOC->BSRR = GPIO_PIN[Led];
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void LEDOff(Led_TypeDef Led)
+{
+  GPIOC->BRR = GPIO_PIN[Led];
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void LEDToggle(Led_TypeDef Led)
+{
+  GPIOC->ODR ^= GPIO_PIN[Led];
+}
+
 
 ///----------------------------------------------------------------------------
 ///
@@ -165,7 +204,7 @@ void GPIO_Configuration(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
 
-  // GPIOA Configuration
+  /* GPIOA Configuration */
 
   // TIM3 Channel 1, 2 as alternate function push-pull (6, 7)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
@@ -185,23 +224,32 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-  // GPIOC Configuration
+  /* GPIOB Configuration */
 
   // TIM3 Channel 3, 4 as alternate function push-pull */
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+  /* GPIOC Configuration */
+
+  // LED pins as push pull outputs
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+
 }
 
 void Dummy_Task(void *pvParameters)
 {
-	while(1){
+	while (1) {
 	}
 }
 
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   Configure pins.
+/// \brief   Read sensors.
 /// \return  -
 /// \remarks -
 ///
@@ -212,7 +260,7 @@ void Read_Sensors_Task(void *pvParameters)
 
     Last_Wake_Time = xTaskGetTickCount();
 
-    STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
+    LEDToggle(GREEN);  // Toggle green LED
 
     while (1) {
 
@@ -222,7 +270,7 @@ void Read_Sensors_Task(void *pvParameters)
 //        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
 //        Log_Send((uint16_t *)buff, 6);      // output data
 
-          STM32vldiscovery_LEDToggle(LED3);  // Toggle LD3
+        LEDToggle(GREEN);  // Toggle green LED
     }
 }
 
