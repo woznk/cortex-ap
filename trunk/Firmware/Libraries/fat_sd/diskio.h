@@ -74,7 +74,8 @@ DRESULT disk_ioctl (BYTE, BYTE, void*);
 #ifndef RAMFUNC
 #define RAMFUNC
 #endif
-RAMFUNC void disk_timerproc (void);
+//RAMFUNC void disk_timerproc (void);
+void disk_timerproc(void *pvParameters);
 
 /* Martin Thomas end */
 

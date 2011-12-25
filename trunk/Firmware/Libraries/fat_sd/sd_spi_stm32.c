@@ -31,6 +31,8 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "stm32f10x.h"
 #include "stm32f10x_spi.h"
@@ -1029,39 +1031,45 @@ DRESULT disk_ioctl (
 
 
 /*-----------------------------------------------------------------------*/
-/* Device Timer Interrupt Procedure  (Platform dependent)                */
+/* Lorentz: disk task, running every 10 ms                               */
 /*-----------------------------------------------------------------------*/
-/* This function must be called in period of 10ms                        */
 
-RAMFUNC void disk_timerproc (void)
+/*RAMFUNC*/ void disk_timerproc (void *pvParameters)
 {
 	static DWORD pv;
 	DWORD ns;
 	BYTE n, s;
 
+    portTickType Last_Wake_Time;
+    Last_Wake_Time = xTaskGetTickCount();
 
-	n = Timer1;                /* 100Hz decrement timers */
-	if (n) Timer1 = --n;
-	n = Timer2;
-	if (n) Timer2 = --n;
+    while (1) {
 
-	ns = pv;
-	pv = socket_is_empty() | socket_is_write_protected();	/* Sample socket switch */
+		vTaskDelayUntil(&Last_Wake_Time,10);
 
-	if (ns == pv) {                         /* Have contacts stabled? */
-		s = Stat;
-
-		if (pv & socket_state_mask_wp)      /* WP is H (write protected) */
-			s |= STA_PROTECT;
-		else                                /* WP is L (write enabled) */
-			s &= ~STA_PROTECT;
-
-		if (pv & socket_state_mask_cp)      /* INS = H (Socket empty) */
-			s |= (STA_NODISK | STA_NOINIT);
-		else                                /* INS = L (Card inserted) */
-			s &= ~STA_NODISK;
-
-		Stat = s;
+	   	n = Timer1;                /* 100Hz decrement timers */
+		if (n) Timer1 = --n;
+		n = Timer2;
+		if (n) Timer2 = --n;
+	
+		ns = pv;
+		pv = socket_is_empty() | socket_is_write_protected();	/* Sample socket switch */
+	
+		if (ns == pv) {                         /* Have contacts stabled? */
+			s = Stat;
+	
+			if (pv & socket_state_mask_wp)      /* WP is H (write protected) */
+				s |= STA_PROTECT;
+			else                                /* WP is L (write enabled) */
+				s &= ~STA_PROTECT;
+	
+			if (pv & socket_state_mask_cp)      /* INS = H (Socket empty) */
+				s |= (STA_NODISK | STA_NOINIT);
+			else                                /* INS = L (Card inserted) */
+				s &= ~STA_NODISK;
+	
+			Stat = s;
+		}
 	}
 }
 
