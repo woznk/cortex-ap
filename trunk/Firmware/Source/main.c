@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Added LED functions, removed STM32Discovery functions
+// Change: LED functions moved to led.c
 //
 //============================================================================*/
 
@@ -21,10 +21,11 @@
 #include "l3g4200d_driver.h"
 #include "adxl345_driver.h"
 #include "servodriver.h"
+#include "diskio.h"
 
-#include "tick.h"
 #include "nav.h"
 #include "log.h"
+#include "led.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -45,24 +46,13 @@
 #endif
 #define VAR_GLOBAL
 
-#define GREEN_PIN    GPIO_Pin_9
-#define BLUE_PIN     GPIO_Pin_8
-
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
 
 /*----------------------------------- Types ----------------------------------*/
 
-typedef enum {
-  GREEN = 0,
-  BLUE = 1,
-  LED_NUM
-} Led_TypeDef;
-
 /*---------------------------------- Constants -------------------------------*/
-
-const uint16_t GPIO_PIN[LED_NUM] = {GREEN_PIN, BLUE_PIN};
 
 /*---------------------------------- Globals ---------------------------------*/
 
@@ -71,16 +61,12 @@ const uint16_t GPIO_PIN[LED_NUM] = {GREEN_PIN, BLUE_PIN};
 VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
 VAR_STATIC uint8_t buff[16];
-VAR_STATIC uint8_t timer = 0;
-VAR_STATIC uint16_t Sampling_Frequency = 10;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
 void RCC_Configuration(void);
 void GPIO_Configuration(void);
-void Delay(__IO uint32_t nCount);
 
-void Dummy_Task(void *pvParameters);
 void Read_Sensors_Task(void *pvParameters);
 
 ///----------------------------------------------------------------------------
@@ -121,50 +107,13 @@ int main(void)
 //  Log_Init();
 
   xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 16, NULL, 5, NULL);
-  xTaskCreate(Dummy_Task, ( signed portCHAR * ) "Dummy", 16, NULL, 5, NULL);
+  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 16, NULL, 5, NULL);
 
   vTaskStartScheduler();
 
   while (1) {
   }
 }
-
-///----------------------------------------------------------------------------
-///
-/// \brief
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void LEDOn(Led_TypeDef Led)
-{
-  GPIOC->BSRR = GPIO_PIN[Led];
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void LEDOff(Led_TypeDef Led)
-{
-  GPIOC->BRR = GPIO_PIN[Led];
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void LEDToggle(Led_TypeDef Led)
-{
-  GPIOC->ODR ^= GPIO_PIN[Led];
-}
-
 
 ///----------------------------------------------------------------------------
 ///
