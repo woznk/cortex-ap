@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: LED functions moved to led.c
+// Change: Increased stack size of all tasks to 64: now works
 //
 //============================================================================*/
 
@@ -52,6 +52,12 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
+typedef struct
+{
+  signed char dummy;
+  uint16_t *pcData;
+} xLog_Message;
+
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
@@ -61,13 +67,14 @@
 VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
 VAR_STATIC uint8_t buff[16];
+xQueueHandle xLog_Queue;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
 void RCC_Configuration(void);
 void GPIO_Configuration(void);
-
 void Read_Sensors_Task(void *pvParameters);
+void Log_Task( void *pvParameters );
 
 ///----------------------------------------------------------------------------
 ///
@@ -104,10 +111,14 @@ int main(void)
 
 //  while (!Nav_Init());  // Navigation init
 
-//  Log_Init();
+  Log_Init();
 
-  xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 16, NULL, 5, NULL);
-  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 16, NULL, 5, NULL);
+  xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
+  while ( xLog_Queue == 0 ) {
+  }
+  xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 64, NULL, 5, NULL);
+  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 4, NULL);
+  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, 3, NULL);
 
   vTaskStartScheduler();
 
@@ -189,12 +200,29 @@ void GPIO_Configuration(void)
 
 }
 
-void Dummy_Task(void *pvParameters)
+///----------------------------------------------------------------------------
+///
+/// \brief   
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Log_Task( void *pvParameters )
 {
-	while (1) {
-	}
-}
+    xLog_Message message;
+    portTickType Last_Wake_Time;
 
+    Last_Wake_Time = xTaskGetTickCount();
+
+    while (1) {
+        vTaskDelayUntil(&Last_Wake_Time, 400);
+
+//        while( xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS );
+//        Log_Send(message.pcData, 6);
+        Log_Send((uint16_t *)buff, 6);
+        LEDToggle(BLUE);
+    }
+}
 
 ///----------------------------------------------------------------------------
 ///
@@ -205,21 +233,20 @@ void Dummy_Task(void *pvParameters)
 ///----------------------------------------------------------------------------
 void Read_Sensors_Task(void *pvParameters)
 {
+    xLog_Message message;
     portTickType Last_Wake_Time;
 
     Last_Wake_Time = xTaskGetTickCount();
 
-    LEDToggle(GREEN);  // Toggle green LED
-
     while (1) {
-
-        vTaskDelayUntil(&Last_Wake_Time,100);
-
-//        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
-//        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
-//        Log_Send((uint16_t *)buff, 6);      // output data
-
+        vTaskDelayUntil(&Last_Wake_Time, 100);
         LEDToggle(GREEN);  // Toggle green LED
+/*
+        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
+        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
+        message.pcData = (uint16_t *)buff;
+        xQueueSend( xLog_Queue, &message, portMAX_DELAY );
+*/
     }
 }
 
