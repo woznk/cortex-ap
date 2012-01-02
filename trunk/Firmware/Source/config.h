@@ -9,50 +9,27 @@
 ///
 /// \file
 ///
-// CHANGES #define HIL spostata in DCM.cpp
-//         SAMPLES_PER_SECOND differenziato per compilazione in Windows
+// CHANGES Modified gains of accelerometer and gyroscope, modified gravity value
 //
 //============================================================================*/
 
 #define PI          3.141592f
 
-#define ADC_STEPS   1024.0f
-
 //! Frequenza di campionamento dell'ADC
 #ifdef _WINDOWS
 #  define SAMPLES_PER_SECOND  10
 #else
-#  define SAMPLES_PER_SECOND  50
+#  define SAMPLES_PER_SECOND  10
 #endif
 
 //! Intervallo di ricalcolo della matrice DCM
-#define DELTA_T             (1.0f / SAMPLES_PER_SECOND)
-
-//! Accelerometer sensitivity [V/g]
-#define ACCEL_SENSITIVITY   0.440f
-
-//! Accelerometer full scale [V]
-#define ACCEL_FULLSCALE     3.3f
-
-//! Gyroscope sensitivity [V/deg/s]
-#define GYRO_SENSITIVITY    0.0033f
-
-//! Gyroscope full scale [V]
-#define GYRO_FULLSCALE      3.0f
+#define DELTA_T         (1.0f / SAMPLES_PER_SECOND)
 
 //! Valore iniziale fattore di conversione da ADC a [m/s/s]
-#define ACCEL_GAIN ((9.81f * ACCEL_FULLSCALE) / (ACCEL_SENSITIVITY * ADC_STEPS))
-/// 9.8 / ((0.440 / 3.3) * 1024) = 0.071777f [m/s/s]
+#define ACCEL_GAIN      0.153125f
 
 //! Valore iniziale fattore di conversione da ADC a [rad/s]
-#define GYRO_GAIN ((GYRO_FULLSCALE * PI) / (GYRO_SENSITIVITY * ADC_STEPS * 180.0f))
-/// (3.0 * 3.1415) / (0.0033 * 1024 * 180) = 0.015494 [rad/s]
-
-//! Offset ADC per accelerometri
-#define ACCEL_OFFSET    512.0f
-
-//! Offset ADC per giroscopi
-#define GYRO_OFFSET     512.0f
+#define GYRO_GAIN       0.0012217f
 
 //! P feedback gain for steering, around 0.1 (Matrixpilot YAWKP, 0.0625)
 #define DIR_KP          0.03f
@@ -64,8 +41,7 @@
 #define DIR_KD          0.25f
 
 //! Equivalent to 1 g in the raw ADC data from accelerometer
-#define GRAVITY         ((ACCEL_SENSITIVITY * ADC_STEPS) / ACCEL_FULLSCALE)
-/// (0.44 V * 1024 ) / 3.3 V = 136
+#define GRAVITY         64
 
 //! P feedback gain for roll leveling, around 0.25 (Matrixpilot ROLLKP, 0.25)
 #define ROLL_KP         0.1f
@@ -114,4 +90,4 @@
 #define XPLANE      1   // Simulator X-Plane
 #define FLIGHTGEAR  2   // Simulator Flightgear
 
-#define SIMULATOR   XPLANE
+#define SIMULATOR   SIM_NONE
