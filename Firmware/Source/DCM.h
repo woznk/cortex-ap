@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES doxygen
+//  CHANGES MatrixUpdate(): added pointer to sensor data as parameter
 //
 //============================================================================
 
@@ -46,4 +46,4 @@ VAR_GLOBAL float speed_3d ;
 void Normalize( void );
 void CompensateDrift( void );
 void AccelAdjust( void );
-void MatrixUpdate( void );
+void MatrixUpdate( int16_t * sensor );
