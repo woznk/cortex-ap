@@ -3,7 +3,7 @@
 /// $Revision:$
 /// $Date:$
 /// L3G4200D driver file
-/// Changes: GetAngRateRaw(): removed reading of status register. 
+/// Changes: Changed full scale range from 250 to 2000 deg/sec
 ///
 ///----------------------------------------------------------------------------
 
@@ -749,7 +749,7 @@ void L3G4200_Init( void )
   //enable all axis
   SetAxis(X_ENABLE | Y_ENABLE | Z_ENABLE);
   //set the fullscale
-  SetFullScale(FULLSCALE_250);
+  SetFullScale(FULLSCALE_2000);
   //set sensor mode
   SetMode(NORMAL);
   //interrupt pin mode configuration: PUSH PULL
