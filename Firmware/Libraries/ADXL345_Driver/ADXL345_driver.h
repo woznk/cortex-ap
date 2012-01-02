@@ -6,7 +6,7 @@
 // $Author: $
 /// \file
 /// \brief  ADXL345 driver
-//  Change: GetAccelRaw() now expects a pointer to uint8_t buffer
+//  Change: Added definitions for output rate and full scale range
 //
 //============================================================================
 
@@ -101,10 +101,16 @@
 // Data rate and power mode control, R/W, reset value = 00001010
 #define BW_RATE         0x2C
 #define LOW_POWER       0x10
-//#define RATE          0x08
-//#define RATE          0x04
-//#define RATE          0x02
-//#define RATE          0x01
+#define RATE_6HZ        0x06
+#define RATE_12HZ       0x07
+#define RATE_25HZ       0x08
+#define RATE_50HZ       0x09
+#define RATE_100HZ      0x0A
+#define RATE_200HZ      0x0B
+#define RATE_400HZ      0x0C
+#define RATE_800HZ      0x0D
+#define RATE_1600HZ     0x0E
+#define RATE_3200HZ     0x0F
 
 // Power-saving features control, R/W, reset value = 00000000
 #define POWER_CTL       0x2D
@@ -137,8 +143,10 @@
 #define ADXL_INT_INVERT 0x20
 #define ADXL_FULL_RES   0x08
 #define ADXL_JUSTIFY    0x04
-//#define Range         0x02
-//#define Range         0x01
+#define RANGE_2G        0x00
+#define RANGE_4G        0x01
+#define RANGE_8G        0x02
+#define RANGE_16G       0x03
 
 // X-Axis Data 0, R, reset value = 00000000
 #define DATAX0          0x32
