@@ -6,7 +6,10 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Increased stack size of all tasks to 64: now works
+// Change: AHRS_Task: added measurement and subtraction of sensor offset,
+//         sign correction of sensor data, computation of DCM matrix, renamed
+//         AHRS_Task
+//         Log_Task: added transmission of DCM matrix.
 //
 //============================================================================*/
 
@@ -23,6 +26,8 @@
 #include "servodriver.h"
 #include "diskio.h"
 
+#include "config.h"
+#include "dcm.h"
 #include "nav.h"
 #include "log.h"
 #include "led.h"
@@ -60,20 +65,30 @@ typedef struct
 
 /*---------------------------------- Constants -------------------------------*/
 
+VAR_STATIC const int16_t Sensor_Sign[6] = {
+    -1,     // acceleration X, must be positive forward
+     1,     // acceleration Y, must be positive rightward
+     1,     // acceleration Z, must be positive downward
+     1,	    // roll rate, must be positive when right wing lowers
+    -1,     // pitch rate, must be positive when tail lowers
+    -1      // yaw rate, must be positive when turning right
+};
+
 /*---------------------------------- Globals ---------------------------------*/
 
 /*----------------------------------- Locals ---------------------------------*/
 
 VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC int16_t Servo_Delta = 10;
-VAR_STATIC uint8_t buff[16];
+VAR_STATIC uint8_t Sensor_Data[16];
+VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
 xQueueHandle xLog_Queue;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
 void RCC_Configuration(void);
 void GPIO_Configuration(void);
-void Read_Sensors_Task(void *pvParameters);
+void AHRS_Task(void *pvParameters);
 void Log_Task( void *pvParameters );
 
 ///----------------------------------------------------------------------------
@@ -101,13 +116,13 @@ int main(void)
 //  Servo_Init();
 
   // I2C peripheral initialization
-//  I2C_MEMS_Init();
+  I2C_MEMS_Init();
 
   // L3G4200 gyro sensor initialization
-//  L3G4200_Init();
+  L3G4200_Init();
 
   // ADXL345 accelerometer sensor initialization
-//  ADXL345_Init();
+  ADXL345_Init();
 
 //  while (!Nav_Init());  // Navigation init
 
@@ -116,7 +131,7 @@ int main(void)
   xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
   while ( xLog_Queue == 0 ) {
   }
-  xTaskCreate(Read_Sensors_Task, ( signed portCHAR * ) "Sensors", 64, NULL, 5, NULL);
+  xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 64, NULL, 5, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 4, NULL);
   xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, 3, NULL);
 
@@ -202,7 +217,7 @@ void GPIO_Configuration(void)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   
+/// \brief
 /// \return  -
 /// \remarks -
 ///
@@ -210,43 +225,73 @@ void GPIO_Configuration(void)
 void Log_Task( void *pvParameters )
 {
     xLog_Message message;
-    portTickType Last_Wake_Time;
-
-    Last_Wake_Time = xTaskGetTickCount();
 
     while (1) {
-        vTaskDelayUntil(&Last_Wake_Time, 400);
-
-//        while( xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS );
+        while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
+        }
+        LEDOn(BLUE);
 //        Log_Send(message.pcData, 6);
-        Log_Send((uint16_t *)buff, 6);
-        LEDToggle(BLUE);
+        Log_DCM();
+        LEDOff(BLUE);
     }
 }
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   Read sensors.
+/// \brief   Attitude and heading computation.
 /// \return  -
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void Read_Sensors_Task(void *pvParameters)
+void AHRS_Task(void *pvParameters)
 {
+    uint8_t i, j;
+    int16_t * pSensor;
     xLog_Message message;
     portTickType Last_Wake_Time;
 
     Last_Wake_Time = xTaskGetTickCount();
 
+    LEDOn(GREEN);
+
+    for (i = 0; i < 64; i++) {
+        GetAccelRaw(Sensor_Data);                   //
+        GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  //
+        pSensor = (int16_t *)Sensor_Data;
+        for (j = 0; j < 6; j++) {
+            Sensor_Offset[j] += *pSensor++;
+        }
+    }
+    for (j = 0; j < 6; j++) {
+        Sensor_Offset[j] = Sensor_Offset[j] / 64;
+    }
+
     while (1) {
-        vTaskDelayUntil(&Last_Wake_Time, 100);
-        LEDToggle(GREEN);  // Toggle green LED
-/*
-        GetAngRateRaw(buff);                // get x, y, z angular rate raw data
-        GetAccelRaw((uint8_t *)&buff[6]);   // get x, y, z acceleration raw data
-        message.pcData = (uint16_t *)buff;
+        vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
+
+        LEDOn(GREEN);
+
+        GetAccelRaw(Sensor_Data);                   //
+        GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  //
+
+        pSensor = (int16_t *)Sensor_Data;
+        for (j = 0; j < 6; j++) {
+            *pSensor = *pSensor - Sensor_Offset[j];
+            *pSensor = *pSensor * Sensor_Sign[j];
+            if (j == 2) {
+               *pSensor = *pSensor + (int16_t)GRAVITY;
+            }
+            pSensor++;
+        }
+
+        message.pcData = (uint16_t *)Sensor_Data;
         xQueueSend( xLog_Queue, &message, portMAX_DELAY );
-*/
+
+        MatrixUpdate((int16_t *)Sensor_Data);       //
+        CompensateDrift();                          //
+        Normalize();                                //
+
+        LEDOff(GREEN);
     }
 }
 
