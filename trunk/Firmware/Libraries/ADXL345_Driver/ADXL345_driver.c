@@ -5,7 +5,9 @@
 // $Date: $
 // $Author: $
 /// \brief I2C driver for MEMS sensors
-//  Change: GetAccelRaw() removed reading of status register.
+///
+//  Change: Set_Range(): added
+//          ADXL345_Init(): full range set to 8 g
 //
 //============================================================================*/
 
@@ -36,6 +38,30 @@
 /*----------------------------------- Locals ---------------------------------*/
 
 /*--------------------------------- Prototypes -------------------------------*/
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Set ADXL345 full scale range
+/// \return  MEMS_SUCCESS / MEMS_ERROR
+/// \param   range_code, range code
+/// \remarks range codes: 0 = 2g, 1 = 4g, 2 = 8g, 3 = 16g
+///
+///----------------------------------------------------------------------------
+static status_t Set_Range( uint8_t range_code )
+{
+  uint8_t value;
+
+  if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, DATA_FORMAT, &value))
+    return MEMS_ERROR;
+
+  value &= 0xFC;                // Clear range field
+  value |= (range_code & 0x03); // New range value
+
+  if (!I2C_MEMS_Write_Reg(ADXL345_SLAVE_ADDR, DATA_FORMAT, value))
+    return MEMS_ERROR;
+
+  return MEMS_SUCCESS;
+}
 
 ///----------------------------------------------------------------------------
 ///
@@ -120,10 +146,12 @@ bool ADXL345_Init( void )
 {
   uint8_t id;
 
-  if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, DEVID, &id))
+  if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, DEVID, &id)) {
       id = 0;
+  }
   Set_Fifo_Mode(BYPASS_MODE);   // Disable FIFO
-  Set_Output_Rate(0x09);        // Set output rate to 100 Hz
+  Set_Range(RANGE_8G);          // Set full scale range to +/- 8 g
+  Set_Output_Rate(RATE_100HZ);  // Set output rate to 100 Hz
   Start_Measurement( );         // Start measurement
   return (bool)(id == I_AM_ADXL345);
 }
