@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES Removed '\r' termination in Log_Send() 
+//  CHANGES simplified Log_DCM()
 //
 //============================================================================*/
 
@@ -75,7 +75,7 @@ Log_Init( void ) {
     USART_InitTypeDef USART_InitStructure;
 
     // Initialize USART1 structure
-    USART_InitStructure.USART_BaudRate = 38400;
+    USART_InitStructure.USART_BaudRate = 115200;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -184,33 +184,30 @@ Log_PutChar ( char c ) {
 void
 Log_DCM(void)
 {
-    static int j = 47;
+    uint8_t x, y, j;
     unsigned char ucDigit;
     long lTemp;
-    int x, y;
 
-    while ((USART_GetFlagStatus(USART1, USART_FLAG_TXE) == SET) && (j < 47)) {
-      USART_SendData(USART1, szString[j++]);
-    }
-    if (j == 47) {
-      j = 0;
-      for (y = 0; y < 3; y++) {
-        for (x = 0; x < 3; x++) {
-            lTemp = (long)ceil(/*DCM_Matrix[y][x] * */32767.0f);
-            szString[j++] = ' ';
-            ucDigit = ((lTemp >> 12) & 0x0000000F);
-            szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-            ucDigit = ((lTemp >> 8) & 0x0000000F);
-            szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-            ucDigit = ((lTemp >> 4) & 0x0000000F);
-            szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-            ucDigit = (lTemp & 0x0000000F);
-            szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-        }
+    for (y = 0; y < 3; y++) {
+      for (x = 0; x < 3; x++) {
+          lTemp = (long)ceil(DCM_Matrix[y][x] * 32767.0f);
+          szString[j++] = ' ';
+          ucDigit = ((lTemp >> 12) & 0x0000000F);
+          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucDigit = ((lTemp >> 8) & 0x0000000F);
+          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucDigit = ((lTemp >> 4) & 0x0000000F);
+          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucDigit = (lTemp & 0x0000000F);
+          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
       }
-      szString[j++] = '\n';
-      szString[j] = '\r';
-      j = 0;
+    }
+    szString[j++] = '\n';
+    szString[j] = '\r';
+    for (j = 0; j < 47; j++) {
+      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
+      }
+      USART_SendData(USART1, szString[j]);
     }
 }
 
