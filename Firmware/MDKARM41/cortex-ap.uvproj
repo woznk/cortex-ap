@@ -385,6 +385,23 @@
       <Groups>
         <Group>
           <GroupName>Drivers</GroupName>
+          <Files>
+            <File>
+              <FileName>i2c_mems_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>ADXL345_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\ADXL345_Driver\ADXL345_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>l3g4200d_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\L3G4200_Driver\l3g4200d_driver.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>User</GroupName>
@@ -413,6 +430,16 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>vmath.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\vmath.c</FilePath>
+            </File>
+            <File>
+              <FileName>DCM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\DCM.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -922,6 +949,23 @@
       <Groups>
         <Group>
           <GroupName>Drivers</GroupName>
+          <Files>
+            <File>
+              <FileName>i2c_mems_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>ADXL345_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\ADXL345_Driver\ADXL345_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>l3g4200d_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\L3G4200_Driver\l3g4200d_driver.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>User</GroupName>
@@ -950,6 +994,16 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>vmath.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\vmath.c</FilePath>
+            </File>
+            <File>
+              <FileName>DCM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\DCM.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1459,6 +1513,23 @@
       <Groups>
         <Group>
           <GroupName>Drivers</GroupName>
+          <Files>
+            <File>
+              <FileName>i2c_mems_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>ADXL345_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\ADXL345_Driver\ADXL345_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>l3g4200d_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\L3G4200_Driver\l3g4200d_driver.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>User</GroupName>
@@ -1487,6 +1558,16 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>vmath.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\vmath.c</FilePath>
+            </File>
+            <File>
+              <FileName>DCM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\DCM.c</FilePath>
             </File>
           </Files>
         </Group>
