@@ -6,10 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: AHRS_Task: added measurement and subtraction of sensor offset,
-//         sign correction of sensor data, computation of DCM matrix, renamed
-//         AHRS_Task
-//         Log_Task: added transmission of DCM matrix.
+// Change: sensor offsets measured with normal sampling frequency
 //
 //============================================================================*/
 
@@ -255,6 +252,8 @@ void AHRS_Task(void *pvParameters)
     LEDOn(GREEN);
 
     for (i = 0; i < 64; i++) {
+        vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
+
         GetAccelRaw(Sensor_Data);                   //
         GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  //
         pSensor = (int16_t *)Sensor_Data;
