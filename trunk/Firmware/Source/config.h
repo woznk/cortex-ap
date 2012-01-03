@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// CHANGES Modified gains of accelerometer and gyroscope, modified gravity value
+// CHANGES Added gains for different full scale values
 //
 //============================================================================*/
 
@@ -26,10 +26,12 @@
 #define DELTA_T         (1.0f / SAMPLES_PER_SECOND)
 
 //! Valore iniziale fattore di conversione da ADC a [m/s/s]
-#define ACCEL_GAIN      0.153125f
+//#define ACCEL_GAIN      0.03828125f   // full scale = 2g
+#define ACCEL_GAIN      0.153125f     // full scale = 8g
 
 //! Valore iniziale fattore di conversione da ADC a [rad/s]
-#define GYRO_GAIN       0.0012217f
+//#define GYRO_GAIN       0.0001527163f // full scale = 250 dps 
+#define GYRO_GAIN       0.0012217f    // full scale = 2000 dps
 
 //! P feedback gain for steering, around 0.1 (Matrixpilot YAWKP, 0.0625)
 #define DIR_KP          0.03f
@@ -41,7 +43,8 @@
 #define DIR_KD          0.25f
 
 //! Equivalent to 1 g in the raw ADC data from accelerometer
-#define GRAVITY         64
+//#define GRAVITY         256    // full scale = 2g
+#define GRAVITY         64     // full scale = 8g
 
 //! P feedback gain for roll leveling, around 0.25 (Matrixpilot ROLLKP, 0.25)
 #define ROLL_KP         0.1f
