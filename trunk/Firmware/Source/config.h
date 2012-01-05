@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// CHANGES Added gains for different full scale values
+// CHANGES AHRS sampling changed to 40 Hz
 //
 //============================================================================*/
 
@@ -19,7 +19,7 @@
 #ifdef _WINDOWS
 #  define SAMPLES_PER_SECOND  10
 #else
-#  define SAMPLES_PER_SECOND  10
+#  define SAMPLES_PER_SECOND  40
 #endif
 
 //! Intervallo di ricalcolo della matrice DCM
