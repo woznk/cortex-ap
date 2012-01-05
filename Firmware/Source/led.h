@@ -5,8 +5,8 @@
 // $Date: $
 // $Author: Lorenz $
 //
-/// \brief   LED driver
-//  CHANGES
+/// \brief  LED driver
+//  CHANGES GREEN LED changed into RED
 //
 //============================================================================
 
@@ -27,7 +27,7 @@
 /*------------------------------------ Types ---------------------------------*/
 
 typedef enum {
-  GREEN     = 0,
+  RED     = 0,
   BLUE      = 1,
   LED_NUM
 } Led_TypeDef;
