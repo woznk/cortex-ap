@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES Modified for STM32F100RB
+//  CHANGES Modified prescaler value for 24 MHz clock
 //
 //============================================================================*/
 
@@ -24,7 +24,7 @@
 #endif
 #define VAR_GLOBAL
 
-#define PRESCALER      11
+#define PRESCALER      23
 #define PERIOD         19999
 #define SERVO_MIN      900   ///< Absolute minimum pulse length (0.9 ms).
 #define SERVO_MAX      2100  ///< Absolute maximum pulse length (2.1 ms).
@@ -56,7 +56,7 @@ VAR_STATIC float fAileronGain = 500.0f;   //!< Aileron servo conversion gain
 /// \brief   Timer 3 initialization for servo output
 /// \return  -
 /// \remarks Generate 4 PWM signals
-///          TIM3CLK = 12 MHz, Prescaler = 11, TIM3 counter clock = 1 MHz
+///          TIM3CLK = 24 MHz, Prescaler = 23, TIM3 counter clock = 1 MHz
 ///          TIM3 ARR Register = 19999 =>
 ///          TIM3 Frequency = TIM3 counter clock/(ARR + 1) = 50 Hz.
 ///
