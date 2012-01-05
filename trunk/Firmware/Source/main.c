@@ -6,7 +6,9 @@
 // $Author: $
 //
 /// \brief main program
-// Change: sensor offsets measured with normal sampling frequency
+// Change: AHRS: added initial 5 sec delay to discard possible aircraft movements
+//         Restored aileron servo output with roll indication from DCM
+//         Changed LED colors
 //
 //============================================================================*/
 
@@ -76,7 +78,6 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 /*----------------------------------- Locals ---------------------------------*/
 
 VAR_STATIC int16_t Servo_Position = 1500;
-VAR_STATIC int16_t Servo_Delta = 10;
 VAR_STATIC uint8_t Sensor_Data[16];
 VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
 xQueueHandle xLog_Queue;
@@ -110,7 +111,7 @@ int main(void)
   GPIO_Configuration();
 
   /* Initialize PWM timers as servo outputs */
-//  Servo_Init();
+  Servo_Init();
 
   // I2C peripheral initialization
   I2C_MEMS_Init();
@@ -226,10 +227,10 @@ void Log_Task( void *pvParameters )
     while (1) {
         while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
         }
-        LEDOn(BLUE);
+        LEDOn(RED);
 //        Log_Send(message.pcData, 6);
         Log_DCM();
-        LEDOff(BLUE);
+        LEDOff(RED);
     }
 }
 
@@ -249,48 +250,54 @@ void AHRS_Task(void *pvParameters)
 
     Last_Wake_Time = xTaskGetTickCount();
 
-    LEDOn(GREEN);
+    LEDOn(BLUE);
 
+    vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 5);
+
+    LEDOff(BLUE);
+
+    /* Compute sensor offsets */
     for (i = 0; i < 64; i++) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
-
-        GetAccelRaw(Sensor_Data);                   //
-        GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  //
+        GetAccelRaw(Sensor_Data);                   // accelerometer
+        GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  // gyroscope
         pSensor = (int16_t *)Sensor_Data;
-        for (j = 0; j < 6; j++) {
+        for (j = 0; j < 6; j++) {                   // accumulate
             Sensor_Offset[j] += *pSensor++;
         }
     }
-    for (j = 0; j < 6; j++) {
+    for (j = 0; j < 6; j++) {                       // average
         Sensor_Offset[j] = Sensor_Offset[j] / 64;
     }
 
+    /* Compute attitude and heading */
     while (1) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
 
-        LEDOn(GREEN);
+        LEDOn(BLUE);
 
-        GetAccelRaw(Sensor_Data);                   //
-        GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  //
+        GetAccelRaw(Sensor_Data);                   // acceleration
+        GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  // rotation
 
         pSensor = (int16_t *)Sensor_Data;
         for (j = 0; j < 6; j++) {
-            *pSensor = *pSensor - Sensor_Offset[j];
-            *pSensor = *pSensor * Sensor_Sign[j];
+            *pSensor = *pSensor - Sensor_Offset[j]; // strip offset
+            *pSensor = *pSensor * Sensor_Sign[j];   // correct sign
             if (j == 2) {
-               *pSensor = *pSensor + (int16_t)GRAVITY;
+               *pSensor += (int16_t)GRAVITY;        // add gravity
             }
             pSensor++;
         }
 
+        MatrixUpdate((int16_t *)Sensor_Data);       // compute DCM
+        CompensateDrift();                          // compensate
+        Normalize();                                // normalize DCM
+        Servo_Position = 1500 + (int16_t)(DCM_Matrix[2][1] * 500.0f);
+        Servo_Set(SERVO_AILERON, Servo_Position);
         message.pcData = (uint16_t *)Sensor_Data;
         xQueueSend( xLog_Queue, &message, portMAX_DELAY );
 
-        MatrixUpdate((int16_t *)Sensor_Data);       //
-        CompensateDrift();                          //
-        Normalize();                                //
-
-        LEDOff(GREEN);
+        LEDOff(BLUE);
     }
 }
 
