@@ -1,29 +1,22 @@
 //============================================================================+
 //
-// $RCSfile: ppmdriver.c,v $ (SOURCE FILE)
-// $Revision: 1.5 $
-// $Date: 2009/10/22 21:13:17 $
-// $Author: Lorenz $
+// $RCSfile: $ 
+// $Revision: $
+// $Date: $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
-/// \file
-///             PPM input driver
-//
-//  CHANGES     REMOVED TIMER TRIGGER ON BOTH TIMER 1A, 1B THAT CAUSED UNWANTED
-//              TRIGGERS ON ADC SAMPLE SEQUENCE 
-//              period of timer 1A, 1B set to maximum achievable (8 ms)
+/// \brief
+///  PPM input driver
+///
+/// \todo
+/// Merge overflow interrupt handler into TIM2 interrupt
+///
+//  CHANGES Ported from Luminary to STM32
 //
 //============================================================================*/
 
-#include "inc/hw_ints.h"
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "driverlib/gpio.h"
-#include "driverlib/timer.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/interrupt.h"
-
+#include "stm32f10x.h"
+#include "led.h"
 #include "ppmdriver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -37,7 +30,6 @@
 #endif
 #define VAR_GLOBAL
 
-#define RC_CHANNELS    7            ///< Modify according to RC type
 #define SYNC   (RC_CHANNELS + 1)    // Pulse index when waiting for first pulse
 #define UNSYNC (RC_CHANNELS + 2)    // Pulse index when not synchronized
 
@@ -47,6 +39,8 @@
 #define PPM_LENGTH_MAX      2100
 #define PPM_LENGTH_NEUTRAL  1500
 
+#define PERIOD              65535
+#define PRESCALER           23
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -77,57 +71,56 @@ VAR_STATIC signed char cOverflowCount;
 ///
 ///  DESCRIPTION The PPM input capture interrupt handler.
 /// \RETURN      -
-/// \REMARKS     
+/// \REMARKS
 ///
 ///----------------------------------------------------------------------------
-void 
-PPMCaptureIntHandler(void)
+void
+vTimer2IntHandler(void)
 {
-    TimerIntClear(TIMER1_BASE, TIMER_CAPA_EVENT);           // Clear capture interrupt flag
-    ulCaptureTime = TimerMatchGet(TIMER1_BASE, TIMER_A);    // Store captured time
+    ulCaptureTime = TIM_GetCapture2 (TIM2);                 // Store captured time
     ulPulseLength = ulCaptureTime - ulLastCapture;          // Compute time difference
     ulLastCapture = ulCaptureTime;                          // Now is also last edge time
 
     switch ( ucPulseIndex )
     {
         case UNSYNC :                                       // NOT SYNCHRONIZED
-            if (( ulPulseLength >= PPM_SYNC_MIN ) &&        // sync pulse detected  
-                ( ulPulseLength <= PPM_SYNC_MAX )) {        // 
+            if (( ulPulseLength >= PPM_SYNC_MIN ) &&        // sync pulse detected
+                ( ulPulseLength <= PPM_SYNC_MAX )) {        //
                 ucPulseIndex = SYNC;                        // synchronized
                 cOverflowCount = 0;                         // We're not in an overflow condition any more
             }
             break;
 
         case SYNC :                                         // SYNCHRONIZED
-            if (( ulPulseLength >= PPM_LENGTH_MIN ) &&      // first channel's pulse detected 
-                ( ulPulseLength <= PPM_LENGTH_MAX )) {      // 
+            if (( ulPulseLength >= PPM_LENGTH_MIN ) &&      // first channel's pulse detected
+                ( ulPulseLength <= PPM_LENGTH_MAX )) {      //
                 ulPulseBuffer[ 0 ] = ulPulseLength;         // pulse width is OK, save it
                 ucPulseIndex = 1;                           // go for second channel
                 cOverflowCount = 0;                         // We're not in an overflow condition any more
-            } else {                                        // wrong pulse detected 
+            } else {                                        // wrong pulse detected
                 ucPulseIndex = UNSYNC;                      // wait for next sync pulse
             }
             break;
 
         case RC_CHANNELS :                                  // LAST RC CHANNEL
-            if (( ulPulseLength >= PPM_SYNC_MIN ) &&        // sync pulse detected 
-                ( ulPulseLength <= PPM_SYNC_MAX )) {        // 
-                ucPulseIndex++;                             // still synchronized 
+            if (( ulPulseLength >= PPM_SYNC_MIN ) &&        // sync pulse detected
+                ( ulPulseLength <= PPM_SYNC_MAX )) {        //
+                ucPulseIndex++;                             // still synchronized
                 cOverflowCount = 0;                         // We're not in an overflow condition any more
-            } else {                                        // wrong pulse detected 
+            } else {                                        // wrong pulse detected
                 ucPulseIndex = UNSYNC;                      // wait for next sync pulse
             }
             break;
 
         default :                                           // CHANNELS 1 .. N - 1
-            if (( ulPulseLength >= PPM_LENGTH_MIN ) &&      // good pulse detected 
-                ( ulPulseLength <= PPM_LENGTH_MAX )) {      // 
-                ulPulseBuffer[ ucPulseIndex ] = ulPulseLength;   // save it
+            if (( ulPulseLength >= PPM_LENGTH_MIN ) &&      // good pulse detected
+                ( ulPulseLength <= PPM_LENGTH_MAX )) {      //
+                ulPulseBuffer[ ucPulseIndex ] = ulPulseLength; // save it
                 cOverflowCount = 0;                         // We're not in an overflow condition any more
             }
             ucPulseIndex++;                                 // always go for next channel
             break;
-    } 
+    }
     if ( MISSING_PULSES ) {                                 // no pulses
         ucPulseIndex = UNSYNC;                              // wait for next sync pulse
     }
@@ -137,13 +130,13 @@ PPMCaptureIntHandler(void)
 ///
 ///  DESCRIPTION The PPM input overflow interrupt handler.
 /// \RETURN      -
-/// \REMARKS     
+/// \REMARKS
 ///
 ///----------------------------------------------------------------------------
-void 
+void
 PPMOverflowIntHandler(void)
 {
-    TimerIntClear(TIMER1_BASE, TIMER_TIMB_TIMEOUT);   // Clear timeout interrupt flag
+    //TimerIntClear(TIMER1_BASE, TIMER_TIMB_TIMEOUT);   // Clear timeout interrupt flag
     if ( ! MISSING_PULSES )
     {
         cOverflowCount++;
@@ -153,69 +146,68 @@ PPMOverflowIntHandler(void)
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION PPM timer initialization
-/// \RETURN      -
-/// \REMARKS     
+/// \brief   Timer 2 initialization for RRC input capture
+/// \return  -
+/// \remarks TIM2CLK = 24 MHz, Prescaler = 23, TIM2 counter clock = 1 MHz
 ///
 ///----------------------------------------------------------------------------
-void
-PPMInit(void)
-{
-    ulLastCapture = 0;
-    cOverflowCount = -1;
-    ucPulseIndex = UNSYNC;
+void PPM_Init(void) {
 
-    //
-    // Enable Timer 1 (PPM input)
-    //
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); 
+  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+  TIM_ICInitTypeDef TIM_ICInitStructure;
+  NVIC_InitTypeDef NVIC_InitStructure;
 
-    //
-    // Enable I/O port B.
-    //
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+  ulLastCapture = 0;
+  cOverflowCount = -1;
+  ucPulseIndex = UNSYNC;
 
-    //
-    // Configure the GPIO used as CCP.
-    //
-    GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_1); 
+  /* Clear current configuration */
+  TIM_DeInit(TIM2);
 
-    //
-    // Initialize Timer 1 has two 16 bit timers.
-    // Timer A as capture timer, timer B as a periodic timer
-    //
-    TimerConfigure(TIMER1_BASE, TIMER_CFG_16_BIT_PAIR | TIMER_CFG_A_CAP_TIME | TIMER_CFG_B_PERIODIC);
+  /* Time base configuration */
+  TIM_TimeBaseStructure.TIM_Period = PERIOD;
+  TIM_TimeBaseStructure.TIM_Prescaler = PRESCALER;
+  TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
 
-    //
-    // Trigger timer A capture on rising edges
-    //
-    TimerControlEvent(TIMER1_BASE, TIMER_A, TIMER_EVENT_POS_EDGE);
+  /* Input capture configuration: channel 2 */
+  TIM_ICInitStructure.TIM_Channel = TIM_Channel_2;
+  TIM_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
+  TIM_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
+  TIM_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
+  TIM_ICInitStructure.TIM_ICFilter = 10;
+  TIM_ICInit(TIM2, &TIM_ICInitStructure);
 
-    //
-    // Configure maximum timer period: 8 MHz / 65535 = 8 ms
-    //
-    TimerLoadSet(TIMER1_BASE, TIMER_BOTH, 65535);
+  /* Input capture interrupt initialization */
+  TIM_ClearFlag(TIM2, TIM_FLAG_CC2);
+  TIM_ITConfig(TIM2, TIM_IT_CC2, ENABLE);
 
-    //
-    // Enable interrupt on timer A capture and on timer B timeout
-    //
-    IntEnable(INT_TIMER1A);
-    IntEnable(INT_TIMER1B);
-    TimerIntEnable(TIMER1_BASE, TIMER_CAPA_EVENT | TIMER_TIMB_TIMEOUT);
+  /* Enable the TIM2 global interrupt */
+  NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
 
-    //
-    // Enable timers
-    //
-    TimerEnable(TIMER1_BASE, TIMER_BOTH);
+  /* Configure auto reload register */
+  TIM_ARRPreloadConfig(TIM2, ENABLE);
+
+  /* Enable compare channel 2 */
+  TIM_CCxCmd(TIM2, TIM_Channel_2, ENABLE);
+
+  /* TIM2 enable counter */
+  TIM_Cmd(TIM2, ENABLE);
 }
 
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION Get value of n-th radio channel
 /// \RETURN      -
-/// \REMARKS     
+/// \REMARKS
 ///
 ///----------------------------------------------------------------------------
-unsigned long 
+unsigned long
 PPMGetChannel(unsigned char ucChannel)
 {
     if ( ucChannel < RC_CHANNELS ) {
@@ -232,11 +224,13 @@ PPMGetChannel(unsigned char ucChannel)
 /// \remarks   -
 ///
 ///----------------------------------------------------------------------------
-unsigned char 
-PPMSignalStatus( void ) {
+unsigned char
+PPMSignalStatus( void )
+{
     if (MISSING_PULSES) {
         return PPM_SIGNAL_BAD;          // bad radio signal
     } else {
         return PPM_SIGNAL_OK;           // radio signal is OK
     }
 }
+
