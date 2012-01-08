@@ -51,8 +51,6 @@ __heap_limit
                 IMPORT xPortPendSVHandler
                 IMPORT xPortSysTickHandler
                 IMPORT vPortSVCHandler
-;                IMPORT vUARTInterruptHandler
-;                IMPORT vTimer2IntHandler
 
                 PRESERVE8
                 THUMB
