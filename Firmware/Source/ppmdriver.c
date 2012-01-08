@@ -8,7 +8,7 @@
 /// \brief
 ///  PPM input driver
 ///
-//  CHANGES Merged overflow interrupt handler into TIM2 interrupt
+//  CHANGES Added function PPMGetMode()
 //
 //============================================================================*/
 
@@ -196,13 +196,34 @@ void PPM_Init(void) {
 /// \REMARKS
 ///
 ///----------------------------------------------------------------------------
-unsigned long
-PPMGetChannel(unsigned char ucChannel)
+uint16_t PPMGetChannel(uint8_t ucChannel)
 {
     if ( ucChannel < RC_CHANNELS ) {
         return ulPulseBuffer[ ucChannel ];
     } else {
         return PPM_LENGTH_NEUTRAL;
+    }
+}
+
+///----------------------------------------------------------------------------
+///
+///  DESCRIPTION Get mode from MODE_CHANNEL
+/// \RETURN      -
+/// \REMARKS
+///
+///----------------------------------------------------------------------------
+uint8_t PPMGetMode(void)
+{
+    uint16_t uiWidth;
+    uiWidth = ulPulseBuffer[MODE_CHANNEL];
+    if ( uiWidth < 1100 ) {
+        return MODE_STABILIZE;
+    } else if (( uiWidth > 1400 ) && ( uiWidth < 1600 )) {
+        return MODE_AUTO;
+    } else if ( uiWidth > 1900 ) {
+        return MODE_MANUAL;
+    } else {
+        return MODE_UNDEFINED;
     }
 }
 
@@ -213,8 +234,7 @@ PPMGetChannel(unsigned char ucChannel)
 /// \remarks   -
 ///
 ///----------------------------------------------------------------------------
-unsigned char
-PPMSignalStatus( void )
+uint8_t PPMSignalStatus(void)
 {
     if (MISSING_PULSES) {
         return PPM_SIGNAL_BAD;          // bad radio signal
