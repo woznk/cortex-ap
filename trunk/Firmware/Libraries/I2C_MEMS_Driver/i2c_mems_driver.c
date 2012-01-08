@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief I2C driver for MEMS sensors
-/// Changes: Added prefix I2C_MEMS_ to all functions
+/// Changes: Added de-initialization of I2c peripheral
 //
 //============================================================================*/
 
@@ -243,6 +243,8 @@ static void GPIO_MEMS_Configuration( void )
 static void I2C_Configuration( void )
 {
     I2C_InitTypeDef I2C_InitStructure;
+
+    I2C_DeInit(I2C_MEMS);
 
     /* I2C structure initialization */
     I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
