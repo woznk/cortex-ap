@@ -1,6 +1,6 @@
 //============================================================================+
 //
-// $RCSfile: $ 
+// $RCSfile: $
 // $Revision: $
 // $Date: $
 // $Author: $
@@ -8,10 +8,7 @@
 /// \brief
 ///  PPM input driver
 ///
-/// \todo
-/// Merge overflow interrupt handler into TIM2 interrupt
-///
-//  CHANGES Ported from Luminary to STM32
+//  CHANGES Merged overflow interrupt handler into TIM2 interrupt
 //
 //============================================================================*/
 
@@ -56,11 +53,11 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC unsigned long ulPulseBuffer[RC_CHANNELS];
-VAR_STATIC unsigned char ucPulseIndex;
-VAR_STATIC unsigned long ulCaptureTime;
-VAR_STATIC unsigned long ulLastCapture;
-VAR_STATIC unsigned long ulPulseLength;
+VAR_STATIC uint16_t ulCaptureTime;
+VAR_STATIC uint16_t ulLastCapture;
+VAR_STATIC uint16_t ulPulseLength;
+VAR_STATIC uint16_t ulPulseBuffer[RC_CHANNELS];
+VAR_STATIC uint8_t ucPulseIndex;
 VAR_STATIC signed char cOverflowCount;
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -75,73 +72,65 @@ VAR_STATIC signed char cOverflowCount;
 ///
 ///----------------------------------------------------------------------------
 void
-vTimer2IntHandler(void)
+TIM2_IRQHandler(void)
 {
-    ulCaptureTime = TIM_GetCapture2 (TIM2);                 // Store captured time
-    ulPulseLength = ulCaptureTime - ulLastCapture;          // Compute time difference
-    ulLastCapture = ulCaptureTime;                          // Now is also last edge time
-
-    switch ( ucPulseIndex )
-    {
-        case UNSYNC :                                       // NOT SYNCHRONIZED
-            if (( ulPulseLength >= PPM_SYNC_MIN ) &&        // sync pulse detected
-                ( ulPulseLength <= PPM_SYNC_MAX )) {        //
-                ucPulseIndex = SYNC;                        // synchronized
-                cOverflowCount = 0;                         // We're not in an overflow condition any more
-            }
-            break;
-
-        case SYNC :                                         // SYNCHRONIZED
-            if (( ulPulseLength >= PPM_LENGTH_MIN ) &&      // first channel's pulse detected
-                ( ulPulseLength <= PPM_LENGTH_MAX )) {      //
-                ulPulseBuffer[ 0 ] = ulPulseLength;         // pulse width is OK, save it
-                ucPulseIndex = 1;                           // go for second channel
-                cOverflowCount = 0;                         // We're not in an overflow condition any more
-            } else {                                        // wrong pulse detected
-                ucPulseIndex = UNSYNC;                      // wait for next sync pulse
-            }
-            break;
-
-        case RC_CHANNELS :                                  // LAST RC CHANNEL
-            if (( ulPulseLength >= PPM_SYNC_MIN ) &&        // sync pulse detected
-                ( ulPulseLength <= PPM_SYNC_MAX )) {        //
-                ucPulseIndex++;                             // still synchronized
-                cOverflowCount = 0;                         // We're not in an overflow condition any more
-            } else {                                        // wrong pulse detected
-                ucPulseIndex = UNSYNC;                      // wait for next sync pulse
-            }
-            break;
-
-        default :                                           // CHANNELS 1 .. N - 1
-            if (( ulPulseLength >= PPM_LENGTH_MIN ) &&      // good pulse detected
-                ( ulPulseLength <= PPM_LENGTH_MAX )) {      //
-                ulPulseBuffer[ ucPulseIndex ] = ulPulseLength; // save it
-                cOverflowCount = 0;                         // We're not in an overflow condition any more
-            }
-            ucPulseIndex++;                                 // always go for next channel
-            break;
-    }
-    if ( MISSING_PULSES ) {                                 // no pulses
-        ucPulseIndex = UNSYNC;                              // wait for next sync pulse
-    }
-}
-
-///----------------------------------------------------------------------------
-///
-///  DESCRIPTION The PPM input overflow interrupt handler.
-/// \RETURN      -
-/// \REMARKS
-///
-///----------------------------------------------------------------------------
-void
-PPMOverflowIntHandler(void)
-{
-    //TimerIntClear(TIMER1_BASE, TIMER_TIMB_TIMEOUT);   // Clear timeout interrupt flag
-    if ( ! MISSING_PULSES )
-    {
+  if (TIM_GetITStatus(TIM2, TIM_IT_Update)) {            // Overflow interrupt
+     TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+     if (!MISSING_PULSES) {
         cOverflowCount++;
-    }
+     }
+  }
+
+  if (TIM_GetITStatus(TIM2, TIM_IT_CC2)) {               // Capture interrupt
+     ulCaptureTime = TIM_GetCapture2 (TIM2);             // Store captured time
+     ulPulseLength = ulCaptureTime - ulLastCapture;      // Compute time difference
+     ulLastCapture = ulCaptureTime;                      // Now is also last edge time
+
+     switch ( ucPulseIndex ) {
+        case UNSYNC :                                    // NOT SYNCHRONIZED
+           if (( ulPulseLength >= PPM_SYNC_MIN ) &&      // sync pulse detected
+               ( ulPulseLength <= PPM_SYNC_MAX )) {      //
+               ucPulseIndex = SYNC;                      // synchronized
+               cOverflowCount = 0;                       // We're not in an overflow condition any more
+           }
+           break;
+
+        case SYNC :                                      // SYNCHRONIZED
+           if (( ulPulseLength >= PPM_LENGTH_MIN ) &&    // first channel's pulse detected
+               ( ulPulseLength <= PPM_LENGTH_MAX )) {    //
+               ulPulseBuffer[ 0 ] = ulPulseLength;       // pulse width is OK, save it
+               ucPulseIndex = 1;                         // go for second channel
+               cOverflowCount = 0;                       // We're not in an overflow condition any more
+           } else {                                      // wrong pulse detected
+               ucPulseIndex = UNSYNC;                    // wait for next sync pulse
+           }
+           break;
+
+        case RC_CHANNELS :                               // LAST RC CHANNEL
+           if (( ulPulseLength >= PPM_SYNC_MIN ) &&      // sync pulse detected
+               ( ulPulseLength <= PPM_SYNC_MAX )) {      //
+               ucPulseIndex++;                           // still synchronized
+               cOverflowCount = 0;                       // We're not in an overflow condition any more
+           } else {                                      // wrong pulse detected
+               ucPulseIndex = UNSYNC;                    // wait for next sync pulse
+           }
+           break;
+
+        default :                                        // CHANNELS 1 .. N - 1
+           if (( ulPulseLength >= PPM_LENGTH_MIN ) &&    // good pulse detected
+               ( ulPulseLength <= PPM_LENGTH_MAX )) {    //
+               ulPulseBuffer[ ucPulseIndex ] = ulPulseLength; // save it
+               cOverflowCount = 0;                       // We're not in an overflow condition any more
+           }
+           ucPulseIndex++;                               // always go for next channel
+           break;
+     }
+     if ( MISSING_PULSES ) {                             // no pulses
+         ucPulseIndex = UNSYNC;                          // wait for next sync pulse
+     }
+  }
 }
+
 
 ///----------------------------------------------------------------------------
 ///
@@ -179,9 +168,9 @@ void PPM_Init(void) {
   TIM_ICInitStructure.TIM_ICFilter = 10;
   TIM_ICInit(TIM2, &TIM_ICInitStructure);
 
-  /* Input capture interrupt initialization */
-  TIM_ClearFlag(TIM2, TIM_FLAG_CC2);
-  TIM_ITConfig(TIM2, TIM_IT_CC2, ENABLE);
+  /* Capture and update interrupts initialization */
+  TIM_ClearFlag(TIM2, TIM_FLAG_CC2 | TIM_IT_Update);
+  TIM_ITConfig(TIM2, TIM_IT_CC2 | TIM_IT_Update, ENABLE);
 
   /* Enable the TIM2 global interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
