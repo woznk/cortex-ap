@@ -20,7 +20,7 @@
 /// In assenza di waypoints disponibili, la funzione calcola la direzione e la
 /// distanza rispetto al punto di partenza (RTL).
 ///
-//  CHANGES moved from tff (tiny fat filesystem) to ff (fat filesystem)
+//  CHANGES removed tick.h
 //
 //============================================================================*/
 
@@ -31,7 +31,6 @@
 #include "config.h"
 #include "gps.h"
 #include "ff.h"
-#include "tick.h"
 #include "nav.h"
 
 /*--------------------------------- Definitions ------------------------------*/
