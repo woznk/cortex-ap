@@ -6,7 +6,8 @@
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES Modified prescaler value for 24 MHz clock
+//  CHANGES Added de-initialization of timer 3
+//          Timer intialization structures made local to init function
 //
 //============================================================================*/
 
@@ -42,8 +43,6 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-VAR_STATIC TIM_OCInitTypeDef TIM_OCInitStructure;
 /*
 VAR_STATIC float fElevatorGain = 500.0f;  //!< Elevator servo conversion gain
 VAR_STATIC float fRudderGain = 500.0f;    //!< Rudder servo conversion gain
@@ -62,6 +61,12 @@ VAR_STATIC float fAileronGain = 500.0f;   //!< Aileron servo conversion gain
 ///
 ///----------------------------------------------------------------------------
 void Servo_Init(void) {
+
+  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+  TIM_OCInitTypeDef TIM_OCInitStructure;
+
+  /* Clear current configuration */
+  TIM_DeInit(TIM3);
 
   /* Time base configuration */
   TIM_TimeBaseStructure.TIM_Period = PERIOD;
