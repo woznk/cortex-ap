@@ -421,6 +421,11 @@
               <FileType>1</FileType>
               <FilePath>..\Source\DCM.c</FilePath>
             </File>
+            <File>
+              <FileName>ppmdriver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\ppmdriver.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -980,6 +985,11 @@
               <FileType>1</FileType>
               <FilePath>..\Source\DCM.c</FilePath>
             </File>
+            <File>
+              <FileName>ppmdriver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\ppmdriver.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1538,6 +1548,11 @@
               <FileName>DCM.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\DCM.c</FilePath>
+            </File>
+            <File>
+              <FileName>ppmdriver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\ppmdriver.c</FilePath>
             </File>
           </Files>
         </Group>
