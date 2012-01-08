@@ -6,12 +6,14 @@
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES Added de-initialization of timer 3
-//          Timer intialization structures made local to init function
+//  CHANGES Aileron servo updated with AHRS roll value or RC control, depending 
+//          on MODE selection
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
+#include "led.h"
+#include "ppmdriver.h"
 #include "servodriver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -127,26 +129,31 @@ void Servo_Init(void) {
 ///----------------------------------------------------------------------------
 void Servo_Set(SERVO_TYPE servo, int16_t position) {
 
-    if (position < SERVO_MIN) { position = SERVO_MIN; }
-    if (position > SERVO_MAX) { position = SERVO_MAX; }
+   if (position < SERVO_MIN) { position = SERVO_MIN; }
+   if (position > SERVO_MAX) { position = SERVO_MAX; }
 
-    switch (servo) {
-        case SERVO_AILERON:
-            TIM_SetCompare1(TIM3, position);
-        break;
-        case SERVO_RUDDER:
-            TIM_SetCompare2(TIM3, position);
-        break;
-        case SERVO_ELEVATOR:
-            TIM_SetCompare3(TIM3, position);
-        break;
-        case SERVO_THROTTLE:
-            TIM_SetCompare4(TIM3, position);
-        break;
-        default:
-        break;
-    }
+   switch (servo) {
+      case SERVO_AILERON:
+          if ((PPMGetMode() == MODE_AUTO) &&
+              (PPMSignalStatus() == PPM_SIGNAL_OK)) {
+             LEDOn(RED);
+          } else {
+             LEDOff(RED);
+             position = PPMGetChannel(AILERON_CHANNEL);
+          }
+          TIM_SetCompare1(TIM3, position);
+       break;
+       case SERVO_RUDDER:
+           TIM_SetCompare2(TIM3, position);
+       break;
+       case SERVO_ELEVATOR:
+           TIM_SetCompare3(TIM3, position);
+       break;
+       case SERVO_THROTTLE:
+           TIM_SetCompare4(TIM3, position);
+       break;
+       default:
+       break;
+   }
 }
-
-
 
