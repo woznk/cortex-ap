@@ -8,7 +8,7 @@
 /// \brief
 /// PPM input driver header file
 ///
-//  CHANGES #defined MODE_CHANNEL and AILERON_CHANNEL
+//  CHANGES Added function PPMGetMode()
 //
 //============================================================================*/
 
@@ -29,6 +29,10 @@
 #define MODE_CHANNEL    4   // Mode selection channel
 #define AILERON_CHANNEL 1   // Aileron control channel
 
+#define MODE_STABILIZE  1
+#define MODE_AUTO       2
+#define MODE_MANUAL     3
+#define MODE_UNDEFINED  0
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -44,7 +48,8 @@
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-void PPM_Init( void );
-unsigned long PPMGetChannel( unsigned char ucChannel );
-unsigned char PPMSignalStatus( void );
+void PPM_Init(void);
+uint8_t PPMSignalStatus(void);
+uint8_t PPMGetMode(void);
+uint16_t PPMGetChannel(uint8_t ucChannel);
 
