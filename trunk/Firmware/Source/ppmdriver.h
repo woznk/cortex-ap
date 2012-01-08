@@ -6,9 +6,9 @@
 // $Author: $
 //
 /// \brief
-///         PPM input driver header file
-//
-//  CHANGES RC_CHANELS = 7
+/// PPM input driver header file
+///
+//  CHANGES #defined MODE_CHANNEL and AILERON_CHANNEL
 //
 //============================================================================*/
 
@@ -26,6 +26,9 @@
 #define PPM_SIGNAL_OK   1
 #define PPM_SIGNAL_BAD  0
 #define RC_CHANNELS     7   ///< Number of RC channels. Modify according to RC type
+#define MODE_CHANNEL    4   // Mode selection channel
+#define AILERON_CHANNEL 1   // Aileron control channel
+
 
 /*----------------------------------- Macros ---------------------------------*/
 
