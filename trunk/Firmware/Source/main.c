@@ -6,9 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: AHRS: added initial 5 sec delay to discard possible aircraft movements
-//         Restored aileron servo output with roll indication from DCM
-//         Changed LED colors
+// Change: Added support for PPM input
 //
 //============================================================================*/
 
@@ -23,6 +21,7 @@
 #include "l3g4200d_driver.h"
 #include "adxl345_driver.h"
 #include "servodriver.h"
+#include "ppmdriver.h"
 #include "diskio.h"
 
 #include "config.h"
@@ -104,14 +103,17 @@ int main(void)
        To reconfigure the default setting of SystemInit() function, refer to
        system_stm32f10x.c file     */
 
-  /* System Clocks Configuration */
+  // System Clocks Configuration
   RCC_Configuration();
 
-  /* GPIO Configuration */
+  // GPIO Configuration
   GPIO_Configuration();
 
-  /* Initialize PWM timers as servo outputs */
+  // Initialize PWM timers as servo outputs
   Servo_Init();
+
+  // Initialize capture timers as RRC input
+  PPM_Init();
 
   // I2C peripheral initialization
   I2C_MEMS_Init();
@@ -122,7 +124,8 @@ int main(void)
   // ADXL345 accelerometer sensor initialization
   ADXL345_Init();
 
-//  while (!Nav_Init());  // Navigation init
+  // Navigation init
+//  while (!Nav_Init());
 
   Log_Init();
 
@@ -157,8 +160,8 @@ void RCC_Configuration(void)
   /* PCLK2 = HCLK */
   RCC_PCLK2Config(RCC_HCLK_Div1);
 
-  /* TIM3 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+  /* TIM2 and TIM3 clock enable */
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM3, ENABLE);
 
   /* GPIOA and GPIOB clock enable */
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
@@ -178,6 +181,12 @@ void GPIO_Configuration(void)
   GPIO_InitTypeDef GPIO_InitStructure;
 
   /* GPIOA Configuration */
+
+  // TIM2 Channel 2 as input pull down (1)
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   // TIM3 Channel 1, 2 as alternate function push-pull (6, 7)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
@@ -227,10 +236,8 @@ void Log_Task( void *pvParameters )
     while (1) {
         while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
         }
-        LEDOn(RED);
 //        Log_Send(message.pcData, 6);
         Log_DCM();
-        LEDOff(RED);
     }
 }
 
