@@ -1,16 +1,14 @@
 //============================================================================+
 //
-// $RCSfile: ppmdriver.h,v $ (SOURCE FILE)
-// $Revision: 1.2 $
-// $Date: 2010/04/14 17:30:52 $
-// $Author: Lorenz $
+// $RCSfile: $ (SOURCE FILE)
+// $Revision: $
+// $Date: $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
-/// \file
-///             PPM input driver header file
+/// \brief
+///         PPM input driver header file
 //
-//  CHANGES     spostato qui #define numero canali RC
+//  CHANGES RC_CHANELS = 7
 //
 //============================================================================*/
 
@@ -27,7 +25,7 @@
 
 #define PPM_SIGNAL_OK   1
 #define PPM_SIGNAL_BAD  0
-#define RC_CHANNELS     6   ///< Number of RC channels. Modify according to RC type
+#define RC_CHANNELS     7   ///< Number of RC channels. Modify according to RC type
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -43,7 +41,7 @@
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-void PPMInit( void );
+void PPM_Init( void );
 unsigned long PPMGetChannel( unsigned char ucChannel );
 unsigned char PPMSignalStatus( void );
 
