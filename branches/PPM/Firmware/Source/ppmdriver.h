@@ -8,7 +8,7 @@
 /// \brief
 /// PPM input driver header file
 ///
-//  CHANGES Added function PPMGetMode()
+//  CHANGES Added #definition of PPM_NO_SIGNAL
 //
 //============================================================================*/
 
@@ -23,8 +23,10 @@
 #endif
 #define VAR_GLOBAL
 
-#define PPM_SIGNAL_OK   1
-#define PPM_SIGNAL_BAD  0
+#define PPM_SIGNAL_OK   2
+#define PPM_SIGNAL_BAD  1
+#define PPM_NO_SIGNAL   0
+
 #define RC_CHANNELS     7   ///< Number of RC channels. Modify according to RC type
 #define MODE_CHANNEL    4   // Mode selection channel
 #define AILERON_CHANNEL 1   // Aileron control channel
