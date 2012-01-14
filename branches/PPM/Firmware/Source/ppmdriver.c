@@ -9,22 +9,28 @@
 ///  PPM input driver
 /// \file
 ///                                                 content of
-///     ucPulseIndex   aliases                      ulPulseBuffer[]
+///  ucPulseIndex     aliases                      ulPulseBuffer[]
 ///
-///         0          SYNC                         channel 0 pulse
-///         1          AILERON_CHANNEL              channel 1 pulse
-///         2          -                            channel 2 pulse
-///         3          -                            channel 3 pulse
-///         4          MODE_CHANNEL                 channel 4 pulse
-///         5          -                            channel 5 pulse
-///         6          -                            channel 6 pulse
-///         7          RC_CHANNELS / WAITING_SYNC   none
+///        0          -                            channel 0 pulse
+///        1          AILERON_CHANNEL              channel 1 pulse
+///        2          -                            channel 2 pulse
+///        3          -                            channel 3 pulse
+///        4          MODE_CHANNEL                 channel 4 pulse
+///        5          -                            channel 5 pulse
+///        6          -                            channel 6 pulse
+///        7          RC_CHANNELS                  none
 ///
-//  CHANGES Checked overflow number before computing time difference.
-//          Forced invalid pulse length when > 2 overflows occurred.
-//          Overflow counter always cleared when a pulse is detected.
-//          Added counter of good pulses for signal strength indication.
-//          Simplified capture interrupt routine.
+///  Before computing time difference, overflow number is checked.
+///  If 2 or more overflows occurred, an invalid pulse length is forced.
+///  Overflow counter is always cleared when a pulse is detected.
+///  Pulse length is saved in a temporary buffer.
+///  Temporary buffer is copied into final buffer only if pulse length
+///  of all channels are good and synchro pulse is good to.
+///  Added counter of channel pulses with correct pulse length.
+///  Counter is copied into a module variable for signal strength indication.
+///
+//  CHANGES Major modifications to capture interrupt working principle.
+//          Function PPMSignalStatus() returns counter of good pulses.
 //
 //============================================================================*/
 
@@ -43,20 +49,14 @@
 #endif
 #define VAR_GLOBAL
 
-#define SYNC                0           // Index when waiting for first pulse
-#define WAITING_SYNC        RC_CHANNELS // Index when waiting for synchronization
-
-#define PPM_SYNC_MIN        5000        ///< Modify according to RC type
-#define PPM_SYNC_MAX        20000       ///< Modify according to RC type
-#define PPM_LENGTH_MIN      900
-#define PPM_LENGTH_MAX      2100
+#define PPM_SYNC_MIN        4999        ///< Modify according to RC type
+#define PPM_SYNC_MAX        20001       ///< Modify according to RC type
+#define PPM_LENGTH_MIN      899
+#define PPM_LENGTH_MAX      2101
 #define PPM_LENGTH_NEUTRAL  1500
 
 #define PERIOD              65535
 #define PRESCALER           23
-#define MAX_STRENGTH        20          //
-#define LOW_STRENGTH        5
-#define HIGH_STRENGTH       15
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -76,9 +76,11 @@ VAR_STATIC uint16_t ulCaptureTime;
 VAR_STATIC uint16_t ulLastCapture;
 VAR_STATIC uint16_t ulPulseLength;
 VAR_STATIC uint16_t ulPulseBuffer[RC_CHANNELS];
+VAR_STATIC uint16_t ulTemp[RC_CHANNELS];
 VAR_STATIC uint8_t ucPulseIndex;
-VAR_STATIC uint8_t ucSignalStrength;
 VAR_STATIC int8_t cOverflowCount;
+VAR_STATIC int8_t cPulseCount;
+VAR_STATIC int8_t cSignalLevel;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -94,47 +96,47 @@ VAR_STATIC int8_t cOverflowCount;
 void
 TIM2_IRQHandler(void)
 {
-  if (TIM_GetITStatus(TIM2, TIM_IT_Update)) {            // Overflow interrupt
+  uint8_t j;
+
+  if (TIM_GetITStatus(TIM2, TIM_IT_Update)) {           // Overflow interrupt
      TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
      if (!MISSING_PULSES) {
         cOverflowCount++;
      }
   }
 
-  if (TIM_GetITStatus(TIM2, TIM_IT_CC2)) {               // Capture interrupt
-     ulCaptureTime = TIM_GetCapture2 (TIM2);             // read captured time
-     if (cOverflowCount <= 1) {                          // at most one overflow
-        ulPulseLength = ulCaptureTime - ulLastCapture;   // compute time difference
-     } else {                                            // more than one overflow
-        ulPulseLength = 0;                               // force invalid pulse length
-        ucSignalStrength = 0;                            // no signal
+  if (TIM_GetITStatus(TIM2, TIM_IT_CC2)) {              // Capture interrupt
+     ulCaptureTime = TIM_GetCapture2 (TIM2);            // read captured time
+     if (cOverflowCount < 2) {                          // at most one overflow
+        ulPulseLength = ulCaptureTime - ulLastCapture;  // compute time difference
+     } else {                                           // more than one overflow
+        ulPulseLength = 0;                              // force invalid pulse length
      }
-     ulLastCapture = ulCaptureTime;                      // now is also last edge time
-     cOverflowCount = 0;                                 // clear overflow condition
+     ulLastCapture = ulCaptureTime;                     // now is also last edge time
+     cOverflowCount = 0;                                // clear overflow condition
 
-     switch ( ucPulseIndex ) {
-        case WAITING_SYNC :                              // WAITING FOR SYNCHRONIZATION
-           if (( ulPulseLength >= PPM_SYNC_MIN ) &&      // sync pulse detected
-               ( ulPulseLength <= PPM_SYNC_MAX )) {      //
-               ucPulseIndex = 0;                         // synchronized
-               ucSignalStrength++;                       // increase signal strength
-               ucSignalStrength %= MAX_STRENGTH;         //
-           } else if (ucSignalStrength > 0) {            // bad pulse detected
-               ucSignalStrength--;                       // decrease signal strength
+     switch (ucPulseIndex) {
+        case RC_CHANNELS:                               // waiting sync pulse
+           if (( ulPulseLength > PPM_SYNC_MIN ) &&      // sync pulse detected
+               ( ulPulseLength < PPM_SYNC_MAX )) {      //
+              ucPulseIndex = 0;                         // reset index
+              if (cPulseCount == RC_CHANNELS) {         // all channels were good
+                 for (j = 0; j < RC_CHANNELS; j++) {    // copy pulse lengths
+                    ulPulseBuffer[j] = ulTemp[j];       //
+                 }
+              }
            }
-           break;
+           cSignalLevel = cPulseCount;                  // update signal level
+           cPulseCount = 0;                             // clear pulse counter
+        break;
 
-        default :                                        // CHANNELS 1 .. N - 1
-           if (( ulPulseLength >= PPM_LENGTH_MIN ) &&    // good pulse detected
-               ( ulPulseLength <= PPM_LENGTH_MAX )) {    //
-               ulPulseBuffer[ucPulseIndex] = ulPulseLength; // save it
-               ucSignalStrength++;                       // increase signal strength
-               ucSignalStrength %= MAX_STRENGTH;         //
-           } else if (ucSignalStrength > 0) {            // bad pulse detected
-               ucSignalStrength--;                       // decrease signal strength
+        default:                                        // waiting channel pulse
+           ulTemp[ucPulseIndex++] = ulPulseLength;      // save pulse length
+           if ((ulPulseLength > PPM_LENGTH_MIN) &&      // good pulse length
+               (ulPulseLength < PPM_LENGTH_MAX)) {
+              cPulseCount++;                            // increase counter
            }
-           ucPulseIndex++;                               // always go for next channel
-           break;
+        break;
      }
   }
 }
@@ -154,10 +156,10 @@ void PPM_Init(void) {
   TIM_ICInitTypeDef TIM_ICInitStructure;
   NVIC_InitTypeDef NVIC_InitStructure;
 
+  cPulseCount = 0;
   ulLastCapture = 0;
   cOverflowCount = -1;
-  ucSignalStrength = 0;
-  ucPulseIndex = WAITING_SYNC;
+  ucPulseIndex = RC_CHANNELS;
 
   /* Clear current configuration */
   TIM_DeInit(TIM2);
@@ -246,12 +248,6 @@ uint8_t PPMGetMode(void)
 ///----------------------------------------------------------------------------
 uint8_t PPMSignalStatus(void)
 {
-    if (ucSignalStrength > HIGH_STRENGTH) {
-        return PPM_SIGNAL_OK;                      // radio signal is OK
-    } else if (ucSignalStrength > LOW_STRENGTH) {
-        return PPM_SIGNAL_BAD;                     // bad radio signal
-    } else {
-        return PPM_NO_SIGNAL;                      // no radio signal
-    }
+    return (uint8_t) cSignalLevel;
 }
 
