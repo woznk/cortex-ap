@@ -6,7 +6,8 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Added support for PPM input
+// Change: xLog_Message structure: modified with message length.
+//         AHRS_Task: blue LED toggled every 10 cycles.
 //
 //============================================================================*/
 
@@ -57,7 +58,7 @@
 
 typedef struct
 {
-  signed char dummy;
+  uint8_t ucLength;
   uint16_t *pcData;
 } xLog_Message;
 
@@ -79,7 +80,7 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 VAR_STATIC int16_t Servo_Position = 1500;
 VAR_STATIC uint8_t Sensor_Data[16];
 VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
-xQueueHandle xLog_Queue;
+VAR_STATIC xQueueHandle xLog_Queue;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -236,8 +237,8 @@ void Log_Task( void *pvParameters )
     while (1) {
         while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
         }
-//        Log_Send(message.pcData, 6);
-        Log_DCM();
+        Log_Send(message.pcData, message.ucLength);
+//        Log_DCM();
     }
 }
 
@@ -250,17 +251,18 @@ void Log_Task( void *pvParameters )
 ///----------------------------------------------------------------------------
 void AHRS_Task(void *pvParameters)
 {
-    uint8_t i, j;
+    uint8_t i = 0, j = 0, ucBlink = 0;
     int16_t * pSensor;
     xLog_Message message;
     portTickType Last_Wake_Time;
 
     Last_Wake_Time = xTaskGetTickCount();
+    message.ucLength = 6 ;
+    message.pcData = (uint16_t *)Sensor_Data;
 
+    /* Wait until aircraft settles */
     LEDOn(BLUE);
-
     vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 5);
-
     LEDOff(BLUE);
 
     /* Compute sensor offsets */
@@ -280,8 +282,11 @@ void AHRS_Task(void *pvParameters)
     /* Compute attitude and heading */
     while (1) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
-
-        LEDOn(BLUE);
+        
+        if (++ucBlink == 10) {                      // blink led every 10 cycles
+           ucBlink = 0;
+           LEDToggle(BLUE);
+        }
 
         GetAccelRaw(Sensor_Data);                   // acceleration
         GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  // rotation
@@ -301,10 +306,7 @@ void AHRS_Task(void *pvParameters)
         Normalize();                                // normalize DCM
         Servo_Position = 1500 + (int16_t)(DCM_Matrix[2][1] * 500.0f);
         Servo_Set(SERVO_AILERON, Servo_Position);
-        message.pcData = (uint16_t *)Sensor_Data;
         xQueueSend( xLog_Queue, &message, portMAX_DELAY );
-
-        LEDOff(BLUE);
     }
 }
 
