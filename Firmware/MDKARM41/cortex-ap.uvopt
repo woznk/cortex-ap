@@ -517,10 +517,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>43</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>129</TopLine>
+      <CurrentLine>137</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\log.c</PathWithFileName>
       <FilenameWithoutPath>log.c</FilenameWithoutPath>
@@ -534,7 +534,7 @@
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>90</TopLine>
-      <CurrentLine>99</CurrentLine>
+      <CurrentLine>100</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -561,8 +561,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>129</TopLine>
-      <CurrentLine>139</CurrentLine>
+      <TopLine>141</TopLine>
+      <CurrentLine>141</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\servodriver.c</PathWithFileName>
       <FilenameWithoutPath>servodriver.c</FilenameWithoutPath>
@@ -615,10 +615,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>31</ColumnNumber>
+      <ColumnNumber>30</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>149</TopLine>
-      <CurrentLine>181</CurrentLine>
+      <TopLine>128</TopLine>
+      <CurrentLine>139</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\ppmdriver.c</PathWithFileName>
       <FilenameWithoutPath>ppmdriver.c</FilenameWithoutPath>
@@ -771,8 +771,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1870</TopLine>
-      <CurrentLine>1897</CurrentLine>
+      <TopLine>1871</TopLine>
+      <CurrentLine>1879</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</PathWithFileName>
       <FilenameWithoutPath>tasks.c</FilenameWithoutPath>
@@ -996,32 +996,6 @@
     </File>
   </Group>
 
-  <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Source\ppmdriver.h</PathWithFilename>
-    <TopLine>23</TopLine>
-    <CurrentLine>45</CurrentLine>
-    <Constant>0</Constant>
-    <WindowPosition>
-      <length>0</length>
-      <flags>0</flags>
-      <showCmd>0</showCmd>
-      <MinPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MinPosition>
-      <MaxPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MaxPosition>
-      <NormalPosition>
-        <Top>0</Top>
-        <Left>0</Left>
-        <Right>0</Right>
-        <Bottom>0</Bottom>
-      </NormalPosition>
-    </WindowPosition>
-  </AlienFiles>
-
   <MDIGroups>
     <Orientation>1</Orientation>
     <ActiveMDIGroup>0</ActiveMDIGroup>
@@ -1030,40 +1004,40 @@
       <ActiveTab>3</ActiveTab>
       <Documents>
         <Doc>
-          <Name>..\Source\ppmdriver.h</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>23</TopLine>
-          <CurrentLine>45</CurrentLine>
-        </Doc>
-        <Doc>
           <Name>..\Source\servodriver.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>129</TopLine>
-          <CurrentLine>139</CurrentLine>
+          <TopLine>141</TopLine>
+          <CurrentLine>141</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\main.c</Name>
           <ColumnNumber>0</ColumnNumber>
           <TopLine>90</TopLine>
-          <CurrentLine>99</CurrentLine>
+          <CurrentLine>100</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\ppmdriver.c</Name>
-          <ColumnNumber>31</ColumnNumber>
-          <TopLine>149</TopLine>
-          <CurrentLine>181</CurrentLine>
+          <ColumnNumber>30</ColumnNumber>
+          <TopLine>128</TopLine>
+          <CurrentLine>139</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>1871</TopLine>
+          <CurrentLine>1879</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\log.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>129</TopLine>
+          <CurrentLine>137</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
           <ColumnNumber>0</ColumnNumber>
           <TopLine>153</TopLine>
           <CurrentLine>153</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>1870</TopLine>
-          <CurrentLine>1897</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
