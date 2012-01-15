@@ -29,8 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES Major modifications to capture interrupt working principle.
-//          Function PPMSignalStatus() returns counter of good pulses.
+//  CHANGES PPMGetMode() returns MODE_RTL when radio signal is missing
 //
 //============================================================================*/
 
@@ -228,7 +227,9 @@ uint8_t PPMGetMode(void)
     uint16_t uiWidth;
     uiWidth = ulPulseBuffer[MODE_CHANNEL];
 
-    if ( uiWidth < 1100 ) {
+    if (cSignalLevel == 0) {
+        return MODE_RTL;
+    } else if ( uiWidth < 1100 ) {
         return MODE_STABILIZE;
     } else if (( uiWidth > 1400 ) && ( uiWidth < 1600 )) {
         return MODE_AUTO;
