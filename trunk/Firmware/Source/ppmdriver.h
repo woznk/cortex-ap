@@ -8,8 +8,7 @@
 /// \brief
 /// PPM input driver header file
 ///
-//  CHANGES Corrected value of RC_CHANNELS (6)
-//          Modified PPM_SIGNAL_OK according new value returned by PPMSignalStatus()
+//  CHANGES Added MODE_RTL
 //
 //============================================================================*/
 
@@ -31,10 +30,11 @@
 #define MODE_CHANNEL    4   // Mode selection channel
 #define AILERON_CHANNEL 1   // Aileron control channel
 
+#define MODE_UNDEFINED  0
 #define MODE_STABILIZE  1
 #define MODE_AUTO       2
 #define MODE_MANUAL     3
-#define MODE_UNDEFINED  0
+#define MODE_RTL        4
 
 /*----------------------------------- Macros ---------------------------------*/
 
