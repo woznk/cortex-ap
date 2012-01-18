@@ -6,7 +6,8 @@
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES MODE_STABILIZE: aileron servo = aileron channel + DCM roll angle
+//  CHANGES definitions of pulse length moved to header file
+//          management of flight mode moved to attitude control task
 //
 //============================================================================*/
 
@@ -28,14 +29,11 @@
 
 #define PRESCALER      23
 #define PERIOD         19999
-#define SERVO_MIN      900   ///< Absolute minimum pulse length (0.9 ms).
-#define SERVO_MAX      2100  ///< Absolute maximum pulse length (2.1 ms).
-#define SERVO_NEUTRAL  1500  ///< Pulse length of servo neutral position (1.5 ms).
+
+/*----------------------------------- Macros ---------------------------------*/
 
 #define SATURATE(p)    if (p < SERVO_MIN) { p = SERVO_MIN; } \
                        if (p > SERVO_MAX) { p = SERVO_MAX; }
-
-/*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
 
@@ -52,6 +50,7 @@ VAR_STATIC float fElevatorGain = 500.0f;  //!< Elevator servo conversion gain
 VAR_STATIC float fRudderGain = 500.0f;    //!< Rudder servo conversion gain
 VAR_STATIC float fAileronGain = 500.0f;   //!< Aileron servo conversion gain
 */
+
 /*--------------------------------- Prototypes -------------------------------*/
 
 ///----------------------------------------------------------------------------
@@ -131,38 +130,10 @@ void Servo_Init(void) {
 ///----------------------------------------------------------------------------
 void Servo_Set(SERVO_TYPE servo, int16_t position) {
 
-   uint8_t ucMode;
-   static uint8_t ucBlink = 0;
-
-   ucMode = PPMGetMode();
    SATURATE(position);
 
    switch (servo) {
       case SERVO_AILERON :
-         switch (ucMode) {
-            case MODE_RTL:
-               LEDOn(RED);
-            break;
-            case MODE_STABILIZE:
-               position -= SERVO_NEUTRAL;
-               position += PPMGetChannel(AILERON_CHANNEL);
-               SATURATE(position);
-               if (++ucBlink >= 5) {
-                  ucBlink = 0;
-                  LEDToggle(RED);
-               }
-            break;
-            case MODE_AUTO:
-               if (++ucBlink == 10) {
-                  ucBlink = 0;
-                  LEDToggle(RED);
-               }
-            break;
-            default:
-               LEDOff(RED);
-               position = PPMGetChannel(AILERON_CHANNEL);
-            break;
-          }
           TIM_SetCompare1(TIM3, position);
        break;
        case SERVO_RUDDER:
