@@ -10,7 +10,7 @@
 /// \file
 ///
 ///
-//  CHANGES
+//  CHANGES Changed PID computation working principle
 //
 //============================================================================*/
 
@@ -42,15 +42,14 @@
 
 typedef struct
 {
-	float B0;          ///< derived gain, B0 = Kp + Ki + Kd
-    float B1;          ///< derived gain, B1 = -Kp - 2Kd
-    float B2;          ///< derived gain, B2 = Kd
-    float State[3];    ///< state array
-    float Endpoint[2]; ///< min and max saturation
+    float fMin;        ///< min saturation
+    float fMax;        ///< max saturation
+    float fLastInput;  ///< last input
+    float fIntegral;   ///< integral term
     float Kp;          ///< proportional gain
-    float Ki;	       ///< integral gain
-    float Kd;		   ///< derivative gain
-} stPID;
+    float Ki;          ///< integral gain
+    float Kd;          ///< derivative gain
+} xPID;
 
-void PID_Init(stPID*, bool bReset);
-float PID_Compute(stPID * psPid, float fError);
+void PID_Init(xPID * pxPid);
+float PID_Compute(xPID * pxPid, float fSetpoint, float fInput);
