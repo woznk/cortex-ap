@@ -8,7 +8,7 @@
 /// \brief
 /// PPM input driver header file
 ///
-//  CHANGES Added MODE_RTL
+//  CHANGES Added ELEVATOR_CHANNEL
 //
 //============================================================================*/
 
@@ -26,9 +26,10 @@
 #define PPM_SIGNAL_OK   6
 #define PPM_NO_SIGNAL   0
 
-#define RC_CHANNELS     6   ///< Number of RC channels. Modify according to RC type
-#define MODE_CHANNEL    4   // Mode selection channel
-#define AILERON_CHANNEL 1   // Aileron control channel
+#define AILERON_CHANNEL     1   // Aileron control channel
+#define ELEVATOR_CHANNEL    2   // Elevator control channel
+#define MODE_CHANNEL        4   // Mode selection channel
+#define RC_CHANNELS         6   ///< Number of RC channels. Modify according to RC type
 
 #define MODE_UNDEFINED  0
 #define MODE_STABILIZE  1
