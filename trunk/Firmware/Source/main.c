@@ -6,7 +6,9 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Added task for attitude control
+// Change: Temporarily removed disktimerproc (seems no more than 3 tasks are allowed)
+//         Removed semaphore for DCM matrix
+//         Added flight mode management to attitude control task
 //
 //============================================================================*/
 
@@ -81,7 +83,6 @@ VAR_STATIC int16_t Elevator_Position = 1500;
 VAR_STATIC uint8_t Sensor_Data[16];
 VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
 VAR_STATIC xQueueHandle xLog_Queue;
-VAR_STATIC xSemaphoreHandle xDCMSemaphore;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -136,12 +137,10 @@ int main(void)
   while ( xLog_Queue == 0 ) {
   }
 
-  vSemaphoreCreateBinary( xDCMSemaphore );
-
   xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 64, NULL, 5, NULL);
-  xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, 5, NULL);
-  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 4, NULL);
-  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, 3, NULL);
+  xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, 4, NULL);
+  //xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 3, NULL);
+  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, 2, NULL);
 
   vTaskStartScheduler();
 
@@ -307,13 +306,9 @@ void AHRS_Task(void *pvParameters)
             pSensor++;
         }
 
-        xSemaphoreTake( xDCMSemaphore, 0 );
-
         MatrixUpdate((int16_t *)Sensor_Data);       // compute DCM
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
-
-        xSemaphoreGive( xDCMSemaphore);
 
         xQueueSend( xLog_Queue, &message, portMAX_DELAY );
     }
@@ -329,6 +324,7 @@ void AHRS_Task(void *pvParameters)
 ///----------------------------------------------------------------------------
 void Attitude_Control_Task(void *pvParameters)
 {
+    uint8_t ucMode, ucBlink = 0;
     portTickType Last_Wake_Time;
 
     Last_Wake_Time = xTaskGetTickCount();
@@ -336,12 +332,37 @@ void Attitude_Control_Task(void *pvParameters)
     while (1) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
 
-        xSemaphoreTake( xDCMSemaphore, 0 );
+        Aileron_Position = SERVO_NEUTRAL + (int16_t)(DCM_Matrix[2][1] * 500.0f);
+        Elevator_Position = SERVO_NEUTRAL + (int16_t)(DCM_Matrix[2][0] * 500.0f);
 
-        Aileron_Position = 1500 + (int16_t)(DCM_Matrix[2][1] * 500.0f);
-        Elevator_Position = 1500 + (int16_t)(DCM_Matrix[2][0] * 500.0f);
+        ucMode = PPMGetMode();
 
-        xSemaphoreGive( xDCMSemaphore );
+        switch (ucMode) {
+           case MODE_RTL:
+              LEDOn(RED);
+           break;
+           case MODE_STABILIZE:
+              Aileron_Position -= SERVO_NEUTRAL;
+              Aileron_Position += PPMGetChannel(AILERON_CHANNEL);
+              Elevator_Position -= SERVO_NEUTRAL;
+              Elevator_Position += PPMGetChannel(ELEVATOR_CHANNEL);
+              if (++ucBlink >= 5) {
+                 ucBlink = 0;
+                 LEDToggle(RED);
+               }
+           break;
+           case MODE_AUTO:
+              if (++ucBlink == 10) {
+                ucBlink = 0;
+                LEDToggle(RED);
+           }
+           break;
+           default:
+              LEDOff(RED);
+              Aileron_Position = PPMGetChannel(AILERON_CHANNEL);
+              Elevator_Position = PPMGetChannel(ELEVATOR_CHANNEL);
+           break;
+        }
 
         Servo_Set(SERVO_AILERON, Aileron_Position);
         Servo_Set(SERVO_ELEVATOR, Elevator_Position);
