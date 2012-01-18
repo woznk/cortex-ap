@@ -5,31 +5,10 @@
 // $Date: $
 // $Author: $
 //
-/// \brief
-///  PID controls
+/// \brief PID controls
 /// \file
 ///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-//  CHANGES
+//  CHANGES Changed PID computation working principle
 //
 //============================================================================*/
 
@@ -74,22 +53,10 @@
 /// \remarks
 ///
 ///----------------------------------------------------------------------------
-void PID_Init(stPID * psPid, bool bReset)
+void PID_Init(xPID * pxPid)
 {
-	// Derive coefficient B2
-    psPid->B2 = psPid->Kp + psPid->Ki + psPid->Kd;
-
-    // Derived coefficient B1
-    psPid->B1 = (-psPid->Kp) - ((float) 2.0 * psPid->Kd);
-
-    // Derived coefficient B0
-    psPid->B0 = psPid->Kd;
-
-    if (bReset) {
-    	psPID->State[0] = 0;
-    	psPID->State[1] = 0;
-    	psPID->State[2] = 0;
-    }
+    pxPid->fLastInput = 0.0f;
+    pxPid->fIntegral = 0.0f;
 }
 
 
@@ -101,40 +68,39 @@ void PID_Init(stPID * psPid, bool bReset)
 /// \return  -
 /// \remarks
 ///
-/// y[n] = y[n-1] + B2 * x[n] + B1 * x[n-1] + B0 * x[n-2]
-///
-/// Ideal = (State[2])+ (B2 * e) + (B1 * State[0]) + (B0 * State[1]);
-///
-/// Saturate(Ideal)
-///
-/// Update state
-/// State[0] = In;			// x(k-1)
-/// State[1] = State[0];	// x(k-2)
-/// State[2] = Out;			// y(k-1)
-///
 ///----------------------------------------------------------------------------
-float PID_Compute(stPID * psPID, float fError)
+float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
 {
-	float Ucm;
-	float Uid;
-	float Elim;
+   float fError, fDelta, fOutput;
 
-	Uid = psPID->State[0] +
-          (psPID->Kp + psPID->Ki + psPID->Kd) * fError -
-          (psPID->Kd * psPID->State[1]);
+    // Compute error
+    fError = fSetpoint - fInput;
 
-	// Saturate
-	if (Uid > psPID->Endpoint[1]) {
-		Ucm = psPID->Endpoint[1];
-	} else if (Uid < psPID->Endpoint[0]) {
-		Ucm = psPID->Endpoint[0];
-    } else {
-		Ucm = Uid;
+    // Compute integral term
+    pxPid->fIntegral += (pxPid->Ki * fError);
+
+    // Saturate integral term
+    if (pxPid->fIntegral > pxPid->fMax) {
+       pxPid->fIntegral = pxPid->fMax;
+    } else if (pxPid->fIntegral < pxPid->fMin) {
+       pxPid->fIntegral = pxPid->fMin;
     }
 
-	Elim = fError - (Uid - Ucm) / (psPID->Kp + psPID->Ki + psPID->Kd);
-	S->State[0] +=  (psPID->Ki * Elim);
-	S->State[1] = fError;
+    // Compute input difference
+    fDelta = (fInput - pxPid->fLastInput);
 
-	return (Ucm);
+    // Compute output
+    fOutput = pxPid->Kp * fError + pxPid->fIntegral - pxPid->Kd * fDelta;
+
+    // Saturate output
+    if (fOutput > pxPid->fMax) {
+       fOutput = pxPid->fMax;
+    } else if (fOutput < pxPid->fMin) {
+       fOutput = pxPid->fMin;
+    }
+
+    // Store current input
+    pxPid->fLastInput = fInput;
+
+    return fOutput;
 }
