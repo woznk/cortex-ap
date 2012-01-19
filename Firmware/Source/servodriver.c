@@ -6,8 +6,7 @@
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES definitions of pulse length moved to header file
-//          management of flight mode moved to attitude control task
+//  CHANGES swapped elevator ad rudder servos
 //
 //============================================================================*/
 
@@ -136,10 +135,10 @@ void Servo_Set(SERVO_TYPE servo, int16_t position) {
       case SERVO_AILERON :
           TIM_SetCompare1(TIM3, position);
        break;
-       case SERVO_RUDDER:
+       case SERVO_ELEVATOR:
            TIM_SetCompare2(TIM3, position);
        break;
-       case SERVO_ELEVATOR:
+       case SERVO_RUDDER:
            TIM_SetCompare3(TIM3, position);
        break;
        case SERVO_THROTTLE:
