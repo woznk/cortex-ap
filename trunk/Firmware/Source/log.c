@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES simplified Log_DCM()
+//  CHANGES commented whole body of Log_PutChar() function
 //
 //============================================================================*/
 
@@ -150,7 +150,7 @@ Log_Send(uint16_t *data, uint8_t num)
 //----------------------------------------------------------------------------
 void
 Log_PutChar ( char c ) {
-
+/*
     UINT wWritten;
     static unsigned long ulSamples;
 
@@ -159,17 +159,18 @@ Log_PutChar ( char c ) {
     }
     if ((c == '\r') && bFileOk) {                           // End of line
         f_write(&stFile, pcBuffer, wWriteIndex, &wWritten); // Write
-        if (/* (HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS)) || */// button pressed
+        if (//(HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS)) ||  // button pressed
             (wWriteIndex != wWritten) ||                    // No file space
             (ulSamples >= MAX_SAMPLES)) {                   // Too many samples
             f_close(&stFile);                               // close file
             bFileOk = FALSE;                                // Halt file logging
-/*            HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;   // clear button flag*/
+//            HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;   // clear button flag
         } else {                                            // Write successfull
             ulSamples++;                                    // Update sample counter
             wWriteIndex = 0;                                // Empty buffer
         }
     }
+*/
 }
 
 
