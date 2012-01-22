@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES commented whole body of Log_PutChar() function
+//  CHANGES Log_DCM() : initialized variable j
 //
 //============================================================================*/
 
@@ -51,12 +51,14 @@
 /*----------------------------------- Locals ---------------------------------*/
 
 VAR_STATIC unsigned char szString[48];
+/*
 VAR_STATIC const char szFileName[16] = "log.txt";   // File name
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // File object
 VAR_STATIC char pcBuffer[FILE_BUFFER_LENGTH];       // File data buffer
 VAR_STATIC WORD wWriteIndex = 0;                    // File buffer write index
 VAR_STATIC bool bFileOk = FALSE;                    // File status
+*/
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -182,10 +184,9 @@ Log_PutChar ( char c ) {
 ///
 ///
 ///----------------------------------------------------------------------------
-void
-Log_DCM(void)
-{
-    uint8_t x, y, j;
+void Log_DCM(void) {
+
+    uint8_t x, y, j = 0;
     unsigned char ucDigit;
     long lTemp;
 
