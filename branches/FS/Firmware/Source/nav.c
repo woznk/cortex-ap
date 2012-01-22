@@ -20,8 +20,7 @@
 /// In assenza di waypoints disponibili, la funzione calcola la direzione e la
 /// distanza rispetto al punto di partenza (RTL).
 ///
-//  CHANGES Navigate() function changed into navigation task 
-//          initialization moved at beginning of navigation task
+//  CHANGES Modified reading sequence
 //
 //============================================================================*/
 
@@ -197,13 +196,8 @@ void Navigation_Task( void *pvParameters ) {
     }
 
     /* Read waypoint file */
-    if ( bError ||
-       ( FR_OK != f_read(&stFile, pcBuffer, FILE_BUFFER_LENGTH, &wFileBytes))) {
-        f_close( &stFile );                         // File error (mount, open, read)
-        uiWptNumber = 0;                            // No waypoint available
-    } else if ( wFileBytes == 0 ) {                 // End of file
-        f_close( &stFile );                         // Close file
-    } else {                                        // File read successfully
+    while ((!bError) &&
+           (FR_OK == f_read(&stFile, pcBuffer, FILE_BUFFER_LENGTH, &wFileBytes))) {
         while ((wFileBytes != 0) && (!bError)) {    // Buffer not empty and no error
             wFileBytes--;                           // Decrease overall counter
             c = *pcBufferPointer++;                 // Read another char
@@ -216,13 +210,14 @@ void Navigation_Task( void *pvParameters ) {
                 cCounter--;                         // Decrease counter
             }
             if (cCounter == 0) {                    // End of line
-               *pszLinePointer = 0;                 // Append line delimiter
-               pszLinePointer = szLine;             // Reset line pointer
-               cCounter = MAX_LINE_LENGTH - 1;      // Reset char counter
-               bError = Parse_Waypoint(szLine);     // Parse line
+                *pszLinePointer = 0;                // Append line delimiter
+                pszLinePointer = szLine;            // Reset line pointer
+                cCounter = MAX_LINE_LENGTH - 1;     // Reset char counter
+                bError = Parse_Waypoint(szLine);    // Parse line
             }
         }
     }
+    f_close( &stFile );                             // Close file
 
     /* Wait first GPS fix and save launch position */
     while ((Gps_Status & GPS_STATUS_FIX) != GPS_STATUS_FIX) {
@@ -379,3 +374,4 @@ bool Parse_Waypoint ( char * pszLine ) {
     }
     return FALSE;
 }
+
