@@ -7,7 +7,8 @@
 //
 /// \file
 /// \brief  Navigation manager header file
-//  CHANGES tBoolean replaced with bool
+//  CHANGES Navigate() function changed into navigation task 
+//          added type definition of gps message
 //
 //============================================================================
 
@@ -24,15 +25,22 @@
 
 /*------------------------------------ Types ---------------------------------*/
 
+typedef struct
+{
+  uint8_t ucLength;
+  uint16_t *pcData;
+} xGps_Message;
+
 /*---------------------------------- Constants -------------------------------*/
 
 /*----------------------------------- Globals --------------------------------*/
 
+VAR_GLOBAL xQueueHandle xGps_Queue;
+
 /*---------------------------------- Interface -------------------------------*/
 
-bool Nav_Init ( void );
-void Navigate ( void );
-int Nav_Bearing ( void );
-unsigned int Nav_Distance ( void );
-unsigned int Nav_WaypointIndex ( void );
+void Navigation_Task( void *pvParameters );
+int16_t Nav_Bearing ( void );
+uint16_t Nav_Distance ( void );
+uint16_t Nav_WaypointIndex ( void );
 
