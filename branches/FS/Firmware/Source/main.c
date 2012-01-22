@@ -6,9 +6,9 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Temporarily removed disktimerproc (seems no more than 3 tasks are allowed)
-//         Removed semaphore for DCM matrix
-//         Added flight mode management to attitude control task
+// Change: created navigation task
+//         added queue for gps messages and its initialization
+//         initialization of L3G4200 and ADXL345 moved inside AHRS task
 //
 //============================================================================*/
 
@@ -105,7 +105,7 @@ int main(void)
        this is done through SystemInit() function which is called from startup
        file (startup_stm32f10x_xx.s) before to branch to application main.
        To reconfigure the default setting of SystemInit() function, refer to
-       system_stm32f10x.c file     */
+       system_stm32f10x.c file */
 
   // System Clocks Configuration
   RCC_Configuration();
@@ -122,24 +122,19 @@ int main(void)
   // I2C peripheral initialization
   I2C_MEMS_Init();
 
-  // L3G4200 gyro sensor initialization
-  L3G4200_Init();
-
-  // ADXL345 accelerometer sensor initialization
-  ADXL345_Init();
-
-  // Navigation init
-//  while (!Nav_Init());
-
   Log_Init();
 
   xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
   while ( xLog_Queue == 0 ) {
   }
+  xGps_Queue = xQueueCreate( 3, sizeof( xGps_Message ) );
+  while ( xGps_Queue == 0 ) {
+  }
 
   xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 64, NULL, 5, NULL);
   xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, 4, NULL);
-  //xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 3, NULL);
+  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 3, NULL);
+  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, 2, NULL);
   xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, 2, NULL);
 
   vTaskStartScheduler();
@@ -262,8 +257,12 @@ void AHRS_Task(void *pvParameters)
     portTickType Last_Wake_Time;
 
     Last_Wake_Time = xTaskGetTickCount();
-    message.ucLength = 6 ;
-    message.pcData = (uint16_t *)Sensor_Data;
+
+    /* Task specific initializations */
+    message.ucLength = 6 ;                          // message length
+    message.pcData = (uint16_t *)Sensor_Data;       // message content
+    L3G4200_Init();                                 // init L3G4200 gyro
+    ADXL345_Init();                                 // init ADXL345 accelerometer
 
     /* Wait until aircraft settles */
     LEDOn(BLUE);
