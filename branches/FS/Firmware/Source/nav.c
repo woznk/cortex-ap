@@ -20,7 +20,9 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES updated header
+//  CHANGES corrected problem reading waypoint file: it seems that f_read()
+//          function keeps returning FR_OK even if end of file was reached.
+//          To tell EOF, checked if the number of bytes read is 0.
 //
 //============================================================================*/
 
@@ -176,7 +178,6 @@ void Navigation_Task( void *pvParameters ) {
     xGps_Message message;
 
     pszLinePointer = szLine;                        // Init line pointer
-    pcBufferPointer = pcBuffer;                     // Init buffer pointer
     cCounter = MAX_LINE_LENGTH - 1;                 // Init char counter
 
     /* Mount file system and open waypoint file */
@@ -192,6 +193,8 @@ void Navigation_Task( void *pvParameters ) {
     /* Read waypoint file */
     while ((!bError) &&
            (FR_OK == f_read(&stFile, pcBuffer, FILE_BUFFER_LENGTH, &wFileBytes))) {
+        bError = (wFileBytes == 0);                 // Force error if end of file
+        pcBufferPointer = pcBuffer;                 // Init buffer pointer
         while ((wFileBytes != 0) && (!bError)) {    // Buffer not empty and no error
             wFileBytes--;                           // Decrease overall counter
             c = *pcBufferPointer++;                 // Read another char
