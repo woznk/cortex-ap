@@ -5,22 +5,22 @@
 // $Date: 2011/01/23 17:54:28 $
 // $Author: Lorenz $
 //
-/// \brief Navigation manager
+/// \brief Navigation task
 ///
 /// \file
-/// La funzione di inizializzazione Nav_Init() serve a leggere da SD card il
-/// file di testo contenente i waypoints, tradurre le stringhe in coordinate,
-/// salvare i waypoint nell'array Waypoint[] e aggiornare il numero totale di
-/// waypoints disponibili.
-/// In assenza di SD card o in caso di errore nella lettura del file, il numero
-/// totale dei waypoints rimane a 0.
-/// La funzione di navigazione Navigate() attende il fix del GPS, salva le
-/// coordinate del punto di partenza nel primo elemento dell'array Waypoint[],
-/// calcola la direzione verso e la distanza dal successivo waypoint.
-/// In assenza di waypoints disponibili, la funzione calcola la direzione e la
-/// distanza rispetto al punto di partenza (RTL).
+/// - Initialization:
+///   reads from SD card a text file containing waypoints, translates strings
+///   into coordinates and altitude, saves waypoints in the array Waypoint[],
+///   updates number of available waypoints.
+///   If SD card is missing or in case of error during file read, the number
+///   of available waypoints is set to 0.
+/// - Navigation:
+///   waits for GPS fix, saves coordinates of launch point in the first entry
+///   of array Waypoint[], computes heading and distance to next waypoint.
+///   If available waypoints are 0, computes heading and distance to launch
+///   point (RTL).
 ///
-//  CHANGES Modified reading sequence
+//  CHANGES updated header
 //
 //============================================================================*/
 
@@ -65,12 +65,6 @@ typedef struct {    // waypoint structure
     float Lat;      // latitude
     float Alt;      // altitude
 } STRUCT_WPT;
-
-typedef enum {      // navigation status
-    NAV_OPEN_FILE,  // opening waypoint file
-    NAV_READ_FILE,  // reading waypoint file
-    NAV_END         // end
-} ENUM_NAV_STATUS;
 
 typedef enum {      // navigation mode
     NAV_RTL,        // return to launch
