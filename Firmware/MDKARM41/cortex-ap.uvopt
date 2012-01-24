@@ -147,28 +147,11 @@
           <Name>-O14 -S0 -C0 -N00("ARM Cortex-M3") -D00(1BA00477) -L00(4) -FO7 -FD20000000 -FC800 -FN1 -FF0STM32F10x_128 -FS08000000 -FL020000)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint>
-        <Bp>
-          <Number>0</Number>
-          <Type>0</Type>
-          <LineNumber>190</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134220066</Address>
-          <ByteObject>0</ByteObject>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename></Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\cortex_ap\../Source/nav.c\190</Expression>
-        </Bp>
-      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>pcBuffer</ItemText>
+          <ItemText>Waypoint</ItemText>
         </Ww>
       </WatchWindow1>
       <MemoryWindow1>
@@ -571,8 +554,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>195</TopLine>
-      <CurrentLine>207</CurrentLine>
+      <TopLine>189</TopLine>
+      <CurrentLine>218</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -746,8 +729,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>1792</TopLine>
+      <CurrentLine>1792</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\fat_sd\ff.c</PathWithFileName>
       <FilenameWithoutPath>ff.c</FilenameWithoutPath>
@@ -872,8 +855,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>882</TopLine>
-      <CurrentLine>882</CurrentLine>
+      <TopLine>883</TopLine>
+      <CurrentLine>891</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_usart.c</FilenameWithoutPath>
@@ -1034,38 +1017,12 @@
     </File>
   </Group>
 
-  <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h</PathWithFilename>
-    <TopLine>67</TopLine>
-    <CurrentLine>79</CurrentLine>
-    <Constant>0</Constant>
-    <WindowPosition>
-      <length>0</length>
-      <flags>0</flags>
-      <showCmd>0</showCmd>
-      <MinPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MinPosition>
-      <MaxPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MaxPosition>
-      <NormalPosition>
-        <Top>0</Top>
-        <Left>0</Left>
-        <Right>0</Right>
-        <Bottom>0</Bottom>
-      </NormalPosition>
-    </WindowPosition>
-  </AlienFiles>
-
   <MDIGroups>
     <Orientation>1</Orientation>
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>4</ActiveTab>
+      <ActiveTab>2</ActiveTab>
       <Documents>
         <Doc>
           <Name>..\Source\servodriver.c</Name>
@@ -1080,10 +1037,10 @@
           <CurrentLine>103</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h</Name>
-          <ColumnNumber>56</ColumnNumber>
-          <TopLine>67</TopLine>
-          <CurrentLine>79</CurrentLine>
+          <Name>..\Source\nav.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>189</TopLine>
+          <CurrentLine>218</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
@@ -1092,16 +1049,10 @@
           <CurrentLine>153</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\nav.c</Name>
+          <Name>..\Libraries\fat_sd\ff.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>195</TopLine>
-          <CurrentLine>207</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\log.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>124</TopLine>
-          <CurrentLine>132</CurrentLine>
+          <TopLine>1792</TopLine>
+          <CurrentLine>1792</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
