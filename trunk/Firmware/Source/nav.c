@@ -5,25 +5,31 @@
 // $Date: 2011/01/23 17:54:28 $
 // $Author: Lorenz $
 //
-/// \brief Navigation manager
+/// \brief Navigation task
 ///
 /// \file
-/// La funzione di inizializzazione Nav_Init() serve a leggere da SD card il
-/// file di testo contenente i waypoints, tradurre le stringhe in coordinate,
-/// salvare i waypoint nell'array Waypoint[] e aggiornare il numero totale di
-/// waypoints disponibili.
-/// In assenza di SD card o in caso di errore nella lettura del file, il numero
-/// totale dei waypoints rimane a 0.
-/// La funzione di navigazione Navigate() attende il fix del GPS, salva le
-/// coordinate del punto di partenza nel primo elemento dell'array Waypoint[],
-/// calcola la direzione verso e la distanza dal successivo waypoint.
-/// In assenza di waypoints disponibili, la funzione calcola la direzione e la
-/// distanza rispetto al punto di partenza (RTL).
+/// - Initialization:
+///   reads from SD card a text file containing waypoints, translates strings
+///   into coordinates and altitude, saves waypoints in the array Waypoint[],
+///   updates number of available waypoints.
+///   If SD card is missing or in case of error during file read, the number
+///   of available waypoints is set to 0.
+/// - Navigation:
+///   waits for GPS fix, saves coordinates of launch point in the first entry
+///   of array Waypoint[], computes heading and distance to next waypoint.
+///   If available waypoints are 0, computes heading and distance to launch
+///   point (RTL).
 ///
-//  CHANGES removed tick.h
+//  CHANGES corrected problem reading waypoint file: it seems that f_read()
+//          function keeps returning FR_OK even if end of file was reached.
+//          To tell EOF, checked if the number of bytes read is 0.
 //
 //============================================================================*/
 
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 #include "stm32f10x.h"
 #include "math.h"
@@ -61,12 +67,6 @@ typedef struct {    // waypoint structure
     float Lat;      // latitude
     float Alt;      // altitude
 } STRUCT_WPT;
-
-typedef enum {      // navigation status
-    NAV_OPEN_FILE,  // opening waypoint file
-    NAV_READ_FILE,  // reading waypoint file
-    NAV_END         // end
-} ENUM_NAV_STATUS;
 
 typedef enum {      // navigation mode
     NAV_RTL,        // return to launch
@@ -106,112 +106,31 @@ const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 3
 
 /*---------------------------------- Globals ---------------------------------*/
 
+VAR_GLOBAL xQueueHandle xGps_Queue;
+
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC ENUM_NAV_STATUS eNavStatus = NAV_OPEN_FILE;
 VAR_STATIC const char szFileName[16] = "path.txt";  // File name
 VAR_STATIC char szLine[MAX_LINE_LENGTH];            // Input line
 VAR_STATIC char pcBuffer[FILE_BUFFER_LENGTH];       // File data buffer
-#ifndef _WINDOWS
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // File object
 VAR_STATIC UINT wFileBytes;                         // Counter of read bytes
-#endif
-VAR_STATIC int Bearing;                             // angle to destination [°]
-VAR_STATIC unsigned int Distance;                   // distance to destination [m]
+VAR_STATIC int16_t Bearing;                         // angle to destination [°]
+VAR_STATIC uint16_t Distance;                       // distance to destination [m]
 VAR_STATIC float fDestLat;                          // destination latitude
 VAR_STATIC float fDestLon;                          // destination longitude
-VAR_STATIC unsigned int uiWptIndex;                 // waypoint index
-VAR_STATIC unsigned int uiWptNumber = 1;            // number of waypoints
+VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
+VAR_STATIC uint16_t uiWptNumber = 1;                // number of waypoints
 VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];      // waypoints array
+
+
+float fCurrLat, fCurrLon;
+unsigned char Gps_Status;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
 bool Parse_Waypoint(char * pszLine);
-
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Initialize navigation
-///
-/// \remarks
-///
-//----------------------------------------------------------------------------
-bool
-Nav_Init( void ) {
-
-    char c;
-    static char cCounter;
-    char * pcBufferPointer;
-    static char * pszLinePointer;
-    bool bError = FALSE, bResult = FALSE;
-
-#ifdef _WINDOWS
-
-    for (char j = 0; j < 4; j++) {
-        Waypoint[j + 1] = DefaultWaypoint[j];           // default waypoints
-    }
-    uiWptNumber = 4;                                    // waypoints available
-
-#else
-
-    switch (eNavStatus) {
-
-        case NAV_OPEN_FILE:                             // Open waypoint file.
-            if (FR_OK == f_mount(0, &stFat)) {          // Mount the file system.
-                if (FR_OK == f_open(&stFile, szFileName, FA_READ)) {
-                    pszLinePointer = szLine;            // Init line pointer
-                    cCounter = MAX_LINE_LENGTH - 1;     // Init char counter
-                    eNavStatus = NAV_READ_FILE;         // File succesfully open
-                } else {                                // Error opening file
-                    uiWptNumber = 0;                    // No waypoint available
-                    eNavStatus = NAV_END;
-                }
-            } else {                                    // Error mounting FS
-                uiWptNumber = 0;                        // No waypoint available
-                eNavStatus = NAV_END;
-            }
-            break;
-
-        case NAV_READ_FILE:                             // Read waypoint file.
-            if ( bError ||
-               ( FR_OK != f_read(&stFile, pcBuffer, FILE_BUFFER_LENGTH, &wFileBytes))) {
-                f_close(&stFile);                       // Error reading file
-                uiWptNumber = 0;                        // No waypoint available
-                eNavStatus = NAV_END;                   // End initialization
-            } else if ( wFileBytes == 0 ) {             // End of file
-                f_close(&stFile);                       // Close file
-                eNavStatus = NAV_END;                   // End initialization
-            } else {                                    // File read successfull
-                pcBufferPointer = pcBuffer;             // Init buffer pointer
-                while ((wFileBytes != 0) && (!bError)) {// Buffer not empty and no error
-                     wFileBytes--;                      // Decrease overall counter
-                     c = *pcBufferPointer++;            // Read another char
-                     if ( c == 13 ) {                   // Carriage return
-                         cCounter = 0;                  // Reached end of line
-                     } else if ( c == 10 ) {            // New line
-                         cCounter--;                    // Increase counter
-                     } else {
-                         *pszLinePointer++ = c;         // Copy char
-                         cCounter--;                    // Increase counter
-                     }
-                     if (cCounter == 0) {               // End of line
-                        *pszLinePointer = 0;            // Append line delimiter
-                        pszLinePointer = szLine;        // Reset line pointer
-                        cCounter = MAX_LINE_LENGTH - 1; // Reset char counter
-                        bError = Parse_Waypoint(szLine);// Parse line
-                    }
-                }
-            }
-            break;
-
-        case NAV_END:
-            bResult = TRUE;
-            break;
-    }
-#endif
-    return bResult;
-}
 
 
 //----------------------------------------------------------------------------
@@ -243,61 +162,98 @@ Nav_Init( void ) {
 ///                       difference
 ///
 ///
+/// Bearing formula works for short distances.
+/// Bearing is positive in CCW direction, heading is positive in CW direction
+/// Bearing reference is rotated 90° CW with respect to heading reference
+///
+///
 //----------------------------------------------------------------------------
-void
-Navigate( void ) {
-/*
-   float temp, dlat, dlon;
+void Navigation_Task( void *pvParameters ) {
 
-    //
-    // First GPS fix: save launch position
-    //
-    if ((Gps_Status & GPS_STATUS_FIRST) == GPS_STATUS_FIRST ) {
-      if ((Gps_Status & GPS_STATUS_FIX) == GPS_STATUS_FIX) {
-        Gps_Status &= ~GPS_STATUS_FIRST;
-        Waypoint[0].Lon = fCurrLon;             // save launch position
-        Waypoint[0].Lat = fCurrLat;
-        if (uiWptNumber != 0) {                 // waypoint file available
-            uiWptIndex = 1;                     // read first waypoint
-        } else {                                // no waypoint file
-            uiWptIndex = 0;                     // read launch position
-        }
-        fDestLon = Waypoint[uiWptIndex].Lon;    //
-        fDestLat = Waypoint[uiWptIndex].Lat;    //
-      } else {
-        return;
-      }
+    float temp, dlat, dlon;
+    char c, cCounter;
+    char * pcBufferPointer;
+    char * pszLinePointer;
+    bool bError = TRUE;
+    xGps_Message message;
+
+    pszLinePointer = szLine;                        // Init line pointer
+    cCounter = MAX_LINE_LENGTH - 1;                 // Init char counter
+
+    /* Mount file system and open waypoint file */
+
+    if (FR_OK != f_mount(0, &stFat)) {              // Mount the file system.
+        uiWptNumber = 0;                            // No waypoint available
+    } else if (FR_OK != f_open(&stFile, szFileName, FA_READ)) {
+        uiWptNumber = 0;                            // No waypoint available
+    } else {
+        bError = FALSE;                             // File succesfully open
     }
 
-    //
-    // calculate bearing to destination, works for short distances
-    // bearing is positive in CCW direction, heading is positive in CW direction
-    // bearing reference is rotated 90° CW with respect to heading reference
-    //
-    dlon = (fDestLon - fCurrLon);
-    dlat = (fDestLat - fCurrLat);
-    Bearing = 90 - (int)((atan2f(dlat, dlon) * 180.0f) / PI);
-    if (Bearing < 0) Bearing = Bearing + 360;
-
-    //
-    // compute distance to destination
-    //
-    temp = (sqrtf((dlat * dlat) + (dlon * dlon)) * 111113.7f);
-    Distance = (unsigned int)temp;
-
-    //
-    // Waypoint reached: next waypoint
-    //
-    if (Distance < MIN_DISTANCE) {
-        if ( uiWptNumber != 0 ) {
-            if ( ++uiWptIndex == uiWptNumber ) {
-                uiWptIndex = 1;
+    /* Read waypoint file */
+    while ((!bError) &&
+           (FR_OK == f_read(&stFile, pcBuffer, FILE_BUFFER_LENGTH, &wFileBytes))) {
+        bError = (wFileBytes == 0);                 // Force error if end of file
+        pcBufferPointer = pcBuffer;                 // Init buffer pointer
+        while ((wFileBytes != 0) && (!bError)) {    // Buffer not empty and no error
+            wFileBytes--;                           // Decrease overall counter
+            c = *pcBufferPointer++;                 // Read another char
+            if ( c == 13 ) {                        // Carriage return
+                cCounter = 0;                       // Reached end of line
+            } else if ( c == 10 ) {                 // New line
+                cCounter--;                         // Decrease counter
+            } else {
+                *pszLinePointer++ = c;              // Copy char
+                cCounter--;                         // Decrease counter
+            }
+            if (cCounter == 0) {                    // End of line
+                *pszLinePointer = 0;                // Append line delimiter
+                pszLinePointer = szLine;            // Reset line pointer
+                cCounter = MAX_LINE_LENGTH - 1;     // Reset char counter
+                bError = Parse_Waypoint(szLine);    // Parse line
             }
         }
-        fDestLon = Waypoint[uiWptIndex].Lon;
-        fDestLat = Waypoint[uiWptIndex].Lat;
     }
-*/
+    f_close( &stFile );                             // Close file
+
+    /* Wait first GPS fix and save launch position */
+    while ((Gps_Status & GPS_STATUS_FIX) != GPS_STATUS_FIX) {
+    }
+    Waypoint[0].Lon = fCurrLon;                 // save launch position
+    Waypoint[0].Lat = fCurrLat;
+    if (uiWptNumber != 0) {                     // waypoint file available
+        uiWptIndex = 1;                         // read first waypoint
+    } else {                                    // no waypoint file
+        uiWptIndex = 0;                         // read launch position
+    }
+    fDestLon = Waypoint[uiWptIndex].Lon;        //
+    fDestLat = Waypoint[uiWptIndex].Lat;        //
+
+    while (1) {
+        while (xQueueReceive( xGps_Queue, &message, portMAX_DELAY ) != pdPASS) {
+        }
+
+        /* Calculate bearing to destination */
+        dlon = (fDestLon - fCurrLon);
+        dlat = (fDestLat - fCurrLat);
+        Bearing = 90 - (int)((atan2f(dlat, dlon) * 180.0f) / PI);
+        if (Bearing < 0) Bearing = Bearing + 360;
+
+        /* compute distance to destination */
+        temp = (sqrtf((dlat * dlat) + (dlon * dlon)) * 111113.7f);
+        Distance = (unsigned int)temp;
+
+        /* Waypoint reached: next waypoint */
+        if (Distance < MIN_DISTANCE) {
+            if ( uiWptNumber != 0 ) {
+                if ( ++uiWptIndex == uiWptNumber ) {
+                    uiWptIndex = 1;
+                }
+            }
+            fDestLon = Waypoint[uiWptIndex].Lon;
+            fDestLat = Waypoint[uiWptIndex].Lat;
+        }
+    }
 }
 
 
@@ -311,8 +267,7 @@ Navigate( void ) {
 ///
 ///
 //----------------------------------------------------------------------------
-unsigned int
-Nav_WaypointIndex ( void ) {
+uint16_t Nav_WaypointIndex ( void ) {
   return uiWptIndex;
 }
 
@@ -327,8 +282,7 @@ Nav_WaypointIndex ( void ) {
 ///
 ///
 //----------------------------------------------------------------------------
-int
-Nav_Bearing ( void ) {
+int16_t Nav_Bearing ( void ) {
   return Bearing;
 }
 
@@ -343,8 +297,7 @@ Nav_Bearing ( void ) {
 ///
 ///
 //----------------------------------------------------------------------------
-unsigned int
-Nav_Distance ( void ) {
+uint16_t Nav_Distance ( void ) {
   return Distance;
 }
 
@@ -362,8 +315,7 @@ Nav_Distance ( void ) {
 ///          [.[a]] is an optional decimal point with an optional decimal data
 ///
 //----------------------------------------------------------------------------
-bool
-Parse_Waypoint ( char * pszLine ) {
+bool Parse_Waypoint ( char * pszLine ) {
     char c;
     float fTemp, fDiv;
     unsigned char ucField = 0, ucCounter = MAX_LINE_LENGTH;
@@ -419,3 +371,4 @@ Parse_Waypoint ( char * pszLine ) {
     }
     return FALSE;
 }
+
