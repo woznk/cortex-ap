@@ -9,16 +9,17 @@
 ///
 /// \file
 ///
-//  CHANGES Log_DCM() : initialized variable j
+//  CHANGES Log task moved to Log.c
 //
 //============================================================================*/
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
 #include "math.h"
-//#include "telemetry.h"
-//#include "config.h"
-//#include "gps.h"
 #include "ff.h"
 #include "DCM.h"
 #include "ppmdriver.h"
@@ -47,6 +48,8 @@
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
+
+VAR_GLOBAL xQueueHandle xLog_Queue;
 
 /*----------------------------------- Locals ---------------------------------*/
 
@@ -108,6 +111,26 @@ Log_Init( void ) {
 */
 }
 
+
+///----------------------------------------------------------------------------
+///
+/// \brief
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Log_Task( void *pvParameters )
+{
+    xLog_Message message;
+
+    while (1) {
+        while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
+        }
+        Log_Send(message.pcData, message.ucLength);
+//        Log_DCM();
+    }
+}
+
 ///----------------------------------------------------------------------------
 ///
 /// \brief   sends data via USART 1
@@ -115,8 +138,7 @@ Log_Init( void ) {
 ///
 ///
 ///----------------------------------------------------------------------------
-void
-Log_Send(uint16_t *data, uint8_t num)
+void Log_Send(uint16_t *data, uint8_t num)
 {
     long l_temp;
     uint8_t digit, i, j = 0;
@@ -150,8 +172,7 @@ Log_Send(uint16_t *data, uint8_t num)
 ///          received
 ///
 //----------------------------------------------------------------------------
-void
-Log_PutChar ( char c ) {
+void Log_PutChar ( char c ) {
 /*
     UINT wWritten;
     static unsigned long ulSamples;
@@ -221,8 +242,7 @@ void Log_DCM(void) {
 ///
 ///
 ///----------------------------------------------------------------------------
-void
-Log_PPM(void)
+void Log_PPM(void)
 {
 /*
     unsigned char szString[64];
@@ -266,38 +286,4 @@ ftoa (float fVal, unsigned char *pucString)
     return ucLength;
 }
 
-void
-Log_(void)
-{
-    unsigned char ucLen, szString[32];
-
-    UART1Send ("!!!EX0:", 7);
-    ucLen = ftoa(DCM_Matrix[0][0], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",EX1:", 5);
-    ucLen = ftoa(DCM_Matrix[0][1], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",EX2:", 5);
-    ucLen = ftoa(DCM_Matrix[0][2], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",EX3:", 5);
-    ucLen = ftoa(DCM_Matrix[1][0], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",EX4:", 5);
-    ucLen = ftoa(DCM_Matrix[1][1], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",EX5:", 5);
-    ucLen = ftoa(DCM_Matrix[1][2], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",EX6:", 5);
-    ucLen = ftoa(DCM_Matrix[2][0], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",EX7:", 5);
-    ucLen = ftoa(DCM_Matrix[2][1], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",EX8:", 5);
-    ucLen = ftoa(DCM_Matrix[2][2], szString);
-    UART1Send (szString, ucLen);
-    UART1Send (",***\r", 5);
-}
 */

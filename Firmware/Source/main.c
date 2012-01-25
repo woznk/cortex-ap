@@ -6,9 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: created navigation task
-//         added queue for gps messages and its initialization
-//         initialization of L3G4200 and ADXL345 moved inside AHRS task
+// Change: Log task moved to Log.c
 //
 //============================================================================*/
 
@@ -57,12 +55,6 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
-typedef struct
-{
-  uint8_t ucLength;
-  uint16_t *pcData;
-} xLog_Message;
-
 /*---------------------------------- Constants -------------------------------*/
 
 VAR_STATIC const int16_t Sensor_Sign[6] = {
@@ -82,7 +74,6 @@ VAR_STATIC int16_t Aileron_Position = 1500;
 VAR_STATIC int16_t Elevator_Position = 1500;
 VAR_STATIC uint8_t Sensor_Data[16];
 VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
-VAR_STATIC xQueueHandle xLog_Queue;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -223,24 +214,6 @@ void GPIO_Configuration(void)
 
 }
 
-///----------------------------------------------------------------------------
-///
-/// \brief
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void Log_Task( void *pvParameters )
-{
-    xLog_Message message;
-
-    while (1) {
-        while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
-        }
-        Log_Send(message.pcData, message.ucLength);
-//        Log_DCM();
-    }
-}
 
 ///----------------------------------------------------------------------------
 ///
