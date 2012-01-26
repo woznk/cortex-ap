@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: log task replaced by telemetry task
+// Change: corrected destination of messages to telemetry task
 //
 //============================================================================*/
 
@@ -81,7 +81,6 @@ VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
 void RCC_Configuration(void);
 void GPIO_Configuration(void);
 void AHRS_Task(void *pvParameters);
-void Log_Task( void *pvParameters );
 void Attitude_Control_Task(void *pvParameters);
 
 ///----------------------------------------------------------------------------
@@ -116,12 +115,14 @@ int main(void)
 
   Telemetry_Init();
 
-  xTelemetry_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
+  xTelemetry_Queue = xQueueCreate( 3, sizeof( xTelemetry_Message ) );
   while ( xTelemetry_Queue == 0 ) {
   }
+
   xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
   while ( xLog_Queue == 0 ) {
   }
+
   xGps_Queue = xQueueCreate( 3, sizeof( xGps_Message ) );
   while ( xGps_Queue == 0 ) {
   }
@@ -130,7 +131,7 @@ int main(void)
   xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, 4, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 3, NULL);
   xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, 2, NULL);
-  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, 2, NULL);
+  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, 2, NULL);
 
   vTaskStartScheduler();
 
@@ -230,7 +231,7 @@ void AHRS_Task(void *pvParameters)
 {
     uint8_t i = 0, j = 0, ucBlink = 0;
     int16_t * pSensor;
-    xLog_Message message;
+    xTelemetry_Message message;
     portTickType Last_Wake_Time;
 
     Last_Wake_Time = xTaskGetTickCount();
@@ -286,7 +287,7 @@ void AHRS_Task(void *pvParameters)
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
 
-        xQueueSend( xLog_Queue, &message, portMAX_DELAY );
+        xQueueSend( xTelemetry_Queue, &message, portMAX_DELAY );
     }
 }
 
