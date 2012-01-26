@@ -431,6 +431,11 @@
               <FileType>1</FileType>
               <FilePath>..\Source\PID.c</FilePath>
             </File>
+            <File>
+              <FileName>telemetry.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\telemetry.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1000,6 +1005,11 @@
               <FileType>1</FileType>
               <FilePath>..\Source\PID.c</FilePath>
             </File>
+            <File>
+              <FileName>telemetry.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\telemetry.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1568,6 +1578,11 @@
               <FileName>PID.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\PID.c</FilePath>
+            </File>
+            <File>
+              <FileName>telemetry.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\telemetry.c</FilePath>
             </File>
           </Files>
         </Group>
