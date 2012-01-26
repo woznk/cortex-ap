@@ -48,29 +48,26 @@
 
 // ---- Include Files -------------------------------------------------------
 
-#include "stdafx.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+
+#include "stm32f10x.h"
+#include "stm32f10x_usart.h"
 #include "math.h"
-
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "driverlib/gpio.h"
-
 #include "gps.h"
 #include "nav.h"
 #include "DCM.h"
-#include "Log.h"
+#include "log.h"
 #include "config.h"
-#ifndef _WINDOWS
-#include "uartdriver.h"
-#endif
 #include "aileronctrl.h"
 #include "elevatorctrl.h"
 #include "rudderctrl.h"
 #include "throttlectrl.h"
 #include "telemetry.h"
 
-//------------ Definitions -------------------------------------------------
+/*--------------------------------- Definitions ------------------------------*/
 
 #ifdef VAR_STATIC
 #   undef VAR_STATIC
@@ -90,8 +87,9 @@
 #   define Telemetry_Get_Char Debug_GetChar
 #endif
 
+/*----------------------------------- Macros ---------------------------------*/
 
-// ---- Enumerations --------------------------------------------------------
+/*-------------------------------- Enumerations ------------------------------*/
 
 enum E_TELEMETRY {
     TEL_NULL,
@@ -102,21 +100,28 @@ enum E_TELEMETRY {
     TEL_DEBUG_F,
 } wait_code;
 
-// ---- Constants and Types -------------------------------------------------
+/*----------------------------------- Types ----------------------------------*/
+
+/*---------------------------------- Constants -------------------------------*/
 
 #if (TELEMETRY_DEBUG == 1)
 const char s_pcSentence[] =
 "$S,100,200,300,400,500,600,110\n$S,560,112,-12,12345,0,1023,110\n$S,512,512,512,512,512,512,512,110,110\n$S,512,512,512,\n$S,512,512,512,512,512,512\n$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n$K,8799,1299, 899, 199,4999,4999\r\n$S,560,112,-12,12345,0,1023,110\n";
 #endif
 
-// ---- Private Variables ---------------------------------------------------
+/*---------------------------------- Globals ---------------------------------*/
 
+VAR_GLOBAL xQueueHandle xTelemetry_Queue;
+
+/*----------------------------------- Locals ---------------------------------*/
+
+VAR_STATIC unsigned char szString[48];
 VAR_STATIC float pfGains[6];              /// gains
 VAR_STATIC float pfSimSensorData[8];      /// Simulator sensor data
 VAR_STATIC float pfSimSensorOffset[8];    /// Simulator sensor offsets
-VAR_STATIC float fSimTAS = 0.0f;          /// Simulator true air speed
+VAR_STATIC float fSimTAS = 0.0f;          /// Simulator TRUE air speed
 VAR_STATIC float fSimCOG = 0.0f;          /// Simulator course over ground (GPS)
-VAR_STATIC tBoolean bSimSettled = false;
+VAR_STATIC bool bSimSettled = FALSE;
 
 //
 // Used to change the polarity of the sensors
@@ -132,15 +137,165 @@ VAR_STATIC float pfSensorSign[8] = {
     1.0f  // 7
 };
 
-// ---- Private Function Prototypes -----------------------------------------
+/*--------------------------------- Prototypes -------------------------------*/
 
 #if (TELEMETRY_DEBUG == 1)
-tBoolean Debug_GetChar ( char *ch );
+bool Debug_GetChar ( char *ch );
 #endif
 
-// ---- Functions -----------------------------------------------------------
+/*---------------------------------- Functions -------------------------------*/
 
 #ifndef _WINDOWS
+
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Initialize telemetry
+///
+/// \remarks configures USART1.
+///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
+///          for direct register initialization of USART 1
+///
+//----------------------------------------------------------------------------
+void Telemetry_Init( void ) {
+
+    USART_InitTypeDef USART_InitStructure;
+
+    // Initialize USART1 structure
+    USART_InitStructure.USART_BaudRate = 115200;
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_Parity = USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+
+    // Configure USART1
+    USART_Init(USART1, &USART_InitStructure);
+
+    // Enable USART1 interrupt
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    //USART_ITConfig(USART1,USART_IT_TXE,ENABLE);
+
+    // Enable the USART1
+    USART_Cmd(USART1, ENABLE);
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   sends data via USART 1
+/// \remarks
+///
+///
+///----------------------------------------------------------------------------
+void Telemetry_Send_Message(uint16_t *data, uint8_t num)
+{
+    long l_temp;
+    uint8_t digit, i, j = 0;
+
+    for (i = 0; i < num; i++) {
+        l_temp = *data++;
+        szString[j++] = ' ';
+        digit = ((l_temp >> 12) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = ((l_temp >> 8) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = ((l_temp >> 4) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = (l_temp & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+    }
+    szString[j++] = '\n';
+
+    for (j = 0; j < (i * 5) + 1; j++) {
+      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
+      }
+      USART_SendData(USART1, szString[j]);
+    }
+}
+
+///----------------------------------------------------------------------------
+///
+///  DESCRIPTION Outputs DCM matrix
+/// \RETURN      -
+/// \REMARKS
+///
+///
+///----------------------------------------------------------------------------
+void Telemetry_Send_DCM(void) {
+
+    uint8_t x, y, j = 0;
+    unsigned char ucDigit;
+    long lTemp;
+
+    for (y = 0; y < 3; y++) {
+      for (x = 0; x < 3; x++) {
+          lTemp = (long)ceil(DCM_Matrix[y][x] * 32767.0f);
+          szString[j++] = ' ';
+          ucDigit = ((lTemp >> 12) & 0x0000000F);
+          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucDigit = ((lTemp >> 8) & 0x0000000F);
+          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucDigit = ((lTemp >> 4) & 0x0000000F);
+          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucDigit = (lTemp & 0x0000000F);
+          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+      }
+    }
+    szString[j++] = '\n';
+    szString[j] = '\r';
+    for (j = 0; j < 47; j++) {
+      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
+      }
+      USART_SendData(USART1, szString[j]);
+    }
+}
+
+///----------------------------------------------------------------------------
+///
+///  DESCRIPTION Outputs PPM input values
+/// \RETURN      -
+/// \REMARKS
+///
+///
+///----------------------------------------------------------------------------
+void Telemetry_Send_PPM(void)
+{
+/*
+    unsigned char szString[64];
+    unsigned long ulTemp;
+    int j = 0, chan = 0;
+
+    for (chan = 0; chan < RC_CHANNELS; chan++) {
+        ulTemp = PPMGetChannel(chan);
+        szString[j++] = ' ';
+        szString[j++] = '0' + ((ulTemp / 10000) % 10);
+        szString[j++] = '0' + ((ulTemp / 1000) % 10);
+        szString[j++] = '0' + ((ulTemp / 100) % 10);
+        szString[j++] = '0' + ((ulTemp / 10) % 10);
+        szString[j++] = '0' +  (ulTemp % 10);
+    }
+    szString[j] = '\r';
+    UART1Send((const unsigned char *)szString, RC_CHANNELS * 6 + 1);
+*/
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Telemetry_Task( void *pvParameters )
+{
+    xTelemetry_Message message;
+
+    while (1) {
+        while (xQueueReceive( xTelemetry_Queue, &message, portMAX_DELAY ) != pdPASS) {
+        }
+        Telemetry_Send_Message(message.pcData, message.ucLength);
+    }
+}
 
 //----------------------------------------------------------------------------
 //
@@ -151,16 +306,16 @@ tBoolean Debug_GetChar ( char *ch );
 ///
 ///
 //----------------------------------------------------------------------------
-tBoolean Telemetry_Parse ( void )
+bool Telemetry_Parse ( void )
 {
     char c;
-    tBoolean bResult;
+    bool bResult;
     static float fTemp = 0.0f;
     static unsigned char ucStatus = 0;
     static unsigned long ulChCounter = 1L, ulTemp = 0L;
 
-    bResult = false;
-    while (Telemetry_Get_Char(&c)) {
+    bResult = FALSE;
+    while (FALSE/*Telemetry_Get_Char(&c)*/) {
 
         if (ulChCounter != 0L) {                    // Count chars
             ulChCounter++;
@@ -268,7 +423,7 @@ tBoolean Telemetry_Parse ( void )
 //                    North = 360 - Heading;
                     ulTemp = 0L;
                     ucStatus = 0;
-                    bResult = true;
+                    bResult = TRUE;
                     Log_PutChar('\r'); // Terminate GPS sentence
                 } else if ( c != '.' ) {
                     ulTemp = (ulTemp * 10) + (unsigned long)(c - '0');
@@ -319,7 +474,7 @@ tBoolean Telemetry_Parse ( void )
     if (ulChCounter > 1000) {
         Sim_SaveOffsets();
         ulChCounter = 0;
-        bSimSettled = true;
+        bSimSettled = TRUE;
     }
 
     return bResult;
@@ -335,9 +490,9 @@ tBoolean Telemetry_Parse ( void )
 ///
 ///
 //----------------------------------------------------------------------------
-void
-Telemetry_Send_Controls(void)
+void Telemetry_Send_Controls(void)
 {
+/*
     float *pfBuff;
     unsigned char cData[20];
 
@@ -356,6 +511,7 @@ Telemetry_Send_Controls(void)
     *pfBuff = Throttle();
 
     UART0Send(cData, 17);
+*/
 }
 
 //----------------------------------------------------------------------------
@@ -367,8 +523,7 @@ Telemetry_Send_Controls(void)
 ///
 ///
 //----------------------------------------------------------------------------
-void
-Telemetry_Send_Waypoint(void)
+void Telemetry_Send_Waypoint(void)
 {
     unsigned int *puiBuff;
     unsigned char cData[8];
@@ -386,7 +541,7 @@ Telemetry_Send_Waypoint(void)
     puiBuff = (unsigned int *)&cData[6];    // distance
     *puiBuff = Nav_Distance();
 
-    UART0Send(cData, 8);
+//    UART0Send(cData, 8);
 }
 
 ///----------------------------------------------------------------------------
@@ -396,8 +551,7 @@ Telemetry_Send_Waypoint(void)
 /// \remarks
 ///
 ///----------------------------------------------------------------------------
-tBoolean
-Sim_Settled ( void ) {
+bool Sim_Settled ( void ) {
     return bSimSettled;
 }
 #endif
@@ -409,8 +563,7 @@ Sim_Settled ( void ) {
 /// \remarks
 ///
 ///----------------------------------------------------------------------------
-float
-Sim_GetData(int n) {
+float Sim_GetData(int n) {
 
     float fData;
     switch (n) {
@@ -431,7 +584,7 @@ Sim_GetData(int n) {
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief Interface to simulator data : true air speed
+/// \brief Interface to simulator data : TRUE air speed
 /// \return
 /// \remarks
 ///
@@ -449,8 +602,7 @@ Sim_Speed(void) {
 /// \remarks Used to force simulator data from extern
 ///
 ///----------------------------------------------------------------------------
-void
-Sim_SetData(int iIndex, float fVal) {
+void Sim_SetData(int iIndex, float fVal) {
 
     switch (iIndex) {
         case 0:
@@ -473,8 +625,7 @@ Sim_SetData(int iIndex, float fVal) {
 /// \remarks Used to save offsets
 ///
 ///----------------------------------------------------------------------------
-void
-Sim_SaveOffsets(void) {
+void Sim_SaveOffsets(void) {
 
     int j;
     for (j = 0; j < 6 ; j++) {
@@ -493,8 +644,7 @@ Sim_SaveOffsets(void) {
 /// \remarks
 ///
 //----------------------------------------------------------------------------
-tBoolean
-Debug_GetChar ( char *ch )
+bool Debug_GetChar ( char *ch )
 {
     char c;
     VAR_STATIC unsigned char j = 0;
@@ -502,7 +652,7 @@ Debug_GetChar ( char *ch )
     c = s_pcSentence[j];
     if (c == 0) { j = 0; } else { j++; }
     *ch = c;
-    return true;
+    return TRUE;
 }
 #endif
 
