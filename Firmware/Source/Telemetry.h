@@ -8,7 +8,7 @@
 /// \brief Simulation interface
 /// \file
 ///
-//  CHANGES tBoolean replaced with bool
+//  CHANGES added telemetry task
 //
 //============================================================================
 
@@ -25,12 +25,22 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
+typedef struct
+{
+  uint8_t ucLength;
+  uint16_t *pcData;
+} xTelemetry_Message;
+
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
 
+VAR_GLOBAL xQueueHandle xTelemetry_Queue;
+
 /*---------------------------------- Interface -------------------------------*/
 
+void Telemetry_Init( void ) ;
+void Telemetry_Task( void *pvParameters );
 bool Telemetry_Parse ( void );
 void Telemetry_Send_Controls ( void );
 void Telemetry_Send_Waypoint ( void );
