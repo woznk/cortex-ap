@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: corrected destination of messages to telemetry task
+// Change: temporarily suppressed navigation task
 //
 //============================================================================*/
 
@@ -130,8 +130,9 @@ int main(void)
   xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 64, NULL, 5, NULL);
   xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, 4, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 3, NULL);
-  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, 2, NULL);
+//  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, 2, NULL);
   xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, 2, NULL);
+  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, 2, NULL);
 
   vTaskStartScheduler();
 
@@ -239,6 +240,7 @@ void AHRS_Task(void *pvParameters)
     /* Task specific initializations */
     message.ucLength = 6 ;                          // message length
     message.pcData = (uint16_t *)Sensor_Data;       // message content
+
     L3G4200_Init();                                 // init L3G4200 gyro
     ADXL345_Init();                                 // init ADXL345 accelerometer
 
@@ -288,6 +290,7 @@ void AHRS_Task(void *pvParameters)
         Normalize();                                // normalize DCM
 
         xQueueSend( xTelemetry_Queue, &message, portMAX_DELAY );
+        xQueueSend( xLog_Queue, &message, portMAX_DELAY );
     }
 }
 
