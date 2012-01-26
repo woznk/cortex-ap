@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES Log task moved to Log.c
+//  CHANGES Data transmission moved to telemetry task
 //
 //============================================================================*/
 
@@ -53,7 +53,6 @@ VAR_GLOBAL xQueueHandle xLog_Queue;
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC unsigned char szString[48];
 /*
 VAR_STATIC const char szFileName[16] = "log.txt";   // File name
 VAR_STATIC FATFS stFat;                             // FAT
@@ -74,29 +73,7 @@ VAR_STATIC bool bFileOk = FALSE;                    // File status
 ///          for direct register initialization of USART 1
 ///
 //----------------------------------------------------------------------------
-void
-Log_Init( void ) {
-
-    USART_InitTypeDef USART_InitStructure;
-
-    // Initialize USART1 structure
-    USART_InitStructure.USART_BaudRate = 115200;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-
-    // Configure USART1
-    USART_Init(USART1, &USART_InitStructure);
-
-    // Enable USART1 interrupt
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-    //USART_ITConfig(USART1,USART_IT_TXE,ENABLE);
-
-    // Enable the USART1
-    USART_Cmd(USART1, ENABLE);
-
+void Log_Init( void ) {
 /*
     // Open log file
     if (FR_OK == f_mount(0, &stFat)) {
@@ -121,48 +98,8 @@ Log_Init( void ) {
 ///----------------------------------------------------------------------------
 void Log_Task( void *pvParameters )
 {
-    xLog_Message message;
-
-    while (1) {
-        while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
-        }
-        Log_Send(message.pcData, message.ucLength);
-//        Log_DCM();
-    }
 }
 
-///----------------------------------------------------------------------------
-///
-/// \brief   sends data via USART 1
-/// \remarks
-///
-///
-///----------------------------------------------------------------------------
-void Log_Send(uint16_t *data, uint8_t num)
-{
-    long l_temp;
-    uint8_t digit, i, j = 0;
-
-    for (i = 0; i < num; i++) {
-        l_temp = *data++;
-        szString[j++] = ' ';
-        digit = ((l_temp >> 12) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
-        digit = ((l_temp >> 8) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
-        digit = ((l_temp >> 4) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
-        digit = (l_temp & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
-    }
-    szString[j++] = '\n';
-
-    for (j = 0; j < (i * 5) + 1; j++) {
-      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
-      }
-      USART_SendData(USART1, szString[j]);
-    }
-}
 
 //----------------------------------------------------------------------------
 //
@@ -196,72 +133,6 @@ void Log_PutChar ( char c ) {
 */
 }
 
-
-///----------------------------------------------------------------------------
-///
-///  DESCRIPTION Outputs DCM matrix
-/// \RETURN      -
-/// \REMARKS
-///
-///
-///----------------------------------------------------------------------------
-void Log_DCM(void) {
-
-    uint8_t x, y, j = 0;
-    unsigned char ucDigit;
-    long lTemp;
-
-    for (y = 0; y < 3; y++) {
-      for (x = 0; x < 3; x++) {
-          lTemp = (long)ceil(DCM_Matrix[y][x] * 32767.0f);
-          szString[j++] = ' ';
-          ucDigit = ((lTemp >> 12) & 0x0000000F);
-          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-          ucDigit = ((lTemp >> 8) & 0x0000000F);
-          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-          ucDigit = ((lTemp >> 4) & 0x0000000F);
-          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-          ucDigit = (lTemp & 0x0000000F);
-          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-      }
-    }
-    szString[j++] = '\n';
-    szString[j] = '\r';
-    for (j = 0; j < 47; j++) {
-      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
-      }
-      USART_SendData(USART1, szString[j]);
-    }
-}
-
-///----------------------------------------------------------------------------
-///
-///  DESCRIPTION Outputs PPM input values
-/// \RETURN      -
-/// \REMARKS
-///
-///
-///----------------------------------------------------------------------------
-void Log_PPM(void)
-{
-/*
-    unsigned char szString[64];
-    unsigned long ulTemp;
-    int j = 0, chan = 0;
-
-    for (chan = 0; chan < RC_CHANNELS; chan++) {
-        ulTemp = PPMGetChannel(chan);
-        szString[j++] = ' ';
-        szString[j++] = '0' + ((ulTemp / 10000) % 10);
-        szString[j++] = '0' + ((ulTemp / 1000) % 10);
-        szString[j++] = '0' + ((ulTemp / 100) % 10);
-        szString[j++] = '0' + ((ulTemp / 10) % 10);
-        szString[j++] = '0' +  (ulTemp % 10);
-    }
-    szString[j] = '\r';
-    UART1Send((const unsigned char *)szString, RC_CHANNELS * 6 + 1);
-*/
-}
 
 /*
 unsigned char
