@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief main program
-// Change: Log task moved to Log.c
+// Change: log task replaced by telemetry task
 //
 //============================================================================*/
 
@@ -27,6 +27,7 @@
 #include "config.h"
 #include "dcm.h"
 #include "nav.h"
+#include "telemetry.h"
 #include "log.h"
 #include "led.h"
 
@@ -113,8 +114,11 @@ int main(void)
   // I2C peripheral initialization
   I2C_MEMS_Init();
 
-  Log_Init();
+  Telemetry_Init();
 
+  xTelemetry_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
+  while ( xTelemetry_Queue == 0 ) {
+  }
   xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
   while ( xLog_Queue == 0 ) {
   }
