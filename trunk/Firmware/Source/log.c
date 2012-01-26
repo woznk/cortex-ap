@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-//  CHANGES Data transmission moved to telemetry task
+//  CHANGES added function Log_write() to convert message into HEX and write 
+//          to file. Initialization moved on top of log task.
 //
 //============================================================================*/
 
@@ -53,28 +54,33 @@ VAR_GLOBAL xQueueHandle xLog_Queue;
 
 /*----------------------------------- Locals ---------------------------------*/
 
-/*
+
 VAR_STATIC const char szFileName[16] = "log.txt";   // File name
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // File object
-VAR_STATIC char pcBuffer[FILE_BUFFER_LENGTH];       // File data buffer
-VAR_STATIC WORD wWriteIndex = 0;                    // File buffer write index
+VAR_STATIC char szString[48];                       //
 VAR_STATIC bool bFileOk = FALSE;                    // File status
-*/
+VAR_STATIC uint16_t uiSamples;
+
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-//----------------------------------------------------------------------------
-//
-/// \brief   Initialize log manager
+void Log_Write(uint16_t *data, uint8_t num);
+
+/*--------------------------------- Functions --------------------------------*/
+
+///----------------------------------------------------------------------------
 ///
-/// \remarks opens log file for writing, configures USART1.
-///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
-///          for direct register initialization of USART 1
+/// \brief
+/// \return  -
+/// \remarks -
 ///
-//----------------------------------------------------------------------------
-void Log_Init( void ) {
-/*
+///----------------------------------------------------------------------------
+void Log_Task( void *pvParameters ) {
+
+    xLog_Message message;
+
+    uiSamples = 0;
     // Open log file
     if (FR_OK == f_mount(0, &stFat)) {
         if (FR_OK == f_open(&stFile, szFileName, FA_WRITE|FA_CREATE_ALWAYS)) {
@@ -85,19 +91,54 @@ void Log_Init( void ) {
     } else {                                    // Error mounting FS
         bFileOk = FALSE;                        // Halt file logging
     }
-*/
+
+    while (1) {
+        while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
+        }
+        Log_Write(message.pcData, message.ucLength);
+    }
 }
 
 
 ///----------------------------------------------------------------------------
 ///
 /// \brief
-/// \return  -
-/// \remarks -
+/// \remarks
+///
 ///
 ///----------------------------------------------------------------------------
-void Log_Task( void *pvParameters )
+void Log_Write(uint16_t *data, uint8_t num)
 {
+    long l_temp;
+    uint8_t digit, i, j = 0;
+    UINT wWritten;
+
+    for (i = 0; i < num; i++) {
+        l_temp = *data++;
+        szString[j++] = ' ';
+        digit = ((l_temp >> 12) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = ((l_temp >> 8) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = ((l_temp >> 4) & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        digit = (l_temp & 0x0000000F);
+        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+    }
+    szString[j++] = '\n';
+
+    if (bFileOk) {                                          //
+        f_write(&stFile, szString, j, &wWritten);           // Write
+        if (//(HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS)) ||  // button pressed
+            (j != wWritten) ||                              // No file space
+            (uiSamples >= MAX_SAMPLES)) {                   // Too many samples
+            f_close(&stFile);                               // close file
+            bFileOk = FALSE;                                // Halt file logging
+//            HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;   // clear button flag
+        } else {                                            // Write successfull
+            uiSamples++;                                    // Update sample counter
+        }
+    }
 }
 
 
@@ -112,7 +153,7 @@ void Log_Task( void *pvParameters )
 void Log_PutChar ( char c ) {
 /*
     UINT wWritten;
-    static unsigned long ulSamples;
+    static unsigned long uiSamples;
 
     if (wWriteIndex < FILE_BUFFER_LENGTH) { // Provided buffer is not full
         pcBuffer[wWriteIndex++] = c;        // Save character in buffer
@@ -121,12 +162,12 @@ void Log_PutChar ( char c ) {
         f_write(&stFile, pcBuffer, wWriteIndex, &wWritten); // Write
         if (//(HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS)) ||  // button pressed
             (wWriteIndex != wWritten) ||                    // No file space
-            (ulSamples >= MAX_SAMPLES)) {                   // Too many samples
+            (uiSamples >= MAX_SAMPLES)) {                   // Too many samples
             f_close(&stFile);                               // close file
             bFileOk = FALSE;                                // Halt file logging
 //            HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;   // clear button flag
         } else {                                            // Write successfull
-            ulSamples++;                                    // Update sample counter
+            uiSamples++;                                    // Update sample counter
             wWriteIndex = 0;                                // Empty buffer
         }
     }
