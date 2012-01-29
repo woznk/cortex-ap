@@ -29,12 +29,13 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES PPMGetMode() returns MODE_RTL when radio signal is missing
+//  CHANGES changed interrupt priority to configLIBRARY_KERNEL_INTERRUPT_PRIORITY
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
 #include "led.h"
+#include "freertosconfig.h"
 #include "ppmdriver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -184,8 +185,8 @@ void PPM_Init(void) {
 
   /* Enable the TIM2 global interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
 
