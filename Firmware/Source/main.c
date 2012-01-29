@@ -6,7 +6,9 @@
 // $Author: $
 //
 /// \brief main program
-// Change: temporarily suppressed navigation task
+// Change: doubled stack size for AHRS task, configured NVIC priority group,
+//         added definitions for task priorities, temporarily removed telemetry
+//         and navigation tasks, attitude and radio channels logged to file.
 //
 //============================================================================*/
 
@@ -50,6 +52,14 @@
 #endif
 #define VAR_GLOBAL
 
+/* Task priorities. */
+#define mainAHRS_PRIORITY       ( tskIDLE_PRIORITY + 4 )
+#define mainDISK_PRIORITY       ( tskIDLE_PRIORITY + 3 )
+#define mainATTITUDE_PRIORITY   ( tskIDLE_PRIORITY + 3 )
+#define mainLOG_PRIORITY        ( tskIDLE_PRIORITY + 2 )
+#define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )
+#define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )
+
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
@@ -73,6 +83,7 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 
 VAR_STATIC int16_t Aileron_Position = 1500;
 VAR_STATIC int16_t Elevator_Position = 1500;
+VAR_STATIC int16_t Message_Buffer[6];
 VAR_STATIC uint8_t Sensor_Data[16];
 VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
 
@@ -97,6 +108,9 @@ int main(void)
        file (startup_stm32f10x_xx.s) before to branch to application main.
        To reconfigure the default setting of SystemInit() function, refer to
        system_stm32f10x.c file */
+
+  // Configure priority group
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
   // System Clocks Configuration
   RCC_Configuration();
@@ -127,12 +141,12 @@ int main(void)
   while ( xGps_Queue == 0 ) {
   }
 
-  xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 64, NULL, 5, NULL);
-  xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, 4, NULL);
-  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, 3, NULL);
-//  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, 2, NULL);
-  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, 2, NULL);
-  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, 2, NULL);
+  xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 128, NULL, mainAHRS_PRIORITY, NULL);
+  xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainATTITUDE_PRIORITY, NULL);
+  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, mainDISK_PRIORITY, NULL);
+//  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, mainNAVIGATION_PRIORITY, NULL);
+//  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
+  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, mainLOG_PRIORITY, NULL);
 
   vTaskStartScheduler();
 
@@ -232,15 +246,12 @@ void AHRS_Task(void *pvParameters)
 {
     uint8_t i = 0, j = 0, ucBlink = 0;
     int16_t * pSensor;
-    xTelemetry_Message message;
+    xLog_Message message;
     portTickType Last_Wake_Time;
 
     Last_Wake_Time = xTaskGetTickCount();
 
     /* Task specific initializations */
-    message.ucLength = 6 ;                          // message length
-    message.pcData = (uint16_t *)Sensor_Data;       // message content
-
     L3G4200_Init();                                 // init L3G4200 gyro
     ADXL345_Init();                                 // init ADXL345 accelerometer
 
@@ -289,7 +300,18 @@ void AHRS_Task(void *pvParameters)
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
 
-        xQueueSend( xTelemetry_Queue, &message, portMAX_DELAY );
+        /* Extract attitude from DCM matrix */
+
+        Message_Buffer[0] = (int16_t)(DCM_Matrix[2][0] * 32767.0f);
+        Message_Buffer[1] = (int16_t)(DCM_Matrix[2][1] * 32767.0f);
+        Message_Buffer[2] = (int16_t)(DCM_Matrix[1][1] * 32767.0f);
+        Message_Buffer[3] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
+        Message_Buffer[4] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
+
+        /* Save attitude to log file */
+
+        message.ucLength = 5;                       // message length
+        message.pcData = (uint16_t *)Message_Buffer;// message content
         xQueueSend( xLog_Queue, &message, portMAX_DELAY );
     }
 }
