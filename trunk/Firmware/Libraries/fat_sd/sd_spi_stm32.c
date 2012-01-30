@@ -1045,7 +1045,7 @@ DRESULT disk_ioctl (
 
     while (1) {
 
-		vTaskDelayUntil(&Last_Wake_Time,10);
+		vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / 100);
 
 	   	n = Timer1;                /* 100Hz decrement timers */
 		if (n) Timer1 = --n;
