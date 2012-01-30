@@ -83,6 +83,8 @@
 #define configIDLE_SHOULD_YIELD         1
 #define configUSE_MUTEXES               1
 
+#define configCHECK_FOR_STACK_OVERFLOW  0
+
 /* Runtime stats macros */
 #define configGENERATE_RUN_TIME_STATS   0
 
