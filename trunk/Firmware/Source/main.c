@@ -23,7 +23,8 @@
 /// or checking queue variable.
 ///
 ///
-// Change: added hook for checking stack overflow, added todos.
+// Change: increased stack size of log task to 128, decreased satck size of 
+//         remaining tasks, restored telemetry task.
 //
 //============================================================================*/
 
@@ -171,12 +172,12 @@ int main(void)
   while ( xGps_Queue == 0 ) {
   }
 
-  xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 128, NULL, mainAHRS_PRIORITY, NULL);
+  xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 64, NULL, mainAHRS_PRIORITY, NULL);
   xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainATTITUDE_PRIORITY, NULL);
-  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 64, NULL, mainDISK_PRIORITY, NULL);
+  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
 //  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, mainNAVIGATION_PRIORITY, NULL);
-//  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
-  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 64, NULL, mainLOG_PRIORITY, NULL);
+  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
+  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
   vTaskStartScheduler();
 
@@ -342,7 +343,8 @@ void AHRS_Task(void *pvParameters)
 
         message.ucLength = 5;                       // message length
         message.pcData = (uint16_t *)Message_Buffer;// message content
-        xQueueSend( xLog_Queue, &message, portMAX_DELAY );
+        xQueueSend( xLog_Queue, &message, 0 );
+        xQueueSend( xTelemetry_Queue, &message, 0 );
     }
 }
 
