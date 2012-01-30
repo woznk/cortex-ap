@@ -9,8 +9,8 @@
 ///
 /// \file
 ///
-//  CHANGES added function Log_write() to convert message into HEX and write 
-//          to file. Initialization moved on top of log task.
+//  CHANGES Log task: added check of queue handle.
+//          Removed Log_PutChar function.
 //
 //============================================================================*/
 
@@ -81,6 +81,7 @@ void Log_Task( void *pvParameters ) {
     xLog_Message message;
 
     uiSamples = 0;
+
     // Open log file
     if (FR_OK == f_mount(0, &stFat)) {
         if (FR_OK == f_open(&stFile, szFileName, FA_WRITE|FA_CREATE_ALWAYS)) {
@@ -92,7 +93,7 @@ void Log_Task( void *pvParameters ) {
         bFileOk = FALSE;                        // Halt file logging
     }
 
-    while (1) {
+    while ( xLog_Queue != 0 ) {
         while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
         }
         Log_Write(message.pcData, message.ucLength);
@@ -142,46 +143,12 @@ void Log_Write(uint16_t *data, uint8_t num)
 }
 
 
-//----------------------------------------------------------------------------
-//
-/// \brief   Put characters to log file
-///
-/// \remarks Characters are saved in a buffer and written to file when EOL is
-///          received
-///
-//----------------------------------------------------------------------------
-void Log_PutChar ( char c ) {
 /*
-    UINT wWritten;
-    static unsigned long uiSamples;
+uint8_t ftoa (float fVal, uint8_t *pucString) {
 
-    if (wWriteIndex < FILE_BUFFER_LENGTH) { // Provided buffer is not full
-        pcBuffer[wWriteIndex++] = c;        // Save character in buffer
-    }
-    if ((c == '\r') && bFileOk) {                           // End of line
-        f_write(&stFile, pcBuffer, wWriteIndex, &wWritten); // Write
-        if (//(HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS)) ||  // button pressed
-            (wWriteIndex != wWritten) ||                    // No file space
-            (uiSamples >= MAX_SAMPLES)) {                   // Too many samples
-            f_close(&stFile);                               // close file
-            bFileOk = FALSE;                                // Halt file logging
-//            HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;   // clear button flag
-        } else {                                            // Write successfull
-            uiSamples++;                                    // Update sample counter
-            wWriteIndex = 0;                                // Empty buffer
-        }
-    }
-*/
-}
-
-
-/*
-unsigned char
-ftoa (float fVal, unsigned char *pucString)
-{
     long lTemp, lSign = 1;
-    unsigned char pucTemp[10];
-    unsigned char ucLength, j = 0;
+    uint8_t pucTemp[10];
+    uint8_t ucLength, j = 0;
 
     lTemp = (long)(fVal * 1000000.0f);
     if (lTemp < 0) { lSign = -1; lTemp = -lTemp; }
