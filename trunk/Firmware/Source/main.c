@@ -6,9 +6,24 @@
 // $Author: $
 //
 /// \brief main program
-// Change: doubled stack size for AHRS task, configured NVIC priority group,
-//         added definitions for task priorities, temporarily removed telemetry
-//         and navigation tasks, attitude and radio channels logged to file.
+///
+/// \todo
+/// try to add message to log queue without blocking AHRS task, i.e. setting
+/// max delay to 0 instead of portMAX_DELAY.
+///
+/// \todo
+/// enale checking of stack overflow by setting configCHECK_FOR_STACK_OVERFLOW
+/// to 2 in file freertosconfig.h.
+///
+/// \todo
+/// have a look at :
+/// http://sourceforge.net/projects/freertos/forums/forum/382005/topic/4033710
+/// http://sourceforge.net/projects/freertos/forums/forum/382005/topic/4059693
+/// in the former the problems was resolved by either increasing the stack size
+/// or checking queue variable.
+///
+///
+// Change: added hook for checking stack overflow, added todos.
 //
 //============================================================================*/
 
@@ -93,6 +108,21 @@ void RCC_Configuration(void);
 void GPIO_Configuration(void);
 void AHRS_Task(void *pvParameters);
 void Attitude_Control_Task(void *pvParameters);
+
+/*--------------------------------- Functions --------------------------------*/
+
+///----------------------------------------------------------------------------
+///
+/// \brief   hook for stack overflow check
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
+    ( void ) pxTask;
+    ( void ) pcTaskName;
+    for ( ;; );
+}
 
 ///----------------------------------------------------------------------------
 ///
