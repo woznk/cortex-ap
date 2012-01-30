@@ -9,8 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES Log task: added check of queue handle.
-//          Removed Log_PutChar function.
+//  CHANGES MAX_SAMPLES increased to 20000
 //
 //============================================================================*/
 
@@ -38,7 +37,7 @@
 #define   VAR_GLOBAL
 
 #define FILE_BUFFER_LENGTH 128
-#define MAX_SAMPLES        1000 // Max number of samples that can be written
+#define MAX_SAMPLES        20000 // Max number of samples that can be written
 
 /*----------------------------------- Macros ---------------------------------*/
 
