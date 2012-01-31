@@ -7,24 +7,7 @@
 //
 /// \brief main program
 ///
-/// \todo
-/// try to add message to log queue without blocking AHRS task, i.e. setting
-/// max delay to 0 instead of portMAX_DELAY.
-///
-/// \todo
-/// enale checking of stack overflow by setting configCHECK_FOR_STACK_OVERFLOW
-/// to 2 in file freertosconfig.h.
-///
-/// \todo
-/// have a look at :
-/// http://sourceforge.net/projects/freertos/forums/forum/382005/topic/4033710
-/// http://sourceforge.net/projects/freertos/forums/forum/382005/topic/4059693
-/// in the former the problems was resolved by either increasing the stack size
-/// or checking queue variable.
-///
-///
-// Change: increased stack size of log task to 128, decreased satck size of 
-//         remaining tasks, restored telemetry task.
+// Change: logged angular rates instead of attitude.
 //
 //============================================================================*/
 
@@ -331,18 +314,15 @@ void AHRS_Task(void *pvParameters)
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
 
-        /* Extract attitude from DCM matrix */
+        /* Log servo positions and angular rates */
+        Message_Buffer[0] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
+        Message_Buffer[1] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
+        Message_Buffer[2] = (int16_t)Sensor_Data[6];
+        Message_Buffer[3] = (int16_t)Sensor_Data[8];
+        Message_Buffer[4] = (int16_t)Sensor_Data[10];
 
-        Message_Buffer[0] = (int16_t)(DCM_Matrix[2][0] * 32767.0f);
-        Message_Buffer[1] = (int16_t)(DCM_Matrix[2][1] * 32767.0f);
-        Message_Buffer[2] = (int16_t)(DCM_Matrix[1][1] * 32767.0f);
-        Message_Buffer[3] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
-        Message_Buffer[4] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
-
-        /* Save attitude to log file */
-
-        message.ucLength = 5;                       // message length
-        message.pcData = (uint16_t *)Message_Buffer;// message content
+        message.ucLength = 5;                        // message length
+        message.pcData = (uint16_t *)Message_Buffer; // message content
         xQueueSend( xLog_Queue, &message, 0 );
         xQueueSend( xTelemetry_Queue, &message, 0 );
     }
