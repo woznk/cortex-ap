@@ -7,7 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: corrected copying of angular rates to message buffer.
+// Change: added acceleration data to message buffer
 //
 //============================================================================*/
 
@@ -82,7 +82,7 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 
 VAR_STATIC int16_t Aileron_Position = 1500;
 VAR_STATIC int16_t Elevator_Position = 1500;
-VAR_STATIC int16_t Message_Buffer[6];
+VAR_STATIC int16_t Message_Buffer[8];
 VAR_STATIC uint8_t Sensor_Data[16];
 VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
 
@@ -277,8 +277,8 @@ void AHRS_Task(void *pvParameters)
     /* Compute sensor offsets */
     for (i = 0; i < 64; i++) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
-        GetAccelRaw(Sensor_Data);                   // accelerometer
-        GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  // gyroscope
+        GetAccelRaw(Sensor_Data);                   // acceleration
+        GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  // angular rate
         pSensor = (int16_t *)Sensor_Data;
         for (j = 0; j < 6; j++) {                   // accumulate
             Sensor_Offset[j] += *pSensor++;
@@ -297,33 +297,32 @@ void AHRS_Task(void *pvParameters)
            LEDToggle(BLUE);
         }
 
+        /* Read sensors */
         GetAccelRaw(Sensor_Data);                   // acceleration
         GetAngRateRaw((uint8_t *)&Sensor_Data[6]);  // rotation
 
+        /* Offset and sign correction */
         pSensor = (int16_t *)Sensor_Data;
         for (j = 0; j < 6; j++) {
             *pSensor = *pSensor - Sensor_Offset[j]; // strip offset
             *pSensor = *pSensor * Sensor_Sign[j];   // correct sign
-            if (j == 2) {
+            if (j == 2) {                           // z acceleration
                *pSensor += (int16_t)GRAVITY;        // add gravity
             }
+            Message_Buffer[j] = *pSensor;           // save into message
             pSensor++;
         }
 
+        /* AHRS */
         MatrixUpdate((int16_t *)Sensor_Data);       // compute DCM
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
 
+        Message_Buffer[6] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
+        Message_Buffer[7] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
+
         /* Log servo positions and angular rates */
-        Message_Buffer[0] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
-        Message_Buffer[1] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
-
-        pSensor = (int16_t *)&Sensor_Data[6];
-        Message_Buffer[2] = *pSensor++;
-        Message_Buffer[3] = *pSensor++;
-        Message_Buffer[4] = *pSensor;
-
-        message.ucLength = 5;                        // message length
+        message.ucLength = 8;                        // message length
         message.pcData = (uint16_t *)Message_Buffer; // message content
         xQueueSend( xLog_Queue, &message, 0 );
         xQueueSend( xTelemetry_Queue, &message, 0 );
