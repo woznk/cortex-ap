@@ -7,7 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: logged angular rates instead of attitude.
+// Change: corrected copying of angular rates to message buffer.
 //
 //============================================================================*/
 
@@ -317,9 +317,11 @@ void AHRS_Task(void *pvParameters)
         /* Log servo positions and angular rates */
         Message_Buffer[0] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
         Message_Buffer[1] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
-        Message_Buffer[2] = (int16_t)Sensor_Data[6];
-        Message_Buffer[3] = (int16_t)Sensor_Data[8];
-        Message_Buffer[4] = (int16_t)Sensor_Data[10];
+
+        pSensor = (int16_t *)&Sensor_Data[6];
+        Message_Buffer[2] = *pSensor++;
+        Message_Buffer[3] = *pSensor++;
+        Message_Buffer[4] = *pSensor;
 
         message.ucLength = 5;                        // message length
         message.pcData = (uint16_t *)Message_Buffer; // message content
