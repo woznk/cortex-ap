@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES MAX_SAMPLES increased to 20000
+//  CHANGES managed multiple log files with sequential file names
 //
 //============================================================================*/
 
@@ -54,7 +54,7 @@ VAR_GLOBAL xQueueHandle xLog_Queue;
 /*----------------------------------- Locals ---------------------------------*/
 
 
-VAR_STATIC const char szFileName[16] = "log.txt";   // File name
+VAR_STATIC uint8_t szFileName[16] = "log0.txt";     // File name
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // File object
 VAR_STATIC char szString[48];                       //
@@ -77,15 +77,30 @@ void Log_Write(uint16_t *data, uint8_t num);
 ///----------------------------------------------------------------------------
 void Log_Task( void *pvParameters ) {
 
+    uint8_t j;
     xLog_Message message;
 
     uiSamples = 0;
+    bFileOk = TRUE;                             //
 
     // Open log file
-    if (FR_OK == f_mount(0, &stFat)) {
-        if (FR_OK == f_open(&stFile, szFileName, FA_WRITE|FA_CREATE_ALWAYS)) {
-            bFileOk = TRUE;                     // File succesfully open
-        } else {                                // Error opening file
+    if (FR_OK == f_mount(0, &stFat)) {          // Mount file system
+        for (j = 0; (j < 10) && bFileOk; j++) { // Search last log file
+            szFileName[3] = '0' + j;            // Append file number
+            if (FR_OK == f_open(&stFile, (const XCHAR *)szFileName, FA_WRITE)) {
+                bFileOk = TRUE;                 // File exist
+                f_close(&stFile);               // Close file
+            } else {                            //
+                bFileOk = FALSE;                // File doesn't exist
+            }
+        }
+        if (!bFileOk) {                         // File doesn't exist
+            if (FR_OK == f_open(&stFile, (const XCHAR *)szFileName, FA_WRITE|FA_CREATE_ALWAYS)) {
+                bFileOk = TRUE;                 // File succesfully open
+            } else {                            // Error opening file
+                bFileOk = FALSE;                // Halt file logging
+            }
+        } else {
             bFileOk = FALSE;                    // Halt file logging
         }
     } else {                                    // Error mounting FS
