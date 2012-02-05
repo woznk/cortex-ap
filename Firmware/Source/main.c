@@ -7,7 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: added acceleration data to message buffer
+// Change: merged working modes AUTO and STABILIZE
 //
 //============================================================================*/
 
@@ -356,6 +356,7 @@ void Attitude_Control_Task(void *pvParameters)
            case MODE_RTL:
               LEDOn(RED);
            break;
+           case MODE_AUTO:
            case MODE_STABILIZE:
               Aileron_Position -= SERVO_NEUTRAL;
               Aileron_Position += PPMGetChannel(AILERON_CHANNEL);
@@ -366,12 +367,7 @@ void Attitude_Control_Task(void *pvParameters)
                  LEDToggle(RED);
                }
            break;
-           case MODE_AUTO:
-              if (++ucBlink == 10) {
-                ucBlink = 0;
-                LEDToggle(RED);
-           }
-           break;
+//         case MODE_MANUAL:
            default:
               LEDOff(RED);
               Aileron_Position = PPMGetChannel(AILERON_CHANNEL);
