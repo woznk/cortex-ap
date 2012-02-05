@@ -29,7 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES changed interrupt priority to configLIBRARY_KERNEL_INTERRUPT_PRIORITY
+//  CHANGES modified association of working modes with RC switch position
 //
 //============================================================================*/
 
@@ -231,11 +231,11 @@ uint8_t PPMGetMode(void)
     if (cSignalLevel == 0) {
         return MODE_RTL;
     } else if ( uiWidth < 1100 ) {
-        return MODE_STABILIZE;
-    } else if (( uiWidth > 1400 ) && ( uiWidth < 1600 )) {
-        return MODE_AUTO;
-    } else if ( uiWidth > 1900 ) {
         return MODE_MANUAL;
+    } else if (( uiWidth > 1400 ) && ( uiWidth < 1600 )) {
+        return MODE_STABILIZE;
+    } else if ( uiWidth > 1900 ) {
+        return MODE_AUTO;
     } else {
         return MODE_UNDEFINED;
     }
