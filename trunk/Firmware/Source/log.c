@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES managed multiple log files with sequential file names
+//  CHANGES log file closed when RC switch is in AUTO mode.
 //
 //============================================================================*/
 
@@ -125,7 +125,7 @@ void Log_Task( void *pvParameters ) {
 void Log_Write(uint16_t *data, uint8_t num)
 {
     long l_temp;
-    uint8_t digit, i, j = 0;
+    uint8_t digit, mode, i, j = 0;
     UINT wWritten;
 
     for (i = 0; i < num; i++) {
@@ -141,11 +141,12 @@ void Log_Write(uint16_t *data, uint8_t num)
         szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
     }
     szString[j++] = '\n';
-
+    mode = PPMGetMode();
     if (bFileOk) {                                          //
         f_write(&stFile, szString, j, &wWritten);           // Write
         if (//(HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS)) ||  // button pressed
             (j != wWritten) ||                              // No file space
+            (mode == MODE_AUTO) ||                          // RC mode switch to AUTO
             (uiSamples >= MAX_SAMPLES)) {                   // Too many samples
             f_close(&stFile);                               // close file
             bFileOk = FALSE;                                // Halt file logging
