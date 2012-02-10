@@ -8,7 +8,8 @@
 /// \brief PID controls
 /// \file
 ///
-//  CHANGES Changed PID computation working principle
+//  CHANGES Added 'f' prefix to P I D coefficients
+//          added output gain
 //
 //============================================================================*/
 
@@ -48,7 +49,6 @@
 ///
 /// \brief   PID initialization
 /// \param
-/// \param
 /// \return  -
 /// \remarks
 ///
@@ -77,7 +77,7 @@ float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
     fError = fSetpoint - fInput;
 
     // Compute integral term
-    pxPid->fIntegral += (pxPid->Ki * fError);
+    pxPid->fIntegral += (pxPid->fKi * fError);
 
     // Saturate integral term
     if (pxPid->fIntegral > pxPid->fMax) {
@@ -90,7 +90,10 @@ float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
     fDelta = (fInput - pxPid->fLastInput);
 
     // Compute output
-    fOutput = pxPid->Kp * fError + pxPid->fIntegral - pxPid->Kd * fDelta;
+    fOutput = pxPid->fKp * fError + pxPid->fIntegral - pxPid->fKd * fDelta;
+
+    // Multiply outpput by its gain
+    fOutput = pxPid->fGain * fOutput;
 
     // Saturate output
     if (fOutput > pxPid->fMax) {
@@ -104,3 +107,4 @@ float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
 
     return fOutput;
 }
+
