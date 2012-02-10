@@ -10,7 +10,8 @@
 /// \file
 ///
 ///
-//  CHANGES Changed PID computation working principle
+//  CHANGES Added 'f' prefix to P I D coefficients
+//          added output gain
 //
 //============================================================================*/
 
@@ -32,6 +33,17 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
+typedef struct {       ///< PID data structure
+    float fGain;       ///< controller output gain
+    float fMin;        ///< min windup guard
+    float fMax;        ///< max windup guard
+    float fLastInput;  ///< last input
+    float fIntegral;   ///< integral term
+    float fKp;         ///< proportional gain
+    float fKi;         ///< integral gain
+    float fKd;         ///< derivative gain
+} xPID;
+
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
@@ -39,17 +51,6 @@
 /*----------------------------------- Locals ---------------------------------*/
 
 /*--------------------------------- Prototypes -------------------------------*/
-
-typedef struct
-{
-    float fMin;        ///< min saturation
-    float fMax;        ///< max saturation
-    float fLastInput;  ///< last input
-    float fIntegral;   ///< integral term
-    float Kp;          ///< proportional gain
-    float Ki;          ///< integral gain
-    float Kd;          ///< derivative gain
-} xPID;
 
 void PID_Init(xPID * pxPid);
 float PID_Compute(xPID * pxPid, float fSetpoint, float fInput);
