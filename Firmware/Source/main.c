@@ -7,7 +7,8 @@
 //
 /// \brief main program
 ///
-// Change: merged working modes AUTO and STABILIZE
+// Change: Increased size of message buffer to fit DCM matrix,
+//         added conditional compilation for loggging different data
 //
 //============================================================================*/
 
@@ -59,6 +60,10 @@
 #define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )
 #define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )
 
+#define LOG_SENSORS       0
+#define LOG_DCM           1
+#define LOG_PPM           0
+
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
@@ -82,7 +87,7 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 
 VAR_STATIC int16_t Aileron_Position = 1500;
 VAR_STATIC int16_t Elevator_Position = 1500;
-VAR_STATIC int16_t Message_Buffer[8];
+VAR_STATIC int16_t Message_Buffer[9];
 VAR_STATIC uint8_t Sensor_Data[16];
 VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
 
@@ -309,7 +314,6 @@ void AHRS_Task(void *pvParameters)
             if (j == 2) {                           // z acceleration
                *pSensor += (int16_t)GRAVITY;        // add gravity
             }
-            Message_Buffer[j] = *pSensor;           // save into message
             pSensor++;
         }
 
@@ -318,14 +322,33 @@ void AHRS_Task(void *pvParameters)
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
 
-        Message_Buffer[6] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
-        Message_Buffer[7] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
-
-        /* Log servo positions and angular rates */
-        message.ucLength = 8;                        // message length
+        /* Log sensor data */
+#if (LOG_SENSORS == 1)
+        message.ucLength = 6;                       // message length
+        message.pcData = (uint16_t *)Sensor_Data;   // message content
+        xQueueSend( xLog_Queue, &message, 0 );
+#endif
+        /* Log PPM channels */
+#if (LOG_PPM == 1)
+        Message_Buffer[0] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
+        Message_Buffer[1] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
+        message.ucLength = 2;                        // message length
+        message.pcData = (uint16_t *)Message_Buffer; // message content
+        xQueueSend( xLog_Queue, &message, 0 );
+#endif
+        /* Log DCM matrix */
+#if (LOG_DCM == 1)
+        for (i = 0; i < 3; i++) {
+            for (j = 0; j < 3; j++) {
+                Message_Buffer[(i * 3) + j] =
+                (int16_t)(DCM_Matrix[i][j] * 32767.0f);
+            }
+        }
+        message.ucLength = 9;                        // message length
         message.pcData = (uint16_t *)Message_Buffer; // message content
         xQueueSend( xLog_Queue, &message, 0 );
         xQueueSend( xTelemetry_Queue, &message, 0 );
+#endif
     }
 }
 
