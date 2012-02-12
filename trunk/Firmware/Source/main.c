@@ -7,8 +7,8 @@
 //
 /// \brief main program
 ///
-// Change: Increased size of message buffer to fit DCM matrix,
-//         added conditional compilation for loggging different data
+// Change: Disabled attitude control task, 
+//         added PID controllers for roll and pitch, not tested
 //
 //============================================================================*/
 
@@ -16,6 +16,7 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
+#include "math.h"
 
 #include "stm32f10x.h"
 
@@ -32,6 +33,7 @@
 #include "telemetry.h"
 #include "log.h"
 #include "led.h"
+#include "pid.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -61,8 +63,9 @@
 #define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )
 
 #define LOG_SENSORS       0
-#define LOG_DCM           1
+#define LOG_DCM           0
 #define LOG_PPM           0
+#define LOG_SERVO         0
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -85,11 +88,17 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC int16_t Aileron_Position = 1500;
-VAR_STATIC int16_t Elevator_Position = 1500;
+//VAR_STATIC int16_t Aileron_Position = 1500;
+//VAR_STATIC int16_t Elevator_Position = 1500;
+VAR_STATIC int16_t iPosition;
 VAR_STATIC int16_t Message_Buffer[9];
 VAR_STATIC uint8_t Sensor_Data[16];
 VAR_STATIC int16_t Sensor_Offset[6] = {0, 0, 0, 0, 0, 0};
+VAR_STATIC xPID Roll_Pid;
+VAR_STATIC xPID Pitch_Pid;
+VAR_STATIC float fSetpoint;
+VAR_STATIC float fInput;
+VAR_STATIC float fOutput;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -161,7 +170,7 @@ int main(void)
   }
 
   xTaskCreate(AHRS_Task, ( signed portCHAR * ) "AHRS", 64, NULL, mainAHRS_PRIORITY, NULL);
-  xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainATTITUDE_PRIORITY, NULL);
+//  xTaskCreate(Attitude_Control_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainATTITUDE_PRIORITY, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
 //  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, mainNAVIGATION_PRIORITY, NULL);
   xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
@@ -274,6 +283,23 @@ void AHRS_Task(void *pvParameters)
     L3G4200_Init();                                 // init L3G4200 gyro
     ADXL345_Init();                                 // init ADXL345 accelerometer
 
+    Roll_Pid.fGain = 1.0f;
+    Roll_Pid.fMin = -1.0f;
+    Roll_Pid.fMax = 1.0f;
+    Roll_Pid.fKp = -0.047831f;
+    Roll_Pid.fKi = 0.0f;
+    Roll_Pid.fKd = 0.0f;
+
+    Pitch_Pid.fGain = 1.0f;
+    Pitch_Pid.fMin = -1.0f;
+    Pitch_Pid.fMax = 1.0f;
+    Pitch_Pid.fKp = 0.0041842f;
+    Pitch_Pid.fKi = 0.0000029f;
+    Pitch_Pid.fKd = 0.0f;
+
+    PID_Init(&Roll_Pid);
+    PID_Init(&Pitch_Pid);
+
     /* Wait until aircraft settles */
     LEDOn(BLUE);
     vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 5);
@@ -322,6 +348,24 @@ void AHRS_Task(void *pvParameters)
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
 
+        fSetpoint = (float)(PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL) / 500.0f;
+        fInput = (acosf(DCM_Matrix[2][1]) * 180.0f) / PI;
+        fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);
+        iPosition = SERVO_NEUTRAL + (int16_t)(fOutput * 500.0f);
+        Servo_Set(SERVO_AILERON, iPosition);
+        Message_Buffer[0] = iPosition;
+
+        fSetpoint = (float)(PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL) / 500.0f;
+        fInput = (acosf(DCM_Matrix[2][0]) * 180.0f) / PI;
+        fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);
+        iPosition = SERVO_NEUTRAL + (int16_t)(fOutput * 500.0f);
+        Servo_Set(SERVO_ELEVATOR, iPosition);
+        Message_Buffer[1] = iPosition;
+
+        message.ucLength = 2;                        // message length
+        message.pcData = (uint16_t *)Message_Buffer; // message content
+        xQueueSend( xTelemetry_Queue, &message, 0 );
+
         /* Log sensor data */
 #if (LOG_SENSORS == 1)
         message.ucLength = 6;                       // message length
@@ -347,7 +391,6 @@ void AHRS_Task(void *pvParameters)
         message.ucLength = 9;                        // message length
         message.pcData = (uint16_t *)Message_Buffer; // message content
         xQueueSend( xLog_Queue, &message, 0 );
-        xQueueSend( xTelemetry_Queue, &message, 0 );
 #endif
     }
 }
@@ -361,7 +404,7 @@ void AHRS_Task(void *pvParameters)
 ///
 ///----------------------------------------------------------------------------
 void Attitude_Control_Task(void *pvParameters)
-{
+{/*
     uint8_t ucMode, ucBlink = 0;
     portTickType Last_Wake_Time;
 
@@ -400,7 +443,7 @@ void Attitude_Control_Task(void *pvParameters)
 
         Servo_Set(SERVO_AILERON, Aileron_Position);
         Servo_Set(SERVO_ELEVATOR, Elevator_Position);
-    }
+    }*/
 }
 
 
