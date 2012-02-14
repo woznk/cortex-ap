@@ -7,8 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: Disabled attitude control task, 
-//         added PID controllers for roll and pitch, not tested
+// Change: changed PID gains for roll and pitch
 //
 //============================================================================*/
 
@@ -286,15 +285,15 @@ void AHRS_Task(void *pvParameters)
     Roll_Pid.fGain = 1.0f;
     Roll_Pid.fMin = -1.0f;
     Roll_Pid.fMax = 1.0f;
-    Roll_Pid.fKp = -0.047831f;
+    Roll_Pid.fKp = -2389.8f;
     Roll_Pid.fKi = 0.0f;
     Roll_Pid.fKd = 0.0f;
 
     Pitch_Pid.fGain = 1.0f;
     Pitch_Pid.fMin = -1.0f;
     Pitch_Pid.fMax = 1.0f;
-    Pitch_Pid.fKp = 0.0041842f;
-    Pitch_Pid.fKi = 0.0000029f;
+    Pitch_Pid.fKp = 3.53241f;
+    Pitch_Pid.fKi = 0.07209f;
     Pitch_Pid.fKd = 0.0f;
 
     PID_Init(&Roll_Pid);
@@ -348,15 +347,15 @@ void AHRS_Task(void *pvParameters)
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
 
-        fSetpoint = (float)(PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL) / 500.0f;
-        fInput = (acosf(DCM_Matrix[2][1]) * 180.0f) / PI;
+        fSetpoint = (float)((PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL) / 500.0f) + (PI/2);
+        fInput = acosf(DCM_Matrix[2][1]);
         fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);
         iPosition = SERVO_NEUTRAL + (int16_t)(fOutput * 500.0f);
         Servo_Set(SERVO_AILERON, iPosition);
         Message_Buffer[0] = iPosition;
 
-        fSetpoint = (float)(PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL) / 500.0f;
-        fInput = (acosf(DCM_Matrix[2][0]) * 180.0f) / PI;
+        fSetpoint = (float)((PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL) / 500.0f) + (PI/2);
+        fInput = acosf(DCM_Matrix[2][0]);
         fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);
         iPosition = SERVO_NEUTRAL + (int16_t)(fOutput * 500.0f);
         Servo_Set(SERVO_ELEVATOR, iPosition);
