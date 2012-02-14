@@ -29,7 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES modified association of working modes with RC switch position
+//  CHANGES added missing initialization of pulse length array
 //
 //============================================================================*/
 
@@ -72,15 +72,15 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
+VAR_STATIC int8_t cPulseCount;
+VAR_STATIC int8_t cSignalLevel;
+VAR_STATIC int8_t cOverflowCount;
+VAR_STATIC uint8_t ucPulseIndex;
 VAR_STATIC uint16_t ulCaptureTime;
 VAR_STATIC uint16_t ulLastCapture;
 VAR_STATIC uint16_t ulPulseLength;
-VAR_STATIC uint16_t ulPulseBuffer[RC_CHANNELS];
 VAR_STATIC uint16_t ulTemp[RC_CHANNELS];
-VAR_STATIC uint8_t ucPulseIndex;
-VAR_STATIC int8_t cOverflowCount;
-VAR_STATIC int8_t cPulseCount;
-VAR_STATIC int8_t cSignalLevel;
+VAR_STATIC uint16_t ulPulseBuffer[RC_CHANNELS];
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -159,6 +159,9 @@ void PPM_Init(void) {
   cPulseCount = 0;
   ulLastCapture = 0;
   cOverflowCount = -1;
+  for (ucPulseIndex = 0; ucPulseIndex < RC_CHANNELS; ucPulseIndex ++) {
+    ulPulseBuffer[ucPulseIndex] = PPM_LENGTH_NEUTRAL;
+  }
   ucPulseIndex = RC_CHANNELS;
 
   /* Clear current configuration */
