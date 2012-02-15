@@ -42,7 +42,7 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES fSimSOG rinominata fSimCOG
+//  CHANGES removed Telemetry_Send_PPM()
 //
 //============================================================================*/
 
@@ -250,34 +250,6 @@ void Telemetry_Send_DCM(void) {
     }
 }
 
-///----------------------------------------------------------------------------
-///
-///  DESCRIPTION Outputs PPM input values
-/// \RETURN      -
-/// \REMARKS
-///
-///
-///----------------------------------------------------------------------------
-void Telemetry_Send_PPM(void)
-{
-/*
-    unsigned char szString[64];
-    unsigned long ulTemp;
-    int j = 0, chan = 0;
-
-    for (chan = 0; chan < RC_CHANNELS; chan++) {
-        ulTemp = PPMGetChannel(chan);
-        szString[j++] = ' ';
-        szString[j++] = '0' + ((ulTemp / 10000) % 10);
-        szString[j++] = '0' + ((ulTemp / 1000) % 10);
-        szString[j++] = '0' + ((ulTemp / 100) % 10);
-        szString[j++] = '0' + ((ulTemp / 10) % 10);
-        szString[j++] = '0' +  (ulTemp % 10);
-    }
-    szString[j] = '\r';
-    UART1Send((const unsigned char *)szString, RC_CHANNELS * 6 + 1);
-*/
-}
 
 ///----------------------------------------------------------------------------
 ///
@@ -492,7 +464,6 @@ bool Telemetry_Parse ( void )
 //----------------------------------------------------------------------------
 void Telemetry_Send_Controls(void)
 {
-/*
     float *pfBuff;
     unsigned char cData[20];
 
@@ -510,8 +481,7 @@ void Telemetry_Send_Controls(void)
     pfBuff = (float *)&cData[13];   // throttle
     *pfBuff = Throttle();
 
-    UART0Send(cData, 17);
-*/
+//    UART0Send(cData, 17);
 }
 
 //----------------------------------------------------------------------------
