@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES log file closed when RC switch is in AUTO mode.
+//  CHANGES log file closed when RC is switched off
 //
 //============================================================================*/
 
@@ -64,7 +64,7 @@ VAR_STATIC uint16_t uiSamples;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-void Log_Write(uint16_t *data, uint8_t num);
+static void Log_Write(uint16_t *data, uint8_t num);
 
 /*--------------------------------- Functions --------------------------------*/
 
@@ -122,7 +122,7 @@ void Log_Task( void *pvParameters ) {
 ///
 ///
 ///----------------------------------------------------------------------------
-void Log_Write(uint16_t *data, uint8_t num)
+static void Log_Write(uint16_t *data, uint8_t num)
 {
     long l_temp;
     uint8_t digit, mode, i, j = 0;
@@ -143,16 +143,15 @@ void Log_Write(uint16_t *data, uint8_t num)
     szString[j++] = '\n';
     mode = PPMGetMode();
     if (bFileOk) {                                          //
-        f_write(&stFile, szString, j, &wWritten);           // Write
-        if (//(HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS)) ||  // button pressed
-            (j != wWritten) ||                              // No file space
-            (mode == MODE_AUTO) ||                          // RC mode switch to AUTO
-            (uiSamples >= MAX_SAMPLES)) {                   // Too many samples
+        f_write(&stFile, szString, j, &wWritten);           // write
+        if (                                                // button pressed
+            (j != wWritten) ||                              // no file space
+            (mode == MODE_RTL) ||                           // RC turned off
+            (uiSamples >= MAX_SAMPLES)) {                   // too many samples
             f_close(&stFile);                               // close file
-            bFileOk = FALSE;                                // Halt file logging
-//            HWREGBITW(&g_ulFlags, FLAG_BUTTON_PRESS) = 0;   // clear button flag
-        } else {                                            // Write successfull
-            uiSamples++;                                    // Update sample counter
+            bFileOk = FALSE;                                // halt file logging
+        } else {                                            // write successfull
+            uiSamples++;                                    // update sample counter
         }
     }
 }
