@@ -42,7 +42,7 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES removed Telemetry_Send_PPM()
+//  CHANGES temporarily commented erroneous code
 //
 //============================================================================*/
 
@@ -470,16 +470,16 @@ void Telemetry_Send_Controls(void)
     cData[0] = TEL_SERVO_POS;       // wait code
 
     pfBuff = (float *)&cData[1];    // elevator
-    *pfBuff = Elevator();
+//    *pfBuff = Elevator();
 
     pfBuff = (float *)&cData[5];    // ailerons
-    *pfBuff = Ailerons();
+//    *pfBuff = Ailerons();
 
     pfBuff = (float *)&cData[9];    // rudder
-    *pfBuff = Rudder();
+//    *pfBuff = Rudder();
 
     pfBuff = (float *)&cData[13];   // throttle
-    *pfBuff = Throttle();
+//    *pfBuff = Throttle();
 
 //    UART0Send(cData, 17);
 }
