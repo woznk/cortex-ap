@@ -29,7 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES added missing initialization of pulse length array
+//  CHANGES changed mode names
 //
 //============================================================================*/
 
@@ -236,9 +236,9 @@ uint8_t PPMGetMode(void)
     } else if ( uiWidth < 1100 ) {
         return MODE_MANUAL;
     } else if (( uiWidth > 1400 ) && ( uiWidth < 1600 )) {
-        return MODE_STABILIZE;
+        return MODE_ROLL_TUNE;
     } else if ( uiWidth > 1900 ) {
-        return MODE_AUTO;
+        return MODE_PITCH_TUNE;
     } else {
         return MODE_UNDEFINED;
     }
