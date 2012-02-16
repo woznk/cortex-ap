@@ -8,8 +8,7 @@
 /// \brief PID controls
 /// \file
 ///
-//  CHANGES Added 'f' prefix to P I D coefficients
-//          added output gain
+//  CHANGES output gain multiplication moved after output saturation
 //
 //============================================================================*/
 
@@ -92,15 +91,15 @@ float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
     // Compute output
     fOutput = pxPid->fKp * fError + pxPid->fIntegral - pxPid->fKd * fDelta;
 
-    // Multiply outpput by its gain
-    fOutput = pxPid->fGain * fOutput;
-
     // Saturate output
     if (fOutput > pxPid->fMax) {
        fOutput = pxPid->fMax;
     } else if (fOutput < pxPid->fMin) {
        fOutput = pxPid->fMin;
     }
+
+    // Multiply outpput by its gain
+    fOutput = pxPid->fGain * fOutput;
 
     // Store current input
     pxPid->fLastInput = fInput;
