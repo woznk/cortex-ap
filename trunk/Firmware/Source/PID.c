@@ -8,11 +8,15 @@
 /// \brief PID controls
 /// \file
 ///
-//  CHANGES output gain multiplication moved after output saturation
+//  CHANGES added multiplication of I term by sampling period, 
+//          modified anti windup of I term,
+//          multiplication of I term by Ki moved in the computation of output,
+//          differential term divided by sampling period.
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
+#include "config.h"
 #include "pid.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -76,20 +80,20 @@ float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
     fError = fSetpoint - fInput;
 
     // Compute integral term
-    pxPid->fIntegral += (pxPid->fKi * fError);
-
-    // Saturate integral term
-    if (pxPid->fIntegral > pxPid->fMax) {
-       pxPid->fIntegral = pxPid->fMax;
-    } else if (pxPid->fIntegral < pxPid->fMin) {
-       pxPid->fIntegral = pxPid->fMin;
+    // Avoid windup
+    if ((pxPid->fIntegral < pxPid->fMax) &&
+        (pxPid->fIntegral > pxPid->fMin)) {
+        pxPid->fIntegral += (fError * DELTA_T);
     }
 
-    // Compute input difference
-    fDelta = (fInput - pxPid->fLastInput);
+    // Compute differential term
+    // Multiply by SAMPLES_PER_SECOND instead of dividing by DELTA_T.
+    fDelta = (fInput - pxPid->fLastInput) * SAMPLES_PER_SECOND;
 
     // Compute output
-    fOutput = pxPid->fKp * fError + pxPid->fIntegral - pxPid->fKd * fDelta;
+    fOutput = pxPid->fKp * fError +
+              pxPid->fKi * pxPid->fIntegral -
+              pxPid->fKd * fDelta;
 
     // Saturate output
     if (fOutput > pxPid->fMax) {
@@ -98,7 +102,7 @@ float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
        fOutput = pxPid->fMin;
     }
 
-    // Multiply outpput by its gain
+    // Multiply by output gain
     fOutput = pxPid->fGain * fOutput;
 
     // Store current input
