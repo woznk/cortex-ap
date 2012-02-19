@@ -11,13 +11,13 @@
 ///                                                 content of
 ///  ucPulseIndex     aliases                      ulPulseBuffer[]
 ///
-///        0          -                            channel 0 pulse
-///        1          AILERON_CHANNEL              channel 1 pulse
-///        2          -                            channel 2 pulse
-///        3          -                            channel 3 pulse
-///        4          MODE_CHANNEL                 channel 4 pulse
-///        5          -                            channel 5 pulse
-///        6          -                            channel 6 pulse
+///        0          see ppmdriver.h              channel 0 pulse
+///        1          see ppmdriver.h              channel 1 pulse
+///        2          see ppmdriver.h              channel 2 pulse
+///        3          see ppmdriver.h              channel 3 pulse
+///        4          see ppmdriver.h              channel 4 pulse
+///        5          see ppmdriver.h              channel 5 pulse
+///        6          see ppmdriver.h              channel 6 pulse
 ///        7          RC_CHANNELS                  none
 ///
 ///  Before computing time difference, overflow number is checked.
@@ -29,7 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES changed mode names
+//  CHANGES PPM_LENGTH_MIN, PPM_LENGTH_MAX made equal to SERVO_MIN, SERVO_MAX
 //
 //============================================================================*/
 
@@ -51,8 +51,8 @@
 
 #define PPM_SYNC_MIN        4999        ///< Modify according to RC type
 #define PPM_SYNC_MAX        20001       ///< Modify according to RC type
-#define PPM_LENGTH_MIN      899
-#define PPM_LENGTH_MAX      2101
+#define PPM_LENGTH_MIN      900
+#define PPM_LENGTH_MAX      2100
 #define PPM_LENGTH_NEUTRAL  1500
 
 #define PERIOD              65535
