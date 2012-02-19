@@ -1,9 +1,10 @@
 ///----------------------------------------------------------------------------
+///
 /// File Name: L3G4200D_Driver.c
 /// $Revision:$
 /// $Date:$
 /// L3G4200D driver file
-/// Changes: Changed full scale range from 250 to 2000 deg/sec
+/// Changes: disabled fifo, watermark and interrupts in initialization
 ///
 ///----------------------------------------------------------------------------
 
@@ -752,23 +753,6 @@ void L3G4200_Init( void )
   SetFullScale(FULLSCALE_2000);
   //set sensor mode
   SetMode(NORMAL);
-  //interrupt pin mode configuration: PUSH PULL
-  SetIntPinMode(PUSH_PULL);
-  //enable interrutp 1 on INT1 pin and set interrupt active high
-  SetInt1Pin(I1_ON_PIN_INT1_ENABLE | INT1_ACTIVE_HIGH);
-  //X and Y high threshold interrutps
-  SetIntConfiguration(INT1_OR | INT1_ZHIE_ENABLE | INT1_XHIE_ENABLE);
-  //interrupt latch disable
-  Int1LatchEnable(MEMS_DISABLE);
-  //set the threshold only on the Z axis
-  SetInt1Threshold(THS_Z, 500);
-  //set the duration to 2 odr
-  SetInt1Duration(2);
-  //set the fifo mode
-  FIFOModeEnable(FIFO_MODE);
-  //set watermark to 5
-  SetWaterMark(5);
-  //enable watermark interrupt on interrupt2
-  //when the fifo contains more than 5 elements, the interrupt raises
-  SetInt2Pin(WTM_ON_INT2_ENABLE);
+  //bypass fifo
+  FIFOModeEnable(FIFO_BYPASS_MODE);
 }
