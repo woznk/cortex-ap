@@ -436,6 +436,11 @@
               <FileType>1</FileType>
               <FilePath>..\Source\telemetry.c</FilePath>
             </File>
+            <File>
+              <FileName>attitude.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\attitude.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1010,6 +1015,11 @@
               <FileType>1</FileType>
               <FilePath>..\Source\telemetry.c</FilePath>
             </File>
+            <File>
+              <FileName>attitude.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\attitude.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1583,6 +1593,11 @@
               <FileName>telemetry.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\telemetry.c</FilePath>
+            </File>
+            <File>
+              <FileName>attitude.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\attitude.c</FilePath>
             </File>
           </Files>
         </Group>
