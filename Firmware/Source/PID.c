@@ -1,14 +1,14 @@
 //============================================================================+
 //
-// $RCSfile: $
+// $HeadURL: $
 // $Revision: $
-// $Date: $
+// $Date:  $
 // $Author: $
 //
 /// \brief PID controls
 /// \file
 ///
-//  CHANGES added multiplication of I term by sampling period, 
+//  CHANGES added multiplication of I term by sampling period,
 //          modified anti windup of I term,
 //          multiplication of I term by Ki moved in the computation of output,
 //          differential term divided by sampling period.

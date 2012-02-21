@@ -1,9 +1,9 @@
 //============================================================================
 //
-// $RCSfile: Telemetry.h,v $ (HEADER FILE)
-// $Revision: 1.1 $
-// $Date: 2011/01/22 16:49:58 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief Simulation interface
 /// \file

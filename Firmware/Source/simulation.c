@@ -1,6 +1,9 @@
 //============================================================================+
 //
-// Copyright (c) 2007 Lorenzo Fraccaro     <l.fraccaro@email.it>
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 2 as
@@ -8,27 +11,22 @@
 //
 // See README and COPYING for more details.
 //
-// $RCSfile: simulation.c,v $ (SOURCE FILE)
-// $Revision: 1.3 $
-// $Date: 2009/10/31 15:11:41 $
-//
-//  LANGUAGE    C
 /// \brief      Navstix simulation file
 /// \file
 ///                                 PITCH+
-//                      - >           - > 
-//                    /    Z+       /       
+//                      - >           - >
+//                    /    Z+       /
 //              YAW+ |      (.)----| -----> Y+
-//                    \      |      \     
-//                      -    |        -   
-//                           |         
+//                    \      |      \
+//                      -    |        -
+//                           |
 //                           |   ^
-//                       \   |   /  ROLL+ 
-//                         -___-    
+//                       \   |   /  ROLL+
+//                         -___-
 //                           |
 //                           |
 //                           V  X+
-//              
+//
 //  CHANGES      corrected naming of reference axes
 //               added sensor signs
 //
@@ -98,11 +96,11 @@ VAR_STATIC float pfSensorSign[8] = {
    1.0f, // 0 : accel X
   -1.0f, // 1 : accel Z
    1.0f, // 2 : accel Y
-   1.0f, // 3 : omega X 
-  -1.0f, // 4 : omega Y 
-   1.0f, // 5 : omega Z 
-   1.0f, // 6 : 
-   1.0f  // 7 : 
+   1.0f, // 3 : omega X
+  -1.0f, // 4 : omega Y
+   1.0f, // 5 : omega Z
+   1.0f, // 6 :
+   1.0f  // 7 :
 };
 
 // ---- Private Function Prototypes -----------------------------------------

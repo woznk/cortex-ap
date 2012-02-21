@@ -1,11 +1,10 @@
 //============================================================================+
 //
-// $RCSfile: AileronCtrl.cpp,v $ (SOURCE FILE)
-// $Revision: 1.6 $
-// $Date: 2010/12/30 09:46:03 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
-//  LANGUAGE C
 /// \brief   Aileron control
 ///
 /// \file

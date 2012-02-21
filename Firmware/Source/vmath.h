@@ -1,18 +1,16 @@
 //============================================================================+
 //
-// $RCSfile: vmath.h,v $ (SOURCE FILE)
-// $Revision: 1.1 $
-// $Date: 2009/11/15 21:04:36 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
 /// \file
-///             Vector algebra header file
+/// Vector algebra header file
 //
-//  CHANGES     
-//              
-//              
+//  CHANGES
+//
+//
 //
 //============================================================================*/
 

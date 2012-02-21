@@ -1,9 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: config.h,v $ (HEADER FILE)
-// $Revision: 1.3 $
-// $Date: 2011/02/02 18:25:20 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief Configuration definitions and control gains
 ///
@@ -30,7 +30,7 @@
 #define ACCEL_GAIN      0.153125f     // full scale = 8g
 
 //! Valore iniziale fattore di conversione da ADC a [rad/s]
-//#define GYRO_GAIN       0.0001527163f // full scale = 250 dps 
+//#define GYRO_GAIN       0.0001527163f // full scale = 250 dps
 #define GYRO_GAIN       0.0012217f    // full scale = 2000 dps
 
 //! P feedback gain for steering, around 0.1 (Matrixpilot YAWKP, 0.0625)

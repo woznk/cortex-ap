@@ -1,12 +1,12 @@
 //============================================================================+
 //
-// $RCSfile: $
+// $HeadURL: $
 // $Revision: $
-// $Date: $
+// $Date:  $
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES swapped elevator ad rudder servos
+//  CHANGES swapped elevator and rudder servos
 //
 //============================================================================*/
 

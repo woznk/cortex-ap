@@ -1,9 +1,9 @@
 //============================================================================
 //
-// $RCSfile: $
+// $HeadURL: $
 // $Revision: $
-// $Date: $
-// $Author: Lorenz $
+// $Date:  $
+// $Author: $
 //
 /// \brief  LED driver
 //  CHANGES GREEN LED changed into RED

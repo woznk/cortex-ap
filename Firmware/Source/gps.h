@@ -1,9 +1,9 @@
 //============================================================================
 //
-// $RCSfile: gps.h,v $ (HEADER FILE)
-// $Revision: 1.4 $
-// $Date: 2010/01/25 21:39:47 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \file
 /// \brief  GPS manager header file
@@ -34,8 +34,8 @@
 
 VAR_GLOBAL float fCurrLat;
 VAR_GLOBAL float fCurrLon;
-VAR_GLOBAL int Heading;                 // 
-VAR_GLOBAL unsigned char Gps_Status;    // 
+VAR_GLOBAL int Heading;                 //
+VAR_GLOBAL unsigned char Gps_Status;    //
 
 /*---------------------------------- Interface -------------------------------*/
 

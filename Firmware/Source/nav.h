@@ -1,13 +1,13 @@
 //============================================================================
 //
-// $RCSfile: nav.h,v $ (HEADER FILE)
-// $Revision: 1.2 $
-// $Date: 2010/01/25 21:42:02 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \file
 /// \brief  Navigation manager header file
-//  CHANGES Navigate() function changed into navigation task 
+//  CHANGES Navigate() function changed into navigation task
 //          added type definition of gps message
 //
 //============================================================================

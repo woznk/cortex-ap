@@ -1,17 +1,14 @@
 //============================================================================+
 //
-// $RCSfile: cordic.c,v $ (SOURCE FILE)
-// $Revision: 1.3 $
-// $Date: 2009/12/20 16:21:37 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
 /// \file
-///             
+///
 //
 //  CHANGES     cosmetics
-//              
 //
 //============================================================================*/
 
@@ -36,17 +33,17 @@
 
 /*---------------------------------- Constants -------------------------------*/
 
-VAR_STATIC const long Phase_Table[15] = 
-{           // degrees    
-   45000,   // 45         
+VAR_STATIC const long Phase_Table[15] =
+{           // degrees
+   45000,   // 45
    26565,   // 26,56505118
    14036,   // 14,03624347
     7125,   // 7,125016349
     3576,   // 3,576334375
     1789,   // 1,789910608
-     895,   // 0,89517371 
+     895,   // 0,89517371
      447,   // 0,447614171
-     223,   // 0,2238105  
+     223,   // 0,2238105
      111,   // 0,111905677
       55,   // 0,055952892
       27,   // 0,027976453
@@ -66,7 +63,7 @@ VAR_STATIC const long Phase_Table[15] =
 //
 /// \brief   CORDIC based arc tangent computation
 ///
-/// \remarks 
+/// \remarks
 ///
 //----------------------------------------------------------------------------
 long cordic_atan(long I, long Q)
@@ -87,7 +84,7 @@ long cordic_atan(long I, long Q)
        Q = tmp_I;
        acc_phase = 90000;
     }
-  } 
+  }
 
   if (Q < 0) {
      tmp_I = (I > -Q) ? I : -Q;
@@ -141,7 +138,7 @@ void cordic_rotate( int *px, int *py, int theta )
     }
     theta = theta * 100;
 
-    x <<= 2;    // Scale coordinates 
+    x <<= 2;    // Scale coordinates
     y <<= 2;    // DEPENDS ON COORDINATE VALUES !!!
 
     for (step = 0; step < 13; step++)
@@ -166,5 +163,5 @@ void cordic_rotate( int *px, int *py, int theta )
     y >>= 2;
 
     *px = (x * COSCALE) / 1000;         // Compensate for CORDIC enlargement
-    *py = (sign * y * COSCALE) / 1000;  // 
+    *py = (sign * y * COSCALE) / 1000;  //
 }

@@ -1,15 +1,13 @@
 //============================================================================
 //
-// $RCSfile: uartdriver.h,v $ (HEADER FILE)
-// $Revision: 1.3 $
-// $Date: 2009/11/14 10:20:11 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
 /// \file
-///             UART driver header file
-//  CHANGES     UART 0 and UART 1 are now managed in the same way
+///  UART driver header file
+//  CHANGES UART 0 and UART 1 are now managed in the same way
 //
 //============================================================================
 

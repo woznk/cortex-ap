@@ -1,9 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: adcdriver.c,v $ (SOURCE FILE)
-// $Revision: 1.15 $
-// $Date: 2011/01/23 17:48:52 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief adc driver
 ///
@@ -47,47 +47,47 @@
 ///                                     |                       |
 ///                                     |                       |
 ///                                     +-----------------------+
-///                                -         -        
-///                        Y+    /       Z+    \      
+///                                -         -
+///                        Y+    /       Z+    \
 ///                        <----|------(x)      | YAW+
-///                              \      |      /      
-///                                - >  |  < -        
-///                           PITCH+    |             
-///                                     |   ^         
-///                                 \   |   / ROLL+   
-///                                   -___-           
-///                                     |             
-///                                     |                    
-///                                     V  X+         
+///                              \      |      /
+///                                - >  |  < -
+///                           PITCH+    |
+///                                     |   ^
+///                                 \   |   / ROLL+
+///                                   -___-
+///                                     |
+///                                     |
+///                                     V  X+
 ///                                                                     \endcode
-/// - EK-LM3S9B90 expansion board        
+/// - EK-LM3S9B90 expansion board
 ///                                                                     \code
-///    +-----------------------+        
-///    |                       |        
-///    |                       |        
-///    |                       |        
-///    |                       |        
+///    +-----------------------+
+///    |                       |
+///    |                       |
+///    |                       |
+///    |                       |
 ///    |                       |         PITCH+
-///    |                       |             -         -           
-///    |                       |      Y+   /       Z+    \         
+///    |                       |             -         -
+///    |                       |      Y+   /       Z+    \
 ///    |                       |      <---|------(X)      | YAW+
-///    |                       |           \      |      /         
-///    |                       |             - >  |  < -           
-///    |                       |                  |                
-///    |                       |              ^   |                                           
-///    |                       |        ROLL+ \   |   /                                       
-///    |                       |                -___-                                         
-///    |                       |                  |                                           
-///    |                       |                  |                                           
-///    |                       |                  V  X+                                       
-///    |                       |                                   
-///    |       +-------+       |                                   
-///    |       |       |       |                                   
-///    |       |       |       |                                   
-///    |       |       |       |                                   
+///    |                       |           \      |      /
+///    |                       |             - >  |  < -
+///    |                       |                  |
+///    |                       |              ^   |
+///    |                       |        ROLL+ \   |   /
+///    |                       |                -___-
+///    |                       |                  |
+///    |                       |                  |
+///    |                       |                  V  X+
+///    |                       |
+///    |       +-------+       |
+///    |       |       |       |
+///    |       |       |       |
+///    |       |       |       |
 ///    +-------+-------+-------+
 ///                                                                     \endcode
-///  
+///
 //  CHANGES corretto segno accelerazione Z. aumentato tempo di assestamento
 //
 //============================================================================*/
@@ -146,7 +146,7 @@ long SensorSign[] = {
 //
 // Sensor offsets
 //
-long SensorOffset[6];         
+long SensorOffset[6];
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -154,7 +154,7 @@ long SensorOffset[6];
 ///
 ///  DESCRIPTION ADC initialization
 /// \RETURN      -
-/// \REMARKS     
+/// \REMARKS
 ///
 ///----------------------------------------------------------------------------
 void
@@ -163,10 +163,10 @@ ADCInit(void)
     //
     // Enable Timer 2 (ADC trigger)
     //
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); 
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
 
     //
-    // Initialize Timer 2 
+    // Initialize Timer 2
     //
     TimerConfigure(TIMER2_BASE, TIMER_CFG_32_BIT_PER);
 
@@ -186,7 +186,7 @@ ADCInit(void)
     // Enable GPIO ports D, E for ADC.
     //
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE); 
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
 
     //
     // Set GPIO PD5, PD6, PD7, PE4, PE5, PE6, PE7 as ADC pins.
@@ -271,10 +271,10 @@ ADCInit(void)
 ///
 ///  DESCRIPTION The ADC sample sequence 1 interrupt handler.
 /// \RETURN      -
-/// \REMARKS     
+/// \REMARKS
 ///
 ///----------------------------------------------------------------------------
-void 
+void
 ADCS0IntHandler(void)
 {
     //
@@ -336,21 +336,21 @@ int
 ADCSettled(void)
 {
     int c;
-    
-    // 
+
+    //
     // Wait some ADC conversions
     //
     if (uiADCsample == 500) {
         //
         // Get offset
-        // 
+        //
         for (c = 0; c < 6; c++) {
             SensorOffset[c] = (long)ulFiltDataBuffer[c];
         }
 
         //
         // Subtract gravity from Z axis
-        // 
+        //
         SensorOffset[2] += GRAVITY;
 
         return 1;
@@ -363,7 +363,7 @@ ADCSettled(void)
 ///
 ///  DESCRIPTION Interface to ADC sample counter.
 /// \RETURN      Number of samples modulo 256
-/// \REMARKS     
+/// \REMARKS
 ///
 ///----------------------------------------------------------------------------
 unsigned char
@@ -376,7 +376,7 @@ ADCSamples(void)
 ///
 ///  DESCRIPTION Interface to sensor data.
 /// \RETURN      offset- and sign-corrected value of n-th sensor
-/// \REMARKS     
+/// \REMARKS
 ///
 ///----------------------------------------------------------------------------
 float

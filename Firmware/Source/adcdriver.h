@@ -1,9 +1,9 @@
 //============================================================================
 //
-// $RCSfile: adcdriver.h,v $ (HEADER FILE)
-// $Revision: 1.5 $
-// $Date: 2010/12/30 09:44:03 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief ADC driver header file
 ///
