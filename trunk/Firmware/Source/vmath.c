@@ -1,9 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: vmath.cpp,v $ (SOURCE FILE)
-// $Revision: 1.2 $
-// $Date: 2010/12/29 18:42:06 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief Vector algebra functions
 ///

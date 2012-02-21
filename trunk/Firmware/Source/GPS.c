@@ -1,12 +1,10 @@
 //============================================================================+
 //
-// $RCSfile: GPS.c,v $ (SOURCE FILE)
-// $Revision: 1.5 $
-// $Date: 2009/10/24 16:51:14 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
 /// \file
 ///             GPS driver
 //
@@ -44,14 +42,14 @@
 
 /****************************************************************************
 *
-*                                                               Pi      
+*                                                               Pi
 *                     radius of waypoint circle [meters] * -------------
 *                                                          180 [deg/rad]
 * Angle to waypoint = --------------------------------------------------- =
-*                              60 [min/deg] *  2170 [meters/min]        
+*                              60 [min/deg] *  2170 [meters/min]
 *
-*                               
-*                     radius of waypoint circle * Pi      
+*
+*                     radius of waypoint circle * Pi
 *                   = ------------------------------
 *                               23436000
 *
@@ -89,7 +87,7 @@ VAR_STATIC int Heading;                 // course over ground
 VAR_STATIC int Direction;               // direction error
 VAR_STATIC unsigned int Distance;       // distance to destination
 VAR_STATIC unsigned int Speed;          // speed
-VAR_STATIC unsigned char Gps_Status;    // 
+VAR_STATIC unsigned char Gps_Status;    //
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -102,11 +100,11 @@ static unsigned int root ( unsigned long x );
 //
 /// \brief   Initialize gps interface
 ///
-/// \remarks The second UART will be configured in 4800 baud, 8-n-1 mode. 
+/// \remarks The second UART will be configured in 4800 baud, 8-n-1 mode.
 ///
 //----------------------------------------------------------------------------
-void 
-GPSInit( void ) 
+void
+GPSInit( void )
 {
     //
     // Wait for first fix
@@ -119,19 +117,19 @@ GPSInit( void )
 //
 /// \brief   Parse NMEA sentence for coordinates
 ///
-/// \param   integer : (pointer to) integer part of coordinate 
-/// \param   decimal : (pointer to) decimal part of coordinate 
+/// \param   integer : (pointer to) integer part of coordinate
+/// \param   decimal : (pointer to) decimal part of coordinate
 /// \param   c       : character of NMEA sentence
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-void 
-Parse_Coord( int * integer, int * decimal, char c ) 
+void
+Parse_Coord( int * integer, int * decimal, char c )
 {
-  if ( c == ',' ) 
+  if ( c == ',' )
   {
     *decimal = 0;
-  } 
+  }
   else if ( c != '.' )
   {
     *decimal *= 10;
@@ -149,10 +147,10 @@ Parse_Coord( int * integer, int * decimal, char c )
 //
 /// \brief   Parse GPS sentences
 ///
-/// \returns true if new coordinate data are available, 
-///          false otherwise 
-/// \remarks 
-///          
+/// \returns true if new coordinate data are available,
+///          false otherwise
+/// \remarks
+///
 ///
 //----------------------------------------------------------------------------
 tBoolean GPSParse( void )
@@ -197,8 +195,8 @@ tBoolean GPSParse( void )
           }
           else if ( c != '.' )
           {
-            Speed *= 10; 
-            Speed += (c - '0'); 
+            Speed *= 10;
+            Speed += (c - '0');
           }
         }
 
@@ -210,8 +208,8 @@ tBoolean GPSParse( void )
           }
           else if ( c != '.' )
           {
-            Heading *= 10; 
-            Heading += (c - '0'); 
+            Heading *= 10;
+            Heading += (c - '0');
           }
         }
 
@@ -234,31 +232,31 @@ tBoolean GPSParse( void )
 ///
 /// \remarks Must be called only when GPSParse() retuns true, otherwise
 ///          values of Lat, Lon, Heading are unpredictable.
-///          
-///                     destination   +---            
-///                                  /|  ^            
-///                                 / |  |            
-///                                /  |  |            
-///                               /   |  |            
-///                              /    |  |            
-///                    distance /     |  |  latitiude 
+///
+///                     destination   +---
+///                                  /|  ^
+///                                 / |  |
+///                                /  |  |
+///                               /   |  |
+///                              /    |  |
+///                    distance /     |  |  latitiude
 ///                            /      |  |  difference
-///                           /       |  |            
-///                          /        |  |            
-///                         /         |  |            
-///                        /          |  |            
-///                       /  bearing  |  |            
-///                      / ) angle    |  V            
+///                           /       |  |
+///                          /        |  |
+///                         /         |  |
+///                        /          |  |
+///                       /  bearing  |  |
+///                      / ) angle    |  V
 ///          actual     +-------------|---
-///          position   |             |   
-///                     |<----------->|   
-///                                       
-///                       longitude       
-///                       difference      
-///          
+///          position   |             |
+///                     |<----------->|
+///
+///                       longitude
+///                       difference
+///
 ///
 //----------------------------------------------------------------------------
-void Navigate( void ) 
+void Navigate( void )
 {
     unsigned long temp;
 
@@ -270,7 +268,7 @@ void Navigate( void )
       if (Gps_Status & GPS_STATUS_FIX)
       {
         Gps_Status &= ~GPS_STATUS_FIRST;
-        Dest_Lat_Dec = Curr_Lat_Dec; 
+        Dest_Lat_Dec = Curr_Lat_Dec;
         Dest_Lat_Int = Curr_Lat_Int;
         Dest_Lon_Dec = Curr_Lon_Dec;
         Dest_Lon_Int = Curr_Lon_Int;
@@ -285,7 +283,7 @@ void Navigate( void )
     // calculate bearing to destination, works for short distances
     // reuses current lat and lon to save RAM
     //
-    Curr_Lat_Dec = Dest_Lat_Dec - Curr_Lat_Dec; 
+    Curr_Lat_Dec = Dest_Lat_Dec - Curr_Lat_Dec;
     Curr_Lat_Int = Dest_Lat_Int - Curr_Lat_Int;
     if (Curr_Lat_Int > 0)
     {
@@ -332,9 +330,9 @@ void Navigate( void )
 /// \brief   Get GPS fix status
 ///
 /// \returns true if fix
-///          
+///
 /// \remarks -
-///          
+///
 ///
 //----------------------------------------------------------------------------
 tBoolean GPSFix ( void )
@@ -347,10 +345,10 @@ tBoolean GPSFix ( void )
 //
 /// \brief   Get direction to home position
 ///
-/// \returns direction angle in degrees, between 0° and 360° 
-///          
+/// \returns direction angle in degrees, between 0° and 360°
+///
 /// \remarks -
-///          
+///
 ///
 //----------------------------------------------------------------------------
 int GPSDirection ( void )
@@ -361,12 +359,12 @@ int GPSDirection ( void )
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Get current GPS heading 
+/// \brief   Get current GPS heading
 ///
 /// \returns heading angle in degrees,  between 0° and 360°
-///          
+///
 /// \remarks -
-///          
+///
 ///
 //----------------------------------------------------------------------------
 int GPSHeading ( void )
@@ -380,9 +378,9 @@ int GPSHeading ( void )
 /// \brief   Get current North angle
 ///
 /// \returns North angle in degrees,  between 0° and 360°
-///          
+///
 /// \remarks -
-///          
+///
 ///
 //----------------------------------------------------------------------------
 int GPSNorth ( void )
@@ -396,9 +394,9 @@ int GPSNorth ( void )
 /// \brief   Get computed bearing
 ///
 /// \returns bearing angle in degrees,  between -180° and + 180°
-///          
+///
 /// \remarks -
-///          
+///
 ///
 //----------------------------------------------------------------------------
 int GPSBearing ( void )
@@ -412,9 +410,9 @@ int GPSBearing ( void )
 /// \brief   Get distance to destination
 ///
 /// \returns distance in meters
-///          
+///
 /// \remarks -
-///          
+///
 ///
 //----------------------------------------------------------------------------
 unsigned int GPSDistance ( void )
@@ -428,9 +426,9 @@ unsigned int GPSDistance ( void )
 /// \brief   Get speed
 ///
 /// \returns speed in m / s
-///          
+///
 /// \remarks -
-///          
+///
 ///
 //----------------------------------------------------------------------------
 unsigned int GPSSpeed ( void )
@@ -447,9 +445,9 @@ unsigned int GPSSpeed ( void )
 /// \brief   Computes square root
 ///
 /// \returns square root
-///          
-/// \remarks 
-///          
+///
+/// \remarks
+///
 ///
 //----------------------------------------------------------------------------
 static unsigned int root( unsigned long val )
@@ -457,8 +455,8 @@ static unsigned int root( unsigned long val )
     unsigned long rem = 0;
     unsigned long root = 0;
     unsigned char i;
- 
-    for (i = 0; i < 16; i++) 
+
+    for (i = 0; i < 16; i++)
     {
         root <<= 1;
         rem = ((rem << 2) + (val >> 30));
@@ -468,8 +466,8 @@ static unsigned int root( unsigned long val )
         {
             rem -= root;
             root++;
-        } 
-        else 
+        }
+        else
         {
             root--;
         }
@@ -482,12 +480,12 @@ static unsigned int root( unsigned long val )
 //
 /// \brief   get a character from preloaded sentence
 ///
-/// \returns 
-/// \remarks 
-///          
+/// \returns
+/// \remarks
+///
 ///
 //----------------------------------------------------------------------------
-tBoolean 
+tBoolean
 SimulatedGPSChar ( char *ch )
 {
     char c;

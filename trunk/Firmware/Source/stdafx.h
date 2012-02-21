@@ -1,15 +1,13 @@
 //============================================================================
 //
-// $RCSfile: stdafx.h,v $ (HEADER FILE)
-// $Revision: 1.1 $
-// $Date: 2010/02/01 21:42:23 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
 /// \file
 ///             Dummy stdafx.h file for compatibility with Visual studio
-//  CHANGES     
+//  CHANGES
 //
 //============================================================================
 

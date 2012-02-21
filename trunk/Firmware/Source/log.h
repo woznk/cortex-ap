@@ -1,11 +1,10 @@
 //============================================================================
 //
-// $RCSfile: log.h,v $ (HEADER FILE)
-// $Revision: 1.3 $
-// $Date: 2010/04/14 17:36:37 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
-//  LANGUAGE C
 /// \brief   Log manager header file
 //  CHANGES  Log task moved to Log.c
 //

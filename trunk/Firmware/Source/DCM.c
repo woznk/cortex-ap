@@ -1,9 +1,9 @@
 //=============================================================================+
 //
-// $RCSfile: DCM.cpp,v $ (SOURCE FILE)
-// $Revision: 1.8 $
-// $Date: 2011/02/02 18:24:56 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 ///
 /// \brief
 /// Direction Cosine Matrix calculations

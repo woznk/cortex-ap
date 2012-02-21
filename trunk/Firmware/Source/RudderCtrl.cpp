@@ -1,9 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: RudderCtrl.cpp,v $ (SOURCE FILE)
-// $Revision: 1.4 $
-// $Date: 2011/02/02 18:24:27 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief Rudder control
 ///

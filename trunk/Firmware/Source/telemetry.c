@@ -1,8 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: Telemetry.cpp,v $ (SOURCE FILE)
-// $Revision: 1.3 $
-// $Date: 2011/02/02 18:26:44 $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief Simulator interface
 ///

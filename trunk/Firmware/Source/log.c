@@ -1,9 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: $ (SOURCE FILE)
+// $HeadURL: $
 // $Revision: $
-// $Date: $
-// $Author: Lorenz $
+// $Date:  $
+// $Author: $
 //
 /// \brief  Log manager
 ///

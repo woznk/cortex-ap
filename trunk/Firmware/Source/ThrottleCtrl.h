@@ -1,15 +1,13 @@
 //============================================================================
 //
-// $RCSfile: ThrottleCtrl.h,v $ (HEADER FILE)
-// $Revision: 1.1 $
-// $Date: 2010/04/14 17:27:20 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
-//  LANGUAGE    C
-//  DESCRIPTION
 /// \file
-///             
-//  CHANGES     
+///
+//  CHANGES
 //
 //============================================================================
 

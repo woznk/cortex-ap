@@ -1,9 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: ElevatorCtrl.cpp,v $ (SOURCE FILE)
-// $Revision: 1.5 $
-// $Date: 2010/12/30 09:48:04 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 ///
 /// \brief
 /// Elevator control

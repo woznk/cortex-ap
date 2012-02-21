@@ -1,9 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: nav.cpp,v $ (SOURCE FILE)
-// $Revision: 1.4 $
-// $Date: 2011/01/23 17:54:28 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief Navigation task
 ///

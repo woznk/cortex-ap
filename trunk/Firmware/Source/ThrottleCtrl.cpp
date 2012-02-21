@@ -1,9 +1,9 @@
 //============================================================================+
 //
-// $RCSfile: ThrottleCtrl.cpp,v $ (SOURCE FILE)
-// $Revision: 1.3 $
-// $Date: 2010/12/30 10:00:51 $
-// $Author: Lorenz $
+// $HeadURL: $
+// $Revision: $
+// $Date:  $
+// $Author: $
 //
 /// \brief
 ///
