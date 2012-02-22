@@ -6,9 +6,8 @@
 // $Author: $
 //
 /// \file
-/// \brief  Navigation manager header file
-//  CHANGES Navigate() function changed into navigation task
-//          added type definition of gps message
+/// \brief  Navigation task header file
+//  CHANGES removed queue for GPS messages
 //
 //============================================================================
 
@@ -25,17 +24,9 @@
 
 /*------------------------------------ Types ---------------------------------*/
 
-typedef struct
-{
-  uint8_t ucLength;
-  uint16_t *pcData;
-} xGps_Message;
-
 /*---------------------------------- Constants -------------------------------*/
 
 /*----------------------------------- Globals --------------------------------*/
-
-VAR_GLOBAL xQueueHandle xGps_Queue;
 
 /*---------------------------------- Interface -------------------------------*/
 
