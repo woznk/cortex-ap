@@ -20,12 +20,12 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES corrected problem reading waypoint file: it seems that f_read()
-//          function keeps returning FR_OK even if end of file was reached.
-//          To tell EOF, checked if the number of bytes read is 0.
+//  CHANGES added Parse_GPS() and Parse_Coord() functions from gps.c file,
+//          added call to Parse_GPS() inside task endless loop,
+//          removed queue for GPS messages,
+//          navigation task does not suspend.
 //
 //============================================================================*/
-
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -35,7 +35,6 @@
 #include "math.h"
 #include "telemetry.h"
 #include "config.h"
-#include "gps.h"
 #include "ff.h"
 #include "nav.h"
 
@@ -55,6 +54,9 @@
 
 #define FILE_BUFFER_LENGTH  64
 #define MAX_LINE_LENGTH     48
+
+#define GPS_STATUS_FIX      1       // GPS status: satellite fix
+#define GPS_STATUS_FIRST    2       // GPS status: waiting for first fix
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -106,39 +108,45 @@ const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 3
 
 /*---------------------------------- Globals ---------------------------------*/
 
-VAR_GLOBAL xQueueHandle xGps_Queue;
-
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC const char szFileName[16] = "path.txt";  // File name
-VAR_STATIC char szLine[MAX_LINE_LENGTH];            // Input line
-VAR_STATIC char pcBuffer[FILE_BUFFER_LENGTH];       // File data buffer
-VAR_STATIC FATFS stFat;                             // FAT
-VAR_STATIC FIL stFile;                              // File object
-VAR_STATIC UINT wFileBytes;                         // Counter of read bytes
-VAR_STATIC int16_t Bearing;                         // angle to destination [°]
-VAR_STATIC uint16_t Distance;                       // distance to destination [m]
-VAR_STATIC float fDestLat;                          // destination latitude
-VAR_STATIC float fDestLon;                          // destination longitude
-VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
-VAR_STATIC uint16_t uiWptNumber = 1;                // number of waypoints
+VAR_STATIC const char szFileName[16] = "path.txt";  // file name
+VAR_STATIC char szLine[MAX_LINE_LENGTH];            // input line
+VAR_STATIC char pcBuffer[FILE_BUFFER_LENGTH];       // file data buffer
 VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];      // waypoints array
-
-
-float fCurrLat, fCurrLon;
-unsigned char Gps_Status;
+VAR_STATIC FATFS stFat;                             // FAT
+VAR_STATIC FIL stFile;                              // file object
+VAR_STATIC UINT wFileBytes;                         // counter of read bytes
+VAR_STATIC float fLat_Dest;                         // destination latitude
+VAR_STATIC float fLon_Dest;                         // destination longitude
+VAR_STATIC float fLat_Curr;                         // current latitude
+VAR_STATIC float fLon_Curr;                         // current longitude
+VAR_STATIC int iLat_Int;                            // integer part of current latitude
+VAR_STATIC int iLat_Dec;                            // decimal part of current latitude
+VAR_STATIC int iLon_Int;                            // integer part of current longitude
+VAR_STATIC int iLon_Dec;                            // decimal part of current longitude
+VAR_STATIC uint16_t uiSpeed;                        // speed [?]
+VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
+VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
+VAR_STATIC uint16_t uiWptNumber = 1;                // number of waypoints
+VAR_STATIC int16_t iNorth;                          // angle to north [°]
+VAR_STATIC int16_t iBearing;                        // angle to destination [°]
+VAR_STATIC int16_t iHeading;                        // course over ground [°]
+VAR_STATIC uint8_t ucGps_Status;                    // status of GPS
+VAR_STATIC uint8_t ucCommas;                        // counter of commas in NMEA sentence
 
 /*--------------------------------- Prototypes -------------------------------*/
 
 bool Parse_Waypoint(char * pszLine);
-
+void Parse_Coord( int * integer, int * decimal, char c );
+bool Parse_GPS(void);
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Main navigation function
+/// \brief   navigation task
 ///
-/// \remarks Must be called only when GPSParse() returns true, otherwise
-///          values of Lat, Lon, Heading are unpredictable.
+/// \remarks Computation must be started only when Parse_GPS() returns TRUE,
+///          otherwise values of lat, lon, heading are unpredictable.
 ///
 ///                     destination   +---
 ///                                  /|  ^
@@ -170,88 +178,90 @@ bool Parse_Waypoint(char * pszLine);
 //----------------------------------------------------------------------------
 void Navigation_Task( void *pvParameters ) {
 
-    float temp, dlat, dlon;
+    float temp, fLat_Delta, fLon_Delta;
     char c, cCounter;
     char * pcBufferPointer;
     char * pszLinePointer;
     bool bError = TRUE;
-    xGps_Message message;
 
-    pszLinePointer = szLine;                        // Init line pointer
-    cCounter = MAX_LINE_LENGTH - 1;                 // Init char counter
+    pszLinePointer = szLine;                        // init line pointer
+    cCounter = MAX_LINE_LENGTH - 1;                 // init char counter
+    Gps_Status = GPS_STATUS_FIRST;                  // init GPS status
 
     /* Mount file system and open waypoint file */
-
-    if (FR_OK != f_mount(0, &stFat)) {              // Mount the file system.
-        uiWptNumber = 0;                            // No waypoint available
+    if (FR_OK != f_mount(0, &stFat)) {              // mount the file system
+        uiWptNumber = 0;                            // no waypoint available
     } else if (FR_OK != f_open(&stFile, szFileName, FA_READ)) {
-        uiWptNumber = 0;                            // No waypoint available
+        uiWptNumber = 0;                            // no waypoint available
     } else {
-        bError = FALSE;                             // File succesfully open
+        bError = FALSE;                             // file succesfully open
     }
 
     /* Read waypoint file */
     while ((!bError) &&
            (FR_OK == f_read(&stFile, pcBuffer, FILE_BUFFER_LENGTH, &wFileBytes))) {
-        bError = (wFileBytes == 0);                 // Force error if end of file
-        pcBufferPointer = pcBuffer;                 // Init buffer pointer
-        while ((wFileBytes != 0) && (!bError)) {    // Buffer not empty and no error
-            wFileBytes--;                           // Decrease overall counter
-            c = *pcBufferPointer++;                 // Read another char
-            if ( c == 13 ) {                        // Carriage return
-                cCounter = 0;                       // Reached end of line
-            } else if ( c == 10 ) {                 // New line
-                cCounter--;                         // Decrease counter
-            } else {
-                *pszLinePointer++ = c;              // Copy char
-                cCounter--;                         // Decrease counter
+        bError = (wFileBytes == 0);                 // force error if end of file
+        pcBufferPointer = pcBuffer;                 // init buffer pointer
+        while ((wFileBytes != 0) && (!bError)) {    // buffer not empty and no error
+            wFileBytes--;                           // decrease overall counter
+            c = *pcBufferPointer++;                 // read another char
+            if ( c == 13 ) {                        // found carriage return
+                cCounter = 0;                       // reached end of line
+            } else if ( c == 10 ) {                 // found new line
+                cCounter--;                         // decrease counter
+            } else {                                // alphanumeric character
+                *pszLinePointer++ = c;              // copy character
+                cCounter--;                         // decrease counter
             }
-            if (cCounter == 0) {                    // End of line
-                *pszLinePointer = 0;                // Append line delimiter
-                pszLinePointer = szLine;            // Reset line pointer
-                cCounter = MAX_LINE_LENGTH - 1;     // Reset char counter
-                bError = Parse_Waypoint(szLine);    // Parse line
+            if (cCounter == 0) {                    // end of line
+                *pszLinePointer = 0;                // append line delimiter
+                pszLinePointer = szLine;            // reset line pointer
+                cCounter = MAX_LINE_LENGTH - 1;     // reset char counter
+                bError = Parse_Waypoint(szLine);    // parse line for waypoint
             }
         }
     }
-    f_close( &stFile );                             // Close file
+    f_close( &stFile );                             // close file
 
-    /* Wait first GPS fix and save launch position */
-    while ((Gps_Status & GPS_STATUS_FIX) != GPS_STATUS_FIX) {
+    /* Wait first GPS fix */
+    while ((ucGps_Status & GPS_STATUS_FIX) != GPS_STATUS_FIX) {
+        Parse_GPS();                                // keep parsing NMEA sentences
     }
-    Waypoint[0].Lon = fCurrLon;                 // save launch position
-    Waypoint[0].Lat = fCurrLat;
-    if (uiWptNumber != 0) {                     // waypoint file available
-        uiWptIndex = 1;                         // read first waypoint
-    } else {                                    // no waypoint file
-        uiWptIndex = 0;                         // read launch position
+
+    /* Save launch position */
+    Waypoint[0].Lon = fLon_Curr;                    // save launch position
+    Waypoint[0].Lat = fLat_Curr;
+    if (uiWptNumber != 0) {                         // waypoint file available
+        uiWptIndex = 1;                             // read first waypoint
+    } else {                                        // no waypoint file
+        uiWptIndex = 0;                             // use launch position
     }
-    fDestLon = Waypoint[uiWptIndex].Lon;        //
-    fDestLat = Waypoint[uiWptIndex].Lat;        //
+    fLon_Dest = Waypoint[uiWptIndex].Lon;           //
+    fLat_Dest = Waypoint[uiWptIndex].Lat;           //
 
     while (1) {
-        while (xQueueReceive( xGps_Queue, &message, portMAX_DELAY ) != pdPASS) {
-        }
+        if (Parse_GPS()) {                          // new coordinate available
 
-        /* Calculate bearing to destination */
-        dlon = (fDestLon - fCurrLon);
-        dlat = (fDestLat - fCurrLat);
-        Bearing = 90 - (int)((atan2f(dlat, dlon) * 180.0f) / PI);
-        if (Bearing < 0) Bearing = Bearing + 360;
+            /* Calculate bearing to destination */
+            fLon_Delta = (fLon_Dest - fLon_Curr);
+            fLat_Delta = (fLat_Dest - fLat_Curr);
+            iBearing = 90 - (int)((atan2f(fLat_Delta, fLon_Delta) * 180.0f) / PI);
+            if (iBearing < 0) iBearing = iBearing + 360;
 
-        /* compute distance to destination */
-        temp = (sqrtf((dlat * dlat) + (dlon * dlon)) * 111113.7f);
-        Distance = (unsigned int)temp;
+            /* compute distance to destination */
+            temp = (sqrtf((fLat_Delta * fLat_Delta) + (fLon_Delta * fLon_Delta)) * 111113.7f);
+            uiDistance = (unsigned int)temp;
 
-        /* Waypoint reached: next waypoint */
-        if (Distance < MIN_DISTANCE) {
-            if ( uiWptNumber != 0 ) {
-                if ( ++uiWptIndex == uiWptNumber ) {
-                    uiWptIndex = 1;
+            /* Waypoint reached: next waypoint */
+            if (uiDistance < MIN_DISTANCE) {
+                if ( uiWptNumber != 0 ) {
+                    if ( ++uiWptIndex == uiWptNumber ) {
+                        uiWptIndex = 1;
+                    }
                 }
+                fLon_Dest = Waypoint[uiWptIndex].Lon;
+                fLat_Dest = Waypoint[uiWptIndex].Lat;
             }
-            fDestLon = Waypoint[uiWptIndex].Lon;
-            fDestLat = Waypoint[uiWptIndex].Lat;
         }
     }
 }
@@ -283,7 +293,7 @@ uint16_t Nav_WaypointIndex ( void ) {
 ///
 //----------------------------------------------------------------------------
 int16_t Nav_Bearing ( void ) {
-  return Bearing;
+  return iBearing;
 }
 
 
@@ -298,13 +308,13 @@ int16_t Nav_Bearing ( void ) {
 ///
 //----------------------------------------------------------------------------
 uint16_t Nav_Distance ( void ) {
-  return Distance;
+  return uiDistance;
 }
 
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Parse waypoint coordinates
+/// \brief   Parse string for waypoint coordinates
 ///
 /// \returns true if an error occurred, FALSE otherwise
 ///
@@ -318,7 +328,7 @@ uint16_t Nav_Distance ( void ) {
 bool Parse_Waypoint ( char * pszLine ) {
     char c;
     float fTemp, fDiv;
-    unsigned char ucField = 0, ucCounter = MAX_LINE_LENGTH;
+    uint8_t ucField = 0, ucCounter = MAX_LINE_LENGTH;
 
     while (( ucField < 3 ) && ( ucCounter > 0 )) {
         fDiv = 1.0f;                                // initialize divisor
@@ -370,5 +380,93 @@ bool Parse_Waypoint ( char * pszLine ) {
         }
     }
     return FALSE;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Parse NMEA sentence for coordinates
+///
+/// \param   integer : (pointer to) integer part of coordinate
+/// \param   decimal : (pointer to) decimal part of coordinate
+/// \param   c       : character of NMEA sentence
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+void Parse_Coord( int * integer, int * decimal, char c )
+{
+    if ( c == ',' )  {          // comma delimiter
+        *decimal = 0;           // clear decimal part
+    } else if ( c != '.' ) {    // numeric character
+        *decimal *= 10;         // multiply decimal part by 10
+        *decimal += (c - '0');  // add digit to decimal part
+    } else  {                   // decimal point
+        *integer = *decimal;    // save integer part
+        *decimal = 0;           // clear decimal part
+    }
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Parse GPS sentences
+///
+/// \returns true if new coordinate data are available, false otherwise
+/// \remarks
+///
+///
+//----------------------------------------------------------------------------
+bool Parse_GPS( void )
+{
+    char c;
+    bool bResult = FALSE;
+
+    while ( FALSE/*GpsChar(&c)*/ ) {      // received another character
+
+        if ( c == '$' ) ucCommas = 0;     // start of NMEA sentence
+
+        if ( c == ',' ) ucCommas++;       // count ucCommas
+
+        if ( ucCommas == 2 ) {            // get fix info
+           if (c == 'A') {
+             ucGps_Status |= GPS_STATUS_FIX;
+           } else if (c == 'V') {
+             ucGps_Status &= ~GPS_STATUS_FIX;
+           }
+        }
+
+        if ( ucCommas == 3 ) {            // get latitude data (3rd comma)
+          Parse_Coord (&iLat_Int, &iLat_Dec, c);
+        }
+
+        if ( ucCommas == 5 ) {            // get longitude data (5th comma)
+          Parse_Coord (&iLon_Int, &iLon_Dec, c);
+        }
+
+        if ( ucCommas == 7 ) {            // get speed (7th comma)
+          if ( c == ',' ) {
+            uiSpeed = 0;
+          } else if ( c != '.' ) {
+            uiSpeed *= 10;
+            uiSpeed += (c - '0');
+          }
+        }
+
+        if ( ucCommas == 8 ) {            // get heading (8th comma)
+          if ( c == ',' ) {
+            iHeading = 0;
+          } else if ( c != '.' ) {
+            iHeading *= 10;
+            iHeading += (c - '0');
+          }
+        }
+
+        if ((ucCommas == 9) &&            // end of NMEA sentence
+            (ucGps_Status & GPS_STATUS_FIX)) {
+          ucCommas = 10;
+          iHeading /= 10;
+          iNorth = 360 - iHeading;
+          bResult = TRUE;
+        }
+    }
+    return bResult;
 }
 
