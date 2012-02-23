@@ -20,10 +20,7 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES added Parse_GPS() and Parse_Coord() functions from gps.c file,
-//          added call to Parse_GPS() inside task endless loop,
-//          removed queue for GPS messages,
-//          navigation task does not suspend.
+//  CHANGES added Navigation_Init() function with USART initialization
 //
 //============================================================================*/
 
@@ -143,6 +140,50 @@ bool Parse_GPS(void);
 
 //----------------------------------------------------------------------------
 //
+/// \brief   Initialize navigation
+///
+/// \remarks configures USART2.
+///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
+///          for direct register initialization of USART
+///
+//----------------------------------------------------------------------------
+void Navigation_Init( void ) {
+
+    USART_InitTypeDef USART_InitStructure;
+
+    /* Initialize USART structure */
+    USART_InitStructure.USART_BaudRate = 4800;
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_Parity = USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+
+    /* Configure USART2 */
+    USART_Init(USART2, &USART_InitStructure);
+
+    /* Enable USART2 interrupt */
+    //USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+    USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+
+    /* Enable the USART2 */
+    USART_Cmd(USART2, ENABLE);
+/*
+    // make sure the relevant pins are appropriately set up.
+    RCC_APB2ENR |= RCC_APB2ENR_IOPAEN;              // enable clock for GPIOA
+    GPIOA_CRH   |= (0x0BUL << 4);                   // Tx (PA9) alt. out push-pull
+    GPIOA_CRH   |= (0x04UL << 8);                   // Rx (PA10) in floating
+    RCC_APB2ENR |= RCC_APB2ENR_USART1EN;            // enable clock for USART1
+    USART1_BRR  = 64000000L/115200L;                // set baudrate
+    USART1_CR1 |= (USART1_CR1_RE | USART1_CR1_TE);  // RX, TX enable
+    USART1_CR1 |= USART1_CR1_UE;                    // USART enable
+*/
+    Gps_Status = GPS_STATUS_FIRST;                  // init GPS status
+}
+
+
+//----------------------------------------------------------------------------
+//
 /// \brief   navigation task
 ///
 /// \remarks Computation must be started only when Parse_GPS() returns TRUE,
@@ -186,14 +227,13 @@ void Navigation_Task( void *pvParameters ) {
 
     pszLinePointer = szLine;                        // init line pointer
     cCounter = MAX_LINE_LENGTH - 1;                 // init char counter
-    Gps_Status = GPS_STATUS_FIRST;                  // init GPS status
 
     /* Mount file system and open waypoint file */
-    if (FR_OK != f_mount(0, &stFat)) {              // mount the file system
+    if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
         uiWptNumber = 0;                            // no waypoint available
-    } else if (FR_OK != f_open(&stFile, szFileName, FA_READ)) {
+    } else if (FR_OK != f_open(&stFile, szFileName, FA_READ)) { // error opening file
         uiWptNumber = 0;                            // no waypoint available
-    } else {
+    } else {                                        //
         bError = FALSE;                             // file succesfully open
     }
 
@@ -254,8 +294,8 @@ void Navigation_Task( void *pvParameters ) {
 
             /* Waypoint reached: next waypoint */
             if (uiDistance < MIN_DISTANCE) {
-                if ( uiWptNumber != 0 ) {
-                    if ( ++uiWptIndex == uiWptNumber ) {
+                if (uiWptNumber != 0) {
+                    if (++uiWptIndex == uiWptNumber) {
                         uiWptIndex = 1;
                     }
                 }
@@ -334,29 +374,29 @@ bool Parse_Waypoint ( char * pszLine ) {
         fDiv = 1.0f;                                // initialize divisor
         fTemp = 0.0f;                               // initialize temporary
         c = *pszLine++;                             // initialize char
-        // leading spaces
+        /* leading spaces */
         while (( c == ' ' ) && ( ucCounter > 0 )) {
             c = *pszLine++;                         // next char
             ucCounter--;                            // count characters
         }
-        // start of integer part
+        /* start of integer part */
         if (( c < '0' ) || ( c > '9' )) {           //
             return TRUE;                            // first char not numeric
         }
-        // integer part
+        /* integer part */
         while (( c >= '0' ) && ( c <= '9' ) && ( ucCounter > 0 )) {
             fTemp = fTemp * 10.0f + (float)(c - '0'); // accumulate
             c = *pszLine++;                         // next char
             ucCounter--;                            // count characters
         }
-        // decimal point
+        /* decimal point */
         if (( c != '.' ) && ( ucField != 2 )) {     // altitude may lack decimal
             return TRUE;
         } else {
             c = *pszLine++;                         // skip decimal point
             ucCounter--;                            // count characters
         }
-        // fractional part
+        /* fractional part */
         while (( c >= '0' ) && ( c <= '9' ) && ( ucCounter > 0 )) {
             if (fDiv < 1000000.0f) {
                 fTemp = fTemp * 10.0f + (float)(c - '0'); // accumulate
@@ -365,13 +405,13 @@ bool Parse_Waypoint ( char * pszLine ) {
             c = *pszLine++;                         // next char
             ucCounter--;                            // count characters
         }
-        // delimiter
+        /* delimiter */
         if (( c != ',' ) && ( c != 0 )) {
             return TRUE;                            // error
         } else {
             fTemp = fTemp / fDiv;                   // convert
         }
-        // assign
+        /* assign */
         switch ( ucField++ ) {
             case 0: Waypoint[uiWptNumber].Lon = fTemp; break;
             case 1: Waypoint[uiWptNumber].Lat = fTemp; break;
@@ -408,10 +448,9 @@ void Parse_Coord( int * integer, int * decimal, char c )
 //----------------------------------------------------------------------------
 //
 /// \brief   Parse GPS sentences
-///
+/// \param   -
 /// \returns true if new coordinate data are available, false otherwise
-/// \remarks
-///
+/// \remarks -
 ///
 //----------------------------------------------------------------------------
 bool Parse_GPS( void )
@@ -419,13 +458,16 @@ bool Parse_GPS( void )
     char c;
     bool bResult = FALSE;
 
-    while ( FALSE/*GpsChar(&c)*/ ) {      // received another character
+    while ((bResult == FALSE) &&            // NMEA sentence not completed
+           (USART2_SR & USART2_SR_RXNE)) {  // received another character
 
-        if ( c == '$' ) ucCommas = 0;     // start of NMEA sentence
+        c = USART1_DR & 0xFF;               // read character
 
-        if ( c == ',' ) ucCommas++;       // count ucCommas
+        if ( c == '$' ) ucCommas = 0;       // start of NMEA sentence
 
-        if ( ucCommas == 2 ) {            // get fix info
+        if ( c == ',' ) ucCommas++;         // count commas
+
+        if ( ucCommas == 2 ) {              // get fix info
            if (c == 'A') {
              ucGps_Status |= GPS_STATUS_FIX;
            } else if (c == 'V') {
@@ -433,15 +475,15 @@ bool Parse_GPS( void )
            }
         }
 
-        if ( ucCommas == 3 ) {            // get latitude data (3rd comma)
+        if ( ucCommas == 3 ) {              // get latitude data (3rd comma)
           Parse_Coord (&iLat_Int, &iLat_Dec, c);
         }
 
-        if ( ucCommas == 5 ) {            // get longitude data (5th comma)
+        if ( ucCommas == 5 ) {              // get longitude data (5th comma)
           Parse_Coord (&iLon_Int, &iLon_Dec, c);
         }
 
-        if ( ucCommas == 7 ) {            // get speed (7th comma)
+        if ( ucCommas == 7 ) {              // get speed (7th comma)
           if ( c == ',' ) {
             uiSpeed = 0;
           } else if ( c != '.' ) {
@@ -450,7 +492,7 @@ bool Parse_GPS( void )
           }
         }
 
-        if ( ucCommas == 8 ) {            // get heading (8th comma)
+        if ( ucCommas == 8 ) {              // get heading (8th comma)
           if ( c == ',' ) {
             iHeading = 0;
           } else if ( c != '.' ) {
@@ -459,7 +501,7 @@ bool Parse_GPS( void )
           }
         }
 
-        if ((ucCommas == 9) &&            // end of NMEA sentence
+        if ((ucCommas == 9) &&              // end of NMEA sentence
             (ucGps_Status & GPS_STATUS_FIX)) {
           ucCommas = 10;
           iHeading /= 10;
