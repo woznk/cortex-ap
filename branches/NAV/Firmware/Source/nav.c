@@ -20,7 +20,7 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES added Navigation_Init() function with USART initialization
+//  CHANGES replaced direct UART register access with library functions
 //
 //============================================================================*/
 
@@ -178,7 +178,7 @@ void Navigation_Init( void ) {
     USART1_CR1 |= (USART1_CR1_RE | USART1_CR1_TE);  // RX, TX enable
     USART1_CR1 |= USART1_CR1_UE;                    // USART enable
 */
-    Gps_Status = GPS_STATUS_FIRST;                  // init GPS status
+    ucGps_Status = GPS_STATUS_FIRST;                  // init GPS status
 }
 
 
@@ -459,9 +459,9 @@ bool Parse_GPS( void )
     bool bResult = FALSE;
 
     while ((bResult == FALSE) &&            // NMEA sentence not completed
-           (USART2_SR & USART2_SR_RXNE)) {  // received another character
+           (USART_GetFlagStatus(USART2, USART_FLAG_RXNE) == SET)) {  // received another character
 
-        c = USART1_DR & 0xFF;               // read character
+        c = USART_ReceiveData(USART2);      // read character
 
         if ( c == '$' ) ucCommas = 0;       // start of NMEA sentence
 
