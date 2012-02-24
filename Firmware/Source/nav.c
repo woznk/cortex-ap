@@ -20,9 +20,7 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES pcBuffer[] reused as USART receive buffer,
-//          configured NVIC for USART 2 interrupt,
-//          added USART 2 interrupt handler
+//  CHANGES added Nav_Heading() and Nav_Ground_Speed()
 //
 //============================================================================*/
 
@@ -124,7 +122,7 @@ VAR_STATIC int iLat_Int;                            // integer part of current l
 VAR_STATIC int iLat_Dec;                            // decimal part of current latitude
 VAR_STATIC int iLon_Int;                            // integer part of current longitude
 VAR_STATIC int iLon_Dec;                            // decimal part of current longitude
-VAR_STATIC uint16_t uiSpeed;                        // speed [?]
+VAR_STATIC uint16_t uiSpeed;                        // speed [kt]
 VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
 VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
 VAR_STATIC uint16_t uiWptNumber = 1;                // number of waypoints
@@ -322,11 +320,9 @@ void Navigation_Task( void *pvParameters ) {
 //----------------------------------------------------------------------------
 //
 /// \brief   Get waypoint index
-///
+/// \param   -
 /// \returns
-///
 /// \remarks -
-///
 ///
 //----------------------------------------------------------------------------
 uint16_t Nav_WaypointIndex ( void ) {
@@ -336,31 +332,55 @@ uint16_t Nav_WaypointIndex ( void ) {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Get computed bearing
-///
-/// \returns bearing angle in degrees,  between -180° and + 180°
-///
+/// \brief   Get computed bearing [°]
+/// \param   -
+/// \returns bearing angle in degrees, between -180° and + 180°
 /// \remarks -
-///
 ///
 //----------------------------------------------------------------------------
 int16_t Nav_Bearing ( void ) {
   return iBearing;
 }
 
+//----------------------------------------------------------------------------
+//
+/// \brief   Get current heading [°]
+/// \param   -
+/// \returns heading angle in degrees, between 0° and 360°
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+int16_t Nav_Heading ( void )
+{
+  return iHeading;
+}
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Get distance to destination
-///
+/// \brief   Get distance to destination [m]
+/// \param   -
 /// \returns distance in meters
-///
 /// \remarks -
-///
 ///
 //----------------------------------------------------------------------------
 uint16_t Nav_Distance ( void ) {
   return uiDistance;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get ground speed detected by GPS [m/s]
+/// \param   -
+/// \returns TAS in meters / sec
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Nav_Ground_Speed ( void )
+{
+    uint32_t ulTemp;
+
+    ulTemp = ((uint32_t)uiSpeed * 1852) / 36000; // convert [kt] to [m/s]
+    return (uint16_t)ulTemp;
 }
 
 
@@ -527,6 +547,14 @@ bool Parse_GPS( void )
     return bResult;
 }
 
+//----------------------------------------------------------------------------
+//
+/// \brief   GPS USART interrupt handler
+/// \param   -
+/// \returns -
+/// \remarks -
+///
+//----------------------------------------------------------------------------
 void USART2_IRQHandler( void )
 {
 //  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
