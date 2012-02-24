@@ -7,7 +7,7 @@
 //
 /// \file
 /// \brief  Navigation task header file
-//  CHANGES removed queue for GPS messages
+//  CHANGES added Nav_Heading() and Nav_Ground_Speed()
 //
 //============================================================================
 
@@ -32,6 +32,8 @@
 
 void Navigation_Task( void *pvParameters );
 int16_t Nav_Bearing ( void );
+int16_t Nav_Heading ( void );
 uint16_t Nav_Distance ( void );
 uint16_t Nav_WaypointIndex ( void );
+uint16_t Nav_Ground_Speed ( void );
 
