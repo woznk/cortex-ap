@@ -79,8 +79,7 @@
 ///
 /// \endcode
 //
-//  CHANGES speed_3d and cog temporarily set to 0
-//          MatrixUpdate(): modified reading of sensor data
+//  CHANGES speed_3d and cog renamed fGround_Speed and fCourse_Over_Ground
 //
 //=============================================================================+
 
@@ -88,9 +87,9 @@
 
 #include "math.h"
 #include "vmath.h"
-//#include "gps.h"
 //#include "telemetry.h"
 #include "config.h"
+#include "nav.h"
 #include "DCM.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -155,7 +154,7 @@ VAR_GLOBAL float Yaw_Kp = YAW_KP;
 //! Guadagno integrale compensazione imbardata
 VAR_GLOBAL float Yaw_Ki = YAW_KI;
 //! Velocita' 3D
-VAR_GLOBAL float speed_3d = 0.0f;
+VAR_GLOBAL float fGround_Speed = 0.0f;
 
 /*----------------------------------- Locals ---------------------------------*/
 
@@ -275,13 +274,13 @@ void
 AccelAdjust(void)
 {
 #ifndef _WINDOWS
-//    speed_3d = ((float)GPSSpeed());
-      speed_3d = 0.0f;
+//    fGround_Speed = ((float)Nav_Ground_Speed());
+    fGround_Speed = 0.0f;
 #elif (SIMULATOR == SIM_NONE)
-    speed_3d = Sim_Speed();
+    fGround_Speed = Sim_Speed();
 #endif
-    Accel_Vector[1] += ((speed_3d * Omega[2] * 9.81f) / GRAVITY);
-    Accel_Vector[2] -= ((speed_3d * Omega[1] * 9.81f) / GRAVITY);
+    Accel_Vector[1] += ((fGround_Speed * Omega[2] * 9.81f) / GRAVITY);
+    Accel_Vector[2] -= ((fGround_Speed * Omega[1] * 9.81f) / GRAVITY);
 }
 
 
@@ -325,7 +324,7 @@ CompensateDrift( void )
 {
     static float Scaled_Omega_P[3];
     static float Scaled_Omega_I[3];
-    float cog;
+    float fCourse_Over_Ground;
 
     // RollPitch correction
     VectorCrossProduct(&errorRollPitch[0], &Accel_Vector[0], &DCM_Matrix[2][0]);
@@ -337,10 +336,10 @@ CompensateDrift( void )
     //
     // Course over ground
     //
-//    cog = (float)GPSHeading();
-    cog = 0.0f;
-    COGX = cosf(ToRad(cog));
-    COGY = sinf(ToRad(cog));
+//    fCourse_Over_Ground = (float)Nav_Heading();
+    fCourse_Over_Ground = 0.0f;
+    COGX = cosf(ToRad(fCourse_Over_Ground));
+    COGY = sinf(ToRad(fCourse_Over_Ground));
 
     //
     // Yaw correction (ground)
