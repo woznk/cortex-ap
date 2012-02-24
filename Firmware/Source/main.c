@@ -7,7 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: configured clock and I/O pins for USART2
+// Change: added initialization of navigation, restored navigation task.
 //
 //============================================================================*/
 
@@ -30,6 +30,7 @@
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
+#include "nav.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -117,6 +118,7 @@ int main(void)
   PPM_Init();                                       // Initialize capture timers as RRC input
   I2C_MEMS_Init();                                  // I2C peripheral initialization
   Telemetry_Init();                                 // Telemetry initialization
+  Navigation_Init();                                // Navigation initialization
 
   xTelemetry_Queue = xQueueCreate( 3, sizeof( xTelemetry_Message ) );
   while ( xTelemetry_Queue == 0 ) {                 // Halt if queue wasn't created
@@ -128,7 +130,7 @@ int main(void)
 
   xTaskCreate(Attitude_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
-//  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, mainNAVIGATION_PRIORITY, NULL);
+  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, mainNAVIGATION_PRIORITY, NULL);
   xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
   xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
