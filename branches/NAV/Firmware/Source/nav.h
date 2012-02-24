@@ -7,7 +7,7 @@
 //
 /// \file
 /// \brief  Navigation task header file
-//  CHANGES added Nav_Heading() and Nav_Ground_Speed()
+//  CHANGES added initialization of navigation
 //
 //============================================================================
 
@@ -31,6 +31,7 @@
 /*---------------------------------- Interface -------------------------------*/
 
 void Navigation_Task( void *pvParameters );
+void Navigation_Init( void );
 int16_t Nav_Bearing ( void );
 int16_t Nav_Heading ( void );
 uint16_t Nav_Distance ( void );
