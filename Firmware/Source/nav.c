@@ -20,7 +20,9 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES replaced direct UART register access with library functions
+//  CHANGES pcBuffer[] reused as USART receive buffer,
+//          configured NVIC for USART 2 interrupt,
+//          added USART 2 interrupt handler
 //
 //============================================================================*/
 
@@ -49,8 +51,8 @@
 #define MAX_WAYPOINTS       8
 #define MIN_DISTANCE        100
 
-#define FILE_BUFFER_LENGTH  64
-#define MAX_LINE_LENGTH     48
+#define BUFFER_LENGTH       64
+#define LINE_LENGTH         48
 
 #define GPS_STATUS_FIX      1       // GPS status: satellite fix
 #define GPS_STATUS_FIRST    2       // GPS status: waiting for first fix
@@ -107,10 +109,10 @@ const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 3
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC const char szFileName[16] = "path.txt";  // file name
-VAR_STATIC char szLine[MAX_LINE_LENGTH];            // input line
-VAR_STATIC char pcBuffer[FILE_BUFFER_LENGTH];       // file data buffer
 VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];      // waypoints array
+VAR_STATIC const char szFileName[16] = "path.txt";  // file name
+VAR_STATIC char szLine[LINE_LENGTH];                // input line
+VAR_STATIC char pcBuffer[BUFFER_LENGTH];            // data buffer
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // file object
 VAR_STATIC UINT wFileBytes;                         // counter of read bytes
@@ -126,11 +128,12 @@ VAR_STATIC uint16_t uiSpeed;                        // speed [?]
 VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
 VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
 VAR_STATIC uint16_t uiWptNumber = 1;                // number of waypoints
-VAR_STATIC int16_t iNorth;                          // angle to north [°]
 VAR_STATIC int16_t iBearing;                        // angle to destination [°]
 VAR_STATIC int16_t iHeading;                        // course over ground [°]
 VAR_STATIC uint8_t ucGps_Status;                    // status of GPS
 VAR_STATIC uint8_t ucCommas;                        // counter of commas in NMEA sentence
+VAR_STATIC uint8_t ucWindex;                        // USART buffer write index
+VAR_STATIC uint8_t ucRindex;                        // USART buffer read index
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -150,6 +153,7 @@ bool Parse_GPS(void);
 void Navigation_Init( void ) {
 
     USART_InitTypeDef USART_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
 
     /* Initialize USART structure */
     USART_InitStructure.USART_BaudRate = 4800;
@@ -163,13 +167,19 @@ void Navigation_Init( void ) {
     USART_Init(USART2, &USART_InitStructure);
 
     /* Enable USART2 interrupt */
-    //USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
-    USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+    USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+    //USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+
+    /* Configure NVIC for USART 2 interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init( &NVIC_InitStructure );
 
     /* Enable the USART2 */
     USART_Cmd(USART2, ENABLE);
 /*
-    // make sure the relevant pins are appropriately set up.
     RCC_APB2ENR |= RCC_APB2ENR_IOPAEN;              // enable clock for GPIOA
     GPIOA_CRH   |= (0x0BUL << 4);                   // Tx (PA9) alt. out push-pull
     GPIOA_CRH   |= (0x04UL << 8);                   // Rx (PA10) in floating
@@ -178,7 +188,9 @@ void Navigation_Init( void ) {
     USART1_CR1 |= (USART1_CR1_RE | USART1_CR1_TE);  // RX, TX enable
     USART1_CR1 |= USART1_CR1_UE;                    // USART enable
 */
-    ucGps_Status = GPS_STATUS_FIRST;                  // init GPS status
+    ucGps_Status = GPS_STATUS_FIRST;                // init GPS status
+    ucWindex = 0;                                   // clear write index
+    ucRindex = 0;                                   // clear read index
 }
 
 
@@ -226,7 +238,7 @@ void Navigation_Task( void *pvParameters ) {
     bool bError = TRUE;
 
     pszLinePointer = szLine;                        // init line pointer
-    cCounter = MAX_LINE_LENGTH - 1;                 // init char counter
+    cCounter = LINE_LENGTH - 1;                 // init char counter
 
     /* Mount file system and open waypoint file */
     if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
@@ -239,7 +251,7 @@ void Navigation_Task( void *pvParameters ) {
 
     /* Read waypoint file */
     while ((!bError) &&
-           (FR_OK == f_read(&stFile, pcBuffer, FILE_BUFFER_LENGTH, &wFileBytes))) {
+           (FR_OK == f_read(&stFile, pcBuffer, BUFFER_LENGTH, &wFileBytes))) {
         bError = (wFileBytes == 0);                 // force error if end of file
         pcBufferPointer = pcBuffer;                 // init buffer pointer
         while ((wFileBytes != 0) && (!bError)) {    // buffer not empty and no error
@@ -256,7 +268,7 @@ void Navigation_Task( void *pvParameters ) {
             if (cCounter == 0) {                    // end of line
                 *pszLinePointer = 0;                // append line delimiter
                 pszLinePointer = szLine;            // reset line pointer
-                cCounter = MAX_LINE_LENGTH - 1;     // reset char counter
+                cCounter = LINE_LENGTH - 1;     // reset char counter
                 bError = Parse_Waypoint(szLine);    // parse line for waypoint
             }
         }
@@ -368,7 +380,7 @@ uint16_t Nav_Distance ( void ) {
 bool Parse_Waypoint ( char * pszLine ) {
     char c;
     float fTemp, fDiv;
-    uint8_t ucField = 0, ucCounter = MAX_LINE_LENGTH;
+    uint8_t ucField = 0, ucCounter = LINE_LENGTH;
 
     while (( ucField < 3 ) && ( ucCounter > 0 )) {
         fDiv = 1.0f;                                // initialize divisor
@@ -459,9 +471,13 @@ bool Parse_GPS( void )
     bool bResult = FALSE;
 
     while ((bResult == FALSE) &&            // NMEA sentence not completed
-           (USART_GetFlagStatus(USART2, USART_FLAG_RXNE) == SET)) {  // received another character
+           (ucRindex != ucWindex)) {        // received another character
 
-        c = USART_ReceiveData(USART2);      // read character
+        c = pcBuffer[ucRindex++];           // read character
+
+        if (ucRindex >= BUFFER_LENGTH) {    // update read index
+            ucRindex = 0;
+        }
 
         if ( c == '$' ) ucCommas = 0;       // start of NMEA sentence
 
@@ -505,10 +521,24 @@ bool Parse_GPS( void )
             (ucGps_Status & GPS_STATUS_FIX)) {
           ucCommas = 10;
           iHeading /= 10;
-          iNorth = 360 - iHeading;
           bResult = TRUE;
         }
     }
     return bResult;
+}
+
+void USART2_IRQHandler( void )
+{
+//  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+//  portCHAR cChar;
+
+	if (USART_GetITStatus(USART2, USART_IT_RXNE) == SET) {
+//		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
+		pcBuffer[ucWindex++] = USART_ReceiveData( USART2 );
+        if (ucWindex >= BUFFER_LENGTH) {
+            ucWindex = 0;
+        }
+	}
+//	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 }
 
