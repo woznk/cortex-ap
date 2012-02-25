@@ -7,7 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: added initialization of navigation, restored navigation task.
+// Change: initialization of telemetry and navigation moved inside respective tasks
 //
 //============================================================================*/
 
@@ -117,8 +117,6 @@ int main(void)
   Servo_Init();                                     // Initialize PWM timers as servo outputs
   PPM_Init();                                       // Initialize capture timers as RRC input
   I2C_MEMS_Init();                                  // I2C peripheral initialization
-  Telemetry_Init();                                 // Telemetry initialization
-  Navigation_Init();                                // Navigation initialization
 
   xTelemetry_Queue = xQueueCreate( 3, sizeof( xTelemetry_Message ) );
   while ( xTelemetry_Queue == 0 ) {                 // Halt if queue wasn't created
