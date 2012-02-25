@@ -20,7 +20,10 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES added Nav_Heading() and Nav_Ground_Speed()
+//  CHANGES added function Load_Path() to read waypoints from SD card,
+//          Navigation_Init() renamed GPS_Init() and called inside navigation 
+//          task after Load_Path() to avoid conflicts on pcBuffer[] array,
+//          added static prefix to all static functions
 //
 //============================================================================*/
 
@@ -46,11 +49,11 @@
 #endif
 #define   VAR_GLOBAL
 
-#define MAX_WAYPOINTS       8
-#define MIN_DISTANCE        100
+#define MAX_WAYPOINTS       8       // Maximum number of waypoints
+#define MIN_DISTANCE        100     // Minimum distance from waypoint [m]
 
-#define BUFFER_LENGTH       64
-#define LINE_LENGTH         48
+#define BUFFER_LENGTH       64      // Length of buffer for file and USART
+#define LINE_LENGTH         48      // Length of lines read from file
 
 #define GPS_STATUS_FIX      1       // GPS status: satellite fix
 #define GPS_STATUS_FIRST    2       // GPS status: waiting for first fix
@@ -135,20 +138,163 @@ VAR_STATIC uint8_t ucRindex;                        // USART buffer read index
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-bool Parse_Waypoint(char * pszLine);
-void Parse_Coord( int * integer, int * decimal, char c );
-bool Parse_GPS(void);
+static void Load_Path( void );
+static void GPS_Init( void );
+static bool Parse_Waypoint ( char * pszLine );
+static void Parse_Coord( int * integer, int * decimal, char c );
+static bool Parse_GPS( void );
+
+//----------------------------------------------------------------------------
+//
+/// \brief   navigation task
+///
+/// \remarks Computation must be started only when Parse_GPS() returns TRUE,
+///          otherwise values of lat, lon, heading are unpredictable.
+///
+///                     destination   +---
+///                                  /|  ^
+///                                 / |  |
+///                                /  |  |
+///                               /   |  |
+///                              /    |  |
+///                    distance /     |  |  latitiude
+///                            /      |  |  difference
+///                           /       |  |
+///                          /        |  |
+///                         /         |  |
+///                        /          |  |
+///                       /  bearing  |  |
+///                      / ) angle    |  V
+///          actual     +-------------|---
+///          position   |             |
+///                     |<----------->|
+///
+///                       longitude
+///                       difference
+///
+///
+/// Bearing formula works for short distances.
+/// Bearing is positive in CCW direction, heading is positive in CW direction
+/// Bearing reference is rotated 90° CW with respect to heading reference
+///
+///
+//----------------------------------------------------------------------------
+void Navigation_Task( void *pvParameters ) {
+
+    float temp, fLat_Delta, fLon_Delta;
+
+    Load_Path();                                    // load path from SD card
+    GPS_Init();                                     // initialize USART for GPS
+
+    /* Wait first GPS fix */
+    while ((ucGps_Status & GPS_STATUS_FIX) != GPS_STATUS_FIX) {
+        Parse_GPS();                                // keep parsing NMEA sentences
+    }
+
+    /* Save launch position */
+    Waypoint[0].Lon = fLon_Curr;                    // save launch position
+    Waypoint[0].Lat = fLat_Curr;
+    if (uiWptNumber != 0) {                         // waypoint file available
+        uiWptIndex = 1;                             // read first waypoint
+    } else {                                        // no waypoint file
+        uiWptIndex = 0;                             // use launch position
+    }
+    fLon_Dest = Waypoint[uiWptIndex].Lon;           //
+    fLat_Dest = Waypoint[uiWptIndex].Lat;           //
+
+    while (1) {
+        if (Parse_GPS()) {                          // new coordinate available
+
+            /* Calculate bearing to destination */
+            fLon_Delta = (fLon_Dest - fLon_Curr);
+            fLat_Delta = (fLat_Dest - fLat_Curr);
+            iBearing = 90 - (int)((atan2f(fLat_Delta, fLon_Delta) * 180.0f) / PI);
+            if (iBearing < 0) iBearing = iBearing + 360;
+
+            /* compute distance to destination */
+            temp = (sqrtf((fLat_Delta * fLat_Delta) + (fLon_Delta * fLon_Delta)) * 111113.7f);
+            uiDistance = (unsigned int)temp;
+
+            /* Waypoint reached: next waypoint */
+            if (uiDistance < MIN_DISTANCE) {
+                if (uiWptNumber != 0) {
+                    if (++uiWptIndex == uiWptNumber) {
+                        uiWptIndex = 1;
+                    }
+                }
+                fLon_Dest = Waypoint[uiWptIndex].Lon;
+                fLat_Dest = Waypoint[uiWptIndex].Lat;
+            }
+        }
+    }
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Load path from file on SD card
+/// \param   -
+/// \return  -
+/// \remarks pcBuffer[] array is used for file reading.
+///          USART 2 must be disabled because it uses same array for reception.
+///
+//----------------------------------------------------------------------------
+static void Load_Path( void ) {
+
+    char c, cCounter;
+    char * pcBufferPointer;
+    char * pszLinePointer;
+    bool bError = TRUE;
+
+    pszLinePointer = szLine;                        // init line pointer
+    cCounter = LINE_LENGTH - 1;                     // init char counter
+
+    /* Mount file system and open waypoint file */
+    if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
+        uiWptNumber = 0;                            // no waypoint available
+    } else if (FR_OK != f_open(&stFile, szFileName, FA_READ)) { // error opening file
+        uiWptNumber = 0;                            // no waypoint available
+    } else {                                        //
+        bError = FALSE;                             // file succesfully open
+    }
+
+    /* Read waypoint file */
+    while ((!bError) &&
+           (FR_OK == f_read(&stFile, pcBuffer, BUFFER_LENGTH, &wFileBytes))) {
+        bError = (wFileBytes == 0);                 // force error if end of file
+        pcBufferPointer = pcBuffer;                 // init buffer pointer
+        while ((wFileBytes != 0) && (!bError)) {    // buffer not empty and no error
+            wFileBytes--;                           // decrease overall counter
+            c = *pcBufferPointer++;                 // read another char
+            if ( c == 13 ) {                        // found carriage return
+                cCounter = 0;                       // reached end of line
+            } else if ( c == 10 ) {                 // found new line
+                cCounter--;                         // decrease counter
+            } else {                                // alphanumeric character
+                *pszLinePointer++ = c;              // copy character
+                cCounter--;                         // decrease counter
+            }
+            if (cCounter == 0) {                    // end of line
+                *pszLinePointer = 0;                // append line delimiter
+                pszLinePointer = szLine;            // reset line pointer
+                cCounter = LINE_LENGTH - 1;         // reset char counter
+                bError = Parse_Waypoint(szLine);    // parse line for waypoint
+            }
+        }
+    }
+    f_close( &stFile );                             // close file
+}
 
 //----------------------------------------------------------------------------
 //
 /// \brief   Initialize navigation
-///
+/// \param   -
+/// \return  -
 /// \remarks configures USART2.
 ///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
 ///          for direct register initialization of USART
 ///
 //----------------------------------------------------------------------------
-void Navigation_Init( void ) {
+static void GPS_Init( void ) {
 
     USART_InitTypeDef USART_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -194,198 +340,6 @@ void Navigation_Init( void ) {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   navigation task
-///
-/// \remarks Computation must be started only when Parse_GPS() returns TRUE,
-///          otherwise values of lat, lon, heading are unpredictable.
-///
-///                     destination   +---
-///                                  /|  ^
-///                                 / |  |
-///                                /  |  |
-///                               /   |  |
-///                              /    |  |
-///                    distance /     |  |  latitiude
-///                            /      |  |  difference
-///                           /       |  |
-///                          /        |  |
-///                         /         |  |
-///                        /          |  |
-///                       /  bearing  |  |
-///                      / ) angle    |  V
-///          actual     +-------------|---
-///          position   |             |
-///                     |<----------->|
-///
-///                       longitude
-///                       difference
-///
-///
-/// Bearing formula works for short distances.
-/// Bearing is positive in CCW direction, heading is positive in CW direction
-/// Bearing reference is rotated 90° CW with respect to heading reference
-///
-///
-//----------------------------------------------------------------------------
-void Navigation_Task( void *pvParameters ) {
-
-    float temp, fLat_Delta, fLon_Delta;
-    char c, cCounter;
-    char * pcBufferPointer;
-    char * pszLinePointer;
-    bool bError = TRUE;
-
-    pszLinePointer = szLine;                        // init line pointer
-    cCounter = LINE_LENGTH - 1;                 // init char counter
-
-    /* Mount file system and open waypoint file */
-    if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
-        uiWptNumber = 0;                            // no waypoint available
-    } else if (FR_OK != f_open(&stFile, szFileName, FA_READ)) { // error opening file
-        uiWptNumber = 0;                            // no waypoint available
-    } else {                                        //
-        bError = FALSE;                             // file succesfully open
-    }
-
-    /* Read waypoint file */
-    while ((!bError) &&
-           (FR_OK == f_read(&stFile, pcBuffer, BUFFER_LENGTH, &wFileBytes))) {
-        bError = (wFileBytes == 0);                 // force error if end of file
-        pcBufferPointer = pcBuffer;                 // init buffer pointer
-        while ((wFileBytes != 0) && (!bError)) {    // buffer not empty and no error
-            wFileBytes--;                           // decrease overall counter
-            c = *pcBufferPointer++;                 // read another char
-            if ( c == 13 ) {                        // found carriage return
-                cCounter = 0;                       // reached end of line
-            } else if ( c == 10 ) {                 // found new line
-                cCounter--;                         // decrease counter
-            } else {                                // alphanumeric character
-                *pszLinePointer++ = c;              // copy character
-                cCounter--;                         // decrease counter
-            }
-            if (cCounter == 0) {                    // end of line
-                *pszLinePointer = 0;                // append line delimiter
-                pszLinePointer = szLine;            // reset line pointer
-                cCounter = LINE_LENGTH - 1;     // reset char counter
-                bError = Parse_Waypoint(szLine);    // parse line for waypoint
-            }
-        }
-    }
-    f_close( &stFile );                             // close file
-
-    /* Wait first GPS fix */
-    while ((ucGps_Status & GPS_STATUS_FIX) != GPS_STATUS_FIX) {
-        Parse_GPS();                                // keep parsing NMEA sentences
-    }
-
-    /* Save launch position */
-    Waypoint[0].Lon = fLon_Curr;                    // save launch position
-    Waypoint[0].Lat = fLat_Curr;
-    if (uiWptNumber != 0) {                         // waypoint file available
-        uiWptIndex = 1;                             // read first waypoint
-    } else {                                        // no waypoint file
-        uiWptIndex = 0;                             // use launch position
-    }
-    fLon_Dest = Waypoint[uiWptIndex].Lon;           //
-    fLat_Dest = Waypoint[uiWptIndex].Lat;           //
-
-    while (1) {
-        if (Parse_GPS()) {                          // new coordinate available
-
-            /* Calculate bearing to destination */
-            fLon_Delta = (fLon_Dest - fLon_Curr);
-            fLat_Delta = (fLat_Dest - fLat_Curr);
-            iBearing = 90 - (int)((atan2f(fLat_Delta, fLon_Delta) * 180.0f) / PI);
-            if (iBearing < 0) iBearing = iBearing + 360;
-
-            /* compute distance to destination */
-            temp = (sqrtf((fLat_Delta * fLat_Delta) + (fLon_Delta * fLon_Delta)) * 111113.7f);
-            uiDistance = (unsigned int)temp;
-
-            /* Waypoint reached: next waypoint */
-            if (uiDistance < MIN_DISTANCE) {
-                if (uiWptNumber != 0) {
-                    if (++uiWptIndex == uiWptNumber) {
-                        uiWptIndex = 1;
-                    }
-                }
-                fLon_Dest = Waypoint[uiWptIndex].Lon;
-                fLat_Dest = Waypoint[uiWptIndex].Lat;
-            }
-        }
-    }
-}
-
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Get waypoint index
-/// \param   -
-/// \returns
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-uint16_t Nav_WaypointIndex ( void ) {
-  return uiWptIndex;
-}
-
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Get computed bearing [°]
-/// \param   -
-/// \returns bearing angle in degrees, between -180° and + 180°
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-int16_t Nav_Bearing ( void ) {
-  return iBearing;
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Get current heading [°]
-/// \param   -
-/// \returns heading angle in degrees, between 0° and 360°
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-int16_t Nav_Heading ( void )
-{
-  return iHeading;
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Get distance to destination [m]
-/// \param   -
-/// \returns distance in meters
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-uint16_t Nav_Distance ( void ) {
-  return uiDistance;
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Get ground speed detected by GPS [m/s]
-/// \param   -
-/// \returns TAS in meters / sec
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-uint16_t Nav_Ground_Speed ( void )
-{
-    uint32_t ulTemp;
-
-    ulTemp = ((uint32_t)uiSpeed * 1852) / 36000; // convert [kt] to [m/s]
-    return (uint16_t)ulTemp;
-}
-
-
-//----------------------------------------------------------------------------
-//
 /// \brief   Parse string for waypoint coordinates
 ///
 /// \returns true if an error occurred, FALSE otherwise
@@ -397,7 +351,7 @@ uint16_t Nav_Ground_Speed ( void )
 ///          [.[a]] is an optional decimal point with an optional decimal data
 ///
 //----------------------------------------------------------------------------
-bool Parse_Waypoint ( char * pszLine ) {
+static bool Parse_Waypoint ( char * pszLine ) {
     char c;
     float fTemp, fDiv;
     uint8_t ucField = 0, ucCounter = LINE_LENGTH;
@@ -464,7 +418,7 @@ bool Parse_Waypoint ( char * pszLine ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-void Parse_Coord( int * integer, int * decimal, char c )
+static void Parse_Coord( int * integer, int * decimal, char c )
 {
     if ( c == ',' )  {          // comma delimiter
         *decimal = 0;           // clear decimal part
@@ -485,7 +439,7 @@ void Parse_Coord( int * integer, int * decimal, char c )
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-bool Parse_GPS( void )
+static bool Parse_GPS( void )
 {
     char c;
     bool bResult = FALSE;
@@ -568,5 +522,71 @@ void USART2_IRQHandler( void )
         }
 	}
 //	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get waypoint index
+/// \param   -
+/// \returns waypoint index
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Nav_WaypointIndex ( void ) {
+  return uiWptIndex;
+}
+
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get computed bearing [°]
+/// \param   -
+/// \returns bearing angle in degrees, between -180° and + 180°
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+int16_t Nav_Bearing ( void ) {
+  return iBearing;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get current heading [°]
+/// \param   -
+/// \returns heading angle in degrees, between 0° and 360°
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+int16_t Nav_Heading ( void )
+{
+  return iHeading;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get distance to destination [m]
+/// \param   -
+/// \returns distance in meters
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Nav_Distance ( void ) {
+  return uiDistance;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get ground speed detected by GPS [m/s]
+/// \param   -
+/// \returns TAS in meters / sec
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Nav_Ground_Speed ( void )
+{
+    uint32_t ulTemp;
+
+    ulTemp = ((uint32_t)uiSpeed * 1852) / 36000; // convert [kt] to [m/s]
+    return (uint16_t)ulTemp;
 }
 
