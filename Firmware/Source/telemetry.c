@@ -43,7 +43,8 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES temporarily commented erroneous code
+//  CHANGES Telemetry_Init() called inside telemetry task,
+//          added static prefix to all static functions
 //
 //============================================================================*/
 
@@ -143,11 +144,36 @@ VAR_STATIC float pfSensorSign[8] = {
 #if (TELEMETRY_DEBUG == 1)
 bool Debug_GetChar ( char *ch );
 #endif
+static void Telemetry_Init( void );
+static void Telemetry_Send_Message(uint16_t *data, uint8_t num);
+static void Telemetry_Send_DCM( void );
+static bool Telemetry_Parse( void );
+static void Telemetry_Send_Controls( void );
+static void Telemetry_Send_Waypoint( void );
 
 /*---------------------------------- Functions -------------------------------*/
 
 #ifndef _WINDOWS
 
+///----------------------------------------------------------------------------
+///
+/// \brief  telemetry task
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Telemetry_Task( void *pvParameters )
+{
+    xTelemetry_Message message;
+
+    Telemetry_Init();       // Telemetry initialization
+
+    while (1) {
+        while (xQueueReceive( xTelemetry_Queue, &message, portMAX_DELAY ) != pdPASS) {
+        }
+        Telemetry_Send_Message(message.pcData, message.ucLength);
+    }
+}
 
 //----------------------------------------------------------------------------
 //
@@ -158,7 +184,7 @@ bool Debug_GetChar ( char *ch );
 ///          for direct register initialization of USART 1
 ///
 //----------------------------------------------------------------------------
-void Telemetry_Init( void ) {
+static void Telemetry_Init( void ) {
 
     USART_InitTypeDef USART_InitStructure;
 
@@ -188,7 +214,7 @@ void Telemetry_Init( void ) {
 ///
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Send_Message(uint16_t *data, uint8_t num)
+static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 {
     long l_temp;
     uint8_t digit, i, j = 0;
@@ -222,7 +248,7 @@ void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 ///
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Send_DCM(void) {
+static void Telemetry_Send_DCM(void) {
 
     uint8_t x, y, j = 0;
     unsigned char ucDigit;
@@ -251,25 +277,6 @@ void Telemetry_Send_DCM(void) {
     }
 }
 
-
-///----------------------------------------------------------------------------
-///
-/// \brief
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void Telemetry_Task( void *pvParameters )
-{
-    xTelemetry_Message message;
-
-    while (1) {
-        while (xQueueReceive( xTelemetry_Queue, &message, portMAX_DELAY ) != pdPASS) {
-        }
-        Telemetry_Send_Message(message.pcData, message.ucLength);
-    }
-}
-
 //----------------------------------------------------------------------------
 //
 /// \brief   parse telemetry data
@@ -279,7 +286,7 @@ void Telemetry_Task( void *pvParameters )
 ///
 ///
 //----------------------------------------------------------------------------
-bool Telemetry_Parse ( void )
+static bool Telemetry_Parse ( void )
 {
     char c;
     bool bResult;
@@ -463,7 +470,7 @@ bool Telemetry_Parse ( void )
 ///
 ///
 //----------------------------------------------------------------------------
-void Telemetry_Send_Controls(void)
+static void Telemetry_Send_Controls(void)
 {
     float *pfBuff;
     unsigned char cData[20];
@@ -494,7 +501,7 @@ void Telemetry_Send_Controls(void)
 ///
 ///
 //----------------------------------------------------------------------------
-void Telemetry_Send_Waypoint(void)
+static void Telemetry_Send_Waypoint(void)
 {
     unsigned int *puiBuff;
     unsigned char cData[8];
@@ -560,8 +567,7 @@ float Sim_GetData(int n) {
 /// \remarks
 ///
 ///----------------------------------------------------------------------------
-float
-Sim_Speed(void) {
+float Sim_Speed(void) {
 //    return fSimTAS;
     return fSimCOG;
 }
