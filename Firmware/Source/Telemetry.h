@@ -8,7 +8,7 @@
 /// \brief Simulation interface
 /// \file
 ///
-//  CHANGES added telemetry task
+//  CHANGES unused interface functions made static
 //
 //============================================================================
 
@@ -25,8 +25,7 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
-typedef struct
-{
+typedef struct {
   uint8_t ucLength;
   uint16_t *pcData;
 } xTelemetry_Message;
@@ -39,11 +38,7 @@ VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 
 /*---------------------------------- Interface -------------------------------*/
 
-void Telemetry_Init( void ) ;
 void Telemetry_Task( void *pvParameters );
-bool Telemetry_Parse ( void );
-void Telemetry_Send_Controls ( void );
-void Telemetry_Send_Waypoint ( void );
 bool Sim_Settled ( void ) ;
 float Sim_Speed ( void );
 float Sim_GetData ( int n );
