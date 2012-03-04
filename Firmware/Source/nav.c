@@ -20,10 +20,7 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES added function Load_Path() to read waypoints from SD card,
-//          Navigation_Init() renamed GPS_Init() and called inside navigation 
-//          task after Load_Path() to avoid conflicts on pcBuffer[] array,
-//          added static prefix to all static functions
+//  CHANGES Bearing type changed to float, initialized navigation PID coeff.
 //
 //============================================================================*/
 
@@ -36,6 +33,7 @@
 #include "telemetry.h"
 #include "config.h"
 #include "ff.h"
+#include "pid.h"
 #include "nav.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -129,12 +127,13 @@ VAR_STATIC uint16_t uiSpeed;                        // speed [kt]
 VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
 VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
 VAR_STATIC uint16_t uiWptNumber = 1;                // number of waypoints
-VAR_STATIC int16_t iBearing;                        // angle to destination [°]
+VAR_STATIC float fBearing;                          // angle to destination [°]
 VAR_STATIC int16_t iHeading;                        // course over ground [°]
 VAR_STATIC uint8_t ucGps_Status;                    // status of GPS
 VAR_STATIC uint8_t ucCommas;                        // counter of commas in NMEA sentence
 VAR_STATIC uint8_t ucWindex;                        // USART buffer write index
 VAR_STATIC uint8_t ucRindex;                        // USART buffer read index
+VAR_STATIC xPID Nav_Pid;                            // Navigation PID loop
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -186,6 +185,14 @@ void Navigation_Task( void *pvParameters ) {
     Load_Path();                                    // load path from SD card
     GPS_Init();                                     // initialize USART for GPS
 
+    Nav_Pid.fGain = 1.0f;
+    Nav_Pid.fMin = -1.0f;
+    Nav_Pid.fMax = 1.0f;
+    Nav_Pid.fKp = 1.0f;
+    Nav_Pid.fKi = 0.0f;
+    Nav_Pid.fKd = 0.0f;
+    PID_Init(&Nav_Pid);
+
     /* Wait first GPS fix */
     while ((ucGps_Status & GPS_STATUS_FIX) != GPS_STATUS_FIX) {
         Parse_GPS();                                // keep parsing NMEA sentences
@@ -208,9 +215,26 @@ void Navigation_Task( void *pvParameters ) {
             /* Calculate bearing to destination */
             fLon_Delta = (fLon_Dest - fLon_Curr);
             fLat_Delta = (fLat_Dest - fLat_Curr);
-            iBearing = 90 - (int)((atan2f(fLat_Delta, fLon_Delta) * 180.0f) / PI);
-            if (iBearing < 0) iBearing = iBearing + 360;
+            fBearing = 90.0f - ((atan2f(fLat_Delta, fLon_Delta) * 180.0f) / PI);
+            if (fBearing < 0.0f) fBearing = fBearing + 360.0f;
+/*
+            // Compute X and Y components of desired direction
+            desired_x = cosf( ( fBearing * PI ) / 180.0f ) ;
+            desired_y = sinf( ( fBearing * PI ) / 180.0f ) ;
 
+            // Get X and Y components of actual direction
+            actual_x = DCM_Matrix[0][0] ;
+            actual_y = DCM_Matrix[1][0] ;
+
+            // Compute cosine of angle between desired and actual direction
+            dot_prod = (actual_x * desired_x) + (actual_y * desired_y);
+
+            // Compute sine of angle between desired and actual direction
+            cross_prod = (actual_x * desired_y) - (actual_y * desired_x);
+
+            // PID controller
+            fOutput = PID_Compute(&Nav_Pid, fBearing, fInput);
+*/
             /* compute distance to destination */
             temp = (sqrtf((fLat_Delta * fLat_Delta) + (fLon_Delta * fLon_Delta)) * 111113.7f);
             uiDistance = (unsigned int)temp;
@@ -546,7 +570,7 @@ uint16_t Nav_WaypointIndex ( void ) {
 ///
 //----------------------------------------------------------------------------
 int16_t Nav_Bearing ( void ) {
-  return iBearing;
+  return (int16_t)fBearing;
 }
 
 //----------------------------------------------------------------------------
