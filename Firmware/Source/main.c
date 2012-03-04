@@ -7,7 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: initialization of telemetry and navigation moved inside respective tasks
+// Change: increased stack size for navigation task
 //
 //============================================================================*/
 
@@ -128,7 +128,7 @@ int main(void)
 
   xTaskCreate(Attitude_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
-  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, mainNAVIGATION_PRIORITY, NULL);
+  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 128, NULL, mainNAVIGATION_PRIORITY, NULL);
   xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
   xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
