@@ -7,7 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: attitude task moved here from main.c
+// Change: used aileron channel instead of rudder, reversed sign of PID gains
 //
 //============================================================================*/
 
@@ -118,14 +118,14 @@ void Attitude_Task(void *pvParameters)
     L3G4200_Init();                                 // init L3G4200 gyro
     ADXL345_Init();                                 // init ADXL345 accelerometer
 
-    Roll_Pid.fGain = 500.0f;
+    Roll_Pid.fGain = -500.0f;
     Roll_Pid.fMin = -1.0f;
     Roll_Pid.fMax = 1.0f;
     Roll_Pid.fKp = 1.0f;
     Roll_Pid.fKi = 0.0f;
     Roll_Pid.fKd = 0.0f;
 
-    Pitch_Pid.fGain = 500.0f;
+    Pitch_Pid.fGain = -500.0f;
     Pitch_Pid.fMin = -1.0f;
     Pitch_Pid.fMax = 1.0f;
     Pitch_Pid.fKp = 1.0f;
@@ -223,7 +223,7 @@ void Attitude_Task(void *pvParameters)
 ///----------------------------------------------------------------------------
 static __inline void Attitude_Control(void)
 {
-    iRudder = PPMGetChannel(RUDDER_CHANNEL);
+    iRudder = PPMGetChannel(AILERON_CHANNEL);
     iElevator = PPMGetChannel(ELEVATOR_CHANNEL);
 
     switch (PPMGetMode()) {
