@@ -7,7 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: used aileron channel instead of rudder, reversed sign of PID gains
+// Change: restored positive sign of PID gains
 //
 //============================================================================*/
 
@@ -118,14 +118,14 @@ void Attitude_Task(void *pvParameters)
     L3G4200_Init();                                 // init L3G4200 gyro
     ADXL345_Init();                                 // init ADXL345 accelerometer
 
-    Roll_Pid.fGain = -500.0f;
+    Roll_Pid.fGain = 500.0f;
     Roll_Pid.fMin = -1.0f;
     Roll_Pid.fMax = 1.0f;
     Roll_Pid.fKp = 1.0f;
     Roll_Pid.fKi = 0.0f;
     Roll_Pid.fKd = 0.0f;
 
-    Pitch_Pid.fGain = -500.0f;
+    Pitch_Pid.fGain = 500.0f;
     Pitch_Pid.fMin = -1.0f;
     Pitch_Pid.fMax = 1.0f;
     Pitch_Pid.fKp = 1.0f;
