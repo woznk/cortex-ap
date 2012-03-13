@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES swapped elevator and rudder servos
+//  CHANGES added array iServoSign[] for servo reversal
 //
 //============================================================================*/
 
@@ -44,11 +44,12 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
-/*
-VAR_STATIC float fElevatorGain = 500.0f;  //!< Elevator servo conversion gain
-VAR_STATIC float fRudderGain = 500.0f;    //!< Rudder servo conversion gain
-VAR_STATIC float fAileronGain = 500.0f;   //!< Aileron servo conversion gain
-*/
+VAR_STATIC int16_t iServoSign[SERVO_NUMBER] = {
+    -1,  // aileron reversed
+     1,  // rudder normal
+    -1,  // elevator reversed
+     1   // throttle normal
+};
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -130,6 +131,9 @@ void Servo_Init(void) {
 void Servo_Set(SERVO_TYPE servo, int16_t position) {
 
    SATURATE(position);
+   position -= SERVO_NEUTRAL;
+   position *= iServoSign[servo];
+   position += SERVO_NEUTRAL;
 
    switch (servo) {
       case SERVO_AILERON :
