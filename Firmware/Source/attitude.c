@@ -7,7 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: restored positive sign of PID gains
+// Change: logged all PPM channels
 //
 //============================================================================*/
 
@@ -192,9 +192,13 @@ void Attitude_Task(void *pvParameters)
 #endif
         /* Log PPM channels */
 #if (LOG_PPM == 1)
-        iMessage_Buffer[0] = (int16_t)PPMGetChannel(RUDDER_CHANNEL);
+        iMessage_Buffer[0] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
         iMessage_Buffer[1] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
-        message.ucLength = 2;                        // message length
+        iMessage_Buffer[2] = (int16_t)PPMGetChannel(MODE_CHANNEL);
+        iMessage_Buffer[3] = (int16_t)PPMGetChannel(THROTTLE_CHANNEL);
+        iMessage_Buffer[4] = (int16_t)PPMGetChannel(RUDDER_CHANNEL);
+
+        message.ucLength = 5;                        // message length
         message.pcData = (uint16_t *)iMessage_Buffer; // message content
         xQueueSend( xLog_Queue, &message, 0 );
 #endif
