@@ -20,7 +20,7 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES Bearing type changed to float, initialized navigation PID coeff.
+//  CHANGES modified bearing computation
 //
 //============================================================================*/
 
@@ -215,8 +215,9 @@ void Navigation_Task( void *pvParameters ) {
             /* Calculate bearing to destination */
             fLon_Delta = (fLon_Dest - fLon_Curr);
             fLat_Delta = (fLat_Dest - fLat_Curr);
-            fBearing = 90.0f - ((atan2f(fLat_Delta, fLon_Delta) * 180.0f) / PI);
-            if (fBearing < 0.0f) fBearing = fBearing + 360.0f;
+            fBearing = 90.0f + ((atan2f(fLat_Delta, fLon_Delta) * 180.0f) / PI);
+            if (fBearing > 180.0f) fBearing = fBearing - 360.0f;
+            if (fBearing > -180.0f) fBearing = fBearing + 360.0f;
 /*
             // Compute X and Y components of desired direction
             desired_x = cosf( ( fBearing * PI ) / 180.0f ) ;
