@@ -20,7 +20,9 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES modified bearing computation
+//  CHANGES modified computation of bank angle setpoint
+//          added initialization of variables at beginning of navigation task
+//          modified Nav_Ground_Speed(), returns speed in knots
 //
 //============================================================================*/
 
@@ -29,6 +31,7 @@
 #include "queue.h"
 
 #include "stm32f10x.h"
+#include "dcm.h"
 #include "math.h"
 #include "telemetry.h"
 #include "config.h"
@@ -115,20 +118,21 @@ VAR_STATIC char pcBuffer[BUFFER_LENGTH];            // data buffer
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // file object
 VAR_STATIC UINT wFileBytes;                         // counter of read bytes
-VAR_STATIC float fLat_Dest;                         // destination latitude
-VAR_STATIC float fLon_Dest;                         // destination longitude
-VAR_STATIC float fLat_Curr;                         // current latitude
-VAR_STATIC float fLon_Curr;                         // current longitude
 VAR_STATIC int iLat_Int;                            // integer part of current latitude
 VAR_STATIC int iLat_Dec;                            // decimal part of current latitude
 VAR_STATIC int iLon_Int;                            // integer part of current longitude
 VAR_STATIC int iLon_Dec;                            // decimal part of current longitude
-VAR_STATIC uint16_t uiSpeed;                        // speed [kt]
-VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
-VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
-VAR_STATIC uint16_t uiWptNumber = 1;                // number of waypoints
+VAR_STATIC float fBank;                             // bank angle setpoint [rad]
+VAR_STATIC float fLat_Dest;                         // destination latitude
+VAR_STATIC float fLon_Dest;                         // destination longitude
+VAR_STATIC float fLat_Curr;                         // current latitude
+VAR_STATIC float fLon_Curr;                         // current longitude
 VAR_STATIC float fBearing;                          // angle to destination [°]
-VAR_STATIC int16_t iHeading;                        // course over ground [°]
+VAR_STATIC uint16_t uiHeading;                      // aircraft GPS heading [°]
+VAR_STATIC uint16_t uiSpeed;                        // speed [kt]
+VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
+VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
+VAR_STATIC uint16_t uiWptNumber;                    // total number of waypoints
 VAR_STATIC uint8_t ucGps_Status;                    // status of GPS
 VAR_STATIC uint8_t ucCommas;                        // counter of commas in NMEA sentence
 VAR_STATIC uint8_t ucWindex;                        // USART buffer write index
@@ -150,48 +154,28 @@ static bool Parse_GPS( void );
 /// \remarks Computation must be started only when Parse_GPS() returns TRUE,
 ///          otherwise values of lat, lon, heading are unpredictable.
 ///
-///                     destination   +---
-///                                  /|  ^
-///                                 / |  |
-///                                /  |  |
-///                               /   |  |
-///                              /    |  |
-///                    distance /     |  |  latitiude
-///                            /      |  |  difference
-///                           /       |  |
-///                          /        |  |
-///                         /         |  |
-///                        /          |  |
-///                       /  bearing  |  |
-///                      / ) angle    |  V
-///          actual     +-------------|---
-///          position   |             |
-///                     |<----------->|
-///
-///                       longitude
-///                       difference
-///
-///
-/// Bearing formula works for short distances.
-/// Bearing is positive in CCW direction, heading is positive in CW direction
-/// Bearing reference is rotated 90° CW with respect to heading reference
-///
-///
 //----------------------------------------------------------------------------
 void Navigation_Task( void *pvParameters ) {
 
-    float temp, fLat_Delta, fLon_Delta;
+    float temp, desired_x, desired_y, actual_x, actual_y, dot_prod, cross_prod;
 
-    Load_Path();                                    // load path from SD card
-    GPS_Init();                                     // initialize USART for GPS
+    fBank = PI / 2.0f;                              // default bank angle
+    fBearing = 0.0f;                                // angle to destination [°]
+    uiHeading = 0;                                  // aircraft GPS heading [°]
+    uiSpeed = 0;                                    // speed [kt]
+    uiDistance = 0;                                 // distance to destination [m]
+    uiWptNumber = 0;                                // no waypoint yet
 
-    Nav_Pid.fGain = 1.0f;
+    Nav_Pid.fGain = PI / 6.0f;                      // limit bank angle to 30°
     Nav_Pid.fMin = -1.0f;
     Nav_Pid.fMax = 1.0f;
     Nav_Pid.fKp = 1.0f;
     Nav_Pid.fKi = 0.0f;
     Nav_Pid.fKd = 0.0f;
-    PID_Init(&Nav_Pid);
+
+    PID_Init(&Nav_Pid);                             // initialize navigation PID
+    Load_Path();                                    // load path from SD card
+    GPS_Init();                                     // initialize USART for GPS
 
     /* Wait first GPS fix */
     while ((ucGps_Status & GPS_STATUS_FIX) != GPS_STATUS_FIX) {
@@ -206,39 +190,41 @@ void Navigation_Task( void *pvParameters ) {
     } else {                                        // no waypoint file
         uiWptIndex = 0;                             // use launch position
     }
-    fLon_Dest = Waypoint[uiWptIndex].Lon;           //
-    fLat_Dest = Waypoint[uiWptIndex].Lat;           //
+    fLon_Dest = Waypoint[uiWptIndex].Lon;           // load destination longitude
+    fLat_Dest = Waypoint[uiWptIndex].Lat;           // load destination latitude
 
     while (1) {
         if (Parse_GPS()) {                          // new coordinate available
 
-            /* Calculate bearing to destination */
-            fLon_Delta = (fLon_Dest - fLon_Curr);
-            fLat_Delta = (fLat_Dest - fLat_Curr);
-            fBearing = 90.0f + ((atan2f(fLat_Delta, fLon_Delta) * 180.0f) / PI);
-            if (fBearing > 180.0f) fBearing = fBearing - 360.0f;
-            if (fBearing > -180.0f) fBearing = fBearing + 360.0f;
-/*
-            // Compute X and Y components of desired direction
-            desired_x = cosf( ( fBearing * PI ) / 180.0f ) ;
-            desired_y = sinf( ( fBearing * PI ) / 180.0f ) ;
+            /* Get X and Y components of bearing */
+            desired_x = fLon_Dest - fLon_Curr;
+            desired_y = fLat_Dest - fLat_Curr;
 
-            // Get X and Y components of actual direction
-            actual_x = DCM_Matrix[0][0] ;
-            actual_y = DCM_Matrix[1][0] ;
+            /* Get X and Y components of heading */
+            actual_x = DCM_Matrix[0][0];
+            actual_y = DCM_Matrix[1][0];
 
-            // Compute cosine of angle between desired and actual direction
+            /* Compute cosine of angle between bearing and heading */
             dot_prod = (actual_x * desired_x) + (actual_y * desired_y);
 
-            // Compute sine of angle between desired and actual direction
+            /* Compute sine of angle between bearing and heading */
             cross_prod = (actual_x * desired_y) - (actual_y * desired_x);
 
-            // PID controller
-            fOutput = PID_Compute(&Nav_Pid, fBearing, fInput);
-*/
-            /* compute distance to destination */
-            temp = (sqrtf((fLat_Delta * fLat_Delta) + (fLon_Delta * fLon_Delta)) * 111113.7f);
-            uiDistance = (unsigned int)temp;
+            /* Saturate sine between -1 and 1 */
+            if (dot_prod < 0.0f) {                  // angle is outside -90°, +90°
+                if (cross_prod >= 0.0f) {           // angle is above 90°
+                    cross_prod = 1.0f;              // saturate at 90°
+                } else {                            // angle is below -90°
+                    cross_prod = -1.0f;             // saturate at -90°
+                }
+            }
+
+            /* Navigation PID controller */
+            fBank = PID_Compute(&Nav_Pid, cross_prod , 0.0f) + (PI / 2.0f);
+
+            /* Compute distance to destination */
+            temp = sqrtf((desired_y * desired_y) + (desired_x * desired_x));
+            uiDistance = (unsigned int)(temp * 111113.7f);
 
             /* Waypoint reached: next waypoint */
             if (uiDistance < MIN_DISTANCE) {
@@ -509,17 +495,17 @@ static bool Parse_GPS( void )
 
         if ( ucCommas == 8 ) {              // get heading (8th comma)
           if ( c == ',' ) {
-            iHeading = 0;
+            uiHeading = 0;
           } else if ( c != '.' ) {
-            iHeading *= 10;
-            iHeading += (c - '0');
+            uiHeading *= 10;
+            uiHeading += (c - '0');
           }
         }
 
         if ((ucCommas == 9) &&              // end of NMEA sentence
             (ucGps_Status & GPS_STATUS_FIX)) {
           ucCommas = 10;
-          iHeading /= 10;
+          uiHeading /= 10;
           bResult = TRUE;
         }
     }
@@ -582,9 +568,9 @@ int16_t Nav_Bearing ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-int16_t Nav_Heading ( void )
+uint16_t Nav_Heading ( void )
 {
-  return iHeading;
+  return uiHeading;
 }
 
 //----------------------------------------------------------------------------
@@ -595,23 +581,21 @@ int16_t Nav_Heading ( void )
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Nav_Distance ( void ) {
+uint16_t Nav_Distance ( void )
+{
   return uiDistance;
 }
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Get ground speed detected by GPS [m/s]
+/// \brief   Get ground speed detected by GPS [kt]
 /// \param   -
-/// \returns TAS in meters / sec
+/// \returns GS in knots
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
 uint16_t Nav_Ground_Speed ( void )
 {
-    uint32_t ulTemp;
-
-    ulTemp = ((uint32_t)uiSpeed * 1852) / 36000; // convert [kt] to [m/s]
-    return (uint16_t)ulTemp;
+  return uiSpeed;
 }
 
