@@ -39,16 +39,16 @@
 ///          col    0                1                 2
 ///      row
 ///
-///       0   cos(Xp /\ Xe)    cos(Yp /\ Xe)     cos(Zp /\ Xe)
+///       0   cos(Xp ^ Xe)    cos(Yp ^ Xe)     cos(Zp ^ Xe)
 ///
-///       1   cos(Xp /\ Ye)    cos(Yp /\ Ye)     cos(Zp /\ Ye)
+///       1   cos(Xp ^ Ye)    cos(Yp ^ Ye)     cos(Zp ^ Ye)
 ///
-///       2   cos(Xp /\ Ze)    cos(Yp /\ Ze)     cos(Zp /\ Ze)
+///       2   cos(Xp ^ Ze)    cos(Yp ^ Ze)     cos(Zp ^ Ze)
 ///
 /// \endcode
 ///
-/// where cos(Xp /\ Xe) is the cosine of the angle between plane X axis and
-/// earth X axis, cos(Yp /\ Xe) is the cosine of the angle between plane Y
+/// where cos(Xp ^ Xe) is the cosine of the angle between plane X axis and
+/// earth X axis, cos(Yp ^ Xe) is the cosine of the angle between plane Y
 /// axis and earth X axis, and so on.
 ///
 /// Following cosines are mostly relevant:
@@ -79,7 +79,7 @@
 ///
 /// \endcode
 //
-//  CHANGES speed_3d and cog renamed fGround_Speed and fCourse_Over_Ground
+//  CHANGES fGround_Speed and fCourse_Over_Ground read from navigation functions
 //
 //=============================================================================+
 
@@ -274,8 +274,8 @@ void
 AccelAdjust(void)
 {
 #ifndef _WINDOWS
-//    fGround_Speed = ((float)Nav_Ground_Speed());
-    fGround_Speed = 0.0f;
+    fGround_Speed = ((float)Nav_Ground_Speed());
+    fGround_Speed = (fGround_Speed * 1852.0f) / 36000.0f; // convert [kt] to [m/s]
 #elif (SIMULATOR == SIM_NONE)
     fGround_Speed = Sim_Speed();
 #endif
@@ -336,8 +336,7 @@ CompensateDrift( void )
     //
     // Course over ground
     //
-//    fCourse_Over_Ground = (float)Nav_Heading();
-    fCourse_Over_Ground = 0.0f;
+    fCourse_Over_Ground = (float)Nav_Heading();
     COGX = cosf(ToRad(fCourse_Over_Ground));
     COGY = sinf(ToRad(fCourse_Over_Ground));
 
