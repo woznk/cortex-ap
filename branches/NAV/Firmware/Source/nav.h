@@ -7,7 +7,7 @@
 //
 /// \file
 /// \brief  Navigation task header file
-//  CHANGES added initialization of navigation
+//  CHANGES Nav_Heading changed from int16 to uint16
 //
 //============================================================================
 
@@ -33,7 +33,7 @@
 void Navigation_Task( void *pvParameters );
 void Navigation_Init( void );
 int16_t Nav_Bearing ( void );
-int16_t Nav_Heading ( void );
+uint16_t Nav_Heading ( void );
 uint16_t Nav_Distance ( void );
 uint16_t Nav_WaypointIndex ( void );
 uint16_t Nav_Ground_Speed ( void );
