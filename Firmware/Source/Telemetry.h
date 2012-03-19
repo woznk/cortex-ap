@@ -8,7 +8,8 @@
 /// \brief Simulation interface
 /// \file
 ///
-//  CHANGES unused interface functions made static
+//  CHANGES removed functions Sim_Settled(), Sim_Speed(), Sim_GetData(),
+//          Sim_SetData(), Sim_SaveOffsets().
 //
 //============================================================================
 
@@ -39,10 +40,6 @@ VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 /*---------------------------------- Interface -------------------------------*/
 
 void Telemetry_Task( void *pvParameters );
-bool Sim_Settled ( void ) ;
 float Sim_Speed ( void );
-float Sim_GetData ( int n );
-void Sim_SetData ( int iIndex, float fVal );
-void Sim_SaveOffsets ( void );
 
 
