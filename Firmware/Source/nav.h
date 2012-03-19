@@ -7,7 +7,7 @@
 //
 /// \file
 /// \brief  Navigation task header file
-//  CHANGES Nav_Heading changed from int16 to uint16
+//  CHANGES added function Nav_Gps_Putc() to force characters into GPS buffer.
 //
 //============================================================================
 
@@ -37,4 +37,5 @@ uint16_t Nav_Heading ( void );
 uint16_t Nav_Distance ( void );
 uint16_t Nav_WaypointIndex ( void );
 uint16_t Nav_Ground_Speed ( void );
+void Nav_Gps_Putc( char c );
 
