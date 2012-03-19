@@ -43,8 +43,10 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES Telemetry_Init() called inside telemetry task,
-//          added static prefix to all static functions
+//  CHANGES removed parsing of GPS sentence: GPS data is forwarded to navigation
+//          task, forcing received character into GPS UART buffer.
+//          removed functions Sim_Settled(), Sim_SetData(), Sim_GetData() and
+//          unused variables.
 //
 //============================================================================*/
 
@@ -118,26 +120,9 @@ VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 /*----------------------------------- Locals ---------------------------------*/
 
 VAR_STATIC unsigned char szString[48];
-VAR_STATIC float pfGains[6];              /// gains
-VAR_STATIC float pfSimSensorData[8];      /// Simulator sensor data
-VAR_STATIC float pfSimSensorOffset[8];    /// Simulator sensor offsets
-VAR_STATIC float fSimTAS = 0.0f;          /// Simulator TRUE air speed
-VAR_STATIC float fSimCOG = 0.0f;          /// Simulator course over ground (GPS)
-VAR_STATIC bool bSimSettled = FALSE;
-
-//
-// Used to change the polarity of the sensors
-//
-VAR_STATIC float pfSensorSign[8] = {
-    1.0f, // 0, aircraft accel X
-    1.0f, // 1, aircraft accel Y
-    1.0f, // 2, aircraft accel Z
-    1.0f, // 3, aircraft roll
-    1.0f, // 4, aircraft pitch
-    1.0f, // 5, aircraft yaw
-    1.0f, // 6
-    1.0f  // 7
-};
+VAR_STATIC float fGain[6];              /// gains
+VAR_STATIC float fSensor[8];            /// Simulator sensor data
+VAR_STATIC float fTrueAirSpeed = 0.0f;  /// Simulator true air speed
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -159,7 +144,8 @@ static void Telemetry_Send_Waypoint( void );
 ///
 /// \brief  telemetry task
 /// \return  -
-/// \remarks -
+/// \remarks waits for a message to be added to telemetry queue and sends it
+///          to the UART
 ///
 ///----------------------------------------------------------------------------
 void Telemetry_Task( void *pvParameters )
@@ -178,7 +164,7 @@ void Telemetry_Task( void *pvParameters )
 //----------------------------------------------------------------------------
 //
 /// \brief   Initialize telemetry
-///
+/// \return  -
 /// \remarks configures USART1.
 ///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
 ///          for direct register initialization of USART 1
@@ -209,9 +195,12 @@ static void Telemetry_Init( void ) {
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   sends data via USART 1
-/// \remarks
-///
+/// \brief   sends data via telemetry USART
+/// \return  -
+/// \param   *data pointer to message
+/// \param   num number of elements
+/// \remarks message is an array of 'num' 16 bit words.
+///          Each element is converted to an hexadecimal string and sent to UART
 ///
 ///----------------------------------------------------------------------------
 static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
@@ -242,10 +231,10 @@ static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 
 ///----------------------------------------------------------------------------
 ///
-///  DESCRIPTION Outputs DCM matrix
-/// \RETURN      -
-/// \REMARKS
-///
+/// \brief   sends DCM matrix via telemetry USART
+/// \return  -
+/// \remarks entries of DCM matrix are converted to hexadecimal string and sent
+///          to UART
 ///
 ///----------------------------------------------------------------------------
 static void Telemetry_Send_DCM(void) {
@@ -280,10 +269,36 @@ static void Telemetry_Send_DCM(void) {
 //----------------------------------------------------------------------------
 //
 /// \brief   parse telemetry data
-///
 /// \returns TRUE when new GPS data are available
-/// \remarks
+/// \remarks telemetry is used to upload different information during flight
+///          and during simulation:
 ///
+///          INFORMATION  SIMULATION  FLIGHT  NOTE
+///          ---------------------------------------------------------------
+///          GPS data         X         -     during flight, GPS data comes
+///                                           from actual GPS receiver
+///          sensor data      X         -     during flight, sensor data
+///                                           comes from actual gyroscopes
+///                                           and accelerometers
+///          PID gains        X         X     PID gains are input on ground
+///                                           control station
+///
+///          Telemetry messages start with a preamble (two characters) used to
+///          discriminate the type of message. The preamble format has been
+///          chosen to resemble the GPS NMEA sentences.
+///          Preamble is followed by useful data. Number of data fields and
+///          data field format depends on message type:
+///
+///          PREAMBLE  MESSAGE CONTENT  DATA FIELDS DATA FORMAT
+///          -------------------------------------------------------------
+///             $G     GPS data         see NMEA    NMEA sentence
+///             $S     gyro and accel   6           16 bit decimal integers
+///             $K     PID gains        6           16 bit decimal integers
+///
+///         GPS data is forwarded to navigation task, forcing characters in
+///         the GPS UART buffer, as they had been received from actual GPS.
+///         Parsing of sensor data and PID gains is a simple string to float
+///         conversion. Sensor data and gains have no final checksum.
 ///
 //----------------------------------------------------------------------------
 static bool Telemetry_Parse ( void )
@@ -292,17 +307,9 @@ static bool Telemetry_Parse ( void )
     bool bResult;
     static float fTemp = 0.0f;
     static unsigned char ucStatus = 0;
-    static unsigned long ulChCounter = 1L, ulTemp = 0L;
 
     bResult = FALSE;
     while (FALSE/*Telemetry_Get_Char(&c)*/) {
-
-        if (ulChCounter != 0L) {                    // Count chars
-            ulChCounter++;
-        }
-        if ((ucStatus > 9) && (ucStatus < 19)) {    // Log GPS data
-            Log_PutChar(c);
-        }
 
         switch (ucStatus) {
             case 0:             // ----------------- preamble -----------------
@@ -326,7 +333,7 @@ static bool Telemetry_Parse ( void )
             case 7:
             case 8:
                 if (c == ',') {
-                    pfSimSensorData[ucStatus - 3] = fTemp;
+                    fSensor[ucStatus - 3] = fTemp;
                     fTemp = 0.0f;
                     ucStatus++;
                 } else if ((c >= '0') && (c <= '9')) {
@@ -338,7 +345,7 @@ static bool Telemetry_Parse ( void )
                 break;
             case 9:
                 if (c == '\r') {
-                    fSimTAS = fTemp / 100.0f;
+                    fTrueAirSpeed = fTemp / 100.0f;
                     fTemp = 0.0f;
                     ucStatus = 0;
                 } else if ((c >= '0') && (c <= '9')) {
@@ -350,81 +357,32 @@ static bool Telemetry_Parse ( void )
                 break;
 
             case 10:            // ------------------- GPS --------------------
+                Nav_Gps_Putc('$');      // force initial characters into GPS buffer
+                Nav_Gps_Putc('G');
+                ucStatus++;
             case 11:
-                if (c == ',') { ucStatus++; }
-                break;
-            case 12:
-                if (c == 'A') {
-                    Gps_Status |= GPS_STATUS_FIX;
-                } else if (c == 'V') {
-                    Gps_Status &= ~GPS_STATUS_FIX;
-                } else if (c == ',') {
-                    ucStatus++;
-                }
-                break;
-            case 13:
-                if ( c == ',' ) {
-                    fCurrLat = (ulTemp % 1000000L) / 600000.0f; // convert ' to °
-                    fCurrLat += (float)(ulTemp / 1000000L);     // add °
-                    ulTemp = 0L;
-                    ucStatus++;
-                } else if ( c != '.' ) {
-                    ulTemp = ulTemp * 10L + (unsigned long)(c - '0');
-                }
-                break;
-            case 14:    // TO DO : change sign of Lat based on N / S
-                if (c == ',') { ucStatus++; }
-                break;
-            case 15:
-                if ( c == ',' ) {
-                    fCurrLon = (ulTemp % 1000000L) / 600000.0f; // convert ' to °
-                    fCurrLon += (float)(ulTemp / 1000000L);     // add °
-                    ulTemp = 0L;
-                    ucStatus++;
-                } else if ( c != '.' ) {
-                    ulTemp = ulTemp * 10L + (unsigned long)(c - '0');
-                }
-                break;
-            case 16:    // TO DO : change sign of Lon based on E / W
-                if (c == ',') { ucStatus++; }
-                break;
-            case 17:    //
-                if ( c == ',' ) {
-                    fSimCOG = fTemp / 10.0f;
-                    fTemp = 0.0f;
-                    ucStatus++;
-                } else if ( c != '.' ) {
-                    fTemp = (fTemp * 10.0f) + (float)(c - '0');
-                }
-                break;
-            case 18:
-                if ( c == ',' ) {
-                    Heading = (int)(ulTemp / 10L);
-//                    North = 360 - Heading;
-                    ulTemp = 0L;
-                    ucStatus = 0;
-                    bResult = TRUE;
-                    Log_PutChar('\r'); // Terminate GPS sentence
-                } else if ( c != '.' ) {
-                    ulTemp = (ulTemp * 10) + (unsigned long)(c - '0');
+                if (c == '$') {         // preamble received
+                   ucStatus = 1;        // go check preamble type
+                } else {                // still inside NMEA sentence
+                   Nav_Gps_Putc(c);     // force character into GPS buffer
                 }
                 break;
 
-            case 19:            // ------------------ gains ------------------
+            case 12:            // --------------- PID gains ------------------
                 if (c == ',') { ucStatus++; } else { ucStatus = 0; }
                 break;
-            case 20:
-            case 21:
-            case 22:
-            case 23:
-            case 24:
-            case 25:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 18:
                 if ((c == '\r') || (c == '\n')) {
-                    pfGains[ucStatus - 20] = fTemp;
+                    fGain[ucStatus - 20] = fTemp;
                     fTemp = 0.0f;
                     ucStatus = 26;
                 } else if (c == ',') {
-                    pfGains[ucStatus - 20] = fTemp;
+                    fGain[ucStatus - 20] = fTemp;
                     fTemp = 0.0f;
                     ucStatus++;
                 } else if ((c >= '0') && (c <= '9')) {
@@ -434,29 +392,22 @@ static bool Telemetry_Parse ( void )
                     ucStatus = 0;
                 }
                 break;
-            case 26:
+            case 19:
                 ucStatus = 0;
-                Gyro_Gain    = pfGains[0] / 9999.0f;
-                Accel_Gain   = pfGains[1] / 9999.0f;
-                PitchRoll_Kp = pfGains[2] / 9999000.0f;
-                PitchRoll_Ki = pfGains[3] / 99990000.0f;
-                Yaw_Kp       = pfGains[4] / 9999.0f;
-                Yaw_Ki       = pfGains[5] / 9999000.0f;
+                Gyro_Gain    = fGain[0] / 9999.0f;
+                Accel_Gain   = fGain[1] / 9999.0f;
+                PitchRoll_Kp = fGain[2] / 9999000.0f;
+                PitchRoll_Ki = fGain[3] / 99990000.0f;
+                Yaw_Kp       = fGain[4] / 9999.0f;
+                Yaw_Ki       = fGain[5] / 9999000.0f;
                 break;
 
             default:
                 fTemp = 0.0f;
-                ulTemp = 0L;
                 ucStatus = 0;
                 break;
         }
     }
-    if (ulChCounter > 1000) {
-        Sim_SaveOffsets();
-        ulChCounter = 0;
-        bSimSettled = TRUE;
-    }
-
     return bResult;
 }
 
@@ -524,92 +475,15 @@ static void Telemetry_Send_Waypoint(void)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief Interface to simulator data : data settled
-/// \return
-/// \remarks
-///
-///----------------------------------------------------------------------------
-bool Sim_Settled ( void ) {
-    return bSimSettled;
-}
-#endif
-
-///----------------------------------------------------------------------------
-///
-/// \brief Interface to simulator data : output.
-/// \return
-/// \remarks
-///
-///----------------------------------------------------------------------------
-float Sim_GetData(int n) {
-
-    float fData;
-    switch (n) {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-            fData = (pfSimSensorData[n] - pfSimSensorOffset[n]) * pfSensorSign[n];
-            break;
-        default:
-            fData = 0.0f;
-            break;
-    }
-    return fData;
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief Interface to simulator data : TRUE air speed
-/// \return
-/// \remarks
+/// \brief   interface to simulator data : true air speed
+/// \return  true air speed
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 float Sim_Speed(void) {
-//    return fSimTAS;
-    return fSimCOG;
+    return fTrueAirSpeed;
 }
-
-///----------------------------------------------------------------------------
-///
-/// \brief Interface to simulator data : input.
-/// \return
-/// \remarks Used to force simulator data from extern
-///
-///----------------------------------------------------------------------------
-void Sim_SetData(int iIndex, float fVal) {
-
-    switch (iIndex) {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-            pfSimSensorData[iIndex] = fVal;
-            break;
-        default:
-            break;
-    }
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief Interface to simulator data : offset.
-/// \return
-/// \remarks Used to save offsets
-///
-///----------------------------------------------------------------------------
-void Sim_SaveOffsets(void) {
-
-    int j;
-    for (j = 0; j < 6 ; j++) {
-        pfSimSensorOffset[j] = pfSimSensorData[j];
-    }
-    pfSimSensorOffset[2] -= GRAVITY;
-}
+#endif
 
 
 #if (TELEMETRY_DEBUG == 1)
