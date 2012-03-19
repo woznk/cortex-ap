@@ -20,9 +20,8 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES modified computation of bank angle setpoint
-//          added initialization of variables at beginning of navigation task
-//          modified Nav_Ground_Speed(), returns speed in knots
+//  CHANGES added function Nav_Gps_Putc() to force characters into GPS buffer.
+//          GPS USART not initialized if simulator option is active.
 //
 //============================================================================*/
 
@@ -297,15 +296,19 @@ static void Load_Path( void ) {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Initialize navigation
+/// \brief   Initialize GPS
 /// \param   -
 /// \return  -
-/// \remarks configures USART2.
-///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
-///          for direct register initialization of USART
+/// \remarks configures USART2 for receiving GPS data and initializes indexes.
+///          If simulator option is active, only indexes are initialized.
+///          For direct register initialization of USART see:
+/// http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
+
 ///
 //----------------------------------------------------------------------------
 static void GPS_Init( void ) {
+
+#if (SIMULATOR == SIM_NONE)
 
     USART_InitTypeDef USART_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -343,6 +346,7 @@ static void GPS_Init( void ) {
     USART1_CR1 |= (USART1_CR1_RE | USART1_CR1_TE);  // RX, TX enable
     USART1_CR1 |= USART1_CR1_UE;                    // USART enable
 */
+#endif
     ucGps_Status = GPS_STATUS_FIRST;                // init GPS status
     ucWindex = 0;                                   // clear write index
     ucRindex = 0;                                   // clear read index
@@ -599,3 +603,21 @@ uint16_t Nav_Ground_Speed ( void )
   return uiSpeed;
 }
 
+//----------------------------------------------------------------------------
+//
+/// \brief   Forces a character into GPS USART receive buffer
+/// \param   c character to be copied into buffer
+/// \returns -
+/// \remarks Function exist only if simulator option is active.
+///          Is used by telemetry to copy GPS data into GPS receive buffer.
+///
+//----------------------------------------------------------------------------
+void Nav_Gps_Putc ( char c )
+{
+#if (SIMULATOR != SIM_NONE)
+  pcBuffer[ucWindex++] = c;
+  if (ucWindex >= BUFFER_LENGTH) {
+    ucWindex = 0;
+  }
+#endif
+}
