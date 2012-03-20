@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief  Servo driver header file
-//  CHANGES added SERVO_NUMBER to SERVO_TYPE enum
+//  CHANGES added function Servo_Get() return servo positions
 //
 //============================================================================*/
 
@@ -49,3 +49,4 @@ typedef enum {
 
 void Servo_Init(void);
 void Servo_Set(SERVO_TYPE servo, int16_t position);
+int16_t Servo_Get(SERVO_TYPE servo);
