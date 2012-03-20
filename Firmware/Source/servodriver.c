@@ -6,7 +6,8 @@
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES added array iServoSign[] for servo reversal
+//  CHANGES added array iServoPosition[] and function Servo_Get() to store 
+//          and return servo positions
 //
 //============================================================================*/
 
@@ -44,11 +45,18 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
+VAR_STATIC int16_t iServoPosition[SERVO_NUMBER] = {
+    SERVO_NEUTRAL,  // aileron
+    SERVO_NEUTRAL,  // rudder
+    SERVO_NEUTRAL,  // elevator
+    SERVO_NEUTRAL   // throttle
+};
+
 VAR_STATIC int16_t iServoSign[SERVO_NUMBER] = {
-    -1,  // aileron reversed
-     1,  // rudder normal
-    -1,  // elevator reversed
-     1   // throttle normal
+    -1,             // aileron reversed
+     1,             // rudder normal
+    -1,             // elevator reversed
+     1              // throttle normal
 };
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -131,6 +139,7 @@ void Servo_Init(void) {
 void Servo_Set(SERVO_TYPE servo, int16_t position) {
 
    SATURATE(position);
+   iServoPosition[servo] = position;
    position -= SERVO_NEUTRAL;
    position *= iServoSign[servo];
    position += SERVO_NEUTRAL;
@@ -153,3 +162,14 @@ void Servo_Set(SERVO_TYPE servo, int16_t position) {
    }
 }
 
+///----------------------------------------------------------------------------
+///
+/// \brief   Get servo position.
+/// \param   servo: servo identifier
+/// \return  position of servo
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+int16_t Servo_Get(SERVO_TYPE servo) {
+   return iServoPosition[servo];
+}
