@@ -20,8 +20,7 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES added function Nav_Gps_Putc() to force characters into GPS buffer.
-//          GPS USART not initialized if simulator option is active.
+//  CHANGES added function Nav_Altitude()
 //
 //============================================================================*/
 
@@ -601,6 +600,19 @@ uint16_t Nav_Distance ( void )
 uint16_t Nav_Ground_Speed ( void )
 {
   return uiSpeed;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get altitude [m]
+/// \param   -
+/// \returns altitude
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+float Nav_Altitude ( void )
+{
+  return 0.0f;
 }
 
 //----------------------------------------------------------------------------
