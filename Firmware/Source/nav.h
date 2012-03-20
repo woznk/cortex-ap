@@ -7,7 +7,7 @@
 //
 /// \file
 /// \brief  Navigation task header file
-//  CHANGES added function Nav_Gps_Putc() to force characters into GPS buffer.
+//  CHANGES added function Nav_Altitude()
 //
 //============================================================================
 
@@ -33,6 +33,7 @@
 void Navigation_Task( void *pvParameters );
 void Navigation_Init( void );
 int16_t Nav_Bearing ( void );
+float Nav_Altitude ( void );
 uint16_t Nav_Heading ( void );
 uint16_t Nav_Distance ( void );
 uint16_t Nav_WaypointIndex ( void );
