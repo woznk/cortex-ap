@@ -43,10 +43,10 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES removed parsing of GPS sentence: GPS data is forwarded to navigation
-//          task, forcing received character into GPS UART buffer.
-//          removed functions Sim_Settled(), Sim_SetData(), Sim_GetData() and
-//          unused variables.
+//  CHANGES szString[] renamed ucBuffer[] and used also for downlink of servo 
+//          positions and waypoint data.
+//          Added actual UART transmission to Telemetry_Send_Waypoints() and
+//          Telemetry_Send_Servo() functions
 //
 //============================================================================*/
 
@@ -65,10 +65,7 @@
 #include "DCM.h"
 #include "log.h"
 #include "config.h"
-#include "aileronctrl.h"
-#include "elevatorctrl.h"
-#include "rudderctrl.h"
-#include "throttlectrl.h"
+#include "servodriver.h"
 #include "telemetry.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -95,14 +92,14 @@
 
 /*-------------------------------- Enumerations ------------------------------*/
 
-enum E_TELEMETRY {
+typedef enum E_TELEMETRY {
     TEL_NULL,
     TEL_GPS_POSITION = 0xf0,
     TEL_SERVO_POS,
     TEL_WAYPOINT,
     TEL_DEBUG_I,
     TEL_DEBUG_F,
-} wait_code;
+} wait_code_t;
 
 /*----------------------------------- Types ----------------------------------*/
 
@@ -119,10 +116,10 @@ VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC unsigned char szString[48];
-VAR_STATIC float fGain[6];              /// gains
-VAR_STATIC float fSensor[8];            /// Simulator sensor data
-VAR_STATIC float fTrueAirSpeed = 0.0f;  /// Simulator true air speed
+VAR_STATIC unsigned char ucBuffer[48];  /// downlink data buffer
+VAR_STATIC float fGain[6];              /// gains for PID loops
+VAR_STATIC float fSensor[8];            /// simulator sensor data
+VAR_STATIC float fTrueAirSpeed = 0.0f;  /// simulator true air speed
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -197,9 +194,9 @@ static void Telemetry_Init( void ) {
 ///
 /// \brief   sends data via telemetry USART
 /// \return  -
-/// \param   *data pointer to message
+/// \param   data, pointer to message
 /// \param   num number of elements
-/// \remarks message is an array of 'num' 16 bit words.
+/// \remarks message is an array of 'num' words, each word is 16 bit.
 ///          Each element is converted to an hexadecimal string and sent to UART
 ///
 ///----------------------------------------------------------------------------
@@ -210,22 +207,22 @@ static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 
     for (i = 0; i < num; i++) {
         l_temp = *data++;
-        szString[j++] = ' ';
+        ucBuffer[j++] = ' ';
         digit = ((l_temp >> 12) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = ((l_temp >> 8) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = ((l_temp >> 4) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = (l_temp & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
     }
-    szString[j++] = '\n';
+    ucBuffer[j++] = '\n';
 
     for (j = 0; j < (i * 5) + 1; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
-      USART_SendData(USART1, szString[j]);
+      USART_SendData(USART1, ucBuffer[j]);
     }
 }
 
@@ -246,23 +243,23 @@ static void Telemetry_Send_DCM(void) {
     for (y = 0; y < 3; y++) {
       for (x = 0; x < 3; x++) {
           lTemp = (long)ceil(DCM_Matrix[y][x] * 32767.0f);
-          szString[j++] = ' ';
+          ucBuffer[j++] = ' ';
           ucDigit = ((lTemp >> 12) & 0x0000000F);
-          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
           ucDigit = ((lTemp >> 8) & 0x0000000F);
-          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
           ucDigit = ((lTemp >> 4) & 0x0000000F);
-          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
           ucDigit = (lTemp & 0x0000000F);
-          szString[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
       }
     }
-    szString[j++] = '\n';
-    szString[j] = '\r';
+    ucBuffer[j++] = '\n';
+    ucBuffer[j] = '\r';
     for (j = 0; j < 47; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
-      USART_SendData(USART1, szString[j]);
+      USART_SendData(USART1, ucBuffer[j]);
     }
 }
 
@@ -278,12 +275,12 @@ static void Telemetry_Send_DCM(void) {
 ///          GPS data         X         -     during flight, GPS data comes
 ///                                           from actual GPS receiver
 ///          sensor data      X         -     during flight, sensor data
-///                                           comes from actual gyroscopes
-///                                           and accelerometers
+///                                           comes from actual gyroscopes,
+///                                           accelerometers and pressure
 ///          PID gains        X         X     PID gains are input on ground
 ///                                           control station
 ///
-///          Telemetry messages start with a preamble (two characters) used to
+///          Telemetry messages start with a preamble (2 characters) used to
 ///          discriminate the type of message. The preamble format has been
 ///          chosen to resemble the GPS NMEA sentences.
 ///          Preamble is followed by useful data. Number of data fields and
@@ -291,9 +288,9 @@ static void Telemetry_Send_DCM(void) {
 ///
 ///          PREAMBLE  MESSAGE CONTENT  DATA FIELDS DATA FORMAT
 ///          -------------------------------------------------------------
-///             $G     GPS data         see NMEA    NMEA sentence
-///             $S     gyro and accel   6           16 bit decimal integers
-///             $K     PID gains        6           16 bit decimal integers
+///             $G     GPS data          see NMEA    NMEA sentence
+///             $S     gyro,accel,speed     7        16 bit decimal integers
+///             $K     PID gains            6        16 bit decimal integers
 ///
 ///         GPS data is forwarded to navigation task, forcing characters in
 ///         the GPS UART buffer, as they had been received from actual GPS.
@@ -415,62 +412,97 @@ static bool Telemetry_Parse ( void )
 //----------------------------------------------------------------------------
 //
 /// \brief   Downlink controls
+/// \returns -
+/// \remarks buffer content:
 ///
-/// \returns
-/// \remarks
+///             index   content
 ///
+///               0     TEL_SERVO_POS
+///               1     elevator
+///               2         "
+///               3         "
+///               4         "
+///               5     ailerons
+///               6         "
+///               7         "
+///               8         "
+///               9     rudder
+///              10         "
+///              11         "
+///              12         "
+///              13     throttle
+///              14         "
+///              15         "
+///              16         "
 ///
 //----------------------------------------------------------------------------
 static void Telemetry_Send_Controls(void)
 {
+    uint8_t j;
     float *pfBuff;
-    unsigned char cData[20];
 
-    cData[0] = TEL_SERVO_POS;       // wait code
+    ucBuffer[0] = TEL_SERVO_POS;                // telemetry wait code
 
-    pfBuff = (float *)&cData[1];    // elevator
-//    *pfBuff = Elevator();
+    pfBuff = (float *)&ucBuffer[1];             // elevator
+    *pfBuff = (float)Servo_Get(SERVO_ELEVATOR);
 
-    pfBuff = (float *)&cData[5];    // ailerons
-//    *pfBuff = Ailerons();
+    pfBuff = (float *)&ucBuffer[5];             // ailerons
+    *pfBuff = (float)Servo_Get(SERVO_AILERON);
 
-    pfBuff = (float *)&cData[9];    // rudder
-//    *pfBuff = Rudder();
+    pfBuff = (float *)&ucBuffer[9];             // rudder
+    *pfBuff = (float)Servo_Get(SERVO_RUDDER);
 
-    pfBuff = (float *)&cData[13];   // throttle
-//    *pfBuff = Throttle();
+    pfBuff = (float *)&ucBuffer[13];            // throttle
+    *pfBuff = (float)Servo_Get(SERVO_THROTTLE);
 
-//    UART0Send(cData, 17);
+    for (j = 0; j < 17; j++) {
+      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
+      }
+      USART_SendData(USART1, ucBuffer[j]);
+    }
 }
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Downlink waypoint
+/// \brief   Downlink waypoint data
+/// \returns -
+/// \remarks buffer content:
 ///
-/// \returns
-/// \remarks
+///             index   content
 ///
+///               0     TEL_WAYPOINT
+///               1     waypoint index
+///               2     bearing LSB
+///               3     bearing MSB
+///               4     altitude LSB
+///               5     altitude MSB
+///               6     distance LSB
+///               7     distance MSB
 ///
 //----------------------------------------------------------------------------
 static void Telemetry_Send_Waypoint(void)
 {
-    unsigned int *puiBuff;
-    unsigned char cData[8];
+    uint8_t j;
+    uint16_t *puiBuff;
 
-    cData[0] = TEL_WAYPOINT;                // wait code
+    ucBuffer[0] = TEL_WAYPOINT;             // telemetry wait code
 
-    cData[1] = Nav_WaypointIndex();         // waypoint index
+    ucBuffer[1] = Nav_WaypointIndex();      // waypoint index
 
-    puiBuff = (unsigned int *)&cData[2];    // bearing
-    *puiBuff = (unsigned int)Nav_Bearing();
+    puiBuff = (uint16_t *)&ucBuffer[2];     // bearing to waypoint
+    *puiBuff = (uint16_t)Nav_Bearing();
 
-    puiBuff = (unsigned int *)&cData[4];    // altitude
-    *puiBuff = 0;
+    puiBuff = (uint16_t *)&ucBuffer[4];     // waypoint altitude
+    *puiBuff = (uint16_t)Nav_Altitude();
 
-    puiBuff = (unsigned int *)&cData[6];    // distance
+    puiBuff = (uint16_t *)&ucBuffer[6];     // distance to waypoint
     *puiBuff = Nav_Distance();
 
-//    UART0Send(cData, 8);
+    for (j = 0; j < 8; j++) {
+      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
+      }
+      USART_SendData(USART1, ucBuffer[j]);
+    }
 }
 
 ///----------------------------------------------------------------------------
