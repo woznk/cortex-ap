@@ -43,15 +43,15 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES szString[] renamed ucBuffer[] and used also for downlink of servo 
-//          positions and waypoint data.
-//          Added actual UART transmission to Telemetry_Send_Waypoints() and
-//          Telemetry_Send_Servo() functions
+//  CHANGES telemetry task periodically activated: sends controls to simulator
+//          every 20 ms, parses all received characters, sends waypoint data
+//          every second
+//          added provisions for uplink data (buffer, UART rx interrupt, indexes)
+//          removed Debug_GetChar(), Telemetry_Parse() made of type void
 //
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
-
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -80,13 +80,10 @@
 #endif
 #define VAR_GLOBAL
 
-#define TELEMETRY_DEBUG 0
-
-#if (TELEMETRY_DEBUG == 0)
-#   define Telemetry_Get_Char UART0GetChar
-#else
-#   define Telemetry_Get_Char Debug_GetChar
-#endif
+#define TELEMETRY_FREQUENCY 50
+#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY)
+#define RX_BUFFER_LENGTH    48
+#define TX_BUFFER_LENGTH    48
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -94,7 +91,7 @@
 
 typedef enum E_TELEMETRY {
     TEL_NULL,
-    TEL_GPS_POSITION = 0xf0,
+    TEL_GPS_POSITION = 0xF0,
     TEL_SERVO_POS,
     TEL_WAYPOINT,
     TEL_DEBUG_I,
@@ -105,37 +102,39 @@ typedef enum E_TELEMETRY {
 
 /*---------------------------------- Constants -------------------------------*/
 
-#if (TELEMETRY_DEBUG == 1)
-const char s_pcSentence[] =
-"$S,100,200,300,400,500,600,110\n$S,560,112,-12,12345,0,1023,110\n$S,512,512,512,512,512,512,512,110,110\n$S,512,512,512,\n$S,512,512,512,512,512,512\n$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n$K,8799,1299, 899, 199,4999,4999\r\n$S,560,112,-12,12345,0,1023,110\n";
-#endif
-
 /*---------------------------------- Globals ---------------------------------*/
 
 VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 
 /*----------------------------------- Locals ---------------------------------*/
-
-VAR_STATIC unsigned char ucBuffer[48];  /// downlink data buffer
-VAR_STATIC float fGain[6];              /// gains for PID loops
-VAR_STATIC float fSensor[8];            /// simulator sensor data
-VAR_STATIC float fTrueAirSpeed = 0.0f;  /// simulator true air speed
+/*
+"$S,100,200,300,400,500,600,110\n"
+"$S,560,112,-12,12345,0,1023,110\n"
+"$S,512,512,512,512,512,512,512,110,110\n"
+"$S,512,512,512,\n$S,512,512,512,512,512,512\n"
+"$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n"
+"$K,8799,1299, 899, 199,4999,4999\r\n$S,560,112,-12,12345,0,1023,110\n"
+*/
+VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    /// uplink data buffer
+VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    /// downlink data buffer
+VAR_STATIC uint8_t ucWindex;                        /// upling write index
+VAR_STATIC uint8_t ucRindex;                        /// uplink read index
+VAR_STATIC uint8_t ucStatus;                        /// status of parser
+VAR_STATIC float fTemp;                             /// temporary for parser
+VAR_STATIC float fGain[6];                          /// gains for PID loops
+VAR_STATIC float fSensor[8];                        /// simulator sensor data
+VAR_STATIC float fTrueAirSpeed = 0.0f;              /// simulator true air speed
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-#if (TELEMETRY_DEBUG == 1)
-bool Debug_GetChar ( char *ch );
-#endif
 static void Telemetry_Init( void );
 static void Telemetry_Send_Message(uint16_t *data, uint8_t num);
 static void Telemetry_Send_DCM( void );
-static bool Telemetry_Parse( void );
+static void Telemetry_Parse( void );
 static void Telemetry_Send_Controls( void );
 static void Telemetry_Send_Waypoint( void );
 
 /*---------------------------------- Functions -------------------------------*/
-
-#ifndef _WINDOWS
 
 ///----------------------------------------------------------------------------
 ///
@@ -147,14 +146,22 @@ static void Telemetry_Send_Waypoint( void );
 ///----------------------------------------------------------------------------
 void Telemetry_Task( void *pvParameters )
 {
-    xTelemetry_Message message;
+    uint8_t ucCycles = 0;
+    portTickType Last_Wake_Time;
 
-    Telemetry_Init();       // Telemetry initialization
+    Last_Wake_Time = xTaskGetTickCount();       //
+    Telemetry_Init();                           // telemetry initialization
 
     while (1) {
-        while (xQueueReceive( xTelemetry_Queue, &message, portMAX_DELAY ) != pdPASS) {
+        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
+#if (SIMULATOR != SIM_NONE)
+        Telemetry_Send_Controls();              // update simulator controls
+#endif
+        Telemetry_Parse();                      // parse uplink data
+        if (++ucCycles >= TELEMETRY_FREQUENCY) {// every second
+            ucCycles = 0;                       // reset cycle counter
+            Telemetry_Send_Waypoint();          // send waypoint information
         }
-        Telemetry_Send_Message(message.pcData, message.ucLength);
     }
 }
 
@@ -170,8 +177,9 @@ void Telemetry_Task( void *pvParameters )
 static void Telemetry_Init( void ) {
 
     USART_InitTypeDef USART_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
 
-    // Initialize USART1 structure
+    /* Initialize USART1 structure */
     USART_InitStructure.USART_BaudRate = 115200;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
@@ -179,15 +187,24 @@ static void Telemetry_Init( void ) {
     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
     USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 
-    // Configure USART1
-    USART_Init(USART1, &USART_InitStructure);
+    USART_Init(USART1, &USART_InitStructure);       // configure USART1
 
-    // Enable USART1 interrupt
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-    //USART_ITConfig(USART1,USART_IT_TXE,ENABLE);
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);  // enable USART1 interrupt
+    //USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
 
-    // Enable the USART1
-    USART_Cmd(USART1, ENABLE);
+    /* Configure NVIC for USART1 interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init( &NVIC_InitStructure );
+
+    USART_Cmd(USART1, ENABLE);                      // enable the USART1
+
+    ucWindex = 0;                                   // clear write index
+    ucRindex = 0;                                   // clear read index
+    ucStatus = 0;                                   // reset parser status
+    fTemp = 0.0f;                                   // clear temporary
 }
 
 ///----------------------------------------------------------------------------
@@ -207,22 +224,22 @@ static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 
     for (i = 0; i < num; i++) {
         l_temp = *data++;
-        ucBuffer[j++] = ' ';
+        ucTxBuffer[j++] = ' ';
         digit = ((l_temp >> 12) & 0x0000000F);
-        ucBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = ((l_temp >> 8) & 0x0000000F);
-        ucBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = ((l_temp >> 4) & 0x0000000F);
-        ucBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = (l_temp & 0x0000000F);
-        ucBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
     }
-    ucBuffer[j++] = '\n';
+    ucTxBuffer[j++] = '\n';
 
     for (j = 0; j < (i * 5) + 1; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
-      USART_SendData(USART1, ucBuffer[j]);
+      USART_SendData(USART1, ucTxBuffer[j]);
     }
 }
 
@@ -243,23 +260,23 @@ static void Telemetry_Send_DCM(void) {
     for (y = 0; y < 3; y++) {
       for (x = 0; x < 3; x++) {
           lTemp = (long)ceil(DCM_Matrix[y][x] * 32767.0f);
-          ucBuffer[j++] = ' ';
+          ucTxBuffer[j++] = ' ';
           ucDigit = ((lTemp >> 12) & 0x0000000F);
-          ucBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucTxBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
           ucDigit = ((lTemp >> 8) & 0x0000000F);
-          ucBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucTxBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
           ucDigit = ((lTemp >> 4) & 0x0000000F);
-          ucBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucTxBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
           ucDigit = (lTemp & 0x0000000F);
-          ucBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          ucTxBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
       }
     }
-    ucBuffer[j++] = '\n';
-    ucBuffer[j] = '\r';
+    ucTxBuffer[j++] = '\n';
+    ucTxBuffer[j] = '\r';
     for (j = 0; j < 47; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
-      USART_SendData(USART1, ucBuffer[j]);
+      USART_SendData(USART1, ucTxBuffer[j]);
     }
 }
 
@@ -298,29 +315,29 @@ static void Telemetry_Send_DCM(void) {
 ///         conversion. Sensor data and gains have no final checksum.
 ///
 //----------------------------------------------------------------------------
-static bool Telemetry_Parse ( void )
+static void Telemetry_Parse ( void )
 {
     char c;
-    bool bResult;
-    static float fTemp = 0.0f;
-    static unsigned char ucStatus = 0;
+    while (ucRindex != ucWindex) {          // received another character
+        c = ucRxBuffer[ucRindex++];         // read character
 
-    bResult = FALSE;
-    while (FALSE/*Telemetry_Get_Char(&c)*/) {
+        if (ucRindex >= RX_BUFFER_LENGTH) { // update read index
+            ucRindex = 0;
+        }
 
         switch (ucStatus) {
-            case 0:             // ----------------- preamble -----------------
+            case 0:             /* ----------------- preamble ----------------- */
                 if (c == '$') { ucStatus++; }
                 break;
             case 1:
                 switch (c) {
-                    case 'S': ucStatus++; break;    // Sensor data
+                    case 'S': ucStatus++; break;    // sensor data
                     case 'G': ucStatus = 10; break; // GPS data
-                    case 'K': ucStatus = 19; break; // Gain data
+                    case 'K': ucStatus = 19; break; // gain data
                     default : ucStatus = 0; break;  //
                 }
                 break;
-            case 2:             // ------------------ sensors ------------------
+            case 2:             /* ------------------ sensors ------------------ */
                 if (c == ',') { ucStatus++; } else { ucStatus = 0; }
                 break;
             case 3:
@@ -353,19 +370,19 @@ static bool Telemetry_Parse ( void )
                 }
                 break;
 
-            case 10:            // ------------------- GPS --------------------
+            case 10:            /* ------------------- GPS -------------------- */
                 Nav_Gps_Putc('$');      // force initial characters into GPS buffer
                 Nav_Gps_Putc('G');
                 ucStatus++;
             case 11:
-                if (c == '$') {         // preamble received
+                if (c == '$') {         // next preamble received
                    ucStatus = 1;        // go check preamble type
                 } else {                // still inside NMEA sentence
                    Nav_Gps_Putc(c);     // force character into GPS buffer
                 }
                 break;
 
-            case 12:            // --------------- PID gains ------------------
+            case 12:            /* --------------- PID gains ------------------ */
                 if (c == ',') { ucStatus++; } else { ucStatus = 0; }
                 break;
             case 13:
@@ -405,7 +422,6 @@ static bool Telemetry_Parse ( void )
                 break;
         }
     }
-    return bResult;
 }
 
 
@@ -441,24 +457,24 @@ static void Telemetry_Send_Controls(void)
     uint8_t j;
     float *pfBuff;
 
-    ucBuffer[0] = TEL_SERVO_POS;                // telemetry wait code
+    ucTxBuffer[0] = TEL_SERVO_POS;                // telemetry wait code
 
-    pfBuff = (float *)&ucBuffer[1];             // elevator
+    pfBuff = (float *)&ucTxBuffer[1];             // elevator
     *pfBuff = (float)Servo_Get(SERVO_ELEVATOR);
 
-    pfBuff = (float *)&ucBuffer[5];             // ailerons
+    pfBuff = (float *)&ucTxBuffer[5];             // ailerons
     *pfBuff = (float)Servo_Get(SERVO_AILERON);
 
-    pfBuff = (float *)&ucBuffer[9];             // rudder
+    pfBuff = (float *)&ucTxBuffer[9];             // rudder
     *pfBuff = (float)Servo_Get(SERVO_RUDDER);
 
-    pfBuff = (float *)&ucBuffer[13];            // throttle
+    pfBuff = (float *)&ucTxBuffer[13];            // throttle
     *pfBuff = (float)Servo_Get(SERVO_THROTTLE);
 
     for (j = 0; j < 17; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
-      USART_SendData(USART1, ucBuffer[j]);
+      USART_SendData(USART1, ucTxBuffer[j]);
     }
 }
 
@@ -485,23 +501,23 @@ static void Telemetry_Send_Waypoint(void)
     uint8_t j;
     uint16_t *puiBuff;
 
-    ucBuffer[0] = TEL_WAYPOINT;             // telemetry wait code
+    ucTxBuffer[0] = TEL_WAYPOINT;             // telemetry wait code
 
-    ucBuffer[1] = Nav_WaypointIndex();      // waypoint index
+    ucTxBuffer[1] = Nav_WaypointIndex();      // waypoint index
 
-    puiBuff = (uint16_t *)&ucBuffer[2];     // bearing to waypoint
+    puiBuff = (uint16_t *)&ucTxBuffer[2];     // bearing to waypoint
     *puiBuff = (uint16_t)Nav_Bearing();
 
-    puiBuff = (uint16_t *)&ucBuffer[4];     // waypoint altitude
+    puiBuff = (uint16_t *)&ucTxBuffer[4];     // waypoint altitude
     *puiBuff = (uint16_t)Nav_Altitude();
 
-    puiBuff = (uint16_t *)&ucBuffer[6];     // distance to waypoint
+    puiBuff = (uint16_t *)&ucTxBuffer[6];     // distance to waypoint
     *puiBuff = Nav_Distance();
 
     for (j = 0; j < 8; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
-      USART_SendData(USART1, ucBuffer[j]);
+      USART_SendData(USART1, ucTxBuffer[j]);
     }
 }
 
@@ -515,27 +531,27 @@ static void Telemetry_Send_Waypoint(void)
 float Sim_Speed(void) {
     return fTrueAirSpeed;
 }
-#endif
 
 
-#if (TELEMETRY_DEBUG == 1)
 //----------------------------------------------------------------------------
 //
-/// \brief Get a character from preloaded string
-///
-/// \returns
-/// \remarks
+/// \brief   telemetry USART interrupt handler
+/// \param   -
+/// \returns -
+/// \remarks -
 ///
 //----------------------------------------------------------------------------
-bool Debug_GetChar ( char *ch )
+void USART1_IRQHandler( void )
 {
-    char c;
-    VAR_STATIC unsigned char j = 0;
+//  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+//  portCHAR cChar;
 
-    c = s_pcSentence[j];
-    if (c == 0) { j = 0; } else { j++; }
-    *ch = c;
-    return TRUE;
+	if (USART_GetITStatus(USART1, USART_IT_RXNE) == SET) {
+//		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
+		ucRxBuffer[ucWindex++] = USART_ReceiveData( USART1 );
+        if (ucWindex >= RX_BUFFER_LENGTH) {
+            ucWindex = 0;
+        }
+    }
+//	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 }
-#endif
-
