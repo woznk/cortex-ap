@@ -20,7 +20,7 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES added function Nav_Altitude()
+//  CHANGES commented
 //
 //============================================================================*/
 
@@ -302,7 +302,6 @@ static void Load_Path( void ) {
 ///          If simulator option is active, only indexes are initialized.
 ///          For direct register initialization of USART see:
 /// http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
-
 ///
 //----------------------------------------------------------------------------
 static void GPS_Init( void ) {
@@ -320,11 +319,9 @@ static void GPS_Init( void ) {
     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
     USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 
-    /* Configure USART2 */
-    USART_Init(USART2, &USART_InitStructure);
+    USART_Init(USART2, &USART_InitStructure);       // configure USART2
 
-    /* Enable USART2 interrupt */
-    USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+    USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);  // enable USART2 interrupt
     //USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
 
     /* Configure NVIC for USART 2 interrupt */
@@ -334,8 +331,7 @@ static void GPS_Init( void ) {
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init( &NVIC_InitStructure );
 
-    /* Enable the USART2 */
-    USART_Cmd(USART2, ENABLE);
+    USART_Cmd(USART2, ENABLE);                      // enable the USART2
 /*
     RCC_APB2ENR |= RCC_APB2ENR_IOPAEN;              // enable clock for GPIOA
     GPIOA_CRH   |= (0x0BUL << 4);                   // Tx (PA9) alt. out push-pull
