@@ -7,7 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: increased stack size for navigation task
+// Change: structure xTelemetry_Message renamed telStruct_Message
 //
 //============================================================================*/
 
@@ -118,7 +118,7 @@ int main(void)
   PPM_Init();                                       // Initialize capture timers as RRC input
   I2C_MEMS_Init();                                  // I2C peripheral initialization
 
-  xTelemetry_Queue = xQueueCreate( 3, sizeof( xTelemetry_Message ) );
+  xTelemetry_Queue = xQueueCreate( 3, sizeof( telStruct_Message ) );
   while ( xTelemetry_Queue == 0 ) {                 // Halt if queue wasn't created
   }
 
