@@ -79,7 +79,7 @@
 ///
 /// \endcode
 //
-//  CHANGES fGround_Speed and fCourse_Over_Ground read from navigation functions
+//  CHANGES function Sim_Speed() renamed Telemetry_Sim_Speed()
 //
 //=============================================================================+
 
@@ -273,11 +273,11 @@ Normalize(void)
 void
 AccelAdjust(void)
 {
-#ifndef _WINDOWS
+#if (SIMULATOR == SIM_NONE)
     fGround_Speed = ((float)Nav_Ground_Speed());
     fGround_Speed = (fGround_Speed * 1852.0f) / 36000.0f; // convert [kt] to [m/s]
-#elif (SIMULATOR == SIM_NONE)
-    fGround_Speed = Sim_Speed();
+#else
+    fGround_Speed = Telemetry_Sim_Speed();
 #endif
     Accel_Vector[1] += ((fGround_Speed * Omega[2] * 9.81f) / GRAVITY);
     Accel_Vector[2] -= ((fGround_Speed * Omega[1] * 9.81f) / GRAVITY);
