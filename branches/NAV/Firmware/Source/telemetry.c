@@ -43,11 +43,11 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES telemetry task periodically activated: sends controls to simulator
-//          every 20 ms, parses all received characters, sends waypoint data
-//          every second
-//          added provisions for uplink data (buffer, UART rx interrupt, indexes)
-//          removed Debug_GetChar(), Telemetry_Parse() made of type void
+//  CHANGES added functions Telemetry_Get_Gain() and Telemetry_Get_Sensors().
+//          function Sim_Speed() renamed Telemetry_Sim_Speed().
+//          removed transmission of simulator controls from telemetry task:
+//          simulator controls are updated inside attitude task when simulator 
+//          option is active.
 //
 //============================================================================*/
 
@@ -113,7 +113,8 @@ VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 "$S,512,512,512,512,512,512,512,110,110\n"
 "$S,512,512,512,\n$S,512,512,512,512,512,512\n"
 "$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n"
-"$K,8799,1299, 899, 199,4999,4999\r\n$S,560,112,-12,12345,0,1023,110\n"
+"$K,8799,1299, 899, 199,4999,4999\r\n"
+"$S,560,112,-12,12345,0,1023,110\n"
 */
 VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    /// uplink data buffer
 VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    /// downlink data buffer
@@ -121,9 +122,9 @@ VAR_STATIC uint8_t ucWindex;                        /// upling write index
 VAR_STATIC uint8_t ucRindex;                        /// uplink read index
 VAR_STATIC uint8_t ucStatus;                        /// status of parser
 VAR_STATIC float fTemp;                             /// temporary for parser
-VAR_STATIC float fGain[6];                          /// gains for PID loops
+VAR_STATIC float fGain[TEL_GAIN_NUMBER];            /// gains for PID loops
 VAR_STATIC float fSensor[8];                        /// simulator sensor data
-VAR_STATIC float fTrueAirSpeed = 0.0f;              /// simulator true air speed
+VAR_STATIC float fTrueAirSpeed;                     /// simulator true air speed
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -154,9 +155,6 @@ void Telemetry_Task( void *pvParameters )
 
     while (1) {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
-#if (SIMULATOR != SIM_NONE)
-        Telemetry_Send_Controls();              // update simulator controls
-#endif
         Telemetry_Parse();                      // parse uplink data
         if (++ucCycles >= TELEMETRY_FREQUENCY) {// every second
             ucCycles = 0;                       // reset cycle counter
@@ -204,7 +202,8 @@ static void Telemetry_Init( void ) {
     ucWindex = 0;                                   // clear write index
     ucRindex = 0;                                   // clear read index
     ucStatus = 0;                                   // reset parser status
-    fTemp = 0.0f;                                   // clear temporary
+    fTemp = 0.0f;                                   // clear parser temporary
+    fTrueAirSpeed = 0.0f;                           // clear true air speed
 }
 
 ///----------------------------------------------------------------------------
@@ -408,12 +407,6 @@ static void Telemetry_Parse ( void )
                 break;
             case 19:
                 ucStatus = 0;
-                Gyro_Gain    = fGain[0] / 9999.0f;
-                Accel_Gain   = fGain[1] / 9999.0f;
-                PitchRoll_Kp = fGain[2] / 9999000.0f;
-                PitchRoll_Ki = fGain[3] / 99990000.0f;
-                Yaw_Kp       = fGain[4] / 9999.0f;
-                Yaw_Ki       = fGain[5] / 9999000.0f;
                 break;
 
             default:
@@ -528,10 +521,41 @@ static void Telemetry_Send_Waypoint(void)
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-float Sim_Speed(void) {
+float Telemetry_Sim_Speed(void) {
     return fTrueAirSpeed;
 }
 
+///----------------------------------------------------------------------------
+///
+/// \brief   Get PID gain
+/// \param   gain, gain number
+/// \return  gain value
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Telemetry_Get_Gain(telEnum_Gain gain) {
+    if (gain < TEL_GAIN_NUMBER) {
+        return fGain[gain];
+    } else {
+        return 1.0f;
+    }
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Get sensor value
+/// \param   puiSensor, pointer to sensro data array
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Telemetry_Get_Sensors(int16_t * piSensor) {
+    uint8_t j;
+
+    for (j = 0; j < 6; j++) {
+        *piSensor++ = (int16_t)fSensor[j];
+    }
+}
 
 //----------------------------------------------------------------------------
 //
@@ -541,8 +565,7 @@ float Sim_Speed(void) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-void USART1_IRQHandler( void )
-{
+void USART1_IRQHandler( void ) {
 //  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 //  portCHAR cChar;
 
