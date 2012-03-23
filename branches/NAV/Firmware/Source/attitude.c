@@ -7,7 +7,10 @@
 //
 /// \brief attitude control
 ///
-// Change: logged all PPM channels
+// Change: distinguished sensor reading and control updating for simulator mode:
+//         sensors read by Telemetry_Get_Sensor(), controls updated by 
+//         Telemetry_Update_Controls()
+//         Gains of PID loops read from telemetry data instead of radio channel.
 //
 //============================================================================*/
 
@@ -164,9 +167,12 @@ void Attitude_Task(void *pvParameters)
         }
 
         /* Read sensors */
+#if (SIMULATOR == SIM_NONE)                         // normal mode
         GetAccelRaw(ucSensor_Data);                 // acceleration
         GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
-
+#else                                               // simulation mode
+        Telemetry_Get_Sensors(ucSensor_Data);       // get simulator sensors
+#endif
         /* Offset and sign correction */
         pSensor = (int16_t *)ucSensor_Data;
         for (j = 0; j < 6; j++) {
@@ -233,8 +239,8 @@ static __inline void Attitude_Control(void)
     switch (PPMGetMode()) {
         case MODE_PITCH_TUNE:
             bTuning = TRUE;
-            Pitch_Pid.fKp = (float)(PPMGetChannel(KP_CHANNEL) - SERVO_MIN) / 250.0f;
-            Pitch_Pid.fKi = (float)(PPMGetChannel(KI_CHANNEL) - SERVO_MIN) / 10000.0f;
+            Pitch_Pid.fKp = Telemetry_Get_Gain(TEL_PITCH_KP);
+            Pitch_Pid.fKi = Telemetry_Get_Gain(TEL_PITCH_KI);
             iElevator -= SERVO_NEUTRAL;
             fSetpoint = ((float)iElevator / 500.0f) + (PI/2);       // setpoint for pitch angle
             fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
@@ -247,8 +253,8 @@ static __inline void Attitude_Control(void)
         break;
         case MODE_ROLL_TUNE:
             bTuning = TRUE;
-            Roll_Pid.fKp = (float)(PPMGetChannel(KP_CHANNEL) - SERVO_MIN) / 250.0f;
-            Roll_Pid.fKi = (float)(PPMGetChannel(KI_CHANNEL) - SERVO_MIN) / 10000.0f;
+            Roll_Pid.fKp = Telemetry_Get_Gain(TEL_ROLL_KP);
+            Roll_Pid.fKi = Telemetry_Get_Gain(TEL_ROLL_KI);
             iRudder -= SERVO_NEUTRAL;
             fSetpoint = ((float)iRudder / 500.0f) + (PI/2);         // setpoint for bank angle
             fInput = acosf(DCM_Matrix[2][1]);                       // bank angle given by DCM
@@ -262,23 +268,20 @@ static __inline void Attitude_Control(void)
 //       case MODE_MANUAL:
 //       case MODE_RTL:
         default:
-            PID_Init(&Roll_Pid);    // reset PID controllers
+            PID_Init(&Roll_Pid);            // reset PID controllers
             PID_Init(&Pitch_Pid);
             LEDOff(RED);
             if (bTuning) {
-                iMessage_Buffer[0] = (int16_t)(Roll_Pid.fKp * 1000.0f);
-                iMessage_Buffer[1] = (int16_t)(Roll_Pid.fKi * 40000.0f);
-                iMessage_Buffer[2] = (int16_t)(Pitch_Pid.fKp * 1000.0f);
-                iMessage_Buffer[3] = (int16_t)(Pitch_Pid.fKi * 40000.0f);
-                message.ucLength = 4;                         // message length
-                message.pcData = (uint16_t *)iMessage_Buffer; // message content
-                xQueueSend( xLog_Queue, &message, 0 );
                 bTuning = FALSE;
             }
         break;
     }
-    Servo_Set(SERVO_AILERON, iRudder);
+#if (SIMULATOR == SIM_NONE)                 // normal mode
+    Servo_Set(SERVO_AILERON, iRudder);      // update servos
     Servo_Set(SERVO_ELEVATOR, iElevator);
+#else                                       // simulation mode
+    Telemetry_Send_Controls();              // update simulator controls
+#endif
 }
 
 /**
