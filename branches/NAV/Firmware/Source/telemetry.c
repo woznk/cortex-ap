@@ -43,11 +43,9 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES added functions Telemetry_Get_Gain() and Telemetry_Get_Sensors().
-//          function Sim_Speed() renamed Telemetry_Sim_Speed().
-//          removed transmission of simulator controls from telemetry task:
-//          simulator controls are updated inside attitude task when simulator 
-//          option is active.
+//  CHANGES corrected ucStatus values
+//          commented declaration of telemetry queue
+//          removed static attribute from function Telemetry_Send_Controls() 
 //
 //============================================================================*/
 
@@ -70,15 +68,15 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
+#ifdef    VAR_STATIC
 #   undef VAR_STATIC
 #endif
-#define VAR_STATIC static
+#define   VAR_STATIC static
 
-#ifdef VAR_GLOBAL
+#ifdef    VAR_GLOBAL
 #   undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
+#define   VAR_GLOBAL
 
 #define TELEMETRY_FREQUENCY 50
 #define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY)
@@ -104,7 +102,7 @@ typedef enum E_TELEMETRY {
 
 /*---------------------------------- Globals ---------------------------------*/
 
-VAR_GLOBAL xQueueHandle xTelemetry_Queue;
+//VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 
 /*----------------------------------- Locals ---------------------------------*/
 /*
@@ -132,8 +130,8 @@ static void Telemetry_Init( void );
 static void Telemetry_Send_Message(uint16_t *data, uint8_t num);
 static void Telemetry_Send_DCM( void );
 static void Telemetry_Parse( void );
-static void Telemetry_Send_Controls( void );
 static void Telemetry_Send_Waypoint( void );
+void Telemetry_Send_Controls( void );
 
 /*---------------------------------- Functions -------------------------------*/
 
@@ -332,7 +330,7 @@ static void Telemetry_Parse ( void )
                 switch (c) {
                     case 'S': ucStatus++; break;    // sensor data
                     case 'G': ucStatus = 10; break; // GPS data
-                    case 'K': ucStatus = 19; break; // gain data
+                    case 'K': ucStatus = 12; break; // gain data
                     default : ucStatus = 0; break;  //
                 }
                 break;
@@ -391,11 +389,11 @@ static void Telemetry_Parse ( void )
             case 17:
             case 18:
                 if ((c == '\r') || (c == '\n')) {
-                    fGain[ucStatus - 20] = fTemp;
+                    fGain[ucStatus - 13] = fTemp;
                     fTemp = 0.0f;
-                    ucStatus = 26;
+                    ucStatus = 19;
                 } else if (c == ',') {
-                    fGain[ucStatus - 20] = fTemp;
+                    fGain[ucStatus - 13] = fTemp;
                     fTemp = 0.0f;
                     ucStatus++;
                 } else if ((c >= '0') && (c <= '9')) {
@@ -445,7 +443,7 @@ static void Telemetry_Parse ( void )
 ///              16         "
 ///
 //----------------------------------------------------------------------------
-static void Telemetry_Send_Controls(void)
+void Telemetry_Send_Controls(void)
 {
     uint8_t j;
     float *pfBuff;
@@ -521,7 +519,7 @@ static void Telemetry_Send_Waypoint(void)
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-float Telemetry_Sim_Speed(void) {
+float Telemetry_Get_Speed(void) {
     return fTrueAirSpeed;
 }
 
