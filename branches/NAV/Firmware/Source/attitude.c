@@ -7,10 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: distinguished sensor reading and control updating for simulator mode:
-//         sensors read by Telemetry_Get_Sensor(), controls updated by 
-//         Telemetry_Update_Controls()
-//         Gains of PID loops read from telemetry data instead of radio channel.
+// Change: corrected reading of sensor data from simulator 
 //
 //============================================================================*/
 
@@ -146,8 +143,12 @@ void Attitude_Task(void *pvParameters)
     /* Compute sensor offsets */
     for (i = 0; i < 64; i++) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
-        GetAccelRaw(ucSensor_Data);                   // acceleration
-        GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);  // angular rate
+#if (SIMULATOR == SIM_NONE)                         // normal mode
+        GetAccelRaw(ucSensor_Data);                 // acceleration
+        GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
+#else                                               // simulation mode
+        Telemetry_Get_Sensors((int16_t *)ucSensor_Data);// get simulator sensors
+#endif
         pSensor = (int16_t *)ucSensor_Data;
         for (j = 0; j < 6; j++) {                   // accumulate
             iSensor_Offset[j] += *pSensor++;
@@ -171,7 +172,7 @@ void Attitude_Task(void *pvParameters)
         GetAccelRaw(ucSensor_Data);                 // acceleration
         GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
 #else                                               // simulation mode
-        Telemetry_Get_Sensors(ucSensor_Data);       // get simulator sensors
+        Telemetry_Get_Sensors((int16_t *)ucSensor_Data);// get simulator sensors
 #endif
         /* Offset and sign correction */
         pSensor = (int16_t *)ucSensor_Data;
