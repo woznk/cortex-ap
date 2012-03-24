@@ -79,7 +79,8 @@
 ///
 /// \endcode
 //
-//  CHANGES function Sim_Speed() renamed Telemetry_Sim_Speed()
+//  CHANGES function Telemetry_Sim_Speed() renamed Telemetry_Get_Speed()
+//          removed reading of simulator data from Matrix_Update()
 //
 //=============================================================================+
 
@@ -87,7 +88,7 @@
 
 #include "math.h"
 #include "vmath.h"
-//#include "telemetry.h"
+#include "telemetry.h"
 #include "config.h"
 #include "nav.h"
 #include "DCM.h"
@@ -277,7 +278,7 @@ AccelAdjust(void)
     fGround_Speed = ((float)Nav_Ground_Speed());
     fGround_Speed = (fGround_Speed * 1852.0f) / 36000.0f; // convert [kt] to [m/s]
 #else
-    fGround_Speed = Telemetry_Sim_Speed();
+    fGround_Speed = Telemetry_Get_Speed();
 #endif
     Accel_Vector[1] += ((fGround_Speed * Omega[2] * 9.81f) / GRAVITY);
     Accel_Vector[2] -= ((fGround_Speed * Omega[1] * 9.81f) / GRAVITY);
@@ -387,7 +388,6 @@ MatrixUpdate(int16_t *sensor)
     //
     int x, y;
 
-#if (SIMULATOR == SIM_NONE)
     //
     // Accelerometer signals
     //
@@ -400,21 +400,6 @@ MatrixUpdate(int16_t *sensor)
     Gyro_Vector[0] = Gyro_Gain * (*sensor++);     // omega x
     Gyro_Vector[1] = Gyro_Gain * (*sensor++);     // omega y
     Gyro_Vector[2] = Gyro_Gain * (*sensor);       // omega z
-#else
-    //
-    // Accelerometer signals
-    //
-    Accel_Vector[0] = Accel_Gain * Sim_GetData(0);  // accel x
-    Accel_Vector[1] = Accel_Gain * Sim_GetData(1);  // accel y
-    Accel_Vector[2] = Accel_Gain * Sim_GetData(2);  // accel z
-
-    //
-    // Gyro signals
-    //
-    Gyro_Vector[0] = Gyro_Gain * Sim_GetData(3);    // gyro x roll
-    Gyro_Vector[1] = Gyro_Gain * Sim_GetData(4);    // gyro y pitch
-    Gyro_Vector[2] = Gyro_Gain * Sim_GetData(5);    // gyro z yaw
-#endif
 
     //
     // adding integral
