@@ -8,9 +8,8 @@
 /// \brief Simulation interface
 /// \file
 ///
-//  CHANGES structure xTelemetry_Message renamed telStruct_Message
-//          added structure telEnum_Gain
-//          added functions Telemetry_Get_Sensor() and Telemetry_Get_Gain()
+//  CHANGES corrected parameter of Telemetry_Get_Sensors() function
+//          function Telemetry_Sim_Speed() renamed Telemetry_Get_Speed()
 //
 //============================================================================
 
@@ -46,13 +45,14 @@ typedef enum {
 
 /*---------------------------------- Globals ---------------------------------*/
 
-VAR_GLOBAL xQueueHandle xTelemetry_Queue;
+//VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 
 /*---------------------------------- Interface -------------------------------*/
 
 void Telemetry_Task( void *pvParameters );
-void Telemetry_Get_Sensor(uint8_t pucSensors);
+void Telemetry_Get_Sensors(int16_t * piSensors);
 float Telemetry_Get_Gain(telEnum_Gain gain);
-float Telemetry_Sim_Speed ( void );
+void Telemetry_Send_Controls(void);
+float Telemetry_Get_Speed(void);
 
 
