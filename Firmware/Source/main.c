@@ -7,7 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: structure xTelemetry_Message renamed telStruct_Message
+// Change: commented creation of telemetry queue
 //
 //============================================================================*/
 
@@ -117,11 +117,11 @@ int main(void)
   Servo_Init();                                     // Initialize PWM timers as servo outputs
   PPM_Init();                                       // Initialize capture timers as RRC input
   I2C_MEMS_Init();                                  // I2C peripheral initialization
-
+/*
   xTelemetry_Queue = xQueueCreate( 3, sizeof( telStruct_Message ) );
   while ( xTelemetry_Queue == 0 ) {                 // Halt if queue wasn't created
   }
-
+*/
   xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
   while ( xLog_Queue == 0 ) {                       // Halt if queue wasn't created
   }
