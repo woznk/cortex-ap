@@ -7,7 +7,8 @@
 //
 /// \brief attitude control
 ///
-// Change: corrected reading of sensor data from simulator 
+// Change: servo outputs always updated (simulation and flight mode)
+//         removed log of sensors, DCM, controls
 //
 //============================================================================*/
 
@@ -160,6 +161,7 @@ void Attitude_Task(void *pvParameters)
 
     /* Compute attitude and heading */
     while (1) {
+
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
 
         if (++ucBlink_Blue == 10) {                 // blink led every 10 cycles
@@ -190,37 +192,6 @@ void Attitude_Task(void *pvParameters)
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
         Attitude_Control();                         // attitude control loop
-
-        /* Log sensor data */
-#if (LOG_SENSORS == 1)
-        message.ucLength = 6;                       // message length
-        message.pcData = (uint16_t *)ucSensor_Data; // message content
-        xQueueSend( xLog_Queue, &message, 0 );
-#endif
-        /* Log PPM channels */
-#if (LOG_PPM == 1)
-        iMessage_Buffer[0] = (int16_t)PPMGetChannel(AILERON_CHANNEL);
-        iMessage_Buffer[1] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
-        iMessage_Buffer[2] = (int16_t)PPMGetChannel(MODE_CHANNEL);
-        iMessage_Buffer[3] = (int16_t)PPMGetChannel(THROTTLE_CHANNEL);
-        iMessage_Buffer[4] = (int16_t)PPMGetChannel(RUDDER_CHANNEL);
-
-        message.ucLength = 5;                        // message length
-        message.pcData = (uint16_t *)iMessage_Buffer; // message content
-        xQueueSend( xLog_Queue, &message, 0 );
-#endif
-        /* Log DCM matrix */
-#if (LOG_DCM == 1)
-        for (i = 0; i < 3; i++) {
-            for (j = 0; j < 3; j++) {
-                iMessage_Buffer[(i * 3) + j] =
-                (int16_t)(DCM_Matrix[i][j] * 32767.0f);
-            }
-        }
-        message.ucLength = 9;                        // message length
-        message.pcData = (uint16_t *)iMessage_Buffer; // message content
-        xQueueSend( xLog_Queue, &message, 0 );
-#endif
     }
 }
 
@@ -277,12 +248,13 @@ static __inline void Attitude_Control(void)
             }
         break;
     }
-#if (SIMULATOR == SIM_NONE)                 // normal mode
-    Servo_Set(SERVO_AILERON, iRudder);      // update servos
+    /* Update controls */
+    Servo_Set(SERVO_AILERON, iRudder);          // update servos
     Servo_Set(SERVO_ELEVATOR, iElevator);
-#else                                       // simulation mode
-    Telemetry_Send_Controls();              // update simulator controls
+#if (SIMULATOR != SIM_NONE)                     // simulation mode
+    Telemetry_Send_Controls();                  // update simulator controls
 #endif
+
 }
 
 /**
