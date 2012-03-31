@@ -43,9 +43,9 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES corrected ucStatus values
-//          commented declaration of telemetry queue
-//          removed static attribute from function Telemetry_Send_Controls() 
+//  CHANGES corrected parsing of sensor data and gain data
+//          disabled forwarding of GPS data to navigation task
+//          disabled transmission of DCM matrix
 //
 //============================================================================*/
 
@@ -153,6 +153,9 @@ void Telemetry_Task( void *pvParameters )
 
     while (1) {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
+if (FALSE) {
+        Telemetry_Send_DCM();
+}
         Telemetry_Parse();                      // parse uplink data
         if (++ucCycles >= TELEMETRY_FREQUENCY) {// every second
             ucCycles = 0;                       // reset cycle counter
@@ -329,7 +332,7 @@ static void Telemetry_Parse ( void )
             case 1:
                 switch (c) {
                     case 'S': ucStatus++; break;    // sensor data
-                    case 'G': ucStatus = 10; break; // GPS data
+                    case 'G': /*ucStatus = 10; */ break; // GPS data
                     case 'K': ucStatus = 12; break; // gain data
                     default : ucStatus = 0; break;  //
                 }
@@ -344,7 +347,7 @@ static void Telemetry_Parse ( void )
             case 7:
             case 8:
                 if (c == ',') {
-                    fSensor[ucStatus - 3] = fTemp;
+                    fSensor[ucStatus - 3] = 32767.0f - fTemp;
                     fTemp = 0.0f;
                     ucStatus++;
                 } else if ((c >= '0') && (c <= '9')) {
@@ -389,11 +392,11 @@ static void Telemetry_Parse ( void )
             case 17:
             case 18:
                 if ((c == '\r') || (c == '\n')) {
-                    fGain[ucStatus - 13] = fTemp;
+                    fGain[ucStatus - 13] = fTemp / 2000.0f;
                     fTemp = 0.0f;
                     ucStatus = 19;
                 } else if (c == ',') {
-                    fGain[ucStatus - 13] = fTemp;
+                    fGain[ucStatus - 13] = fTemp / 2000.0f;
                     fTemp = 0.0f;
                     ucStatus++;
                 } else if ((c >= '0') && (c <= '9')) {
