@@ -8,8 +8,7 @@
 /// \brief Simulation interface
 /// \file
 ///
-//  CHANGES corrected parameter of Telemetry_Get_Sensors() function
-//          function Telemetry_Sim_Speed() renamed Telemetry_Get_Speed()
+//  CHANGES corrected enum of PID gains
 //
 //============================================================================
 
@@ -32,10 +31,10 @@ typedef struct {
 } telStruct_Message;
 
 typedef enum {
-    TEL_ROLL_KP = 0,
-    TEL_ROLL_KI,
-    TEL_PITCH_KP,
+    TEL_PITCH_KP = 0,
     TEL_PITCH_KI,
+    TEL_ROLL_KP,
+    TEL_ROLL_KI,
     TEL_NAV_KP,
     TEL_NAV_KI,
     TEL_GAIN_NUMBER
