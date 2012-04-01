@@ -29,7 +29,8 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES PPM_LENGTH_MIN, PPM_LENGTH_MAX made equal to SERVO_MIN, SERVO_MAX
+//  CHANGES modes MODE_ROLL_TUNE and MODE_PITCH_TUNE renamed MODE_STAB and
+//          MODE_NAV respectively
 //
 //============================================================================*/
 
@@ -236,9 +237,9 @@ uint8_t PPMGetMode(void)
     } else if ( uiWidth < 1100 ) {
         return MODE_MANUAL;
     } else if (( uiWidth > 1400 ) && ( uiWidth < 1600 )) {
-        return MODE_ROLL_TUNE;
+        return MODE_STAB;
     } else if ( uiWidth > 1900 ) {
-        return MODE_PITCH_TUNE;
+        return MODE_NAV;
     } else {
         return MODE_UNDEFINED;
     }
