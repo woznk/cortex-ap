@@ -43,9 +43,7 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES corrected parsing of sensor data and gain data
-//          disabled forwarding of GPS data to navigation task
-//          disabled transmission of DCM matrix
+//  CHANGES removed forwarding of GPS data to navigation task
 //
 //============================================================================*/
 
@@ -155,6 +153,9 @@ void Telemetry_Task( void *pvParameters )
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
 if (FALSE) {
         Telemetry_Send_DCM();
+}
+if (TRUE) {
+        Telemetry_Send_Controls();              // update simulator controls
 }
         Telemetry_Parse();                      // parse uplink data
         if (++ucCycles >= TELEMETRY_FREQUENCY) {// every second
@@ -371,14 +372,10 @@ static void Telemetry_Parse ( void )
                 break;
 
             case 10:            /* ------------------- GPS -------------------- */
-                Nav_Gps_Putc('$');      // force initial characters into GPS buffer
-                Nav_Gps_Putc('G');
                 ucStatus++;
             case 11:
                 if (c == '$') {         // next preamble received
                    ucStatus = 1;        // go check preamble type
-                } else {                // still inside NMEA sentence
-                   Nav_Gps_Putc(c);     // force character into GPS buffer
                 }
                 break;
 
@@ -495,7 +492,7 @@ static void Telemetry_Send_Waypoint(void)
     uint8_t j;
     uint16_t *puiBuff;
 
-    ucTxBuffer[0] = TEL_WAYPOINT;             // telemetry wait code
+    ucTxBuffer[0] = TEL_WAYPOINT;           // telemetry wait code
 
     ucTxBuffer[1] = Nav_WaypointIndex();      // waypoint index
 
