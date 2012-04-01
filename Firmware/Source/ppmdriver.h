@@ -8,7 +8,8 @@
 /// \brief
 /// PPM input driver header file
 ///
-//  CHANGES modified channel definitions for EasyStar
+//  CHANGES modes MODE_ROLL_TUNE and MODE_PITCH_TUNE renamed MODE_STAB and
+//          MODE_NAV respectively
 //
 //============================================================================*/
 
@@ -63,8 +64,8 @@
 #endif
 
 #define MODE_UNDEFINED      0
-#define MODE_ROLL_TUNE      1
-#define MODE_PITCH_TUNE     2
+#define MODE_STAB           1
+#define MODE_NAV            2
 #define MODE_MANUAL         3
 #define MODE_RTL            4
 
