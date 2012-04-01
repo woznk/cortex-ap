@@ -7,8 +7,8 @@
 //
 /// \brief attitude control
 ///
-// Change: servo outputs always updated (simulation and flight mode)
-//         removed log of sensors, DCM, controls
+// Change: removed tuning modes for roll and pitch, replaced with stabilization
+//         mode and navigation mode
 //
 //============================================================================*/
 
@@ -30,7 +30,9 @@
 #include "telemetry.h"
 #include "log.h"
 #include "led.h"
+#include "nav.h"
 #include "pid.h"
+#include "attitude.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -78,7 +80,7 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 /*----------------------------------- Locals ---------------------------------*/
 
 VAR_STATIC bool bTuning = FALSE;
-VAR_STATIC int16_t iRudder;
+VAR_STATIC int16_t iAileron;
 VAR_STATIC int16_t iElevator;
 VAR_STATIC uint8_t ucBlink_Red = 0;
 VAR_STATIC uint8_t ucBlink_Blue = 0;
@@ -205,56 +207,68 @@ void Attitude_Task(void *pvParameters)
 ///----------------------------------------------------------------------------
 static __inline void Attitude_Control(void)
 {
-    iRudder = PPMGetChannel(AILERON_CHANNEL);
-    iElevator = PPMGetChannel(ELEVATOR_CHANNEL);
+    Pitch_Pid.fKp = Telemetry_Get_Gain(TEL_PITCH_KP);
+    Pitch_Pid.fKi = Telemetry_Get_Gain(TEL_PITCH_KI);
+    Roll_Pid.fKp = Telemetry_Get_Gain(TEL_ROLL_KP);
+    Roll_Pid.fKi = Telemetry_Get_Gain(TEL_ROLL_KI);
 
     switch (PPMGetMode()) {
-        case MODE_PITCH_TUNE:
-            bTuning = TRUE;
-            Pitch_Pid.fKp = Telemetry_Get_Gain(TEL_PITCH_KP);
-            Pitch_Pid.fKi = Telemetry_Get_Gain(TEL_PITCH_KI);
-            iElevator -= SERVO_NEUTRAL;
-            fSetpoint = ((float)iElevator / 500.0f) + (PI/2);       // setpoint for pitch angle
+
+        case MODE_STAB:
+            iAileron = PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL;;
+            iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
+
+            fSetpoint = ((float)iElevator / 500.0f) + (PI / 2.0f);  // setpoint for pitch angle
             fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
             fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
             iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
-            if (++ucBlink_Red >= 4) {
-                ucBlink_Red = 0;
-                LEDToggle(RED);
-            }
-        break;
-        case MODE_ROLL_TUNE:
-            bTuning = TRUE;
-            Roll_Pid.fKp = Telemetry_Get_Gain(TEL_ROLL_KP);
-            Roll_Pid.fKi = Telemetry_Get_Gain(TEL_ROLL_KI);
-            iRudder -= SERVO_NEUTRAL;
-            fSetpoint = ((float)iRudder / 500.0f) + (PI/2);         // setpoint for bank angle
+
+            fSetpoint = ((float)iAileron / 500.0f) + (PI / 2.0f);   // setpoint for bank angle
             fInput = acosf(DCM_Matrix[2][1]);                       // bank angle given by DCM
             fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
-            iRudder = SERVO_NEUTRAL + (int16_t)fOutput;
+            iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
+
             if (++ucBlink_Red >= 8) {
                 ucBlink_Red = 0;
                 LEDToggle(RED);
             }
-        break;
+            break;
+
+        case MODE_NAV:
+            iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
+
+            fSetpoint = ((float)iElevator / 500.0f) + (PI / 2.0f);  // setpoint for pitch angle
+            fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
+            fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
+            iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
+
+            fSetpoint = Nav_Bank();                                 // setpoint for bank angle
+            fInput = acosf(DCM_Matrix[2][1]);                       // bank angle given by DCM
+            fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
+            iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
+
+            if (++ucBlink_Red >= 4) {
+                ucBlink_Red = 0;
+                LEDToggle(RED);
+            }
+            break;
+
 //       case MODE_MANUAL:
 //       case MODE_RTL:
         default:
-            PID_Init(&Roll_Pid);            // reset PID controllers
+            iAileron = PPMGetChannel(AILERON_CHANNEL);
+            iElevator = PPMGetChannel(ELEVATOR_CHANNEL);
+            PID_Init(&Roll_Pid);                                    // reset PID controllers
             PID_Init(&Pitch_Pid);
             LEDOff(RED);
             if (bTuning) {
                 bTuning = FALSE;
             }
-        break;
+            break;
     }
     /* Update controls */
-    Servo_Set(SERVO_AILERON, iRudder);          // update servos
+    Servo_Set(SERVO_AILERON, iAileron);                             // update servos
     Servo_Set(SERVO_ELEVATOR, iElevator);
-#if (SIMULATOR != SIM_NONE)                     // simulation mode
-    Telemetry_Send_Controls();                  // update simulator controls
-#endif
-
 }
 
 /**
