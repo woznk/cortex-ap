@@ -20,8 +20,7 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES corrected again parsing of GPS coordinates,
-//          tentatively computed heading from DCM matrix (not working)
+//  CHANGES GPS_Heading() returns an uint16_t
 //
 //============================================================================*/
 
@@ -602,7 +601,7 @@ float Nav_Heading ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-float Gps_Heading ( void ) {
+uint16_t Gps_Heading ( void ) {
   return uiGps_Heading;
 }
 
