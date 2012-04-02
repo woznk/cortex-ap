@@ -79,8 +79,7 @@
 ///
 /// \endcode
 //
-//  CHANGES function Telemetry_Sim_Speed() renamed Telemetry_Get_Speed()
-//          removed reading of simulator data from Matrix_Update()
+//  CHANGES function Nav_Heading() replaced by Gps_Heading()
 //
 //=============================================================================+
 
@@ -337,7 +336,7 @@ CompensateDrift( void )
     //
     // Course over ground
     //
-    fCourse_Over_Ground = (float)Nav_Heading();
+    fCourse_Over_Ground = (float)Gps_Heading();
     COGX = cosf(ToRad(fCourse_Over_Ground));
     COGY = sinf(ToRad(fCourse_Over_Ground));
 
