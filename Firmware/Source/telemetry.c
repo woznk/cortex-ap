@@ -43,7 +43,7 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES removed forwarding of GPS data to navigation task
+//  CHANGES added heading to Telemetry_Send_Waypoint()
 //
 //============================================================================*/
 
@@ -151,12 +151,12 @@ void Telemetry_Task( void *pvParameters )
 
     while (1) {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
-if (FALSE) {
+#if 0
         Telemetry_Send_DCM();
-}
-if (TRUE) {
+#endif
+#if 0
         Telemetry_Send_Controls();              // update simulator controls
-}
+#endif
         Telemetry_Parse();                      // parse uplink data
         if (++ucCycles >= TELEMETRY_FREQUENCY) {// every second
             ucCycles = 0;                       // reset cycle counter
@@ -494,18 +494,21 @@ static void Telemetry_Send_Waypoint(void)
 
     ucTxBuffer[0] = TEL_WAYPOINT;           // telemetry wait code
 
-    ucTxBuffer[1] = Nav_WaypointIndex();      // waypoint index
+    ucTxBuffer[1] = Nav_Wpt_Index();        // waypoint index
 
-    puiBuff = (uint16_t *)&ucTxBuffer[2];     // bearing to waypoint
+    puiBuff = (uint16_t *)&ucTxBuffer[2];   // bearing to waypoint
     *puiBuff = (uint16_t)Nav_Bearing();
 
-    puiBuff = (uint16_t *)&ucTxBuffer[4];     // waypoint altitude
-    *puiBuff = (uint16_t)Nav_Altitude();
+    puiBuff = (uint16_t *)&ucTxBuffer[4];   // waypoint altitude
+    *puiBuff = (uint16_t)Nav_Wpt_Altitude();
 
-    puiBuff = (uint16_t *)&ucTxBuffer[6];     // distance to waypoint
+    puiBuff = (uint16_t *)&ucTxBuffer[6];   // distance to waypoint
     *puiBuff = Nav_Distance();
 
-    for (j = 0; j < 8; j++) {
+    puiBuff = (uint16_t *)&ucTxBuffer[8];   // heading
+    *puiBuff = (uint16_t)Nav_Heading();
+
+    for (j = 0; j < 10; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
       USART_SendData(USART1, ucTxBuffer[j]);
