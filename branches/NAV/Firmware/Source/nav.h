@@ -7,7 +7,7 @@
 //
 /// \file
 /// \brief  Navigation task header file
-//  CHANGES Nav_Heading returns a float
+//  CHANGES added function Gps_Heading()
 //
 //============================================================================
 
@@ -35,6 +35,7 @@ void Navigation_Init( void );
 float Nav_Heading ( void );
 float Nav_Bearing ( void );
 float Nav_Bank ( void );
+uint16_t Gps_Heading ( void );
 uint16_t Nav_Distance ( void );
 uint16_t Nav_Wpt_Index ( void );
 uint16_t Nav_Wpt_Altitude ( void );
