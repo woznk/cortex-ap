@@ -20,9 +20,8 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES corrected parsing of GPS coordinates, 
-//          added updating of PID gains from telemetry,
-//          added bearing to waypoint calculation
+//  CHANGES corrected again parsing of GPS coordinates,
+//          tentatively computed heading from DCM matrix (not working)
 //
 //============================================================================*/
 
@@ -126,8 +125,9 @@ VAR_STATIC float fLon_Dest;                         // destination longitude
 VAR_STATIC float fLat_Curr;                         // current latitude
 VAR_STATIC float fLon_Curr;                         // current longitude
 VAR_STATIC float fBearing;                          // angle to destination [°]
+VAR_STATIC float fHeading;                          // aircraft navigation heading [°]
+VAR_STATIC uint16_t uiGps_Heading;                  // aircraft GPS heading [°]
 VAR_STATIC uint32_t ulTempCoord;                    // temporary for coordinate parser
-VAR_STATIC uint16_t uiHeading;                      // aircraft GPS heading [°]
 VAR_STATIC uint16_t uiSpeed;                        // speed [kt]
 VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
 VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
@@ -160,7 +160,7 @@ void Navigation_Task( void *pvParameters ) {
 
     fBank = PI / 2.0f;                              // default bank angle
     fBearing = 0.0f;                                // angle to destination [°]
-    uiHeading = 0;                                  // aircraft GPS heading [°]
+    uiGps_Heading = 0;                              // aircraft GPS heading [°]
     uiSpeed = 0;                                    // speed [kt]
     uiDistance = 0;                                 // distance to destination [m]
     uiWptNumber = 0;                                // no waypoint yet
@@ -208,6 +208,14 @@ void Navigation_Task( void *pvParameters ) {
             actual_x = DCM_Matrix[0][0];
             actual_y = DCM_Matrix[1][0];
 
+            /* Compute heading */
+            fHeading = (atan2f(actual_x, actual_y) * 180.0f) / PI;
+            if (fHeading < 0.0f) fHeading = fHeading + 360.0f;
+
+            /* Compute bearing to waypoint */
+            fBearing = 90.0f - ((atan2f(desired_y, desired_x) * 180.0f) / PI);
+            if (fBearing < 0.0f) fBearing = fBearing + 360.0f;
+
             /* Compute cosine of angle between bearing and heading */
             dot_prod = (actual_x * desired_x) + (actual_y * desired_y);
 
@@ -229,10 +237,6 @@ void Navigation_Task( void *pvParameters ) {
             /* Compute distance to waypoint */
             temp = sqrtf((desired_y * desired_y) + (desired_x * desired_x));
             uiDistance = (unsigned int)(temp * 111113.7f);
-
-            /* Compute bearing to waypoint */
-            fBearing = 90.0f - ((atan2f(desired_y, desired_x) * 180.0f) / PI);
-            if (fBearing < 0.0f) fBearing = fBearing + 360.0f;
 
             /* Waypoint reached: next waypoint */
             if (uiDistance < MIN_DISTANCE) {
@@ -492,11 +496,13 @@ static bool Parse_GPS( void )
            }
         }
 
-        if ( ucCommas == 3 ) {              // get latitude data (3rd comma)
+        if (( ucCommas == 3 ) ||
+            ( ucCommas == 4 )) {            // get latitude data (3rd comma)
           Parse_Coord (&fLat_Curr, c);
         }
 
-        if ( ucCommas == 5 ) {              // get longitude data (5th comma)
+        if (( ucCommas == 5 ) ||
+            ( ucCommas == 6 )) {            // get longitude data (5th comma)
           Parse_Coord (&fLon_Curr, c);
         }
 
@@ -511,17 +517,17 @@ static bool Parse_GPS( void )
 
         if ( ucCommas == 8 ) {              // get heading (8th comma)
           if ( c == ',' ) {
-            uiHeading = 0;
+            uiGps_Heading = 0;
           } else if ( c != '.' ) {
-            uiHeading *= 10;
-            uiHeading += (c - '0');
+            uiGps_Heading *= 10;
+            uiGps_Heading += (c - '0');
           }
         }
 
         if ((ucCommas == 9) &&              // end of NMEA sentence
             (ucGps_Status & GPS_STATUS_FIX)) {
           ucCommas = 10;
-          uiHeading /= 10;
+          uiGps_Heading /= 10;
           bResult = TRUE;
         }
     }
@@ -584,9 +590,20 @@ float Nav_Bearing ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Nav_Heading ( void )
-{
-  return uiHeading;
+float Nav_Heading ( void ) {
+  return fHeading;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get GPS heading [°]
+/// \param   -
+/// \returns heading angle in degrees, between 0° and 360°
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+float Gps_Heading ( void ) {
+  return uiGps_Heading;
 }
 
 //----------------------------------------------------------------------------
@@ -597,8 +614,7 @@ uint16_t Nav_Heading ( void )
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Nav_Distance ( void )
-{
+uint16_t Nav_Distance ( void ) {
   return uiDistance;
 }
 
@@ -610,8 +626,7 @@ uint16_t Nav_Distance ( void )
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Nav_Ground_Speed ( void )
-{
+uint16_t Nav_Ground_Speed ( void ) {
   return uiSpeed;
 }
 
@@ -623,8 +638,7 @@ uint16_t Nav_Ground_Speed ( void )
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Nav_Wpt_Altitude ( void )
-{
+uint16_t Nav_Wpt_Altitude ( void ) {
   return (uint16_t)Waypoint[uiWptIndex].Alt;
 }
 
@@ -636,8 +650,7 @@ uint16_t Nav_Wpt_Altitude ( void )
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-float Nav_Bank ( void )
-{
+float Nav_Bank ( void ) {
   return fBank;
 }
 
