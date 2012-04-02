@@ -7,8 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: removed tuning modes for roll and pitch, replaced with stabilization
-//         mode and navigation mode
+// Change: throttle command forwarded to throttle servo
 //
 //============================================================================*/
 
@@ -82,6 +81,7 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 VAR_STATIC bool bTuning = FALSE;
 VAR_STATIC int16_t iAileron;
 VAR_STATIC int16_t iElevator;
+VAR_STATIC int16_t iThrottle;
 VAR_STATIC uint8_t ucBlink_Red = 0;
 VAR_STATIC uint8_t ucBlink_Blue = 0;
 VAR_STATIC uint8_t ucSensor_Data[16];
@@ -267,8 +267,10 @@ static __inline void Attitude_Control(void)
             break;
     }
     /* Update controls */
+    iThrottle = PPMGetChannel(THROTTLE_CHANNEL);
     Servo_Set(SERVO_AILERON, iAileron);                             // update servos
     Servo_Set(SERVO_ELEVATOR, iElevator);
+    Servo_Set(SERVO_THROTTLE, iThrottle);
 }
 
 /**
