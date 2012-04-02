@@ -7,7 +7,7 @@
 //
 /// \file
 /// \brief  Navigation task header file
-//  CHANGES renamed interface functions
+//  CHANGES Nav_Heading returns a float
 //
 //============================================================================
 
@@ -32,9 +32,9 @@
 
 void Navigation_Task( void *pvParameters );
 void Navigation_Init( void );
+float Nav_Heading ( void );
 float Nav_Bearing ( void );
 float Nav_Bank ( void );
-uint16_t Nav_Heading ( void );
 uint16_t Nav_Distance ( void );
 uint16_t Nav_Wpt_Index ( void );
 uint16_t Nav_Wpt_Altitude ( void );
