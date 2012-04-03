@@ -79,7 +79,7 @@
 ///
 /// \endcode
 //
-//  CHANGES function Nav_Heading() replaced by Gps_Heading()
+//  CHANGES Nav_Ground_Speed() renamed Gps_Speed()
 //
 //=============================================================================+
 
@@ -274,7 +274,7 @@ void
 AccelAdjust(void)
 {
 #if (SIMULATOR == SIM_NONE)
-    fGround_Speed = ((float)Nav_Ground_Speed());
+    fGround_Speed = ((float)Gps_Speed());
     fGround_Speed = (fGround_Speed * 1852.0f) / 36000.0f; // convert [kt] to [m/s]
 #else
     fGround_Speed = Telemetry_Get_Speed();
