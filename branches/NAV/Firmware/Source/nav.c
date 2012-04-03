@@ -20,7 +20,12 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES GPS_Heading() returns an uint16_t
+//  CHANGES added reset of navigation PID loop in NORMAL mode,
+//          inverted x and y components of bearing,
+//          navigation PID tentatively computed with fHeading, fBearing as 
+//          setpoint and current value,
+//          deg to rad conversion of heading and bearing moved inside functions
+//          Nav_Heading() and Nav_Bearing()
 //
 //============================================================================*/
 
@@ -29,6 +34,7 @@
 #include "queue.h"
 
 #include "stm32f10x.h"
+#include "ppmdriver.h"
 #include "dcm.h"
 #include "math.h"
 #include "telemetry.h"
@@ -164,9 +170,9 @@ void Navigation_Task( void *pvParameters ) {
     uiDistance = 0;                                 // distance to destination [m]
     uiWptNumber = 0;                                // no waypoint yet
 
-    Nav_Pid.fGain = PI / 6.0f;                      // limit bank angle to 30°
-    Nav_Pid.fMin = -1.0f;
-    Nav_Pid.fMax = 1.0f;
+    Nav_Pid.fGain = PI / 6.0f;                      // limit bank angle to -30°, 30°
+    Nav_Pid.fMin = -1.0f;                           //
+    Nav_Pid.fMax = 1.0f;                            //
     Nav_Pid.fKp = 1.0f;
     Nav_Pid.fKi = 0.0f;
     Nav_Pid.fKd = 0.0f;
@@ -195,43 +201,44 @@ void Navigation_Task( void *pvParameters ) {
     while (1) {
         if (Parse_GPS()) {                          // NMEA sentence completed
 
-            /* Update PID gains */
+            /* Update PID gains and possibly reset PID */
             Nav_Pid.fKp = Telemetry_Get_Gain(TEL_NAV_KP);
             Nav_Pid.fKi = Telemetry_Get_Gain(TEL_NAV_KI);
+            if (PPMGetMode() == MODE_MANUAL) {
+                PID_Init(&Nav_Pid);
+            }
 
             /* Get X and Y components of bearing */
-            desired_x = fLon_Dest - fLon_Curr;
-            desired_y = fLat_Dest - fLat_Curr;
+            desired_y = fLon_Dest - fLon_Curr;
+            desired_x = fLat_Dest - fLat_Curr;
 
             /* Get X and Y components of heading */
             actual_x = DCM_Matrix[0][0];
             actual_y = DCM_Matrix[1][0];
 
             /* Compute heading */
-            fHeading = (atan2f(actual_x, actual_y) * 180.0f) / PI;
-            if (fHeading < 0.0f) fHeading = fHeading + 360.0f;
+            fHeading = atan2f(actual_y, actual_x) / PI;
 
             /* Compute bearing to waypoint */
-            fBearing = 90.0f - ((atan2f(desired_y, desired_x) * 180.0f) / PI);
-            if (fBearing < 0.0f) fBearing = fBearing + 360.0f;
+            fBearing = atan2f(desired_y, desired_x) / PI;
 
             /* Compute cosine of angle between bearing and heading */
-            dot_prod = (actual_x * desired_x) + (actual_y * desired_y);
+//            dot_prod = (actual_x * desired_x) + (actual_y * desired_y);
 
             /* Compute sine of angle between bearing and heading */
-            cross_prod = (actual_x * desired_y) - (actual_y * desired_x);
+//            cross_prod = (actual_x * desired_y) - (actual_y * desired_x);
 
             /* Saturate sine between -1 and 1 */
-            if (dot_prod < 0.0f) {                  // angle is outside -90°, +90°
-                if (cross_prod >= 0.0f) {           // angle is above 90°
-                    cross_prod = 1.0f;              // saturate at 90°
-                } else {                            // angle is below -90°
-                    cross_prod = -1.0f;             // saturate at -90°
-                }
-            }
+//            if (dot_prod < 0.0f) {                  // angle is outside -90°, +90°
+//                if (cross_prod >= 0.0f) {           // angle is above 90°
+//                    cross_prod = 1.0f;              // saturate at 90°
+//                } else {                            // angle is below -90°
+//                    cross_prod = -1.0f;             // saturate at -90°
+//                }
+//            }
 
             /* Navigation PID controller */
-            fBank = (PI / 2.0f) + PID_Compute(&Nav_Pid, cross_prod , 0.0f);
+            fBank = (PI / 2.0f) + PID_Compute(&Nav_Pid, fHeading , fBearing);
 
             /* Compute distance to waypoint */
             temp = sqrtf((desired_y * desired_y) + (desired_x * desired_x));
@@ -573,12 +580,16 @@ uint16_t Nav_Wpt_Index ( void ) {
 //
 /// \brief   Get computed bearing [°]
 /// \param   -
-/// \returns bearing angle in degrees, between -180° and + 180°
+/// \returns bearing angle in degrees, between 0° and 360°
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
 float Nav_Bearing ( void ) {
-  return fBearing;
+  if (fBearing < 0.0f)  {
+    return 360.0f + (fBearing * 180.0f);
+  } else {
+    return (fBearing * 180.0f);
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -590,7 +601,11 @@ float Nav_Bearing ( void ) {
 ///
 //----------------------------------------------------------------------------
 float Nav_Heading ( void ) {
-  return fHeading;
+  if (fHeading < 0.0f)  {
+    return 360.0f + (fHeading * 180.0f);
+  } else {
+    return (fHeading * 180.0f);
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -625,7 +640,7 @@ uint16_t Nav_Distance ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Nav_Ground_Speed ( void ) {
+uint16_t Gps_Speed ( void ) {
   return uiSpeed;
 }
 
