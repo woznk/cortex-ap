@@ -43,7 +43,7 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES added heading to Telemetry_Send_Waypoint()
+//  CHANGES restored transmission of simulator controls
 //
 //============================================================================*/
 
@@ -154,7 +154,7 @@ void Telemetry_Task( void *pvParameters )
 #if 0
         Telemetry_Send_DCM();
 #endif
-#if 0
+#if 1
         Telemetry_Send_Controls();              // update simulator controls
 #endif
         Telemetry_Parse();                      // parse uplink data
