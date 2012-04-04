@@ -20,12 +20,8 @@
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
 ///
-//  CHANGES added reset of navigation PID loop in NORMAL mode,
-//          inverted x and y components of bearing,
-//          navigation PID tentatively computed with fHeading, fBearing as 
-//          setpoint and current value,
-//          deg to rad conversion of heading and bearing moved inside functions
-//          Nav_Heading() and Nav_Bearing()
+//  CHANGES navigation PID computed with difference between fBearing and 
+//          fHeading, sign corrected when > 180° or < -180°, seems working.
 //
 //============================================================================*/
 
@@ -161,7 +157,7 @@ static bool Parse_GPS( void );
 //----------------------------------------------------------------------------
 void Navigation_Task( void *pvParameters ) {
 
-    float temp, desired_x, desired_y, actual_x, actual_y, dot_prod, cross_prod;
+    float fTemp, fDx, fDy;
 
     fBank = PI / 2.0f;                              // default bank angle
     fBearing = 0.0f;                                // angle to destination [°]
@@ -209,40 +205,27 @@ void Navigation_Task( void *pvParameters ) {
             }
 
             /* Get X and Y components of bearing */
-            desired_y = fLon_Dest - fLon_Curr;
-            desired_x = fLat_Dest - fLat_Curr;
-
-            /* Get X and Y components of heading */
-            actual_x = DCM_Matrix[0][0];
-            actual_y = DCM_Matrix[1][0];
+            fDy = fLon_Dest - fLon_Curr;
+            fDx = fLat_Dest - fLat_Curr;
 
             /* Compute heading */
-            fHeading = atan2f(actual_y, actual_x) / PI;
+            fHeading = atan2f(DCM_Matrix[1][0], DCM_Matrix[0][0]) / PI;
 
             /* Compute bearing to waypoint */
-            fBearing = atan2f(desired_y, desired_x) / PI;
-
-            /* Compute cosine of angle between bearing and heading */
-//            dot_prod = (actual_x * desired_x) + (actual_y * desired_y);
-
-            /* Compute sine of angle between bearing and heading */
-//            cross_prod = (actual_x * desired_y) - (actual_y * desired_x);
-
-            /* Saturate sine between -1 and 1 */
-//            if (dot_prod < 0.0f) {                  // angle is outside -90°, +90°
-//                if (cross_prod >= 0.0f) {           // angle is above 90°
-//                    cross_prod = 1.0f;              // saturate at 90°
-//                } else {                            // angle is below -90°
-//                    cross_prod = -1.0f;             // saturate at -90°
-//                }
-//            }
+            fBearing = atan2f(fDy, fDx) / PI;
 
             /* Navigation PID controller */
-            fBank = (PI / 2.0f) + PID_Compute(&Nav_Pid, fHeading , fBearing);
+            fTemp = fBearing - fHeading;
+            if (fTemp < -1.0f) {
+                fTemp += 2.0f;
+            } else if (fTemp > 1.0f) {
+                fTemp = 2.0f - fTemp;
+            }
+            fBank = (PI / 2.0f) - PID_Compute(&Nav_Pid, fTemp, 0.0f);
 
             /* Compute distance to waypoint */
-            temp = sqrtf((desired_y * desired_y) + (desired_x * desired_x));
-            uiDistance = (unsigned int)(temp * 111113.7f);
+            fTemp = sqrtf((fDy * fDy) + (fDx * fDx));
+            uiDistance = (unsigned int)(fTemp * 111113.7f);
 
             /* Waypoint reached: next waypoint */
             if (uiDistance < MIN_DISTANCE) {
