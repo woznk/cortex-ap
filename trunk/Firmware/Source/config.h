@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// CHANGES AHRS sampling changed to 40 Hz
+// CHANGES enabled simulation with Xplane
 //
 //============================================================================*/
 
@@ -93,4 +93,4 @@
 #define XPLANE      1   // Simulator X-Plane
 #define FLIGHTGEAR  2   // Simulator Flightgear
 
-#define SIMULATOR   SIM_NONE
+#define SIMULATOR   XPLANE
