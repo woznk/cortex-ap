@@ -6,9 +6,10 @@
 // $Author: $
 //
 /// \file
-/// \brief  Navigation manager header file
-//  CHANGES Navigate() function changed into navigation task
-//          added type definition of gps message
+/// \brief  Navigation task header file
+///
+//  CHANGES result of merge of NAV branch:
+//          renamed and added interface functions 
 //
 //============================================================================
 
@@ -25,22 +26,20 @@
 
 /*------------------------------------ Types ---------------------------------*/
 
-typedef struct
-{
-  uint8_t ucLength;
-  uint16_t *pcData;
-} xGps_Message;
-
 /*---------------------------------- Constants -------------------------------*/
 
 /*----------------------------------- Globals --------------------------------*/
 
-VAR_GLOBAL xQueueHandle xGps_Queue;
-
 /*---------------------------------- Interface -------------------------------*/
 
 void Navigation_Task( void *pvParameters );
-int16_t Nav_Bearing ( void );
+void Navigation_Init( void );
+float Nav_Heading ( void );
+float Nav_Bearing ( void );
+float Nav_Bank ( void );
+uint16_t Gps_Speed ( void );
+uint16_t Gps_Heading ( void );
 uint16_t Nav_Distance ( void );
-uint16_t Nav_WaypointIndex ( void );
+uint16_t Nav_Wpt_Index ( void );
+uint16_t Nav_Wpt_Altitude ( void );
 
