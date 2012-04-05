@@ -8,7 +8,9 @@
 /// \brief Simulation interface
 /// \file
 ///
-//  CHANGES added telemetry task
+//  CHANGES result of merge of NAV branch:
+//          corrected enum of PID gains,
+//          removed and renamed interface functions 
 //
 //============================================================================
 
@@ -25,29 +27,33 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
-typedef struct
-{
-  uint8_t ucLength;
-  uint16_t *pcData;
-} xTelemetry_Message;
+typedef struct {
+    uint8_t ucLength;
+    uint16_t *pcData;
+} telStruct_Message;
+
+typedef enum {
+    TEL_PITCH_KP = 0,
+    TEL_PITCH_KI,
+    TEL_ROLL_KP,
+    TEL_ROLL_KI,
+    TEL_NAV_KP,
+    TEL_NAV_KI,
+    TEL_GAIN_NUMBER
+} telEnum_Gain;
 
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
 
-VAR_GLOBAL xQueueHandle xTelemetry_Queue;
+//VAR_GLOBAL xQueueHandle xTelemetry_Queue;
 
 /*---------------------------------- Interface -------------------------------*/
 
-void Telemetry_Init( void ) ;
 void Telemetry_Task( void *pvParameters );
-bool Telemetry_Parse ( void );
-void Telemetry_Send_Controls ( void );
-void Telemetry_Send_Waypoint ( void );
-bool Sim_Settled ( void ) ;
-float Sim_Speed ( void );
-float Sim_GetData ( int n );
-void Sim_SetData ( int iIndex, float fVal );
-void Sim_SaveOffsets ( void );
+void Telemetry_Get_Sensors(int16_t * piSensors);
+float Telemetry_Get_Gain(telEnum_Gain gain);
+void Telemetry_Send_Controls(void);
+float Telemetry_Get_Speed(void);
 
 
