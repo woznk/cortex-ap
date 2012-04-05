@@ -79,12 +79,8 @@
 ///
 /// \endcode
 ///
-/// \todo 
-/// controllare se è corretto che la velocita' sia letta da Telemetry_Get_Speed() 
-/// quando funziona in modo normale (non simulazione)
-//
 //  CHANGES result of merge of NAV branch:
-//          enabled reading of ground speed and COG from GPS data 
+//          enabled reading of ground speed and COG from GPS data
 //
 //=============================================================================+
 
