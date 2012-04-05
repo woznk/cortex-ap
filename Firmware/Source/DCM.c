@@ -39,16 +39,16 @@
 ///          col    0                1                 2
 ///      row
 ///
-///       0   cos(Xp /\ Xe)    cos(Yp /\ Xe)     cos(Zp /\ Xe)
+///       0   cos(Xp ^ Xe)    cos(Yp ^ Xe)     cos(Zp ^ Xe)
 ///
-///       1   cos(Xp /\ Ye)    cos(Yp /\ Ye)     cos(Zp /\ Ye)
+///       1   cos(Xp ^ Ye)    cos(Yp ^ Ye)     cos(Zp ^ Ye)
 ///
-///       2   cos(Xp /\ Ze)    cos(Yp /\ Ze)     cos(Zp /\ Ze)
+///       2   cos(Xp ^ Ze)    cos(Yp ^ Ze)     cos(Zp ^ Ze)
 ///
 /// \endcode
 ///
-/// where cos(Xp /\ Xe) is the cosine of the angle between plane X axis and
-/// earth X axis, cos(Yp /\ Xe) is the cosine of the angle between plane Y
+/// where cos(Xp ^ Xe) is the cosine of the angle between plane X axis and
+/// earth X axis, cos(Yp ^ Xe) is the cosine of the angle between plane Y
 /// axis and earth X axis, and so on.
 ///
 /// Following cosines are mostly relevant:
@@ -78,9 +78,13 @@
 ///     Gyro_Vector[2]   yaw rate    omegagyro[2]
 ///
 /// \endcode
+///
+/// \todo 
+/// controllare se è corretto che la velocita' sia letta da Telemetry_Get_Speed() 
+/// quando funziona in modo normale (non simulazione)
 //
-//  CHANGES speed_3d and cog temporarily set to 0
-//          MatrixUpdate(): modified reading of sensor data
+//  CHANGES result of merge of NAV branch:
+//          enabled reading of ground speed and COG from GPS data 
 //
 //=============================================================================+
 
@@ -88,9 +92,9 @@
 
 #include "math.h"
 #include "vmath.h"
-//#include "gps.h"
-//#include "telemetry.h"
+#include "telemetry.h"
 #include "config.h"
+#include "nav.h"
 #include "DCM.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -155,7 +159,7 @@ VAR_GLOBAL float Yaw_Kp = YAW_KP;
 //! Guadagno integrale compensazione imbardata
 VAR_GLOBAL float Yaw_Ki = YAW_KI;
 //! Velocita' 3D
-VAR_GLOBAL float speed_3d = 0.0f;
+VAR_GLOBAL float fGround_Speed = 0.0f;
 
 /*----------------------------------- Locals ---------------------------------*/
 
@@ -274,14 +278,14 @@ Normalize(void)
 void
 AccelAdjust(void)
 {
-#ifndef _WINDOWS
-//    speed_3d = ((float)GPSSpeed());
-      speed_3d = 0.0f;
-#elif (SIMULATOR == SIM_NONE)
-    speed_3d = Sim_Speed();
+#if (SIMULATOR == SIM_NONE)
+    fGround_Speed = ((float)Gps_Speed());
+    fGround_Speed = (fGround_Speed * 1852.0f) / 36000.0f; // convert [kt] to [m/s]
+#else
+    fGround_Speed = Telemetry_Get_Speed();
 #endif
-    Accel_Vector[1] += ((speed_3d * Omega[2] * 9.81f) / GRAVITY);
-    Accel_Vector[2] -= ((speed_3d * Omega[1] * 9.81f) / GRAVITY);
+    Accel_Vector[1] += ((fGround_Speed * Omega[2] * 9.81f) / GRAVITY);
+    Accel_Vector[2] -= ((fGround_Speed * Omega[1] * 9.81f) / GRAVITY);
 }
 
 
@@ -325,7 +329,7 @@ CompensateDrift( void )
 {
     static float Scaled_Omega_P[3];
     static float Scaled_Omega_I[3];
-    float cog;
+    float fCourse_Over_Ground;
 
     // RollPitch correction
     VectorCrossProduct(&errorRollPitch[0], &Accel_Vector[0], &DCM_Matrix[2][0]);
@@ -337,10 +341,9 @@ CompensateDrift( void )
     //
     // Course over ground
     //
-//    cog = (float)GPSHeading();
-    cog = 0.0f;
-    COGX = cosf(ToRad(cog));
-    COGY = sinf(ToRad(cog));
+    fCourse_Over_Ground = (float)Gps_Heading();
+    COGX = cosf(ToRad(fCourse_Over_Ground));
+    COGY = sinf(ToRad(fCourse_Over_Ground));
 
     //
     // Yaw correction (ground)
@@ -389,7 +392,6 @@ MatrixUpdate(int16_t *sensor)
     //
     int x, y;
 
-#if (SIMULATOR == SIM_NONE)
     //
     // Accelerometer signals
     //
@@ -402,21 +404,6 @@ MatrixUpdate(int16_t *sensor)
     Gyro_Vector[0] = Gyro_Gain * (*sensor++);     // omega x
     Gyro_Vector[1] = Gyro_Gain * (*sensor++);     // omega y
     Gyro_Vector[2] = Gyro_Gain * (*sensor);       // omega z
-#else
-    //
-    // Accelerometer signals
-    //
-    Accel_Vector[0] = Accel_Gain * Sim_GetData(0);  // accel x
-    Accel_Vector[1] = Accel_Gain * Sim_GetData(1);  // accel y
-    Accel_Vector[2] = Accel_Gain * Sim_GetData(2);  // accel z
-
-    //
-    // Gyro signals
-    //
-    Gyro_Vector[0] = Gyro_Gain * Sim_GetData(3);    // gyro x roll
-    Gyro_Vector[1] = Gyro_Gain * Sim_GetData(4);    // gyro y pitch
-    Gyro_Vector[2] = Gyro_Gain * Sim_GetData(5);    // gyro z yaw
-#endif
 
     //
     // adding integral
