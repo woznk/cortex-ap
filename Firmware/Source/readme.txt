@@ -1,111 +1,79 @@
 /**
-  @page TIM_PWM_Output TIM_PWM_Output
+  @page Appunti
   
   @verbatim
-  ******************** (C) COPYRIGHT 2009 STMicroelectronics *******************
-  * @file    TIM/PWM_Output/readme.txt 
-  * @author  MCD Application Team
-  * @version V3.1.2
-  * @date    09/28/2009
-  * @brief   Description of the TIM PWM_Output example.
-  ******************************************************************************
-  * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
-  * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
-  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
-  * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
-  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-  ******************************************************************************
-   @endverbatim
+  @endverbatim
 
-@par Example Description
+@par Simulazione
 
-This example shows how to configure the TIM peripheral in PWM (Pulse Width Modulation) 
-mode.
-The TIMxCLK frequency is set to 36 MHz, the Prescaler is 0 so the TIM3 counter clock is
-36 MHz. 
+     per rendere il codice più semplice, creare un task di lettura dei MEMS
+     che invia un messaggio con i valori dei sensori al task attitude.
+     In questo modo, il task di lettura dei MEMS è più facilmente sostituibile 
+     dal task di telemetria che può inviare i valori di sensori al suo posto.
 
-The TIM3 is running at 36 KHz: TIM3 Frequency = TIM3 counter clock/(ARR + 1)
+@par GPS
 
-The TIM3 CCR1 register value is equal to 500, so the TIM3 Channel 1 generates a 
-PWM signal with a frequency equal to 36 KHz and a duty cycle equal to 50%:
-TIM3 Channel1 duty cycle = (TIM3_CCR1/ TIM3_ARR + 1)* 100 = 50%
+     Il buffer di ricezione dell'UART non contiene un'intera frase NMEA.
+     In funzionamento normale il buffer non si riempie per la bassa velocità 
+     di comunicazione. In simulazione, il buffer è "forzato" dalla telemetria
+     che lavora a 115200 e viene sovrascritto prima che il task di navigazione
+     riesca ad elaborare la stringa.
 
-The TIM3 CCR2 register value is equal to 375, so the TIM3 Channel 2 generates a 
-PWM signal with a frequency equal to 36 KHz and a duty cycle equal to 37.5%:
-TIM3 Channel2 duty cycle = (TIM3_CCR2/ TIM3_ARR + 1)* 100 = 37.5%
+@par Log
 
-The TIM3 CCR3 register value is equal to 250, so the TIM3 Channel 3 generates a 
-PWM signal with a frequency equal to 36 KHz and a duty cycle equal to 25%:
-TIM3 Channel3 duty cycle = (TIM3_CCR3/ TIM3_ARR + 1)* 100 = 25%
+     Il task di log potrebbe funzionare a tempo e salvare su SD i dati utili 
+     leggendoli autonomamente mediante funzioni di interfaccia.
+     Problemi di inconsistenza dei dati potrebbero essere risolti con semafori
+     che "occupano" il dato quando deve essere aggiornato.
 
-The TIM3 CCR4 register value is equal to 125, so the TIM3 Channel 4 generates a 
-PWM signal with a frequency equal to 36 KHz and a duty cycle equal to 12.5%:
-TIM3 Channel4 duty cycle = (TIM3_CCR4/ TIM3_ARR + 1)* 100 = 12.5%
+@par FAT FS
 
-The PWM waveform can be displayed using an oscilloscope.
+     Il file system viene montato sia dal task di log che dal task di navigazione.
+     Spostare il montaggio del file system nel programma principale.
 
-@par Directory contents 
+@par Python socket
+     esemio di invio e ricezione stringhe tramite socket in Python:
 
-  - TIM/PWM_Output/stm32f10x_conf.h  Library Configuration file
-  - TIM/PWM_Output/stm32f10x_it.c    Interrupt handlers
-  - TIM/PWM_Output/stm32f10x_it.h    Interrupt handlers header file
-  - TIM/PWM_Output/main.c            Main program 
+	################ sender
+	import socket
 
-@par Hardware and Software environment 
+	UDP_IP="127.0.0.1"
+	UDP_PORT=5005
+	MESSAGE="Hello, World!"
+	avalue = 1.234
+	DCM = [[1,0,0],[0,0,0],[0,0,0],
+	       [0,0,0],[0,1,0],[0,0,0],
+	       [0,0,0],[0,0,0],[0,0,1]]
 
-- This example runs on STM32F10x Connectivity line, High-Density, Medium-Density 
-    and Low-Density Devices.
-  
-  - This example has been tested with STMicroelectronics STM3210C-EVAL (STM32F10x 
-    Connectivity line), STM3210E-EVAL (STM32F10x High-Density) and STM3210B-EVAL
-    (STM32F10x Medium-Density) evaluation boards and can be easily tailored to
-    any other supported device and development board.
+	print "UDP target IP:", UDP_IP
+	print "UDP target port:", UDP_PORT
+	print "message:", MESSAGE
+	print "DCM:", DCM
 
-  - STM3210C-EVAL Set-up 
-    - Connect the following pins(TIM3 full remapping pins) to an oscilloscope to monitor the different 
-      waveforms:
-        - PC.06: (TIM3_CH1)
-        - PC.07: (TIM3_CH2)
-        - PC.08: (TIM3_CH3)
-        - PC.09: (TIM3_CH4)      
+	sock = socket.socket( socket.AF_INET, # Internet
+			      socket.SOCK_DGRAM ) # UDP
+	sock.sendto( MESSAGE, (UDP_IP, UDP_PORT) )
+	sock.sendto( str(DCM), (UDP_IP, UDP_PORT) )
 
-  - STM3210E-EVAL and STM3210B-EVAL Set-up 
-    - Connect the following pins to an oscilloscope to monitor the different 
-      waveforms:
-        - PA.06: (TIM3_CH1)
-        - PA.07: (TIM3_CH2)
-        - PB.00: (TIM3_CH3)
-        - PB.01: (TIM3_CH4)  
-  
+	################ receiver
+	import socket
+
+	UDP_IP="127.0.0.1"
+	UDP_PORT=5005
+
+	sock = socket.socket( socket.AF_INET,     # Internet
+			      socket.SOCK_DGRAM ) # UDP
+	sock.bind( (UDP_IP,UDP_PORT) )
+
+	while True:
+	    data, addr = sock.recvfrom( 1024 )    # buffer size is 1024 bytes
+	    print "received message:", data
+
 @par How to use it ? 
 
-In order to make the program work, you must do the following:
-- Create a project and setup all project configuration
-- Add the required Library files:
-  - stm32f10x_flash.c  
-  - stm32f10x_gpio.c 
-  - stm32f10x_rcc.c 
-  - stm32f10x_tim.c
-  - system_stm32f10x.c (under Libraries\CMSIS\Core\CM3)
-    
-- Edit stm32f10x.h file to select the device you are working on.
-  
-@b Tip: You can tailor the provided project template to run this example, for 
-        more details please refer to "stm32f10x_stdperiph_lib_um.chm" user 
-        manual; select "Peripheral Examples" then follow the instructions 
-        provided in "How to proceed" section.   
-- Link all compiled files and load your image into target memory
-- Run the example
+@b 
 
 @note
- - Low-density devices are STM32F101xx and STM32F103xx microcontrollers where
-   the Flash memory density ranges between 16 and 32 Kbytes.
- - Medium-density devices are STM32F101xx and STM32F103xx microcontrollers where
-   the Flash memory density ranges between 32 and 128 Kbytes.
- - High-density devices are STM32F101xx and STM32F103xx microcontrollers where
-   the Flash memory density ranges between 256 and 512 Kbytes.
- - Connectivity line devices are STM32F105xx and STM32F107xx microcontrollers.
    
- * <h3><center>&copy; COPYRIGHT 2009 STMicroelectronics</center></h3>
+ * <h3><center>&copy; Lorentz</center></h3>
  */
