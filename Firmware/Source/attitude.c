@@ -7,7 +7,11 @@
 //
 /// \brief attitude control
 ///
-// Change: attitude task moved here from main.c
+// Change: result of merge of NAV branch:
+//         added sensors input from simulator (conditional compilation)
+//         workiong modes changed into STABilization and NAVigation,
+//         throttle command forwarded to servo outputs,
+//         removed log to SD card
 //
 //============================================================================*/
 
@@ -29,7 +33,9 @@
 #include "telemetry.h"
 #include "log.h"
 #include "led.h"
+#include "nav.h"
 #include "pid.h"
+#include "attitude.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -77,8 +83,9 @@ VAR_STATIC const int16_t Sensor_Sign[6] = {
 /*----------------------------------- Locals ---------------------------------*/
 
 VAR_STATIC bool bTuning = FALSE;
-VAR_STATIC int16_t iRudder;
+VAR_STATIC int16_t iAileron;
 VAR_STATIC int16_t iElevator;
+VAR_STATIC int16_t iThrottle;
 VAR_STATIC uint8_t ucBlink_Red = 0;
 VAR_STATIC uint8_t ucBlink_Blue = 0;
 VAR_STATIC uint8_t ucSensor_Data[16];
@@ -143,8 +150,12 @@ void Attitude_Task(void *pvParameters)
     /* Compute sensor offsets */
     for (i = 0; i < 64; i++) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
-        GetAccelRaw(ucSensor_Data);                   // acceleration
-        GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);  // angular rate
+#if (SIMULATOR == SIM_NONE)                         // normal mode
+        GetAccelRaw(ucSensor_Data);                 // acceleration
+        GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
+#else                                               // simulation mode
+        Telemetry_Get_Sensors((int16_t *)ucSensor_Data);// get simulator sensors
+#endif
         pSensor = (int16_t *)ucSensor_Data;
         for (j = 0; j < 6; j++) {                   // accumulate
             iSensor_Offset[j] += *pSensor++;
@@ -156,6 +167,7 @@ void Attitude_Task(void *pvParameters)
 
     /* Compute attitude and heading */
     while (1) {
+
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
 
         if (++ucBlink_Blue == 10) {                 // blink led every 10 cycles
@@ -164,9 +176,12 @@ void Attitude_Task(void *pvParameters)
         }
 
         /* Read sensors */
+#if (SIMULATOR == SIM_NONE)                         // normal mode
         GetAccelRaw(ucSensor_Data);                 // acceleration
         GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
-
+#else                                               // simulation mode
+        Telemetry_Get_Sensors((int16_t *)ucSensor_Data);// get simulator sensors
+#endif
         /* Offset and sign correction */
         pSensor = (int16_t *)ucSensor_Data;
         for (j = 0; j < 6; j++) {
@@ -183,33 +198,6 @@ void Attitude_Task(void *pvParameters)
         CompensateDrift();                          // compensate
         Normalize();                                // normalize DCM
         Attitude_Control();                         // attitude control loop
-
-        /* Log sensor data */
-#if (LOG_SENSORS == 1)
-        message.ucLength = 6;                       // message length
-        message.pcData = (uint16_t *)ucSensor_Data; // message content
-        xQueueSend( xLog_Queue, &message, 0 );
-#endif
-        /* Log PPM channels */
-#if (LOG_PPM == 1)
-        iMessage_Buffer[0] = (int16_t)PPMGetChannel(RUDDER_CHANNEL);
-        iMessage_Buffer[1] = (int16_t)PPMGetChannel(ELEVATOR_CHANNEL);
-        message.ucLength = 2;                        // message length
-        message.pcData = (uint16_t *)iMessage_Buffer; // message content
-        xQueueSend( xLog_Queue, &message, 0 );
-#endif
-        /* Log DCM matrix */
-#if (LOG_DCM == 1)
-        for (i = 0; i < 3; i++) {
-            for (j = 0; j < 3; j++) {
-                iMessage_Buffer[(i * 3) + j] =
-                (int16_t)(DCM_Matrix[i][j] * 32767.0f);
-            }
-        }
-        message.ucLength = 9;                        // message length
-        message.pcData = (uint16_t *)iMessage_Buffer; // message content
-        xQueueSend( xLog_Queue, &message, 0 );
-#endif
     }
 }
 
@@ -223,58 +211,70 @@ void Attitude_Task(void *pvParameters)
 ///----------------------------------------------------------------------------
 static __inline void Attitude_Control(void)
 {
-    iRudder = PPMGetChannel(RUDDER_CHANNEL);
-    iElevator = PPMGetChannel(ELEVATOR_CHANNEL);
+    Pitch_Pid.fKp = Telemetry_Get_Gain(TEL_PITCH_KP);
+    Pitch_Pid.fKi = Telemetry_Get_Gain(TEL_PITCH_KI);
+    Roll_Pid.fKp = Telemetry_Get_Gain(TEL_ROLL_KP);
+    Roll_Pid.fKi = Telemetry_Get_Gain(TEL_ROLL_KI);
 
     switch (PPMGetMode()) {
-        case MODE_PITCH_TUNE:
-            bTuning = TRUE;
-            Pitch_Pid.fKp = (float)(PPMGetChannel(KP_CHANNEL) - SERVO_MIN) / 250.0f;
-            Pitch_Pid.fKi = (float)(PPMGetChannel(KI_CHANNEL) - SERVO_MIN) / 10000.0f;
-            iElevator -= SERVO_NEUTRAL;
-            fSetpoint = ((float)iElevator / 500.0f) + (PI/2);       // setpoint for pitch angle
+
+        case MODE_STAB:
+            iAileron = PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL;;
+            iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
+
+            fSetpoint = ((float)iElevator / 500.0f) + (PI / 2.0f);  // setpoint for pitch angle
             fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
             fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
             iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
-            if (++ucBlink_Red >= 4) {
-                ucBlink_Red = 0;
-                LEDToggle(RED);
-            }
-        break;
-        case MODE_ROLL_TUNE:
-            bTuning = TRUE;
-            Roll_Pid.fKp = (float)(PPMGetChannel(KP_CHANNEL) - SERVO_MIN) / 250.0f;
-            Roll_Pid.fKi = (float)(PPMGetChannel(KI_CHANNEL) - SERVO_MIN) / 10000.0f;
-            iRudder -= SERVO_NEUTRAL;
-            fSetpoint = ((float)iRudder / 500.0f) + (PI/2);         // setpoint for bank angle
+
+            fSetpoint = ((float)iAileron / 500.0f) + (PI / 2.0f);   // setpoint for bank angle
             fInput = acosf(DCM_Matrix[2][1]);                       // bank angle given by DCM
             fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
-            iRudder = SERVO_NEUTRAL + (int16_t)fOutput;
+            iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
+
             if (++ucBlink_Red >= 8) {
                 ucBlink_Red = 0;
                 LEDToggle(RED);
             }
-        break;
+            break;
+
+        case MODE_NAV:
+            iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
+
+            fSetpoint = ((float)iElevator / 500.0f) + (PI / 2.0f);  // setpoint for pitch angle
+            fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
+            fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
+            iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
+
+            fSetpoint = Nav_Bank();                                 // setpoint for bank angle
+            fInput = acosf(DCM_Matrix[2][1]);                       // bank angle given by DCM
+            fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
+            iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
+
+            if (++ucBlink_Red >= 4) {
+                ucBlink_Red = 0;
+                LEDToggle(RED);
+            }
+            break;
+
 //       case MODE_MANUAL:
 //       case MODE_RTL:
         default:
-            PID_Init(&Roll_Pid);    // reset PID controllers
+            iAileron = PPMGetChannel(AILERON_CHANNEL);
+            iElevator = PPMGetChannel(ELEVATOR_CHANNEL);
+            PID_Init(&Roll_Pid);                                    // reset PID controllers
             PID_Init(&Pitch_Pid);
             LEDOff(RED);
             if (bTuning) {
-                iMessage_Buffer[0] = (int16_t)(Roll_Pid.fKp * 1000.0f);
-                iMessage_Buffer[1] = (int16_t)(Roll_Pid.fKi * 40000.0f);
-                iMessage_Buffer[2] = (int16_t)(Pitch_Pid.fKp * 1000.0f);
-                iMessage_Buffer[3] = (int16_t)(Pitch_Pid.fKi * 40000.0f);
-                message.ucLength = 4;                         // message length
-                message.pcData = (uint16_t *)iMessage_Buffer; // message content
-                xQueueSend( xLog_Queue, &message, 0 );
                 bTuning = FALSE;
             }
-        break;
+            break;
     }
-    Servo_Set(SERVO_AILERON, iRudder);
+    /* Update controls */
+    iThrottle = PPMGetChannel(THROTTLE_CHANNEL);
+    Servo_Set(SERVO_AILERON, iAileron);                             // update servos
     Servo_Set(SERVO_ELEVATOR, iElevator);
+    Servo_Set(SERVO_THROTTLE, iThrottle);
 }
 
 /**
