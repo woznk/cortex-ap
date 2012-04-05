@@ -7,7 +7,9 @@
 //
 /// \brief main program
 ///
-// Change: attitude task moved to file attitude.c
+// Change: result of merge of NAV branch:
+//         enabled navigation task, disabled telemetry queue,
+//         corrected RCC_Configuration and GPIO_Configuration()
 //
 //============================================================================*/
 
@@ -30,6 +32,7 @@
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
+#include "nav.h"
 
 /** @addtogroup cortex-ap
   * @{
@@ -116,23 +119,18 @@ int main(void)
   Servo_Init();                                     // Initialize PWM timers as servo outputs
   PPM_Init();                                       // Initialize capture timers as RRC input
   I2C_MEMS_Init();                                  // I2C peripheral initialization
-  Telemetry_Init();                                 // Telemetry initialization
-
-  xTelemetry_Queue = xQueueCreate( 3, sizeof( xTelemetry_Message ) );
+/*
+  xTelemetry_Queue = xQueueCreate( 3, sizeof( telStruct_Message ) );
   while ( xTelemetry_Queue == 0 ) {                 // Halt if queue wasn't created
   }
-
+*/
   xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
   while ( xLog_Queue == 0 ) {                       // Halt if queue wasn't created
   }
-/*
-  xGps_Queue = xQueueCreate( 3, sizeof( xGps_Message ) );
-  while ( xGps_Queue == 0 ) {                       // Halt if queue wasn't created
-  }
-*/
+
   xTaskCreate(Attitude_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
-//  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 64, NULL, mainNAVIGATION_PRIORITY, NULL);
+  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 128, NULL, mainNAVIGATION_PRIORITY, NULL);
   xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
   xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
@@ -160,13 +158,19 @@ void RCC_Configuration(void)
   /* PCLK2 = HCLK */
   RCC_PCLK2Config(RCC_HCLK_Div1);
 
-  /* TIM2 and TIM3 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM3, ENABLE);
+  /* TIM2, TIM3 USART2 clock enable */
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 |  // Used for PPM signal capture
+                         RCC_APB1Periph_TIM3 |  // Used for servo signal PWM
+                         RCC_APB1Periph_USART2, // Used for GPS communication
+                         ENABLE);
 
-  /* GPIOA and GPIOB clock enable */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
-                         RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO |
-                         RCC_APB2Periph_USART1, ENABLE);
+  /* GPIOA, GPIOB, GPIOC, USART1 clock enable */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | // TIM2, TIM3, USART1, USART2
+                         RCC_APB2Periph_GPIOB | // TIM3
+                         RCC_APB2Periph_GPIOC | // LED
+                         RCC_APB2Periph_AFIO  | //
+                         RCC_APB2Periph_USART1, // Used for telemetry
+                         ENABLE);
 }
 
 ///----------------------------------------------------------------------------
@@ -196,13 +200,25 @@ void GPIO_Configuration(void)
 
   // USART 1 TX pin as alternate function push pull (9)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   // USART 1 RX pin as input floating (10)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  // USART 2 TX pin as alternate function push pull (2)
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  // USART 2 RX pin as input floating (3)
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
