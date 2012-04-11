@@ -43,12 +43,7 @@
 ///                                                                     \endcode
 /// \todo aggiungere parser protocollo ardupilot o mnav
 ///
-//  CHANGES result of merge of NAV branch:
-//          corrected parsing of telemetry data,
-//          removed forwarding of GPS data to navigation task,
-//          added transmission of waypoint data to telemetry task,
-//          added conditional transmission of sensor data and DCM matrix to 
-//          telemetry task (conditional compilation)
+//  CHANGES DCM transmission in binary format 
 //
 //============================================================================*/
 
@@ -95,8 +90,11 @@ typedef enum E_TELEMETRY {
     TEL_GPS_POSITION = 0xF0,
     TEL_SERVO_POS,
     TEL_WAYPOINT,
+    TEL_ACCEL,
+    TEL_GYRO,
     TEL_DEBUG_I,
     TEL_DEBUG_F,
+    TEL_DCM
 } wait_code_t;
 
 /*----------------------------------- Types ----------------------------------*/
@@ -156,9 +154,6 @@ void Telemetry_Task( void *pvParameters )
 
     while (1) {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
-#if 0
-        Telemetry_Send_DCM();
-#endif
 #if 1
         Telemetry_Send_Controls();              // update simulator controls
 #endif
@@ -166,6 +161,9 @@ void Telemetry_Task( void *pvParameters )
         if (++ucCycles >= TELEMETRY_FREQUENCY) {// every second
             ucCycles = 0;                       // reset cycle counter
             Telemetry_Send_Waypoint();          // send waypoint information
+#if 1
+            Telemetry_Send_DCM();
+#endif
         }
     }
 }
@@ -259,27 +257,19 @@ static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 ///----------------------------------------------------------------------------
 static void Telemetry_Send_DCM(void) {
 
-    uint8_t x, y, j = 0;
-    unsigned char ucDigit;
-    long lTemp;
+    #define TEL_DCM_LENGTH (1 + (9 * 4))
 
+    uint8_t x, y, j;
+    float * pfTemp;
+
+    ucTxBuffer[0] = TEL_DCM;
+    pfTemp = (float *)&(ucTxBuffer[1]);
     for (y = 0; y < 3; y++) {
       for (x = 0; x < 3; x++) {
-          lTemp = (long)ceil(DCM_Matrix[y][x] * 32767.0f);
-          ucTxBuffer[j++] = ' ';
-          ucDigit = ((lTemp >> 12) & 0x0000000F);
-          ucTxBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-          ucDigit = ((lTemp >> 8) & 0x0000000F);
-          ucTxBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-          ucDigit = ((lTemp >> 4) & 0x0000000F);
-          ucTxBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
-          ucDigit = (lTemp & 0x0000000F);
-          ucTxBuffer[j++] = ((ucDigit < 10) ? (ucDigit + '0') : (ucDigit - 10 + 'A'));
+          *pfTemp++ = DCM_Matrix[y][x];
       }
     }
-    ucTxBuffer[j++] = '\n';
-    ucTxBuffer[j] = '\r';
-    for (j = 0; j < 47; j++) {
+    for (j = 0; j < TEL_DCM_LENGTH; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
       }
       USART_SendData(USART1, ucTxBuffer[j]);
@@ -550,7 +540,7 @@ float Telemetry_Get_Gain(telEnum_Gain gain) {
 ///----------------------------------------------------------------------------
 ///
 /// \brief   Get sensor value
-/// \param   puiSensor, pointer to sensro data array
+/// \param   puiSensor, pointer to sensor data array
 /// \return  -
 /// \remarks -
 ///
