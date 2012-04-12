@@ -9,88 +9,75 @@
 ///
 /// \file
 ///
-// CHANGES enabled simulation with Xplane
+// CHANGES updated default values of PID gains
 //
 //============================================================================*/
 
 #define PI          3.141592f
 
-//! Frequenza di campionamento dell'ADC
+/* Frequency of attitude control loop */
 #ifdef _WINDOWS
 #  define SAMPLES_PER_SECOND  10
 #else
 #  define SAMPLES_PER_SECOND  40
 #endif
 
-//! Intervallo di ricalcolo della matrice DCM
+/* DCM matrix updating interval */
 #define DELTA_T         (1.0f / SAMPLES_PER_SECOND)
 
-//! Valore iniziale fattore di conversione da ADC a [m/s/s]
+/* Equivalent to 1 g in the raw data from accelerometer */
+//#define GRAVITY         256           // full scale = 2g
+#define GRAVITY         64              // full scale = 8g
+
+/* Accelerometer conversion factor to [m/s/s] */
 //#define ACCEL_GAIN      0.03828125f   // full scale = 2g
-#define ACCEL_GAIN      0.153125f     // full scale = 8g
+#define ACCEL_GAIN      0.153125f       // full scale = 8g
 
-//! Valore iniziale fattore di conversione da ADC a [rad/s]
+/* Gyroscope conversion factor to [rad/s] */
 //#define GYRO_GAIN       0.0001527163f // full scale = 250 dps
-#define GYRO_GAIN       0.0012217f    // full scale = 2000 dps
+#define GYRO_GAIN       0.0012217f      // full scale = 2000 dps
 
-//! P feedback gain for steering, around 0.1 (Matrixpilot YAWKP, 0.0625)
-#define DIR_KP          0.03f
+/* Navigation PID initial gains */
+#define NAV_KP          5.0f            //! Navigation P gain
+#define NAV_KI          0.05f           //! Navigation I gain
+#define NAV_KD          0.0f            //! Navigation D gain
 
-//! I feedback gain for steering (Matrixpilot -)
-#define DIR_KI          0.04f
+/* Attitude roll PID initial gains */
+#define ROLL_KP         1.0f            //! Roll P gain
+#define ROLL_KI         0.1f            //! Roll I gain
+#define ROLL_KD         0.0f            //! Roll D gain
 
-//! D feedback gain for steering (Matrixpilot -)
-#define DIR_KD          0.25f
+/* Attitude pitch PID initial gains */
+#define PITCH_KP        1.0f            //! Pitch P gain
+#define PITCH_KI        0.1f            //! Pitch P gain
+#define PITCH_KD        0.0f            //! Pitch D gain
 
-//! Equivalent to 1 g in the raw ADC data from accelerometer
-//#define GRAVITY         256    // full scale = 2g
-#define GRAVITY         64     // full scale = 8g
+/* Angle that the nose of the plane will pitch downward during
+   a return to launch, used to increase speed (and wind penetration).
+   Set it to zero to disable this feature. */
+#define RTL_PITCH_DOWN  0.0f            //! Return to launch pitch down [deg]
 
-//! P feedback gain for roll leveling, around 0.25 (Matrixpilot ROLLKP, 0.25)
-#define ROLL_KP         0.1f
+/* Limits servo throw by controlling pulse width saturation.
+   Set it to 1.0 if you want full servo throw, otherwise set it
+   to the portion that you want */
+#define SERVOSAT        1.0f            //! Limits servo throw
 
-//! Rate feedback gain for roll damping, around 0.125 (Matrixpilot ROLLKD, 0.12 * SCALEGYRO)
-#define ROLL_KD         0.1f
-
-//! P feedback gain for pitch leveling, around 0.125 (Matrixpilot PITCHGAIN, -)
-#define PITCH_KP        0.5f
-
-//! D feedback gain for pitch damping, around 0.0625 (Matrixpilot PITCHGAIN, -)
-#define PITCH_KD        0.03f
-
-//! Pitch boost (optional, I do not use it myself), around 0.25 (Matrixpilot PITCHBOOST, -)
-#define PITCH_BOOST     0.0f
-
-//! Return to launch pitch down in degrees
-#define RTL_PITCH_DOWN  0.0f
-/// Angle that the nose of the plane will pitch downward during a return to launch,
-/// used to increase speed (and wind penetration). Set it to zero to disable this feature.
-
-//! Limits servo throw by controlling pulse width saturation.
-#define SERVOSAT        1.0f
-/// Set it to 1.0 if you want full servo throw, otherwise set it to the portion that you want
-
+/* comment out this line if you are not going to use altitude hold,
+   to avoid spurious interrupts from the unused PWM channel */
 #define ALTITUDEHOLD
-/// comment out this line if you are not going to use altitude hold,
-/// to avoid spurious interrupts from the unused PWM channel
 
-//! maximum target height in meters
-#define HEIGHTMAX       100.0f
+#define HEIGHTMAX       300.0f          //! maximum target height [m]
 
-//! minimum throttle
-#define MINIMUMTHROTTLE 0.35f
+#define MINIMUMTHROTTLE 0.35f           //! minimum throttle
 
-//! Target pitch angle in degrees at minimum throttle
-#define PITCHATMINTHROTTLE  0.0f
+#define PITCHATMINTHROTTLE  0.0f        //! Pitch angle at minimum throttle [deg]
 
-//! Target pitch angle in degrees at maximum throttle
-#define PITCHATMAXTHROTTLE 15.0f
+#define PITCHATMAXTHROTTLE 15.0f        //! Pitch angle at maximum throttle [deg]
 
-//! Target pitch angle in degrees while gliding
-#define PITCHATZEROTHROTTLE 0.0f
+#define PITCHATZEROTHROTTLE 0.0f        //! Pitch angle while gliding [deg]
 
-#define SIM_NONE    0   // No simulator
-#define XPLANE      1   // Simulator X-Plane
-#define FLIGHTGEAR  2   // Simulator Flightgear
+#define SIM_NONE    0                   // No simulator
+#define XPLANE      1                   // Simulator X-Plane
+#define FLIGHTGEAR  2                   // Simulator Flightgear
 
 #define SIMULATOR   XPLANE
