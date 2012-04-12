@@ -7,11 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: result of merge of NAV branch:
-//         added sensors input from simulator (conditional compilation)
-//         workiong modes changed into STABilization and NAVigation,
-//         throttle command forwarded to servo outputs,
-//         removed log to SD card
+// Change: PID gains initialized with default values #defined in config.h
 //
 //============================================================================*/
 
@@ -125,19 +121,19 @@ void Attitude_Task(void *pvParameters)
     L3G4200_Init();                                 // init L3G4200 gyro
     ADXL345_Init();                                 // init ADXL345 accelerometer
 
-    Roll_Pid.fGain = 500.0f;
-    Roll_Pid.fMin = -1.0f;
-    Roll_Pid.fMax = 1.0f;
-    Roll_Pid.fKp = 1.0f;
-    Roll_Pid.fKi = 0.0f;
-    Roll_Pid.fKd = 0.0f;
+    Roll_Pid.fGain = 500.0f;                        // limit servo throw
+    Roll_Pid.fMin = -1.0f;                          //
+    Roll_Pid.fMax = 1.0f;                           //
+    Roll_Pid.fKp = ROLL_KP;                         // init gains with default values
+    Roll_Pid.fKi = ROLL_KI;                         //
+    Roll_Pid.fKd = ROLL_KD;                         //
 
-    Pitch_Pid.fGain = 500.0f;
-    Pitch_Pid.fMin = -1.0f;
-    Pitch_Pid.fMax = 1.0f;
-    Pitch_Pid.fKp = 1.0f;
-    Pitch_Pid.fKi = 0.0f;
-    Pitch_Pid.fKd = 0.0f;
+    Pitch_Pid.fGain = 500.0f;                       // limit servo throw
+    Pitch_Pid.fMin = -1.0f;                         //
+    Pitch_Pid.fMax = 1.0f;                          //
+    Pitch_Pid.fKp = PITCH_KP;                       // init gains with default values
+    Pitch_Pid.fKi = PITCH_KI;                       //
+    Pitch_Pid.fKd = PITCH_KD;                       //
 
     PID_Init(&Roll_Pid);
     PID_Init(&Pitch_Pid);
