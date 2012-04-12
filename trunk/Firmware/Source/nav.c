@@ -19,16 +19,11 @@
 ///   of array Waypoint[], computes heading and distance to next waypoint.
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
-///   PID loop setpoint is the difference (bearing - heading), sign corrected 
+///   PID loop setpoint is the difference (bearing - heading), sign corrected
 ///   when < -180° or > 180°. Cross produt and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
-//  CHANGES result of merge of NAV branch:
-//          added navigation PID loop with difference between bearing and 
-//          heading as setpoint, removed dot / cross product calculation of
-//          desired direction and actual direction, 
-//          added initialization of GPS USART, added parsing of GPS data, 
-//          added reading of waypoint from SD card
+//  CHANGES PID gains initialized with default values #defined in config.h
 //
 //============================================================================*/
 
@@ -176,9 +171,9 @@ void Navigation_Task( void *pvParameters ) {
     Nav_Pid.fGain = PI / 6.0f;                      // limit bank angle to -30°, 30°
     Nav_Pid.fMin = -1.0f;                           //
     Nav_Pid.fMax = 1.0f;                            //
-    Nav_Pid.fKp = 1.0f;
-    Nav_Pid.fKi = 0.0f;
-    Nav_Pid.fKd = 0.0f;
+    Nav_Pid.fKp = NAV_KP;                           // Init gains with default values
+    Nav_Pid.fKi = NAV_KI;                           //
+    Nav_Pid.fKd = NAV_KD;                           //
 
     PID_Init(&Nav_Pid);                             // initialize navigation PID
     Load_Path();                                    // load path from SD card
