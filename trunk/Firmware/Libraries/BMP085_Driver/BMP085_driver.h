@@ -5,9 +5,10 @@
 // $Date: $
 // $Author: $
 /// \file
-/// \brief  ADXL345 driver
-//  Changes macros BIT(x) replaced with explicit byte values,
-//          all interface functions return bool
+/// \brief  BMP085 pressure sensor driver
+///
+//  Change type definitions in unix style
+//         renamed variables and function parameters
 //
 //============================================================================
 
@@ -61,10 +62,10 @@
 #define I_AM_BMP085                 0x55
 
 /*    SMB380 API error codes*/
-#define E_BMP_NULL_PTR              (char)-127
-#define E_BMP_COMM_RES              (char)-1
-#define E_BMP_OUT_OF_RANGE          (char)-2
-#define E_SENSOR_NOT_DETECTED       (char) 0
+#define E_BMP_NULL_PTR              (int8_t)-127
+#define E_BMP_COMM_RES              (int8_t)-1
+#define E_BMP_OUT_OF_RANGE          (int8_t)-2
+#define E_SENSOR_NOT_DETECTED       (int8_t) 0
 
 // Register definition
 
@@ -86,38 +87,8 @@
 #define BMP085_TEMP_CONVERSION_TIME 5           // TO be spec'd by GL or SB
 
 /* register write and read delays */
-#define BMP085_MDELAY_DATA_TYPE    unsigned int
+#define BMP085_MDELAY_DATA_TYPE    uint16_t
 #define BMP085_MDELAY_RETURN_TYPE  void
-
-/* this structure holds all device specific calibration parameters */
-typedef struct {
-   short ac1;
-   short ac2;
-   short ac3;
-   unsigned short ac4;
-   unsigned short ac5;
-   unsigned short ac6;
-   short b1;
-   short b2;
-   short mb;
-   short mc;
-   short md;
-} bmp085_calibration_param_t;
-
-
-/* BMP085 image registers data structure*/
-typedef struct  {
-    bmp085_calibration_param_t cal_param;
-    unsigned char mode;
-    unsigned char chip_id, ml_version, al_version;
-    unsigned char dev_addr;
-
-    long param_b5;
-    int number_of_samples;
-    short oversampling_setting;
-    short smd500_t_resolution, smd500_masterclock;
-    BMP085_MDELAY_RETURN_TYPE (*delay_msec)( BMP085_MDELAY_DATA_TYPE );
-} bmp085_t;
 
 /* bit slice positions in registers */
 #define BMP085_CHIP_ID__POS         0
@@ -135,6 +106,9 @@ typedef struct  {
 #define BMP085_AL_VERSION__MSK      0xF0
 #define BMP085_AL_VERSION__REG      BMP085_VERSION_REG
 
+
+/*----------------------------------- Macros ---------------------------------*/
+
 /* DATA REGISTERS */
 
 /* LG/HG thresholds are in LSB and depend on RANGE setting */
@@ -145,11 +119,38 @@ typedef struct  {
 #define BMP085_SET_BITSLICE(regvar, bitname, val)\
           (regvar & ~bitname##__MSK) | ((val<<bitname##__POS)&bitname##__MSK)
 
-/*----------------------------------- Macros ---------------------------------*/
-
 /*-------------------------------- Enumerations ------------------------------*/
 
 /*----------------------------------- Types ----------------------------------*/
+
+/* this structure holds all device specific calibration parameters */
+typedef struct {
+   int16_t ac1;
+   int16_t ac2;
+   int16_t ac3;
+   uint16_t ac4;
+   uint16_t ac5;
+   uint16_t ac6;
+   int16_t b1;
+   int16_t b2;
+   int16_t mb;
+   int16_t mc;
+   int16_t md;
+} bmp085_calibration_param_t;
+
+
+/* BMP085 image registers data structure */
+typedef struct  {
+    bmp085_calibration_param_t cal_param;
+    uint8_t mode;
+    uint8_t chip_id, ml_version, al_version;
+    uint8_t dev_addr;
+    uint32_t param_b5;
+    uint16_t number_of_samples;
+    int16_t oversampling;
+    int16_t smd500_t_resolution, smd500_masterclock;
+    BMP085_MDELAY_RETURN_TYPE (*delay_msec)( BMP085_MDELAY_DATA_TYPE );
+} xBMP85;
 
 /*---------------------------------- Constants -------------------------------*/
 
@@ -158,22 +159,15 @@ typedef struct  {
 /*---------------------------------- Interface -------------------------------*/
 
 // Generic functions
-int bmp085_init(bmp085_t *);
-short bmp085_get_temperature(unsigned long ut);
-long bmp085_get_pressure(unsigned long up);
-unsigned short bmp085_get_ut(void);
-unsigned long  bmp085_get_up(void);
-
-// misc raw functions
-char bmp085_get_reg(unsigned char , unsigned char*, unsigned char);
-char bmp085_set_reg(unsigned char , unsigned char*, unsigned char);
+uint8_t bmp085_init(void);
+int16_t bmp085_get_temperature(uint32_t raw_t);
+int32_t bmp085_get_pressure(uint32_t raw_p);
+uint16_t bmp085_get_raw_t(void);
+uint32_t bmp085_get_raw_p(void);
 
 // API internal helper functions
-int bmp085_get_cal_param(void);
-int smd500_get_cal_param(void);
+int32_t bmp085_get_cal_param(void);
+//int32_t smd500_get_cal_param(void);
 
 #endif /* __BMP085_DRIVER__H */
-
-
-
 
