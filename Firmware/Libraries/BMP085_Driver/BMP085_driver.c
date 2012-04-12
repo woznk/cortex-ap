@@ -4,8 +4,10 @@
 // $Revision: $
 // $Date: $
 // $Author: $
-/// \brief
-//  Change:
+/// \brief BMP085 pressure sensor driver
+///
+//  Change type definitions in unix style
+//         renamed variables and function parameters
 //
 //============================================================================*/
 
@@ -35,45 +37,41 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
-/*--------------------------------- Prototypes -------------------------------*/
+VAR_STATIC xBMP85 *pxBMP85 = 0;      // pointer to BMP085 device data structure
 
-bmp085_t *p_bmp085 = 0; // pointer to BMP085 device area
+/*--------------------------------- Prototypes -------------------------------*/
 
 ///----------------------------------------------------------------------------
 ///
 /// \brief   initialize BMP085
-/// \param   *bmp085_t pointer to bmp085 device data structure
+/// \param   -
 /// \return  result of communication routines
 /// \remarks the function automatically detects the sensor type and stores
 ///          this for all future communication and calculation steps
 ///
 ///----------------------------------------------------------------------------
-int bmp085_init(bmp085_t *bmp085)
+uint8_t bmp085_init(void)
 {
-  char comres=0;
-  unsigned char data;
-  long dummy;
-
-  /* assign BMP085 ptr */
-  p_bmp085 = bmp085;
+  uint8_t comres = 0;
+  uint8_t data;
 
   /* read Chip Id */
-  comres += ReadReg(BMP085_SLAVE_ADDR, BMP085_CHIP_ID__REG, &data);
+  comres += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_CHIP_ID__REG, &data);
 
-  p_bmp085->chip_id = BMP085_GET_BITSLICE(data, BMP085_CHIP_ID);
-  p_bmp085->number_of_samples = 1;
-  p_bmp085->oversampling_setting = 0;
+  pxBMP85->chip_id = BMP085_GET_BITSLICE(data, BMP085_CHIP_ID);
+  pxBMP85->number_of_samples = 1;
+  pxBMP85->oversampling = 0;
 
-  /* read Version reg */
-  comres += ReadReg(BMP085_SLAVE_ADDR, BMP085_VERSION_REG, &data);
+  /* read Version register */
+  comres += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_VERSION_REG, &data);
 
   /* get ML Version */
-  p_bmp085->ml_version = BMP085_GET_BITSLICE(data, BMP085_ML_VERSION);
+  pxBMP85->ml_version = BMP085_GET_BITSLICE(data, BMP085_ML_VERSION);
 
   /* get AL Version */
-  p_bmp085->al_version = BMP085_GET_BITSLICE(data, BMP085_AL_VERSION);
+  pxBMP85->al_version = BMP085_GET_BITSLICE(data, BMP085_AL_VERSION);
 
-  /* readout bmp085 calibration parameter structure */
+  /* extract bmp085 calibration parameter structure */
   bmp085_get_cal_param( );
 
   return comres;
@@ -82,7 +80,7 @@ int bmp085_init(bmp085_t *bmp085)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   read out parameters cal_param from BMP085 memory
+/// \brief   extract calibration parameters from BMP085 memory
 /// \param   -
 /// \return  result of communication routines
 /// \remarks -
@@ -93,48 +91,50 @@ int bmp085_get_cal_param(void)
   int comres;
   unsigned char data[22];
 
-  comres = ReadBuff(BMP085_SLAVE_ADDR, BMP085_PROM_START_ADDR, data, BMP085_PROM_DATA_LEN);
+  comres = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, 
+                              BMP085_PROM_START_ADDR, 
+                              data, 
+                              BMP085_PROM_DATA_LEN);
 
   /* parameters AC1-AC6 */
-  p_bmp085->cal_param.ac1 =  (data[0] <<8) | data[1];
-  p_bmp085->cal_param.ac2 =  (data[2] <<8) | data[3];
-  p_bmp085->cal_param.ac3 =  (data[4] <<8) | data[5];
-  p_bmp085->cal_param.ac4 =  (data[6] <<8) | data[7];
-  p_bmp085->cal_param.ac5 =  (data[8] <<8) | data[9];
-  p_bmp085->cal_param.ac6 = (data[10] <<8) | data[11];
+  pxBMP85->cal_param.ac1 =  (data[0] <<8) | data[1];
+  pxBMP85->cal_param.ac2 =  (data[2] <<8) | data[3];
+  pxBMP85->cal_param.ac3 =  (data[4] <<8) | data[5];
+  pxBMP85->cal_param.ac4 =  (data[6] <<8) | data[7];
+  pxBMP85->cal_param.ac5 =  (data[8] <<8) | data[9];
+  pxBMP85->cal_param.ac6 = (data[10] <<8) | data[11];
 
   /* parameters B1,B2 */
-  p_bmp085->cal_param.b1 =  (data[12] <<8) | data[13];
-  p_bmp085->cal_param.b2 =  (data[14] <<8) | data[15];
+  pxBMP85->cal_param.b1 =  (data[12] <<8) | data[13];
+  pxBMP85->cal_param.b2 =  (data[14] <<8) | data[15];
 
   /* parameters MB,MC,MD */
-  p_bmp085->cal_param.mb =  (data[16] <<8) | data[17];
-  p_bmp085->cal_param.mc =  (data[18] <<8) | data[19];
-  p_bmp085->cal_param.md =  (data[20] <<8) | data[21];
+  pxBMP85->cal_param.mb =  (data[16] <<8) | data[17];
+  pxBMP85->cal_param.mc =  (data[18] <<8) | data[19];
+  pxBMP85->cal_param.md =  (data[20] <<8) | data[21];
 
   return comres;
-
 }
 
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   calculate temperature from ut
-/// \param   ut, parameter read from device
+/// \brief   calculate temperature from raw temperature
+/// \param   raw_t, parameter read from device
 /// \return  temperature in steps of 0.1 deg celsius
-/// \remarks ut was read from the device via I2C and fed into the right calc
-///          path for BMP085
+/// \remarks raw_t was read from the device via I2C and fed into the right
+///          calculation path for BMP085
 ///
 ///----------------------------------------------------------------------------
-short bmp085_get_temperature(unsigned long ut)
+int16_t bmp085_get_temperature(uint32_t raw_t)
 {
-  short temperature;
-  long x1,x2,x3,x4,y2,y3,y4;
+  int16_t temperature;
+  int32_t x1, x2;
 
-  x1 = (((long) ut - (long) p_bmp085->cal_param.ac6) * (long) p_bmp085->cal_param.ac5) >> 15;
-  x2 = ((long) p_bmp085->cal_param.mc << 11) / (x1 + p_bmp085->cal_param.md);
-  p_bmp085->param_b5 = x1 + x2;
-  temperature = ((p_bmp085->param_b5 + 8) >> 4);  // temperature in 0.1°C
+  x1 = (((int32_t) raw_t - (int32_t) pxBMP85->cal_param.ac6) * (int32_t) pxBMP85->cal_param.ac5) >> 15;
+  x2 = ((int32_t) pxBMP85->cal_param.mc << 11) / (x1 + pxBMP85->cal_param.md);
+  pxBMP85->param_b5 = x1 + x2;
+  temperature = ((pxBMP85->param_b5 + 8) >> 4);  // temperature in 0.1°C
 
   return (temperature);
 }
@@ -142,39 +142,39 @@ short bmp085_get_temperature(unsigned long ut)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   calculate pressure from up
-/// \param   up, parameter read from device
+/// \brief   calculate pressure from raw pressure
+/// \param   raw_p, parameter read from device
 /// \return  pressure in steps of 0.1 Pa
-/// \remarks up was read from the device via I2C and fed into the right calc
+/// \remarks raw_p was read from the device via I2C and fed into the right calc
 ///          path for BMP085
 ///
 ///----------------------------------------------------------------------------
-long bmp085_get_pressure(unsigned long up)
+int32_t bmp085_get_pressure(uint32_t raw_p)
 {
-   long pressure,x1,x2,x3,b3,b6;
-   unsigned long b4, b7;
+   int32_t pressure, x1, x2, x3, b3, b6;
+   uint32_t b4, b7;
 
-   b6 = p_bmp085->param_b5 - 4000;
+   b6 = pxBMP85->param_b5 - 4000;
 
    /* calculate B3 */
    x1 = (b6 * b6) >> 12;
-   x1 *= p_bmp085->cal_param.b2;
+   x1 *= pxBMP85->cal_param.b2;
    x1 >>= 11;
 
-   x2 = (p_bmp085->cal_param.ac2 * b6);
+   x2 = (pxBMP85->cal_param.ac2 * b6);
    x2 >>= 11;
 
-   x3 = x1 +x2;
+   x3 = x1 + x2;
 
-   b3 = (((((long)p_bmp085->cal_param.ac1) * 4 + x3) << p_bmp085->oversampling_setting) + 2) >> 2;
+   b3 = (((((int32_t)pxBMP85->cal_param.ac1) * 4 + x3) << pxBMP85->oversampling) + 2) >> 2;
 
    /* calculate B4 */
-   x1 = (p_bmp085->cal_param.ac3 * b6) >> 13;
-   x2 = (p_bmp085->cal_param.b1 * ((b6 * b6) >> 12) ) >> 16;
+   x1 = (pxBMP85->cal_param.ac3 * b6) >> 13;
+   x2 = (pxBMP85->cal_param.b1 * ((b6 * b6) >> 12) ) >> 16;
    x3 = ((x1 + x2) + 2) >> 2;
-   b4 = (p_bmp085->cal_param.ac4 * (unsigned long) (x3 + 32768)) >> 15;
+   b4 = (pxBMP85->cal_param.ac4 * (uint32_t) (x3 + 32768)) >> 15;
 
-   b7 = ((unsigned long)(up - b3) * (50000 >> p_bmp085->oversampling_setting));
+   b7 = ((uint32_t)(raw_p - b3) * (50000 >> pxBMP85->oversampling));
    if (b7 < 0x80000000) {
      pressure = (b7 << 1) / b4;
    } else {
@@ -193,30 +193,31 @@ long bmp085_get_pressure(unsigned long up)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   read out ut for temperature conversion
-/// \param   up, parameter read from device
+/// \brief   read out raw temperature for temperature conversion
+/// \param   -
 /// \return  uncompensated temperature sensors conversion value
-/// \remarks -
+/// \remarks raw_t parameter read from device
 ///
 ///----------------------------------------------------------------------------
-unsigned short bmp085_get_ut ()
+uint16_t bmp085_get_raw_t (void)
 {
-  unsigned short ut;
-  unsigned char data[2];
-  unsigned char ctrl_reg_data;
-  int wait_time;
-  int comres;
+  uint16_t raw_t;
+  uint8_t data[2];
+//  uint8_t ctrl_reg_data;
+  int32_t wait_time, comres;
 
-  ctrl_reg_data = BMP085_T_MEASURE;
+//  ctrl_reg_data = BMP085_T_MEASURE;
   wait_time = BMP085_TEMP_CONVERSION_TIME;
 
-  comres = WriteReg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, &ctrl_reg_data);
+//  comres = I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, ctrl_reg_data);
+  comres = I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, BMP085_T_MEASURE);
 
-  p_bmp085->delay_msec (wait_time);
-  comres += ReadBuff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 2);
+/* REPLACE WITH STAND ALONE FUNCTION */
+  pxBMP85->delay_msec ( wait_time );
+  comres += I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 2);
 
-  ut = (data[0] << 8) | data[1];
-  return (ut);
+  raw_t = (data[0] << 8) | data[1];
+  return (raw_t);
 }
 
 
@@ -228,22 +229,25 @@ unsigned short bmp085_get_ut ()
 /// \remarks depending on the oversampling ratio setting up can be 16 to 19 bit
 ///
 ///----------------------------------------------------------------------------
-unsigned long bmp085_get_up ()
+uint32_t bmp085_get_raw_p (void)
 {
-  int i;
-  unsigned long up=0;
-  unsigned char data[3];
-  unsigned char ctrl_reg_data;
-  int comres=0;
+//  int32_t i;
+  uint32_t raw_p = 0;
+  uint8_t comres = 0;
+  uint8_t data[3];
+  uint8_t ctrl_reg_data;
 
-  ctrl_reg_data = BMP085_P_MEASURE + (p_bmp085->oversampling_setting << 6);
-  comres = p_bmp085->BMP085_BUS_WRITE_FUNC(p_bmp085->dev_addr, BMP085_CTRL_MEAS_REG, &ctrl_reg_data, 1);
-  p_bmp085->delay_msec ( 2 + (3 << (p_bmp085->oversampling_setting) ) );
-  comres += ReadBuff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 3);
-  up = (((unsigned long) data[0] << 16) | ((unsigned long) data[1] << 8) | (unsigned long) data[2]) >> (8-p_bmp085->oversampling_setting);
-  p_bmp085->number_of_samples = 1;
+  ctrl_reg_data = BMP085_P_MEASURE + (pxBMP85->oversampling << 6);
+//  comres = pxBMP85->BMP085_BUS_WRITE_FUNC(pxBMP85->dev_addr, BMP085_CTRL_MEAS_REG, &ctrl_reg_data, 1);
+  I2C_MEMS_Write_Reg(pxBMP85->dev_addr, BMP085_CTRL_MEAS_REG, ctrl_reg_data);
 
-  return (up);
+/* REPLACE WITH STAND ALONE FUNCTION */
+  pxBMP85->delay_msec ( 2 + (3 << (pxBMP85->oversampling) ) );
+  comres += I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 3);
+  raw_p = (((uint32_t) data[0] << 16) | ((uint32_t) data[1] << 8) | (uint32_t) data[2]) >> (8 - pxBMP85->oversampling);
+  pxBMP85->number_of_samples = 1;
+
+  return (raw_p);
 }
 
 
