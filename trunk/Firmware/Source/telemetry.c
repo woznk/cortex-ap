@@ -41,9 +41,10 @@
 ///                         |                        |
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
-/// \todo aggiungere parser protocollo ardupilot o mnav
+/// \todo add parser for ardupilot / mnav protocols
 ///
-//  CHANGES DCM transmission in binary format 
+//  CHANGES PID gains initialized with default values #defined in config.h
+//          simplified functions Telemetry_Send_Controls and Telemetry_Send_Wayoint
 //
 //============================================================================*/
 
@@ -115,15 +116,22 @@ typedef enum E_TELEMETRY {
 "$K,8799,1299, 899, 199,4999,4999\r\n"
 "$S,560,112,-12,12345,0,1023,110\n"
 */
-VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    /// uplink data buffer
-VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    /// downlink data buffer
-VAR_STATIC uint8_t ucWindex;                        /// upling write index
-VAR_STATIC uint8_t ucRindex;                        /// uplink read index
-VAR_STATIC uint8_t ucStatus;                        /// status of parser
-VAR_STATIC float fTemp;                             /// temporary for parser
-VAR_STATIC float fGain[TEL_GAIN_NUMBER];            /// gains for PID loops
-VAR_STATIC float fSensor[8];                        /// simulator sensor data
-VAR_STATIC float fTrueAirSpeed;                     /// simulator true air speed
+VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    // uplink data buffer
+VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    // downlink data buffer
+VAR_STATIC uint8_t ucWindex;                        // uplink write index
+VAR_STATIC uint8_t ucRindex;                        // uplink read index
+VAR_STATIC uint8_t ucStatus;                        // status of parser
+VAR_STATIC float fTemp;                             // temporary for parser
+VAR_STATIC float fTrueAirSpeed;                     // simulator true air speed
+VAR_STATIC float fSensor[8];                        // simulator sensor data
+VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {         // gains for PID loops
+    PITCH_KP,                                       // default TEL_PITCH_KP
+    PITCH_KI,                                       // default TEL_PITCH_KI
+    ROLL_KP,                                        // default TEL_ROLL_KP
+    ROLL_KI,                                        // default TEL_ROLL_KI
+    NAV_KP,                                         // default TEL_NAV_KP
+    NAV_KI                                          // default TEL_NAV_KI
+};
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -327,10 +335,10 @@ static void Telemetry_Parse ( void )
                 break;
             case 1:
                 switch (c) {
-                    case 'S': ucStatus++; break;    // sensor data
-                    case 'G': /*ucStatus = 10; */ break; // GPS data
-                    case 'K': ucStatus = 12; break; // gain data
-                    default : ucStatus = 0; break;  //
+                    case 'S': ucStatus++; break;            // sensor data
+                    case 'G': /*ucStatus = 10; */ break;    // GPS data
+                    case 'K': ucStatus = 12; break;         // gain data
+                    default : ucStatus = 0; break;          // error
                 }
                 break;
             case 2:             /* ------------------ sensors ------------------ */
@@ -443,19 +451,14 @@ void Telemetry_Send_Controls(void)
     uint8_t j;
     float *pfBuff;
 
-    ucTxBuffer[0] = TEL_SERVO_POS;                // telemetry wait code
+    ucTxBuffer[0] = TEL_SERVO_POS;                  // telemetry wait code
 
-    pfBuff = (float *)&ucTxBuffer[1];             // elevator
-    *pfBuff = (float)Servo_Get(SERVO_ELEVATOR);
+    pfBuff = (float *)&ucTxBuffer[1];               // starting of data field
 
-    pfBuff = (float *)&ucTxBuffer[5];             // ailerons
-    *pfBuff = (float)Servo_Get(SERVO_AILERON);
-
-    pfBuff = (float *)&ucTxBuffer[9];             // rudder
-    *pfBuff = (float)Servo_Get(SERVO_RUDDER);
-
-    pfBuff = (float *)&ucTxBuffer[13];            // throttle
-    *pfBuff = (float)Servo_Get(SERVO_THROTTLE);
+    *pfBuff++ = (float)Servo_Get(SERVO_ELEVATOR);   // elevator
+    *pfBuff++ = (float)Servo_Get(SERVO_AILERON);    // ailerons
+    *pfBuff++ = (float)Servo_Get(SERVO_RUDDER);     // rudder
+    *pfBuff   = (float)Servo_Get(SERVO_THROTTLE);   // throttle
 
     for (j = 0; j < 17; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
@@ -487,21 +490,16 @@ static void Telemetry_Send_Waypoint(void)
     uint8_t j;
     uint16_t *puiBuff;
 
-    ucTxBuffer[0] = TEL_WAYPOINT;           // telemetry wait code
+    ucTxBuffer[0] = TEL_WAYPOINT;               // telemetry wait code
 
-    ucTxBuffer[1] = Nav_Wpt_Index();        // waypoint index
+    ucTxBuffer[1] = Nav_Wpt_Index();            // waypoint index
 
-    puiBuff = (uint16_t *)&ucTxBuffer[2];   // bearing to waypoint
-    *puiBuff = (uint16_t)Nav_Bearing();
+    puiBuff = (uint16_t *)&ucTxBuffer[2];       // starting of data field
 
-    puiBuff = (uint16_t *)&ucTxBuffer[4];   // waypoint altitude
-    *puiBuff = (uint16_t)Nav_Wpt_Altitude();
-
-    puiBuff = (uint16_t *)&ucTxBuffer[6];   // distance to waypoint
-    *puiBuff = Nav_Distance();
-
-    puiBuff = (uint16_t *)&ucTxBuffer[8];   // heading
-    *puiBuff = (uint16_t)Nav_Heading();
+    *puiBuff++ = (uint16_t)Nav_Bearing();       // bearing to waypoint
+    *puiBuff++ = (uint16_t)Nav_Wpt_Altitude();  // waypoint altitude
+    *puiBuff++ = Nav_Distance();                // distance to waypoint
+    *puiBuff   = (uint16_t)Nav_Heading();       // heading
 
     for (j = 0; j < 10; j++) {
       while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
