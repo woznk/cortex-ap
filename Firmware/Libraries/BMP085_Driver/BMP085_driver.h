@@ -7,8 +7,8 @@
 /// \file
 /// \brief  BMP085 pressure sensor driver
 ///
-//  Change type definitions in unix style
-//         renamed variables and function parameters
+//  Change restored SMD500 specific constants
+//         corrected (?) MP085 Physical Device Address
 //
 //============================================================================
 
@@ -24,51 +24,22 @@
 #endif
 #define VAR_GLOBAL extern
 
-// Define the calling convention of YOUR bus communication routine.
-// note This includes types of parameters. This example shows the configuration for an SPI bus link.
-
-// defines the return parameter type of the BMP085_WR_FUNCTION
-#define BMP085_BUS_WR_RETURN_TYPE char
-
-// defines the calling parameter types of the BMP085_WR_FUNCTION
-#define BMP085_BUS_WR_PARAM_TYPES unsigned char,unsigned char,unsigned char *,unsigned char
-
-// links the order of parameters defined in BMP085_BUS_WR_PARAM_TYPE to function calls used inside the API
-#define BMP085_BUS_WR_PARAM_ORDER device_addr, register_addr, register_data, write_length
-
-// never change this line
-#define BMP085_BUS_WRITE_FUNC(device_addr, register_addr, register_data, write_length)\
-           bus_write( device_addr, register_addr, register_data, write_length )
-
-// defines the return parameter type of the BMP085_WR_FUNCTION
-#define BMP085_BUS_RD_RETURN_TYPE char
-
-// defines the calling parameter types of the BMP085_WR_FUNCTION
-#define BMP085_BUS_RD_PARAM_TYPES unsigned char, unsigned char, unsigned char *, unsigned char
-
-// links the order of parameters defined in BMP085_BUS_WR_PARAM_TYPE to function calls used inside the API
-#define BMP085_BUS_RD_PARAM_ORDER device_addr, register_addr, register_data, read_length
-
-// never change this line */
-#define BMP085_BUS_READ_FUNC(device_addr, register_addr, register_data, read_length)\
-           bus_read( device_addr, register_addr, register_data, read_length )
-
 /*    CHIP_TYPE CONSTANTS */
 #define BOSCH_PRESSURE_BMP085       85
 
-// BMP085 Physical Device Address
-#define BMP085_SLAVE_ADDR           (0xEE << 1)
+/* BMP085 Physical Device Address */
+#define BMP085_SLAVE_ADDR           0xEE
 
+/* BMP085 Identifier */
 #define I_AM_BMP085                 0x55
 
-/*    SMB380 API error codes*/
+/* SMB380 API error codes*/
 #define E_BMP_NULL_PTR              (int8_t)-127
 #define E_BMP_COMM_RES              (int8_t)-1
 #define E_BMP_OUT_OF_RANGE          (int8_t)-2
 #define E_SENSOR_NOT_DETECTED       (int8_t) 0
 
-// Register definition
-
+/* Register definition */
 #define BMP085_PROM_START_ADDR      0xAA
 #define BMP085_PROM_DATA_LEN        22
 
@@ -106,6 +77,24 @@
 #define BMP085_AL_VERSION__MSK      0xF0
 #define BMP085_AL_VERSION__REG      BMP085_VERSION_REG
 
+/* SMD500 specific constants */
+#define SMD500_PARAM_M1     -2218        //calibration parameter
+#define SMD500_PARAM_M2      -457        //calibration parameter
+#define SMD500_PARAM_M3     -1984        //calibration parameter
+#define SMD500_PARAM_M4      8808        //calibration parameter
+#define SMD500_PARAM_M5       496        //calibration parameter
+#define SMD500_PARAM_M6      1415        //calibration parameter
+
+#define SMD500_PARAM_MB     -4955        //calibration parameter
+#define SMD500_PARAM_MC     11611        //calibration parameter
+#define SMD500_PARAM_MD    -12166        //calibration parameter
+#define SMD500_PARAM_ME    -17268        //calibration parameter
+#define SMD500_PARAM_MF     -8970        //calibration parameter
+
+#define SMD500_PARAM_MG      3038        //calibration parameter
+#define SMD500_PARAM_MH     -7357        //calibration parameter
+#define SMD500_PARAM_MI      3791        //calibration parameter
+#define SMD500_PARAM_MJ     64385        //calibration parameter
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -137,7 +126,6 @@ typedef struct {
    int16_t mc;
    int16_t md;
 } bmp085_calibration_param_t;
-
 
 /* BMP085 image registers data structure */
 typedef struct  {
