@@ -147,17 +147,24 @@
           <Name>-O14 -S0 -C0 -N00("ARM Cortex-M3") -D00(1BA00477) -L00(4) -FO7 -FD20000000 -FC800 -FN1 -FF0STM32F10x_128 -FS08000000 -FL020000)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
+      <WatchWindow1>
+        <Ww>
+          <count>0</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>Bmp85</ItemText>
+        </Ww>
+      </WatchWindow1>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x08008c0a</ItemText>
+          <ItemText>ucTxBuffer</ItemText>
         </Mm>
       </MemoryWindow1>
       <DebugFlag>
         <trace>0</trace>
         <periodic>1</periodic>
-        <aLwin>1</aLwin>
+        <aLwin>0</aLwin>
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
@@ -533,8 +540,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>106</TopLine>
-      <CurrentLine>116</CurrentLine>
+      <TopLine>109</TopLine>
+      <CurrentLine>109</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -547,8 +554,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>457</TopLine>
+      <CurrentLine>465</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -643,10 +650,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>2</ColumnNumber>
+      <ColumnNumber>74</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>460</TopLine>
-      <CurrentLine>476</CurrentLine>
+      <TopLine>461</TopLine>
+      <CurrentLine>469</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\telemetry.c</PathWithFileName>
       <FilenameWithoutPath>telemetry.c</FilenameWithoutPath>
@@ -659,8 +666,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1</TopLine>
-      <CurrentLine>19</CurrentLine>
+      <TopLine>115</TopLine>
+      <CurrentLine>115</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\attitude.c</PathWithFileName>
       <FilenameWithoutPath>attitude.c</FilenameWithoutPath>
@@ -756,6 +763,20 @@
       <PathWithFileName>..\Libraries\fat_sd\ff.c</PathWithFileName>
       <FilenameWithoutPath>ff.c</FilenameWithoutPath>
     </File>
+    <File>
+      <GroupNumber>2</GroupNumber>
+      <FileNumber>18</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>7</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>66</TopLine>
+      <CurrentLine>100</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\BMP085_Driver\BMP085_driver.c</PathWithFileName>
+      <FilenameWithoutPath>BMP085_driver.c</FilenameWithoutPath>
+    </File>
   </Group>
 
   <Group>
@@ -765,7 +786,7 @@
     <cbSel>0</cbSel>
     <File>
       <GroupNumber>3</GroupNumber>
-      <FileNumber>18</FileNumber>
+      <FileNumber>19</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -779,7 +800,7 @@
     </File>
     <File>
       <GroupNumber>3</GroupNumber>
-      <FileNumber>19</FileNumber>
+      <FileNumber>20</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -793,7 +814,7 @@
     </File>
     <File>
       <GroupNumber>3</GroupNumber>
-      <FileNumber>20</FileNumber>
+      <FileNumber>21</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -807,21 +828,21 @@
     </File>
     <File>
       <GroupNumber>3</GroupNumber>
-      <FileNumber>21</FileNumber>
+      <FileNumber>22</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1879</TopLine>
-      <CurrentLine>1879</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</PathWithFileName>
       <FilenameWithoutPath>tasks.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>3</GroupNumber>
-      <FileNumber>22</FileNumber>
+      <FileNumber>23</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -835,7 +856,7 @@
     </File>
     <File>
       <GroupNumber>3</GroupNumber>
-      <FileNumber>23</FileNumber>
+      <FileNumber>24</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -849,7 +870,7 @@
     </File>
     <File>
       <GroupNumber>3</GroupNumber>
-      <FileNumber>24</FileNumber>
+      <FileNumber>25</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -870,21 +891,21 @@
     <cbSel>0</cbSel>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>25</FileNumber>
+      <FileNumber>26</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>874</TopLine>
+      <CurrentLine>882</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_usart.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>26</FileNumber>
+      <FileNumber>27</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -898,7 +919,7 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>27</FileNumber>
+      <FileNumber>28</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -912,21 +933,21 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>28</FileNumber>
+      <FileNumber>29</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>62</TopLine>
-      <CurrentLine>62</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Utilities\stm32f10x_it.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_it.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>29</FileNumber>
+      <FileNumber>30</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -940,7 +961,7 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>30</FileNumber>
+      <FileNumber>31</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -954,7 +975,7 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>31</FileNumber>
+      <FileNumber>32</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -968,21 +989,21 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>32</FileNumber>
+      <FileNumber>33</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>20</ColumnNumber>
+      <ColumnNumber>67</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>979</TopLine>
-      <CurrentLine>997</CurrentLine>
+      <TopLine>985</TopLine>
+      <CurrentLine>994</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_i2c.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>33</FileNumber>
+      <FileNumber>34</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -996,7 +1017,7 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>34</FileNumber>
+      <FileNumber>35</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -1010,7 +1031,7 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>35</FileNumber>
+      <FileNumber>36</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -1024,7 +1045,7 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>36</FileNumber>
+      <FileNumber>37</FileNumber>
       <FileType>2</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -1039,9 +1060,9 @@
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Source\attitude.h</PathWithFilename>
-    <TopLine>28</TopLine>
-    <CurrentLine>40</CurrentLine>
+    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h</PathWithFilename>
+    <TopLine>76</TopLine>
+    <CurrentLine>84</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -1065,61 +1086,9 @@
   </AlienFiles>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Source\ppmdriver.h</PathWithFilename>
-    <TopLine>28</TopLine>
-    <CurrentLine>42</CurrentLine>
-    <Constant>0</Constant>
-    <WindowPosition>
-      <length>0</length>
-      <flags>0</flags>
-      <showCmd>0</showCmd>
-      <MinPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MinPosition>
-      <MaxPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MaxPosition>
-      <NormalPosition>
-        <Top>0</Top>
-        <Left>0</Left>
-        <Right>0</Right>
-        <Bottom>0</Bottom>
-      </NormalPosition>
-    </WindowPosition>
-  </AlienFiles>
-
-  <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Source\telemetry.h</PathWithFilename>
-    <TopLine>14</TopLine>
-    <CurrentLine>38</CurrentLine>
-    <Constant>0</Constant>
-    <WindowPosition>
-      <length>0</length>
-      <flags>0</flags>
-      <showCmd>0</showCmd>
-      <MinPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MinPosition>
-      <MaxPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MaxPosition>
-      <NormalPosition>
-        <Top>0</Top>
-        <Left>0</Left>
-        <Right>0</Right>
-        <Bottom>0</Bottom>
-      </NormalPosition>
-    </WindowPosition>
-  </AlienFiles>
-
-  <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Source\log.h</PathWithFilename>
-    <TopLine>12</TopLine>
-    <CurrentLine>36</CurrentLine>
+    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\BMP085_Driver\bmp085_driver.h</PathWithFilename>
+    <TopLine>122</TopLine>
+    <CurrentLine>151</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -1150,28 +1119,10 @@
       <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
-          <Name>..\Source\attitude.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>19</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\log.h</Name>
-          <ColumnNumber>23</ColumnNumber>
-          <TopLine>12</TopLine>
-          <CurrentLine>36</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\telemetry.h</Name>
-          <ColumnNumber>24</ColumnNumber>
-          <TopLine>14</TopLine>
-          <CurrentLine>38</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>1879</TopLine>
-          <CurrentLine>1879</CurrentLine>
+          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</Name>
+          <ColumnNumber>67</ColumnNumber>
+          <TopLine>985</TopLine>
+          <CurrentLine>994</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
@@ -1180,34 +1131,34 @@
           <CurrentLine>153</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Utilities\stm32f10x_it.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>62</TopLine>
-          <CurrentLine>62</CurrentLine>
+          <Name>..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h</Name>
+          <ColumnNumber>43</ColumnNumber>
+          <TopLine>76</TopLine>
+          <CurrentLine>84</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\ppmdriver.h</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>28</TopLine>
-          <CurrentLine>42</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</Name>
-          <ColumnNumber>20</ColumnNumber>
-          <TopLine>979</TopLine>
-          <CurrentLine>997</CurrentLine>
+          <Name>..\Libraries\BMP085_Driver\BMP085_driver.c</Name>
+          <ColumnNumber>7</ColumnNumber>
+          <TopLine>66</TopLine>
+          <CurrentLine>100</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\main.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>106</TopLine>
-          <CurrentLine>116</CurrentLine>
+          <TopLine>109</TopLine>
+          <CurrentLine>109</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\attitude.h</Name>
-          <ColumnNumber>38</ColumnNumber>
-          <TopLine>28</TopLine>
-          <CurrentLine>40</CurrentLine>
+          <Name>..\Source\attitude.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>115</TopLine>
+          <CurrentLine>115</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\BMP085_Driver\bmp085_driver.h</Name>
+          <ColumnNumber>26</ColumnNumber>
+          <TopLine>122</TopLine>
+          <CurrentLine>151</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
