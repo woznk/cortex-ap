@@ -5,10 +5,10 @@
 // $Date: $
 // $Author: $
 /// \file
-/// \brief  BMP085 pressure sensor driver
+/// \brief  BMP085 lPressure sensor driver
 ///
-//  Change restored SMD500 specific constants
-//         corrected (?) MP085 Physical Device Address
+//  Change added BMP085_Handler()
+//         renamed variables
 //
 //============================================================================
 
@@ -125,11 +125,11 @@ typedef struct {
    int16_t mb;
    int16_t mc;
    int16_t md;
-} bmp085_calibration_param_t;
+} STRUCT_CALIBRATION;
 
 /* BMP085 image registers data structure */
 typedef struct  {
-    bmp085_calibration_param_t cal_param;
+    STRUCT_CALIBRATION cal_param;
     uint8_t mode;
     uint8_t chip_id, ml_version, al_version;
     uint8_t dev_addr;
@@ -138,7 +138,7 @@ typedef struct  {
     int16_t oversampling;
     int16_t smd500_t_resolution, smd500_masterclock;
     BMP085_MDELAY_RETURN_TYPE (*delay_msec)( BMP085_MDELAY_DATA_TYPE );
-} xBMP85;
+} STRUCT_BMP85;
 
 /*---------------------------------- Constants -------------------------------*/
 
@@ -147,15 +147,10 @@ typedef struct  {
 /*---------------------------------- Interface -------------------------------*/
 
 // Generic functions
-uint8_t bmp085_init(void);
-int16_t bmp085_get_temperature(uint32_t raw_t);
-int32_t bmp085_get_pressure(uint32_t raw_p);
-uint16_t bmp085_get_raw_t(void);
-uint32_t bmp085_get_raw_p(void);
-
-// API internal helper functions
-int32_t bmp085_get_cal_param(void);
-//int32_t smd500_get_cal_param(void);
+uint8_t BMP085_Init(void);
+void BMP085_Handler(void);
+int16_t BMP085_Get_Temperature(void);
+int32_t BMP085_Get_Pressure(void);
 
 #endif /* __BMP085_DRIVER__H */
 
