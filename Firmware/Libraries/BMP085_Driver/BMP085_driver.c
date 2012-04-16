@@ -6,8 +6,7 @@
 // $Author: $
 /// \brief BMP085 lPressure sensor driver
 ///
-//  Change added BMP085_Handler()
-//         renamed variables
+//  Change added altitude computation
 //
 //============================================================================*/
 
@@ -54,7 +53,7 @@ VAR_STATIC STRUCT_BMP85 Bmp85;      // BMP085 device data structure
 VAR_STATIC uint16_t raw_t, raw_p;
 VAR_STATIC uint8_t data[3];
 VAR_STATIC int16_t iTemperature;
-VAR_STATIC int32_t lPressure;
+VAR_STATIC int32_t lPressure, lAltitude;
 VAR_STATIC ENUM_BMP085_STATUS ucBMP085_Status;
 VAR_STATIC portTickType Last_Wake_Time;
 
@@ -159,6 +158,7 @@ void BMP085_Handler(void)
         break;
 
     case COMPUTE_ALTITUDE:          /* compute altitude from pressure */
+        lAltitude =(((745 * (11390 - lPressure)) / 256 + 46597) * (11390 - lPressure)) / 65536 - 966;
         ucBMP085_Status = START_PRESS_CONVERSION;
         break;
 
