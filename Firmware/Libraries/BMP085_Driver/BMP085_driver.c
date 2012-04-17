@@ -6,7 +6,7 @@
 // $Author: $
 /// \brief BMP085 lPressure sensor driver
 ///
-//  Change added altitude computation
+//  Change reading one register at a time (multiple register reading doesn't work)
 //
 //============================================================================*/
 
@@ -123,7 +123,8 @@ void BMP085_Handler(void)
 
     case READ_UNCOMPENSATED_TEMP:   /* read uncompensated temperature */
         if (xTaskGetTickCount() > Last_Wake_Time + BMP085_TEMP_CONVERSION_TIME) {
-            ucTemp += I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 2);
+            ucTemp  = I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, (uint8_t *)&data[0]);
+            ucTemp += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG + 1, (uint8_t *)&data[1]);
             raw_t = (data[0] << 8) | data[1];
             ucBMP085_Status = COMPENSATE_TEMP;
         }
@@ -136,14 +137,16 @@ void BMP085_Handler(void)
 
     case START_PRESS_CONVERSION:    /* start pressure conversion */
         ucTemp = BMP085_P_MEASURE + (Bmp85.oversampling << 6);
-        I2C_MEMS_Write_Reg(Bmp85.dev_addr, BMP085_CTRL_MEAS_REG, ucTemp);
+        I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, ucTemp);
         Last_Wake_Time = xTaskGetTickCount();
-        ucBMP085_Status = READ_UNCOMPENSATED_TEMP;
+        ucBMP085_Status = READ_UNCOMPENSATED_PRESS;
         break;
 
     case READ_UNCOMPENSATED_PRESS:  /* read uncompensated pressure */
-        if (xTaskGetTickCount() > Last_Wake_Time + (2 + (3 << (Bmp85.oversampling)))) {
-            ucTemp += I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 3);
+        if (xTaskGetTickCount() > Last_Wake_Time + BMP085_PRESS_CONVERSION_TIME/*(2 + (3 << (Bmp85.oversampling)))*/) {
+            ucTemp  = I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, (uint8_t *)&data[0]);
+            ucTemp += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG + 1, (uint8_t *)&data[1]);
+            ucTemp += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG + 2, (uint8_t *)&data[2]);
             raw_p = (((uint32_t) data[0] << 16) |
                      ((uint32_t) data[1] << 8) |
                       (uint32_t) data[2]) >> (8 - Bmp85.oversampling);
@@ -178,13 +181,14 @@ void BMP085_Handler(void)
 ///----------------------------------------------------------------------------
 static uint8_t BMP085_Get_Calibration(void)
 {
-  uint8_t comres;
-  unsigned char data[22];
+  uint8_t j, comres;
+  unsigned char data[BMP085_PROM_DATA_LEN];
 
-  comres = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR,
-                              BMP085_PROM_START_ADDR,
-                              data,
-                              BMP085_PROM_DATA_LEN);
+  for (j = 0; j < BMP085_PROM_DATA_LEN; j++) {
+    comres = I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR,
+                               BMP085_PROM_START_ADDR + j,
+                               (uint8_t *)&data[j]);
+  }
 
   /* parameters AC1-AC6 */
   Bmp85.cal_param.ac1 =  (data[0] <<8) | data[1];
