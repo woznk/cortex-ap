@@ -7,8 +7,7 @@
 /// \file
 /// \brief  BMP085 lPressure sensor driver
 ///
-//  Change added BMP085_Handler()
-//         renamed variables
+//  Change added #definition of BMP085_PRESS_CONVERSION_TIME
 //
 //============================================================================
 
@@ -55,7 +54,8 @@
 #define BMP085_T_MEASURE            0x2E        // temperature measurent
 #define BMP085_P_MEASURE            0x34        // pressure measurement
 
-#define BMP085_TEMP_CONVERSION_TIME 5           // TO be spec'd by GL or SB
+#define BMP085_TEMP_CONVERSION_TIME 20 // 5           // TO be spec'd by GL or SB
+#define BMP085_PRESS_CONVERSION_TIME 20
 
 /* register write and read delays */
 #define BMP085_MDELAY_DATA_TYPE    uint16_t
