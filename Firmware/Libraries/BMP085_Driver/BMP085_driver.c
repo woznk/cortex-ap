@@ -6,7 +6,7 @@
 // $Author: $
 /// \brief BMP085 lPressure sensor driver
 ///
-//  Change reading one register at a time (multiple register reading doesn't work)
+//  Change corrected variable types
 //
 //============================================================================*/
 
@@ -50,10 +50,10 @@ typedef enum {
 /*----------------------------------- Locals ---------------------------------*/
 
 VAR_STATIC STRUCT_BMP85 Bmp85;      // BMP085 device data structure
-VAR_STATIC uint16_t raw_t, raw_p;
+VAR_STATIC uint16_t raw_t;
 VAR_STATIC uint8_t data[3];
 VAR_STATIC int16_t iTemperature;
-VAR_STATIC int32_t lPressure, lAltitude;
+VAR_STATIC int32_t raw_p, lPressure, lAltitude;
 VAR_STATIC ENUM_BMP085_STATUS ucBMP085_Status;
 VAR_STATIC portTickType Last_Wake_Time;
 
@@ -240,7 +240,8 @@ static void Compensate_Temperature(void)
 ///----------------------------------------------------------------------------
 static void Compensate_Pressure(void)
 {
-    int32_t x1, x2, x3, b3, b4, b6, b7;
+    int32_t x1, x2, x3, b3, b6;
+    uint32_t b4, b7;
 
     /* calculate B6 */
     b6 = Bmp85.param_b5 - 4000;
