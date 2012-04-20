@@ -45,6 +45,22 @@
 
 @par Altimetro
 
+     La lettura della temperatura dal sensore BMP085 restituisce 0xFFFF.
+     Il problema è dovuto a componente difettoso, confermato da vari forum.
+     La pressione compensata è espressa in decimi di mBar (o decimi di hPa o
+     millesimi di Pa). Per calcolare l'altitudine in centimetri si puo' usare
+     il polinomio del secondo ordine :
+
+         H = [(p - 101325) (p - 342104)] / 32768
+
+     dove "H" è l'altezza espressa in cm e "p" è la pressione compensata 
+     espressa in multipli di 0.1 mBar.
+     L'approssimazione vale per pressioni comprese tra 800 mBar e 1013 mBar.
+     L'errore massimo si ha con p = 800 mBar ed è pari a 15 metri.
+     Al di sotto di 100 m dal ivello del mare e in atmosfera standard l'errore
+     è inferiore al centimetro.
+
+
 @par Telemetria
      
      link all'elenco dei comandi MAVLink implementati su ArduPilot Mega:
