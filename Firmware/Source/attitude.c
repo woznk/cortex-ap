@@ -7,7 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: PID gains initialized with default values #defined in config.h
+// Change: added management of barometric pressure sensor BMP085
 //
 //============================================================================*/
 
@@ -21,6 +21,7 @@
 #include "i2c_mems_driver.h"
 #include "l3g4200d_driver.h"
 #include "adxl345_driver.h"
+#include "bmp085_driver.h"
 #include "servodriver.h"
 #include "ppmdriver.h"
 
@@ -120,6 +121,7 @@ void Attitude_Task(void *pvParameters)
     /* Task specific initializations */
     L3G4200_Init();                                 // init L3G4200 gyro
     ADXL345_Init();                                 // init ADXL345 accelerometer
+    BMP085_Init();
 
     Roll_Pid.fGain = 500.0f;                        // limit servo throw
     Roll_Pid.fMin = -1.0f;                          //
@@ -175,6 +177,7 @@ void Attitude_Task(void *pvParameters)
 #if (SIMULATOR == SIM_NONE)                         // normal mode
         GetAccelRaw(ucSensor_Data);                 // acceleration
         GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
+        BMP085_Handler();
 #else                                               // simulation mode
         Telemetry_Get_Sensors((int16_t *)ucSensor_Data);// get simulator sensors
 #endif
