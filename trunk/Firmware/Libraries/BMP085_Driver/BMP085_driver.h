@@ -7,7 +7,7 @@
 /// \file
 /// \brief  BMP085 lPressure sensor driver
 ///
-//  Change added #definition of BMP085_PRESS_CONVERSION_TIME
+//  Change removed unused fields from BMP085 data structure
 //
 //============================================================================
 
@@ -54,7 +54,7 @@
 #define BMP085_T_MEASURE            0x2E        // temperature measurent
 #define BMP085_P_MEASURE            0x34        // pressure measurement
 
-#define BMP085_TEMP_CONVERSION_TIME 20 // 5           // TO be spec'd by GL or SB
+#define BMP085_TEMP_CONVERSION_TIME 5           // TO be spec'd by GL or SB
 #define BMP085_PRESS_CONVERSION_TIME 20
 
 /* register write and read delays */
@@ -78,23 +78,23 @@
 #define BMP085_AL_VERSION__REG      BMP085_VERSION_REG
 
 /* SMD500 specific constants */
-#define SMD500_PARAM_M1     -2218        //calibration parameter
-#define SMD500_PARAM_M2      -457        //calibration parameter
-#define SMD500_PARAM_M3     -1984        //calibration parameter
-#define SMD500_PARAM_M4      8808        //calibration parameter
-#define SMD500_PARAM_M5       496        //calibration parameter
-#define SMD500_PARAM_M6      1415        //calibration parameter
+#define SMD500_PARAM_M1     -2218        // calibration parameter
+#define SMD500_PARAM_M2      -457        // calibration parameter
+#define SMD500_PARAM_M3     -1984        // calibration parameter
+#define SMD500_PARAM_M4      8808        // calibration parameter
+#define SMD500_PARAM_M5       496        // calibration parameter
+#define SMD500_PARAM_M6      1415        // calibration parameter
 
-#define SMD500_PARAM_MB     -4955        //calibration parameter
-#define SMD500_PARAM_MC     11611        //calibration parameter
-#define SMD500_PARAM_MD    -12166        //calibration parameter
-#define SMD500_PARAM_ME    -17268        //calibration parameter
-#define SMD500_PARAM_MF     -8970        //calibration parameter
+#define SMD500_PARAM_MB     -4955        // calibration parameter
+#define SMD500_PARAM_MC     11611        // calibration parameter
+#define SMD500_PARAM_MD    -12166        // calibration parameter
+#define SMD500_PARAM_ME    -17268        // calibration parameter
+#define SMD500_PARAM_MF     -8970        // calibration parameter
 
-#define SMD500_PARAM_MG      3038        //calibration parameter
-#define SMD500_PARAM_MH     -7357        //calibration parameter
-#define SMD500_PARAM_MI      3791        //calibration parameter
-#define SMD500_PARAM_MJ     64385        //calibration parameter
+#define SMD500_PARAM_MG      3038        // calibration parameter
+#define SMD500_PARAM_MH     -7357        // calibration parameter
+#define SMD500_PARAM_MI      3791        // calibration parameter
+#define SMD500_PARAM_MJ     64385        // calibration parameter
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -129,15 +129,10 @@ typedef struct {
 
 /* BMP085 image registers data structure */
 typedef struct  {
-    STRUCT_CALIBRATION cal_param;
-    uint8_t mode;
+    STRUCT_CALIBRATION calibration;
     uint8_t chip_id, ml_version, al_version;
-    uint8_t dev_addr;
     uint32_t param_b5;
-    uint16_t number_of_samples;
     int16_t oversampling;
-    int16_t smd500_t_resolution, smd500_masterclock;
-    BMP085_MDELAY_RETURN_TYPE (*delay_msec)( BMP085_MDELAY_DATA_TYPE );
 } STRUCT_BMP85;
 
 /*---------------------------------- Constants -------------------------------*/
