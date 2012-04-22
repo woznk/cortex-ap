@@ -6,7 +6,10 @@
 // $Author: $
 /// \brief BMP085 lPressure sensor driver
 ///
-//  Change corrected variable types
+//  Change restored bufferized reading of multiple consecutive registers,
+//         added second reading of calibration parameters to obtain useful data
+//         oversampling set to 3
+//         removed unused fields from BMP085 data structure
 //
 //============================================================================*/
 
@@ -51,7 +54,6 @@ typedef enum {
 
 VAR_STATIC STRUCT_BMP85 Bmp85;      // BMP085 device data structure
 VAR_STATIC uint16_t raw_t;
-VAR_STATIC uint8_t data[3];
 VAR_STATIC int16_t iTemperature;
 VAR_STATIC int32_t raw_p, lPressure, lAltitude;
 VAR_STATIC ENUM_BMP085_STATUS ucBMP085_Status;
@@ -73,23 +75,22 @@ static uint8_t BMP085_Get_Calibration(void);
 ///----------------------------------------------------------------------------
 uint8_t BMP085_Init(void)
 {
-  uint8_t comres = 0;
+  uint8_t data, comres = 0;
 
   /* read Chip Id */
-  comres += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_CHIP_ID__REG, data);
+  comres += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_CHIP_ID__REG, &data);
 
-  Bmp85.chip_id = BMP085_GET_BITSLICE(data[0], BMP085_CHIP_ID);
-  Bmp85.number_of_samples = 1;
-  Bmp85.oversampling = 0;
+  Bmp85.chip_id = BMP085_GET_BITSLICE(data, BMP085_CHIP_ID);
+  Bmp85.oversampling = 3;
 
   /* read Version register */
-  comres += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_VERSION_REG, data);
+  comres += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_VERSION_REG, &data);
 
   /* get ML Version */
-  Bmp85.ml_version = BMP085_GET_BITSLICE(data[0], BMP085_ML_VERSION);
+  Bmp85.ml_version = BMP085_GET_BITSLICE(data, BMP085_ML_VERSION);
 
   /* get AL Version */
-  Bmp85.al_version = BMP085_GET_BITSLICE(data[0], BMP085_AL_VERSION);
+  Bmp85.al_version = BMP085_GET_BITSLICE(data, BMP085_AL_VERSION);
 
   /* extract bmp085 calibration parameter structure */
   BMP085_Get_Calibration( );
@@ -112,6 +113,7 @@ uint8_t BMP085_Init(void)
 void BMP085_Handler(void)
 {
   uint8_t ucTemp = 0;
+  uint8_t data[3];
 
   switch (ucBMP085_Status) {
 
@@ -123,8 +125,7 @@ void BMP085_Handler(void)
 
     case READ_UNCOMPENSATED_TEMP:   /* read uncompensated temperature */
         if (xTaskGetTickCount() > Last_Wake_Time + BMP085_TEMP_CONVERSION_TIME) {
-            ucTemp  = I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, (uint8_t *)&data[0]);
-            ucTemp += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG + 1, (uint8_t *)&data[1]);
+            ucTemp  = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 2);
             raw_t = (data[0] << 8) | data[1];
             ucBMP085_Status = COMPENSATE_TEMP;
         }
@@ -143,14 +144,11 @@ void BMP085_Handler(void)
         break;
 
     case READ_UNCOMPENSATED_PRESS:  /* read uncompensated pressure */
-        if (xTaskGetTickCount() > Last_Wake_Time + BMP085_PRESS_CONVERSION_TIME/*(2 + (3 << (Bmp85.oversampling)))*/) {
-            ucTemp  = I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, (uint8_t *)&data[0]);
-            ucTemp += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG + 1, (uint8_t *)&data[1]);
-            ucTemp += I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG + 2, (uint8_t *)&data[2]);
+        if (xTaskGetTickCount() > Last_Wake_Time + (2 + (3 << (Bmp85.oversampling)))) {
+            ucTemp  = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 3);
             raw_p = (((uint32_t) data[0] << 16) |
                      ((uint32_t) data[1] << 8) |
                       (uint32_t) data[2]) >> (8 - Bmp85.oversampling);
-            Bmp85.number_of_samples = 1;
             ucBMP085_Status = COMPENSATE_PRESS;
         }
         break;
@@ -161,7 +159,7 @@ void BMP085_Handler(void)
         break;
 
     case COMPUTE_ALTITUDE:          /* compute altitude from pressure */
-        lAltitude =(((745 * (11390 - lPressure)) / 256 + 46597) * (11390 - lPressure)) / 65536 - 966;
+        lAltitude = ((lPressure - 101325) * (lPressure - 342104)) / 32768;
         ucBMP085_Status = START_PRESS_CONVERSION;
         break;
 
@@ -181,31 +179,28 @@ void BMP085_Handler(void)
 ///----------------------------------------------------------------------------
 static uint8_t BMP085_Get_Calibration(void)
 {
-  uint8_t j, comres;
-  unsigned char data[BMP085_PROM_DATA_LEN];
+  uint8_t comres;
+  uint8_t data[BMP085_PROM_DATA_LEN];
 
-  for (j = 0; j < BMP085_PROM_DATA_LEN; j++) {
-    comres = I2C_MEMS_Read_Reg(BMP085_SLAVE_ADDR,
-                               BMP085_PROM_START_ADDR + j,
-                               (uint8_t *)&data[j]);
-  }
+  comres = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_PROM_START_ADDR, data, BMP085_PROM_DATA_LEN);
+  comres = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_PROM_START_ADDR, data, BMP085_PROM_DATA_LEN);
 
   /* parameters AC1-AC6 */
-  Bmp85.cal_param.ac1 =  (data[0] <<8) | data[1];
-  Bmp85.cal_param.ac2 =  (data[2] <<8) | data[3];
-  Bmp85.cal_param.ac3 =  (data[4] <<8) | data[5];
-  Bmp85.cal_param.ac4 =  (data[6] <<8) | data[7];
-  Bmp85.cal_param.ac5 =  (data[8] <<8) | data[9];
-  Bmp85.cal_param.ac6 = (data[10] <<8) | data[11];
+  Bmp85.calibration.ac1 =  (data[0] <<8) | data[1];
+  Bmp85.calibration.ac2 =  (data[2] <<8) | data[3];
+  Bmp85.calibration.ac3 =  (data[4] <<8) | data[5];
+  Bmp85.calibration.ac4 =  (data[6] <<8) | data[7];
+  Bmp85.calibration.ac5 =  (data[8] <<8) | data[9];
+  Bmp85.calibration.ac6 = (data[10] <<8) | data[11];
 
   /* parameters B1,B2 */
-  Bmp85.cal_param.b1 =  (data[12] <<8) | data[13];
-  Bmp85.cal_param.b2 =  (data[14] <<8) | data[15];
+  Bmp85.calibration.b1 =  (data[12] <<8) | data[13];
+  Bmp85.calibration.b2 =  (data[14] <<8) | data[15];
 
   /* parameters MB,MC,MD */
-  Bmp85.cal_param.mb =  (data[16] <<8) | data[17];
-  Bmp85.cal_param.mc =  (data[18] <<8) | data[19];
-  Bmp85.cal_param.md =  (data[20] <<8) | data[21];
+  Bmp85.calibration.mb =  (data[16] <<8) | data[17];
+  Bmp85.calibration.mc =  (data[18] <<8) | data[19];
+  Bmp85.calibration.md =  (data[20] <<8) | data[21];
 
   return comres;
 }
@@ -223,8 +218,8 @@ static void Compensate_Temperature(void)
 {
     int32_t x1, x2;
 
-    x1 = (((int32_t) raw_t - (int32_t) Bmp85.cal_param.ac6) * (int32_t) Bmp85.cal_param.ac5) >> 15;
-    x2 = ((int32_t) Bmp85.cal_param.mc << 11) / (x1 + Bmp85.cal_param.md);
+    x1 = (((int32_t) raw_t - (int32_t) Bmp85.calibration.ac6) * (int32_t) Bmp85.calibration.ac5) >> 15;
+    x2 = ((int32_t) Bmp85.calibration.mc << 11) / (x1 + Bmp85.calibration.md);
     Bmp85.param_b5 = x1 + x2;
     iTemperature = ((Bmp85.param_b5 + 8) >> 4);  // iTemperature in 0.1°C
 }
@@ -248,18 +243,18 @@ static void Compensate_Pressure(void)
 
     /* calculate B3 */
     x1 = (b6 * b6) >> 12;
-    x1 *= Bmp85.cal_param.b2;
+    x1 *= Bmp85.calibration.b2;
     x1 >>= 11;
-    x2 = (Bmp85.cal_param.ac2 * b6);
+    x2 = (Bmp85.calibration.ac2 * b6);
     x2 >>= 11;
     x3 = x1 + x2;
-    b3 = (((((int32_t)Bmp85.cal_param.ac1) * 4 + x3) << Bmp85.oversampling) + 2) >> 2;
+    b3 = (((((int32_t)Bmp85.calibration.ac1) * 4 + x3) << Bmp85.oversampling) + 2) >> 2;
 
     /* calculate B4 */
-    x1 = (Bmp85.cal_param.ac3 * b6) >> 13;
-    x2 = (Bmp85.cal_param.b1 * ((b6 * b6) >> 12) ) >> 16;
+    x1 = (Bmp85.calibration.ac3 * b6) >> 13;
+    x2 = (Bmp85.calibration.b1 * ((b6 * b6) >> 12) ) >> 16;
     x3 = ((x1 + x2) + 2) >> 2;
-    b4 = (Bmp85.cal_param.ac4 * (uint32_t) (x3 + 32768)) >> 15;
+    b4 = (Bmp85.calibration.ac4 * (uint32_t) (x3 + 32768)) >> 15;
 
     /* calculate B7 */
     b7 = ((uint32_t)(raw_p - b3) * (50000 >> Bmp85.oversampling));
