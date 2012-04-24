@@ -6,10 +6,10 @@
 
 @par Sensori
 
-     Per semplificare il codice, creare un task di lettura dei MEMS che accoda
-     un messaggio al task attitude con i valori dei sensori.
-     In questo modo, il task di lettura dei MEMS è più facilmente sostituibile 
-     dal task di telemetria che può inviare i valori di sensori al suo posto.
+     Creare un task di lettura dei MEMS che accoda un messaggio al task attitude 
+     con i valori dei sensori. In questo modo, il task di lettura dei MEMS è più 
+     facilmente sostituibile dal task di telemetria che può inviare i valori di 
+     sensori al suo posto.
 
 @par Simulazione
 
@@ -51,7 +51,7 @@
      millesimi di Pa). Per calcolare l'altitudine in centimetri si puo' usare
      il polinomio del secondo ordine :
 
-         H = [(p - 101325) (p - 342104)] / 32768
+         H = [(p - 101325) * (p - 342104)] / 32768
 
      dove "H" è l'altezza espressa in cm e "p" è la pressione compensata 
      espressa in multipli di 0.1 mBar.
@@ -59,7 +59,6 @@
      L'errore massimo si ha con p = 800 mBar ed è pari a 15 metri.
      Al di sotto di 100 m dal ivello del mare e in atmosfera standard l'errore
      è inferiore al centimetro.
-
 
 @par Telemetria
      
@@ -84,6 +83,20 @@
      Calcolare la distanza dal punto come:
 
          Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
+
+
+@par Modifiche hardware
+     
+     Aggiungere batteria tampone per RTC
+     Eliminare CD 4504 D
+     Correggere package LD1117 o cambiare tipo di stabilizzatore
+     Sostituire sensore di pressione differenziale con MP3V5004DP
+     Collegare il pin EOC del barometro BMP085 al micro
+     Aggiungere la possibilità di resettare i sensori (accel, gyro, baro)
+     Aggiungere SPI per modulo radio Hope RF 23
+     Aggiungere altre uscite per i servocomandi
+     Togliere pulsante di reset ?
+     Aggiungere soppressore di disturbi sull'alimentazione
 
 @par How to use it ? 
 
