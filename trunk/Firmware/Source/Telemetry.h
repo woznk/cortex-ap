@@ -8,9 +8,7 @@
 /// \brief Simulation interface
 /// \file
 ///
-//  CHANGES result of merge of NAV branch:
-//          corrected enum of PID gains,
-//          removed and renamed interface functions 
+//  CHANGES added Telemetry_Get_Altitude() function
 //
 //============================================================================
 
@@ -39,6 +37,8 @@ typedef enum {
     TEL_ROLL_KI,
     TEL_NAV_KP,
     TEL_NAV_KI,
+    TEL_ALT_KP,
+    TEL_ALT_KI,
     TEL_GAIN_NUMBER
 } telEnum_Gain;
 
@@ -55,5 +55,6 @@ void Telemetry_Get_Sensors(int16_t * piSensors);
 float Telemetry_Get_Gain(telEnum_Gain gain);
 void Telemetry_Send_Controls(void);
 float Telemetry_Get_Speed(void);
+float Telemetry_Get_Altitude(void);
 
 
