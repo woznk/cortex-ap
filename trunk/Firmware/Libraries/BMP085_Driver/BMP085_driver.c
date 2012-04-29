@@ -6,10 +6,8 @@
 // $Author: $
 /// \brief BMP085 lPressure sensor driver
 ///
-//  Change restored bufferized reading of multiple consecutive registers,
-//         added second reading of calibration parameters to obtain useful data
-//         oversampling set to 3
-//         removed unused fields from BMP085 data structure
+//  Change restored previous approximation of altitude
+//         added function to return altitude
 //
 //============================================================================*/
 
@@ -159,7 +157,7 @@ void BMP085_Handler(void)
         break;
 
     case COMPUTE_ALTITUDE:          /* compute altitude from pressure */
-        lAltitude = ((lPressure - 101325) * (lPressure - 342104)) / 32768;
+        lAltitude =(((745 * (11390 - (lPressure / 10))) / 256 + 46597) * (11390 - (lPressure / 10))) / 65536 - 966;
         ucBMP085_Status = START_PRESS_CONVERSION;
         break;
 
@@ -287,7 +285,7 @@ int16_t BMP085_Get_Temperature(void)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   get compensated pPressure
+/// \brief   get compensated pressure
 /// \param   -
 /// \return  pressure in steps of 0.1 Pa
 /// \remarks -
@@ -296,5 +294,18 @@ int16_t BMP085_Get_Temperature(void)
 int32_t BMP085_Get_Pressure(void)
 {
    return (lPressure);
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   get altitude
+/// \param   -
+/// \return  altitude in [m]
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+int32_t BMP085_Get_Altitude(void)
+{
+   return (lAltitude);
 }
 
