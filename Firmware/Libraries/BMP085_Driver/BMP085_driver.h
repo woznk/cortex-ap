@@ -7,7 +7,7 @@
 /// \file
 /// \brief  BMP085 lPressure sensor driver
 ///
-//  Change removed unused fields from BMP085 data structure
+//  Change added function to return altitude
 //
 //============================================================================
 
@@ -146,6 +146,7 @@ uint8_t BMP085_Init(void);
 void BMP085_Handler(void);
 int16_t BMP085_Get_Temperature(void);
 int32_t BMP085_Get_Pressure(void);
+int32_t BMP085_Get_Altitude(void);
 
 #endif /* __BMP085_DRIVER__H */
 
