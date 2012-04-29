@@ -8,8 +8,7 @@
 /// \file
 /// \brief  Navigation task header file
 ///
-//  CHANGES result of merge of NAV branch:
-//          renamed and added interface functions 
+//  CHANGES added Nav_Throttle() function
 //
 //============================================================================
 
@@ -37,6 +36,7 @@ void Navigation_Init( void );
 float Nav_Heading ( void );
 float Nav_Bearing ( void );
 float Nav_Bank ( void );
+float Nav_Throttle ( void );
 uint16_t Gps_Speed ( void );
 uint16_t Gps_Heading ( void );
 uint16_t Nav_Distance ( void );
