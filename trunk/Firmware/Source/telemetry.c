@@ -43,8 +43,9 @@
 ///                                                                     \endcode
 /// \todo add parser for ardupilot / mnav protocols
 ///
-//  CHANGES PID gains initialized with default values #defined in config.h
-//          simplified functions Telemetry_Send_Controls and Telemetry_Send_Wayoint
+//  CHANGES added parsing of simulator altitude, 
+//          added enumeration for parser ststus, 
+//          removed forwarding of GPS data
 //
 //============================================================================*/
 
@@ -98,6 +99,27 @@ typedef enum E_TELEMETRY {
     TEL_DCM
 } wait_code_t;
 
+typedef enum E_PARSER {
+    PARSE_PREAMBLE = 0, // preamble
+    PARSE_TYPE,         // 1: data type ('S'= sensor, 'K'= gains)
+    PARSE_SENSORS,      // 2: sensor start
+    PARSE_SENSOR_1,     // 3: sensor 1
+    PARSE_SENSOR_2,     // 4: sensor 2
+    PARSE_SENSOR_3,     // 5: sensor 3
+    PARSE_SENSOR_4,     // 6: sensor 4
+    PARSE_SENSOR_5,     // 7: sensor 5
+    PARSE_SENSOR_6,     // 8: sensor 6
+    PARSE_AIRSPEED,     // 9: airspeed
+    PARSE_ALTITUDE,     // 10: altitude
+    PARSE_GAINS,        // 11: PID gains start
+    PARSE_GAIN_1,       // 12: gain 1
+    PARSE_GAIN_2,       // 13: gain 2
+    PARSE_GAIN_3,       // 14: gain 3
+    PARSE_GAIN_4,       // 15: gain 4
+    PARSE_GAIN_5,       // 16: gain 5
+    PARSE_GAIN_6        // 17: gain 6
+} parser_status_t;
+
 /*----------------------------------- Types ----------------------------------*/
 
 /*---------------------------------- Constants -------------------------------*/
@@ -120,9 +142,10 @@ VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    // uplink data buffer
 VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    // downlink data buffer
 VAR_STATIC uint8_t ucWindex;                        // uplink write index
 VAR_STATIC uint8_t ucRindex;                        // uplink read index
-VAR_STATIC uint8_t ucStatus;                        // status of parser
+VAR_STATIC parser_status_t xStatus;                 // status of parser
 VAR_STATIC float fTemp;                             // temporary for parser
 VAR_STATIC float fTrueAirSpeed;                     // simulator true air speed
+VAR_STATIC float fAltitude;                         // simulator altitude
 VAR_STATIC float fSensor[8];                        // simulator sensor data
 VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {         // gains for PID loops
     PITCH_KP,                                       // default TEL_PITCH_KP
@@ -214,7 +237,7 @@ static void Telemetry_Init( void ) {
 
     ucWindex = 0;                                   // clear write index
     ucRindex = 0;                                   // clear read index
-    ucStatus = 0;                                   // reset parser status
+    xStatus = PARSE_PREAMBLE;                       // reset parser status
     fTemp = 0.0f;                                   // clear parser temporary
     fTrueAirSpeed = 0.0f;                           // clear true air speed
 }
@@ -329,90 +352,90 @@ static void Telemetry_Parse ( void )
             ucRindex = 0;
         }
 
-        switch (ucStatus) {
-            case 0:             /* ----------------- preamble ----------------- */
-                if (c == '$') { ucStatus++; }
+        switch (xStatus) {
+            case PARSE_PREAMBLE :   /* ------------- preamble -------------- */
+                if (c == '$') { xStatus++; }    // preamble ok
                 break;
-            case 1:
+            case PARSE_TYPE :       /* ------------- data type ------------- */
                 switch (c) {
-                    case 'S': ucStatus++; break;            // sensor data
-                    case 'G': /*ucStatus = 10; */ break;    // GPS data
-                    case 'K': ucStatus = 12; break;         // gain data
-                    default : ucStatus = 0; break;          // error
+                    case 'S': xStatus = PARSE_SENSORS; break;   // sensor data
+                    case 'K': xStatus = PARSE_GAINS; break;     // gain data
+                    default : xStatus = PARSE_PREAMBLE; break;  // error
                 }
                 break;
-            case 2:             /* ------------------ sensors ------------------ */
-                if (c == ',') { ucStatus++; } else { ucStatus = 0; }
+            case PARSE_SENSORS :    /* -------------- sensors -------------- */
+                if (c == ',') { xStatus++; } else { xStatus = PARSE_PREAMBLE; }
                 break;
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-            case 8:
+            case PARSE_SENSOR_1 :
+            case PARSE_SENSOR_2 :
+            case PARSE_SENSOR_3 :
+            case PARSE_SENSOR_4 :
+            case PARSE_SENSOR_5 :
+            case PARSE_SENSOR_6 :
                 if (c == ',') {
-                    fSensor[ucStatus - 3] = 32767.0f - fTemp;
-                    fTemp = 0.0f;
-                    ucStatus++;
-                } else if ((c >= '0') && (c <= '9')) {
-                    fTemp = fTemp * 10.0f + (float)(c - '0');
-                } else if (c != ' ') {
-                    fTemp = 0.0f;
-                    ucStatus = 0;
+                    fSensor[xStatus - 3] = 32767.0f - fTemp;    // save sensor
+                    fTemp = 0.0f;                               // clear temp
+                    xStatus++;                                  // next sensor
+                } else if ((c >= '0') && (c <= '9')) {          // numeric char
+                    fTemp = fTemp * 10.0f + (float)(c - '0');   // add to temp
+                } else if (c != ' ') {                          // error
+                    fTemp = 0.0f;                               // clear temp
+                    xStatus = PARSE_PREAMBLE;                   // reset parser
                 }
                 break;
-            case 9:
-                if (c == '\r') {
-                    fTrueAirSpeed = fTemp / 100.0f;
-                    fTemp = 0.0f;
-                    ucStatus = 0;
-                } else if ((c >= '0') && (c <= '9')) {
-                    fTemp = fTemp * 10.0f + (float)(c - '0');
-                } else if (c != ' ') {
-                    fTemp = 0.0f;
-                    ucStatus = 0;
+            case PARSE_AIRSPEED :
+                if (c == ',') {
+                    fTrueAirSpeed = fTemp / 100.0f;             // save airspeed
+                    fTemp = 0.0f;                               // clear temp
+                    xStatus++;                                  // next data
+                } else if ((c >= '0') && (c <= '9')) {          // numeric char
+                    fTemp = fTemp * 10.0f + (float)(c - '0');   // add to temp
+                } else if (c != ' ') {                          // error
+                    fTemp = 0.0f;                               // clear temp
+                    xStatus = PARSE_PREAMBLE;                   // reset parser
+                }
+                break;
+            case PARSE_ALTITUDE :
+                if (c == '\r') {                                // end of data
+                    fAltitude = fTemp;                          // save altitude
+                    fTemp = 0.0f;                               // clear temp
+                    xStatus = PARSE_PREAMBLE;                   // reset parser
+                } else if ((c >= '0') && (c <= '9')) {          // numeric char
+                    fTemp = fTemp * 10.0f + (float)(c - '0');   // add to temp
+                } else if (c != ' ') {                          // error
+                    fTemp = 0.0f;                               // clear temp
+                    xStatus = PARSE_PREAMBLE;                   // reset parser
                 }
                 break;
 
-            case 10:            /* ------------------- GPS -------------------- */
-                ucStatus++;
-            case 11:
-                if (c == '$') {         // next preamble received
-                   ucStatus = 1;        // go check preamble type
+            case PARSE_GAINS :  /* --------------- PID gains ------------------ */
+                if (c == ',') { xStatus++; } else { xStatus = PARSE_PREAMBLE; }
+                break;
+            case PARSE_GAIN_1 :
+            case PARSE_GAIN_2 :
+            case PARSE_GAIN_3 :
+            case PARSE_GAIN_4 :
+            case PARSE_GAIN_5 :
+            case PARSE_GAIN_6 :
+                if ((c == '\r') || (c == '\n')) {                   // end of data
+                    fGain[xStatus - PARSE_GAIN_1] = fTemp / 2000.0f;// save last gain
+                    fTemp = 0.0f;                                   // clear temp
+                    xStatus = PARSE_PREAMBLE;                       // reset parser
+                } else if (c == ',') {                              // comma
+                    fGain[xStatus - PARSE_GAIN_1] = fTemp / 2000.0f;// save gain
+                    fTemp = 0.0f;                                   // clear temp
+                    xStatus++;                                      // next gain
+                } else if ((c >= '0') && (c <= '9')) {              // numeric char
+                    fTemp = fTemp * 10.0f + (float)(c - '0');       // add to temp
+                } else if (c != ' ') {                              // error
+                    fTemp = 0.0f;                                   // clear temp
+                    xStatus = PARSE_PREAMBLE;                       // reset parser
                 }
                 break;
 
-            case 12:            /* --------------- PID gains ------------------ */
-                if (c == ',') { ucStatus++; } else { ucStatus = 0; }
-                break;
-            case 13:
-            case 14:
-            case 15:
-            case 16:
-            case 17:
-            case 18:
-                if ((c == '\r') || (c == '\n')) {
-                    fGain[ucStatus - 13] = fTemp / 2000.0f;
-                    fTemp = 0.0f;
-                    ucStatus = 19;
-                } else if (c == ',') {
-                    fGain[ucStatus - 13] = fTemp / 2000.0f;
-                    fTemp = 0.0f;
-                    ucStatus++;
-                } else if ((c >= '0') && (c <= '9')) {
-                    fTemp = fTemp * 10.0f + (float)(c - '0');
-                } else if (c != ' ') {
-                    fTemp = 0.0f;
-                    ucStatus = 0;
-                }
-                break;
-            case 19:
-                ucStatus = 0;
-                break;
-
-            default:
-                fTemp = 0.0f;
-                ucStatus = 0;
+            default:                                            // wrong status
+                fTemp = 0.0f;                                   // clear temp
+                xStatus = PARSE_PREAMBLE;                       // reset parser
                 break;
         }
     }
@@ -521,6 +544,17 @@ float Telemetry_Get_Speed(void) {
 
 ///----------------------------------------------------------------------------
 ///
+/// \brief   interface to simulator data : altitude
+/// \return  altitude
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Telemetry_Get_Altitude(void) {
+    return fAltitude;
+}
+
+///----------------------------------------------------------------------------
+///
 /// \brief   Get PID gain
 /// \param   gain, gain number
 /// \return  gain value
@@ -572,3 +606,4 @@ void USART1_IRQHandler( void ) {
     }
 //	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 }
+
