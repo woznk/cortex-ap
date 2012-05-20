@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-// CHANGES updated default values of PID gains
+// CHANGES added definition of initial gains for speed and altitude PIDs
+//         pitch values at various throttles converted into radians 
 //
 //============================================================================*/
 
@@ -42,6 +43,16 @@
 #define NAV_KI          0.05f           //! Navigation I gain
 #define NAV_KD          0.0f            //! Navigation D gain
 
+/* Speed PID initial gains */
+#define SPEED_KP        1.0f            //! Speed P gain
+#define SPEED_KI        0.1f            //! Speed I gain
+#define SPEED_KD        0.0f            //! Speed D gain
+
+/* Altitude PID initial gains */
+#define ALT_KP          1.0f            //! Altitude P gain
+#define ALT_KI          0.1f            //! Altitude I gain
+#define ALT_KD          0.0f            //! Altitude D gain
+
 /* Attitude roll PID initial gains */
 #define ROLL_KP         1.0f            //! Roll P gain
 #define ROLL_KI         0.1f            //! Roll I gain
@@ -57,24 +68,33 @@
    Set it to zero to disable this feature. */
 #define RTL_PITCH_DOWN  0.0f            //! Return to launch pitch down [deg]
 
-/* Limits servo throw by controlling pulse width saturation.
-   Set it to 1.0 if you want full servo throw, otherwise set it
-   to the portion that you want */
-#define SERVOSAT        1.0f            //! Limits servo throw
-
-/* comment out this line if you are not going to use altitude hold,
-   to avoid spurious interrupts from the unused PWM channel */
+/* comment out this line if you are not going to use altitude hold */
 #define ALTITUDEHOLD
 
-#define HEIGHTMAX       300.0f          //! maximum target height [m]
+/* The range of altitude within which to linearly vary the throttle
+   and pitch to maintain altitude. Bigger values makes altitude hold
+   smoother, and is suggested for very fast planes. */
+#define HEIGHT_MARGIN       20.0f
 
-#define MINIMUMTHROTTLE 0.35f           //! minimum throttle
+/* Use ALT_HOLD_THROTTLE_MAX when below HEIGHT_MARGIN of the target height.
+   Interpolate between ALT_HOLD_THROTTLE_MAX and ALT_HOLD_THROTTLE_MIN
+   when within HEIGHT_MARGIN of the target height.
+   Use ALT_HOLD_THROTTLE_MIN when above HEIGHT_MARGIN of the target height.
+   Throttle values are from -1.0 to +1.0.*/
+#define ALT_HOLD_THROTTLE_MIN   -0.3f
+#define ALT_HOLD_THROTTLE_MAX   1.0f
 
-#define PITCHATMINTHROTTLE  0.0f        //! Pitch angle at minimum throttle [deg]
+#define HEIGHTMAX           300.0f      //! maximum target height [m]
 
-#define PITCHATMAXTHROTTLE 15.0f        //! Pitch angle at maximum throttle [deg]
+#define HEIGHT_MARGIN       20.0f       //! height margin [m]
 
-#define PITCHATZEROTHROTTLE 0.0f        //! Pitch angle while gliding [deg]
+#define MINIMUMTHROTTLE     -0.3f       //! minimum throttle
+
+#define PITCHATMINTHROTTLE  -0.0349f    //! Pitch angle at minimum throttle [rad]
+
+#define PITCHATMAXTHROTTLE  0.2094f     //! Pitch angle at maximum throttle [rad]
+
+#define PITCHATZEROTHROTTLE -0.0872f    //! Pitch angle while gliding [rad]
 
 #define SIM_NONE    0                   // No simulator
 #define XPLANE      1                   // Simulator X-Plane
