@@ -23,7 +23,7 @@
 ///   when < -180° or > 180°. Cross produt and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
-//  CHANGES PID gains initialized with default values #defined in config.h
+//  CHANGES added throttle control based on altitude error
 //
 //============================================================================*/
 
@@ -113,9 +113,9 @@ const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 3
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC char ucGpsBuffer[BUFFER_LENGTH];
+VAR_STATIC char ucGpsBuffer[BUFFER_LENGTH];         // data buffer
 //"$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n";
-//"$GPRMC,194618.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*3E\n";         // data buffer
+//"$GPRMC,194618.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*3E\n";
 VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];      // waypoints array
 VAR_STATIC const char szFileName[16] = "path.txt";  // file name
 VAR_STATIC char szLine[LINE_LENGTH];                // input line
@@ -123,10 +123,14 @@ VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // file object
 VAR_STATIC UINT wFileBytes;                         // counter of read bytes
 VAR_STATIC float fBank;                             // bank angle setpoint [rad]
+VAR_STATIC float fThrottle;                         // throttle
+VAR_STATIC float fPitch;                            // pitch setpoint [rad]
 VAR_STATIC float fLat_Dest;                         // destination latitude
 VAR_STATIC float fLon_Dest;                         // destination longitude
+VAR_STATIC float fAlt_Dest;                         // destination altitude
 VAR_STATIC float fLat_Curr;                         // current latitude
 VAR_STATIC float fLon_Curr;                         // current longitude
+VAR_STATIC float fAlt_Curr;                         // current altitude
 VAR_STATIC float fBearing;                          // angle to destination [°]
 VAR_STATIC float fHeading;                          // aircraft navigation heading [°]
 VAR_STATIC uint16_t uiGps_Heading;                  // aircraft GPS heading [°]
@@ -140,6 +144,10 @@ VAR_STATIC uint8_t ucCommas;                        // counter of commas in NMEA
 VAR_STATIC uint8_t ucWindex;                        // USART buffer write index
 VAR_STATIC uint8_t ucRindex;                        // USART buffer read index
 VAR_STATIC xPID Nav_Pid;                            // Navigation PID loop
+//VAR_STATIC xPID Speed_Pid;                          // Speed PID loop
+VAR_STATIC float fHeight_Margin = HEIGHT_MARGIN;
+VAR_STATIC float fThrottle_Min = ALT_HOLD_THROTTLE_MIN;
+VAR_STATIC float fThrottle_Max = ALT_HOLD_THROTTLE_MAX;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -163,6 +171,8 @@ void Navigation_Task( void *pvParameters ) {
 
     fBank = PI / 2.0f;                              // default bank angle
     fBearing = 0.0f;                                // angle to destination [°]
+    fThrottle = -1.0f;                              // default throttle
+    fPitch = PI / 2.0f;                             // default pitch angle
     uiGps_Heading = 0;                              // aircraft GPS heading [°]
     uiSpeed = 0;                                    // speed [kt]
     uiDistance = 0;                                 // distance to destination [m]
@@ -171,10 +181,9 @@ void Navigation_Task( void *pvParameters ) {
     Nav_Pid.fGain = PI / 6.0f;                      // limit bank angle to -30°, 30°
     Nav_Pid.fMin = -1.0f;                           //
     Nav_Pid.fMax = 1.0f;                            //
-    Nav_Pid.fKp = NAV_KP;                           // Init gains with default values
+    Nav_Pid.fKp = NAV_KP;                           // init gains with default values
     Nav_Pid.fKi = NAV_KI;                           //
     Nav_Pid.fKd = NAV_KD;                           //
-
     PID_Init(&Nav_Pid);                             // initialize navigation PID
     Load_Path();                                    // load path from SD card
     GPS_Init();                                     // initialize USART for GPS
@@ -195,6 +204,7 @@ void Navigation_Task( void *pvParameters ) {
     }
     fLon_Dest = Waypoint[uiWptIndex].Lon;           // load destination longitude
     fLat_Dest = Waypoint[uiWptIndex].Lat;           // load destination latitude
+    fAlt_Dest = Waypoint[uiWptIndex].Alt;           // load destination altitude
 
     while (1) {
         if (Parse_GPS()) {                          // NMEA sentence completed
@@ -205,6 +215,12 @@ void Navigation_Task( void *pvParameters ) {
             if (PPMGetMode() == MODE_MANUAL) {
                 PID_Init(&Nav_Pid);
             }
+
+#if (SIMULATOR == SIM_NONE)                             // normal mode
+            fAlt_Curr = (float)BMP085_Get_Altitude();   // get barometric altitude
+#else                                                   // simulation mode
+            fAlt_Curr = Telemetry_Get_Altitude();       // get simulator altitude
+#endif
 
             /* Get X and Y components of bearing */
             fDy = fLon_Dest - fLon_Curr;
@@ -236,8 +252,23 @@ void Navigation_Task( void *pvParameters ) {
                         uiWptIndex = 1;
                     }
                 }
-                fLon_Dest = Waypoint[uiWptIndex].Lon;
-                fLat_Dest = Waypoint[uiWptIndex].Lat;
+                fLon_Dest = Waypoint[uiWptIndex].Lon;   // new destination longitude
+                fLat_Dest = Waypoint[uiWptIndex].Lat;   // new destination latitude
+                fAlt_Dest = Waypoint[uiWptIndex].Alt;   // new destination altitude
+            }
+
+            /* Compute throttle and pitch based on altitude error */
+            fTemp = fAlt_Curr - fAlt_Dest;              // altitude error
+            if (fTemp > fHeight_Margin) {               // above maximum
+                fThrottle = fThrottle_Min;              // minimum throttle
+                fPitch = (PI / 2.0f) + PITCHATMINTHROTTLE;
+            } else if (fTemp < - fHeight_Margin) {      // below minimum
+                fThrottle = fThrottle_Max;              // max throttle
+                fPitch = (PI / 2.0f) + PITCHATMAXTHROTTLE;
+            } else {                                    // interpolate
+                fTemp = (fTemp - HEIGHT_MARGIN) / (2 * HEIGHT_MARGIN);
+                fThrottle = fTemp * (fThrottle_Min - fThrottle_Max) + fThrottle_Min;
+                fPitch = (PI / 2.0f) + fTemp * (PITCHATMINTHROTTLE - PITCHATMAXTHROTTLE) + PITCHATMINTHROTTLE;
             }
         }
     }
@@ -458,7 +489,39 @@ static void Parse_Coord( float * fCoord, char c )
 /// \brief   Parse GPS sentences
 /// \param   -
 /// \returns true if new coordinate data are available, false otherwise
-/// \remarks -
+/// \remarks structure of NMEA sentences
+///
+///    $GPRMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,ddmmyy,x.x,a*hh
+///    1    = UTC of position fix
+///    2    = Data status (V=navigation receiver warning)
+///    3    = Latitude of fix
+///    4    = N or S
+///    5    = Longitude of fix
+///    6    = E or W
+///    7    = Speed over ground [kts]
+///    8    = Track made good in [deg] True
+///    9    = UT date
+///    10   = Magnetic variation [deg] (Easterly var. subtracts from true course)
+///    11   = E or W
+///    12   = Checksum
+///
+///    $GPGGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh
+///    1    = UTC of Position
+///    2    = Latitude
+///    3    = N or S
+///    4    = Longitude
+///    5    = E or W
+///    6    = GPS quality indicator (0=invalid; 1=GPS fix; 2=Diff. GPS fix)
+///    7    = Number of satellites in use [not those in view]
+///    8    = Horizontal dilution of position
+///    9    = Antenna altitude above/below mean sea level (geoid)
+///    10   = Meters (Antenna height unit)
+///    11   = Geoidal separation (Diff. between WGS-84 earth ellipsoid and
+///           mean sea level.-= geoid is below WGS-84 ellipsoid)
+///    12   = Meters  (Units of geoidal separation)
+///    13   = Age in seconds since last update from diff. reference station
+///    14   = Differential reference station ID#
+///    15   = Checksum
 ///
 //----------------------------------------------------------------------------
 static bool Parse_GPS( void )
@@ -595,18 +658,6 @@ float Nav_Heading ( void ) {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Get GPS heading [°]
-/// \param   -
-/// \returns heading angle in degrees, between 0° and 360°
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-uint16_t Gps_Heading ( void ) {
-  return uiGps_Heading;
-}
-
-//----------------------------------------------------------------------------
-//
 /// \brief   Get distance to destination [m]
 /// \param   -
 /// \returns distance in meters
@@ -615,18 +666,6 @@ uint16_t Gps_Heading ( void ) {
 //----------------------------------------------------------------------------
 uint16_t Nav_Distance ( void ) {
   return uiDistance;
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Get ground speed detected by GPS [kt]
-/// \param   -
-/// \returns GS in knots
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-uint16_t Gps_Speed ( void ) {
-  return uiSpeed;
 }
 
 //----------------------------------------------------------------------------
@@ -651,5 +690,53 @@ uint16_t Nav_Wpt_Altitude ( void ) {
 //----------------------------------------------------------------------------
 float Nav_Bank ( void ) {
   return fBank;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get throttle
+/// \param   -
+/// \returns throttle
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+float Nav_Throttle ( void ) {
+  return fThrottle;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get pitch setpoint [rad]
+/// \param   -
+/// \returns throttle
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+float Nav_Pitch ( void ) {
+  return fPitch;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get ground speed detected by GPS [kt]
+/// \param   -
+/// \returns GS in knots
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Gps_Speed ( void ) {
+  return uiSpeed;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get GPS heading [°]
+/// \param   -
+/// \returns heading angle in degrees, between 0° and 360°
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Gps_Heading ( void ) {
+  return uiGps_Heading;
 }
 
