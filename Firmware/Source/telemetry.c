@@ -43,9 +43,7 @@
 ///                                                                     \endcode
 /// \todo add parser for ardupilot / mnav protocols
 ///
-//  CHANGES added parsing of simulator altitude, 
-//          added enumeration for parser ststus, 
-//          removed forwarding of GPS data
+//  CHANGES modified remarks
 //
 //============================================================================*/
 
@@ -148,12 +146,12 @@ VAR_STATIC float fTrueAirSpeed;                     // simulator true air speed
 VAR_STATIC float fAltitude;                         // simulator altitude
 VAR_STATIC float fSensor[8];                        // simulator sensor data
 VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {         // gains for PID loops
-    PITCH_KP,                                       // default TEL_PITCH_KP
-    PITCH_KI,                                       // default TEL_PITCH_KI
-    ROLL_KP,                                        // default TEL_ROLL_KP
-    ROLL_KI,                                        // default TEL_ROLL_KI
-    NAV_KP,                                         // default TEL_NAV_KP
-    NAV_KI                                          // default TEL_NAV_KI
+    PITCH_KP,                                       // default pitch kp
+    PITCH_KI,                                       // default pitch ki
+    ROLL_KP,                                        // default roll kp
+    ROLL_KI,                                        // default roll ki
+    NAV_KP,                                         // default direction kp
+    NAV_KI                                          // default direction ki
 };
 
 /*--------------------------------- Prototypes -------------------------------*/
