@@ -8,7 +8,7 @@
 /// \file
 /// \brief  Navigation task header file
 ///
-//  CHANGES added Nav_Throttle() function
+//  CHANGES added Nav_Pitch() function
 //
 //============================================================================
 
@@ -36,6 +36,7 @@ void Navigation_Init( void );
 float Nav_Heading ( void );
 float Nav_Bearing ( void );
 float Nav_Bank ( void );
+float Nav_Pitch ( void ) ;
 float Nav_Throttle ( void );
 uint16_t Gps_Speed ( void );
 uint16_t Gps_Heading ( void );
