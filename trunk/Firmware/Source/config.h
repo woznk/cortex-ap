@@ -9,8 +9,7 @@
 ///
 /// \file
 ///
-// CHANGES added definition of initial gains for speed and altitude PIDs
-//         pitch values at various throttles converted into radians 
+// CHANGES reduced ALT_HOLD_THROTTLE_MAX to 0.3
 //
 //============================================================================*/
 
@@ -82,7 +81,7 @@
    Use ALT_HOLD_THROTTLE_MIN when above HEIGHT_MARGIN of the target height.
    Throttle values are from -1.0 to +1.0.*/
 #define ALT_HOLD_THROTTLE_MIN   -0.3f
-#define ALT_HOLD_THROTTLE_MAX   1.0f
+#define ALT_HOLD_THROTTLE_MAX   0.3f
 
 #define HEIGHTMAX           300.0f      //! maximum target height [m]
 
