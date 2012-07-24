@@ -7,7 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: throttle value set by navigation task in NAV mode
+// Change: removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -86,11 +86,11 @@ VAR_STATIC int16_t iThrottle;
 VAR_STATIC uint8_t ucBlink_Red = 0;
 VAR_STATIC uint8_t ucBlink_Blue = 0;
 VAR_STATIC uint8_t ucSensor_Data[16];
-VAR_STATIC int16_t iMessage_Buffer[9];
+//VAR_STATIC int16_t iMessage_Buffer[9];
 VAR_STATIC int16_t iSensor_Offset[6] = {0, 0, 0, 0, 0, 0};
 VAR_STATIC xPID Roll_Pid;
 VAR_STATIC xPID Pitch_Pid;
-VAR_STATIC xLog_Message message;
+//VAR_STATIC xLog_Message message;
 VAR_STATIC float fSetpoint;
 VAR_STATIC float fInput;
 VAR_STATIC float fOutput;
@@ -119,9 +119,9 @@ void Attitude_Task(void *pvParameters)
     Last_Wake_Time = xTaskGetTickCount();
 
     /* Task specific initializations */
-    L3G4200_Init();                                 // init L3G4200 gyro
-    ADXL345_Init();                                 // init ADXL345 accelerometer
-    BMP085_Init();
+    ( void )L3G4200_Init();                         // init L3G4200 gyro
+    ( void )ADXL345_Init();                         // init ADXL345 accelerometer
+    ( void )BMP085_Init();
 
     Roll_Pid.fGain = 500.0f;                        // limit servo throw
     Roll_Pid.fMin = -1.0f;                          //
@@ -218,7 +218,7 @@ static __inline void Attitude_Control(void)
     switch (PPMGetMode()) {
 
         case MODE_STAB:
-            iAileron = PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL;;
+            iAileron = PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL;
             iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
             iThrottle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
 

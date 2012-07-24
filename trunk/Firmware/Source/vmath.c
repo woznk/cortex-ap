@@ -11,6 +11,8 @@
 //
 //============================================================================*/
 
+#include "FreeRTOS.h"
+
 /*--------------------------------- Definitions ------------------------------*/
 
 #ifdef VAR_STATIC
@@ -47,7 +49,7 @@ float
 VectorDotProduct(float fVectorA[3], float fVectorB[3])
 {
     float fDotP = 0.0f;
-    int c;
+    uint8_t c;
 
     for ( c = 0; c < 3; c++ )
     {
@@ -81,7 +83,7 @@ VectorCrossProduct(float fCrossP[3], float fVectorA[3], float fVectorB[3])
 void
 VectorScale(float fScaledV[3], float fVector[3], float fScale)
 {
-    int c;
+    uint8_t c;
 
     for ( c = 0; c < 3; c++ )
     {
@@ -99,7 +101,7 @@ VectorScale(float fScaledV[3], float fVector[3], float fScale)
 void
 VectorAdd(float fSumV[3], float fVectorA[3], float fVectorB[3])
 {
-    int c;
+    uint8_t c;
 
     for ( c = 0; c < 3; c++)
     {
@@ -117,7 +119,7 @@ VectorAdd(float fSumV[3], float fVectorA[3], float fVectorB[3])
 void
 MatrixMultiply(float fMatrixA[3][3], float fMatrixB[3][3], float fMatrixR[3][3])
 {
-    int x, y, w;
+    uint8_t x, y, w;
     float fMatrixT[3];
 
     for ( x = 0; x < 3; x++ )

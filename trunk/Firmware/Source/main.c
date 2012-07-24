@@ -7,9 +7,7 @@
 //
 /// \brief main program
 ///
-// Change: result of merge of NAV branch:
-//         enabled navigation task, disabled telemetry queue,
-//         corrected RCC_Configuration and GPIO_Configuration()
+// Change: removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -95,7 +93,7 @@ void GPIO_Configuration(void);
 void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
     ( void ) pxTask;
     ( void ) pcTaskName;
-    for ( ;; );
+    while (1);
 }
 
 ///----------------------------------------------------------------------------
@@ -105,7 +103,7 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-int main(void)
+int32_t main(void)
 {
   /*!< At this stage the microcontroller clock setting is already configured,
        this is done through SystemInit() function which is called from startup

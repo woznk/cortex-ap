@@ -8,10 +8,7 @@
 /// \brief PID controls
 /// \file
 ///
-//  CHANGES added multiplication of I term by sampling period,
-//          modified anti windup of I term,
-//          multiplication of I term by Ki moved in the computation of output,
-//          differential term divided by sampling period.
+//  CHANGES removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -72,7 +69,7 @@ void PID_Init(xPID * pxPid)
 /// \remarks
 ///
 ///----------------------------------------------------------------------------
-float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
+float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)
 {
    float fError, fDelta, fOutput;
 
@@ -100,6 +97,7 @@ float PID_Compute(xPID * pxPid, float fSetpoint, float fInput)
        fOutput = pxPid->fMax;
     } else if (fOutput < pxPid->fMin) {
        fOutput = pxPid->fMin;
+    } else {
     }
 
     // Multiply by output gain
