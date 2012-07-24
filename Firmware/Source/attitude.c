@@ -7,7 +7,7 @@
 //
 /// \brief attitude control
 ///
-// Change: added management of barometric pressure sensor BMP085
+// Change: throttle value set by navigation task in NAV mode
 //
 //============================================================================*/
 
@@ -220,6 +220,7 @@ static __inline void Attitude_Control(void)
         case MODE_STAB:
             iAileron = PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL;;
             iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
+            iThrottle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
 
             fSetpoint = ((float)iElevator / 500.0f) + (PI / 2.0f);  // setpoint for pitch angle
             fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
@@ -238,9 +239,7 @@ static __inline void Attitude_Control(void)
             break;
 
         case MODE_NAV:
-            iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
-
-            fSetpoint = ((float)iElevator / 500.0f) + (PI / 2.0f);  // setpoint for pitch angle
+            fSetpoint = Nav_Pitch();                                // setpoint for pitch angle
             fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
             fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
             iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
@@ -249,6 +248,8 @@ static __inline void Attitude_Control(void)
             fInput = acosf(DCM_Matrix[2][1]);                       // bank angle given by DCM
             fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
             iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
+
+            iThrottle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
 
             if (++ucBlink_Red >= 4) {
                 ucBlink_Red = 0;
@@ -261,6 +262,7 @@ static __inline void Attitude_Control(void)
         default:
             iAileron = PPMGetChannel(AILERON_CHANNEL);
             iElevator = PPMGetChannel(ELEVATOR_CHANNEL);
+            iThrottle = PPMGetChannel(THROTTLE_CHANNEL);
             PID_Init(&Roll_Pid);                                    // reset PID controllers
             PID_Init(&Pitch_Pid);
             LEDOff(RED);
@@ -270,7 +272,6 @@ static __inline void Attitude_Control(void)
             break;
     }
     /* Update controls */
-    iThrottle = PPMGetChannel(THROTTLE_CHANNEL);
     Servo_Set(SERVO_AILERON, iAileron);                             // update servos
     Servo_Set(SERVO_ELEVATOR, iElevator);
     Servo_Set(SERVO_THROTTLE, iThrottle);
