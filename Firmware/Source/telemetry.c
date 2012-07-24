@@ -80,6 +80,7 @@
 #define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY)
 #define RX_BUFFER_LENGTH    48
 #define TX_BUFFER_LENGTH    48
+#define TEL_DCM_LENGTH      (1 + (9 * 4))
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -252,7 +253,7 @@ static void Telemetry_Init( void ) {
 ///----------------------------------------------------------------------------
 static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 {
-    long l_temp;
+    uint32_t l_temp;
     uint8_t digit, i, j = 0;
 
     for (i = 0; i < num; i++) {
@@ -285,8 +286,6 @@ static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 ///
 ///----------------------------------------------------------------------------
 static void Telemetry_Send_DCM(void) {
-
-    #define TEL_DCM_LENGTH (1 + (9 * 4))
 
     uint8_t x, y, j;
     float * pfTemp;
@@ -342,7 +341,7 @@ static void Telemetry_Send_DCM(void) {
 //----------------------------------------------------------------------------
 static void Telemetry_Parse ( void )
 {
-    char c;
+    uint8_t c;
     while (ucRindex != ucWindex) {          // received another character
         c = ucRxBuffer[ucRindex++];         // read character
 
@@ -391,7 +390,8 @@ static void Telemetry_Parse ( void )
                 } else if (c != ' ') {                          // error
                     fTemp = 0.0f;                               // clear temp
                     xStatus = PARSE_PREAMBLE;                   // reset parser
-                }
+                } else {
+				}
                 break;
             case PARSE_ALTITUDE :
                 if (c == '\r') {                                // end of data
@@ -403,7 +403,8 @@ static void Telemetry_Parse ( void )
                 } else if (c != ' ') {                          // error
                     fTemp = 0.0f;                               // clear temp
                     xStatus = PARSE_PREAMBLE;                   // reset parser
-                }
+                } else {
+				}
                 break;
 
             case PARSE_GAINS :  /* --------------- PID gains ------------------ */
@@ -428,7 +429,8 @@ static void Telemetry_Parse ( void )
                 } else if (c != ' ') {                              // error
                     fTemp = 0.0f;                                   // clear temp
                     xStatus = PARSE_PREAMBLE;                       // reset parser
-                }
+                } else {
+				}
                 break;
 
             default:                                            // wrong status

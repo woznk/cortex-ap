@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES MatrixUpdate(): added pointer to sensor data as parameter
+//  CHANGES removed minor defects detectd by static analysis
 //
 //============================================================================
 

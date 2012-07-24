@@ -10,8 +10,7 @@
 /// \file
 ///
 ///
-//  CHANGES Added 'f' prefix to P I D coefficients
-//          added output gain
+//  CHANGES removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -53,4 +52,4 @@ typedef struct {       ///< PID data structure
 /*--------------------------------- Prototypes -------------------------------*/
 
 void PID_Init(xPID * pxPid);
-float PID_Compute(xPID * pxPid, float fSetpoint, float fInput);
+float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput);

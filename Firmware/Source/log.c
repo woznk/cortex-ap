@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES log file closed when RC is switched off
+//  CHANGES removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -57,7 +57,7 @@ VAR_GLOBAL xQueueHandle xLog_Queue;
 VAR_STATIC uint8_t szFileName[16] = "log0.txt";     // File name
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // File object
-VAR_STATIC char szString[48];                       //
+VAR_STATIC uint8_t szString[48];                    //
 VAR_STATIC bool bFileOk = FALSE;                    // File status
 VAR_STATIC uint16_t uiSamples;
 
@@ -89,7 +89,7 @@ void Log_Task( void *pvParameters ) {
             szFileName[3] = '0' + j;            // Append file number
             if (FR_OK == f_open(&stFile, (const XCHAR *)szFileName, FA_WRITE)) {
                 bFileOk = TRUE;                 // File exist
-                f_close(&stFile);               // Close file
+                ( void )f_close(&stFile);       // Close file
             } else {                            //
                 bFileOk = FALSE;                // File doesn't exist
             }
@@ -124,7 +124,7 @@ void Log_Task( void *pvParameters ) {
 ///----------------------------------------------------------------------------
 static void Log_Write(uint16_t *data, uint8_t num)
 {
-    long l_temp;
+    uint32_t l_temp;
     uint8_t digit, mode, i, j = 0;
     UINT wWritten;
 
@@ -143,12 +143,12 @@ static void Log_Write(uint16_t *data, uint8_t num)
     szString[j++] = '\n';
     mode = PPMGetMode();
     if (bFileOk) {                                          //
-        f_write(&stFile, szString, j, &wWritten);           // write
+        ( void )f_write(&stFile, szString, j, &wWritten);   // write
         if (                                                // button pressed
             (j != wWritten) ||                              // no file space
             (mode == MODE_RTL) ||                           // RC turned off
             (uiSamples >= MAX_SAMPLES)) {                   // too many samples
-            f_close(&stFile);                               // close file
+            ( void )f_close(&stFile);                       // close file
             bFileOk = FALSE;                                // halt file logging
         } else {                                            // write successfull
             uiSamples++;                                    // update sample counter

@@ -123,7 +123,7 @@ tBoolean Sim_ParseFlightGear ( void )
 {
     static unsigned char ucIndex = 0;
     static unsigned char ucStatus = 0;
-    static float fTemp = 0.0f;
+    static float fSimTemp = 0.0f;
     static float fSign = 1.0f;
 
     char c;
@@ -151,7 +151,7 @@ tBoolean Sim_ParseFlightGear ( void )
                 {
                     ucStatus++;
                     fSign = 1.0f;
-                    fTemp = fTemp * 10 + (float)(c - '0');
+                    fSimTemp = fSimTemp * 10 + (float)(c - '0');
                 }
                 else
                 {
@@ -161,17 +161,17 @@ tBoolean Sim_ParseFlightGear ( void )
             case 3:
                 if ((c >= '0') && (c <= '9'))
                 {
-                    fTemp = fTemp * 10 + (float)(c - '0');
+                    fSimTemp = fSimTemp * 10 + (float)(c - '0');
                 }
                 else if ((c == ',') || (c == '\n'))
                 {
-                    if (fTemp < 0.0f) { fTemp = 0.0f; }
-                    if (fTemp > 1023.0f) { fTemp = 1023.0f; }
-                    pfSimSensorData[ucIndex] = fTemp * fSign;
+                    if (fSimTemp < 0.0f) { fSimTemp = 0.0f; }
+                    if (fSimTemp > 1023.0f) { fSimTemp = 1023.0f; }
+                    pfSimSensorData[ucIndex] = fSimTemp * fSign;
                     ucStatus = (c == '\n') ? 0 : 2;
                     ucIndex =  (c == '\n') ? 0 : (ucIndex + 1);
                     if (ucIndex > 5) {ucIndex = 0; ucStatus = 0; }
-                    fTemp = 0.0f;
+                    fSimTemp = 0.0f;
                 }
                 else
                 {

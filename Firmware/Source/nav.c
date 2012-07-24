@@ -23,7 +23,7 @@
 ///   when < -180° or > 180°. Cross produt and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
-//  CHANGES added throttle control based on altitude error
+//  CHANGES removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -102,23 +102,24 @@ const STRUCT_WPT DefaultWaypoint[] = {   // HERON
     { 11.431036f, 45.538116f, 130.0f }
 };
 */
+/*
 const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 3
     { 11.528960f, 45.570528f, 150.0f },
     { 11.529764f, 45.566249f, 150.0f },
     { 11.534911f, 45.566383f, 150.0f },
     { 11.535398f, 45.570759f, 150.0f }
 };
-
+*/
 /*---------------------------------- Globals ---------------------------------*/
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC char ucGpsBuffer[BUFFER_LENGTH];         // data buffer
+VAR_STATIC uint8_t ucGpsBuffer[BUFFER_LENGTH];         // data buffer
 //"$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n";
 //"$GPRMC,194618.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*3E\n";
-VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];      // waypoints array
-VAR_STATIC const char szFileName[16] = "path.txt";  // file name
-VAR_STATIC char szLine[LINE_LENGTH];                // input line
+VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];         	// waypoints array
+VAR_STATIC const uint8_t szFileName[16] = "path.txt";	// file name
+VAR_STATIC uint8_t szLine[LINE_LENGTH];                 // input line
 VAR_STATIC FATFS stFat;                             // FAT
 VAR_STATIC FIL stFile;                              // file object
 VAR_STATIC UINT wFileBytes;                         // counter of read bytes
@@ -153,8 +154,8 @@ VAR_STATIC float fThrottle_Max = ALT_HOLD_THROTTLE_MAX;
 
 static void Load_Path( void );
 static void GPS_Init( void );
-static bool Parse_Waypoint ( char * pszLine );
-static void Parse_Coord( float * fCoord, char c );
+static bool Parse_Waypoint ( uint8_t * pszLine );
+static void Parse_Coord( float * fCoord, uint8_t c );
 static bool Parse_GPS( void );
 
 //----------------------------------------------------------------------------
@@ -285,9 +286,9 @@ void Navigation_Task( void *pvParameters ) {
 //----------------------------------------------------------------------------
 static void Load_Path( void ) {
 
-    char c, cCounter;
-    char * ucGpsBufferPointer;
-    char * pszLinePointer;
+    uint8_t c, cCounter;
+    uint8_t * ucGpsBufferPointer;
+    uint8_t * pszLinePointer;
     bool bError = TRUE;
 
     pszLinePointer = szLine;                        // init line pointer
@@ -296,7 +297,9 @@ static void Load_Path( void ) {
     /* Mount file system and open waypoint file */
     if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
         uiWptNumber = 0;                            // no waypoint available
-    } else if (FR_OK != f_open(&stFile, szFileName, FA_READ)) { // error opening file
+    } else if (FR_OK != f_open(&stFile, 
+                               (const XCHAR *)szFileName,
+                                FA_READ)) {         // error opening file
         uiWptNumber = 0;                            // no waypoint available
     } else {                                        //
         bError = FALSE;                             // file succesfully open
@@ -326,7 +329,7 @@ static void Load_Path( void ) {
             }
         }
     }
-    f_close( &stFile );                             // close file
+    ( void )f_close( &stFile );                     // close file
 }
 
 //----------------------------------------------------------------------------
@@ -387,8 +390,8 @@ static void GPS_Init( void ) {
 ///          [.[a]] is an optional decimal point with an optional decimal data
 ///
 //----------------------------------------------------------------------------
-static bool Parse_Waypoint ( char * pszLine ) {
-    char c;
+static bool Parse_Waypoint ( uint8_t * pszLine ) {
+    uint8_t c;
     float fTemp, fDiv;
     uint8_t ucField = 0, ucCounter = LINE_LENGTH;
 
@@ -453,7 +456,7 @@ static bool Parse_Waypoint ( char * pszLine ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-static void Parse_Coord( float * fCoord, char c )
+static void Parse_Coord( float * fCoord, uint8_t c )
 {
     switch (c) {
         case '0' :
@@ -526,7 +529,7 @@ static void Parse_Coord( float * fCoord, char c )
 //----------------------------------------------------------------------------
 static bool Parse_GPS( void )
 {
-    char c;
+    uint8_t c;
     bool bResult = FALSE;
 
     while ((bResult == FALSE) &&            // NMEA sentence not completed
