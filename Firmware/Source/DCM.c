@@ -79,8 +79,7 @@
 ///
 /// \endcode
 ///
-//  CHANGES result of merge of NAV branch:
-//          enabled reading of ground speed and COG from GPS data
+//  CHANGES rad <-> deg conversion macros moved to config.h
 //
 //=============================================================================+
 
@@ -121,9 +120,6 @@
 /// Typical values 0.0005f
 
 /*----------------------------------- Macros ---------------------------------*/
-
-#define ToRad(x) (((x) * PI) / 180.0f)
-#define ToDeg(x) (((x) * 180.0f) / PI)
 
 /*-------------------------------- Enumerations ------------------------------*/
 
