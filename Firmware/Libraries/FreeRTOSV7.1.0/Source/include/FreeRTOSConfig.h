@@ -55,7 +55,6 @@
 #define FREERTOS_CONFIG_H
 
 /* Library includes. */
-#include "stm32f10x.h"
 
 /*-----------------------------------------------------------
  * Application specific definitions.
