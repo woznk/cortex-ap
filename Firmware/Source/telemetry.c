@@ -43,7 +43,7 @@
 ///                                                                     \endcode
 /// \todo add parser for ardupilot / mnav protocols
 ///
-//  CHANGES modified remarks
+//  CHANGES modified after Lint analysis
 //
 //============================================================================*/
 
@@ -52,6 +52,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+
+#include "misc.h"
 
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
@@ -152,7 +154,9 @@ VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {         // gains for PID loops
     ROLL_KP,                                        // default roll kp
     ROLL_KI,                                        // default roll ki
     NAV_KP,                                         // default direction kp
-    NAV_KI                                          // default direction ki
+    NAV_KI,                                         // default direction ki
+    0.0f,                                           // dummy placeholder
+    0.0f                                            // dummy placeholder
 };
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -162,7 +166,6 @@ static void Telemetry_Send_Message(uint16_t *data, uint8_t num);
 static void Telemetry_Send_DCM( void );
 static void Telemetry_Parse( void );
 static void Telemetry_Send_Waypoint( void );
-void Telemetry_Send_Controls( void );
 
 /*---------------------------------- Functions -------------------------------*/
 
@@ -182,7 +185,7 @@ void Telemetry_Task( void *pvParameters )
     Last_Wake_Time = xTaskGetTickCount();       //
     Telemetry_Init();                           // telemetry initialization
 
-    while (1) {
+    while (TRUE) {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
 #if 1
         Telemetry_Send_Controls();              // update simulator controls
@@ -260,13 +263,13 @@ static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
         l_temp = *data++;
         ucTxBuffer[j++] = ' ';
         digit = ((l_temp >> 12) & 0x0000000F);
-        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = ((l_temp >> 8) & 0x0000000F);
-        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = ((l_temp >> 4) & 0x0000000F);
-        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = (l_temp & 0x0000000F);
-        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
     }
     ucTxBuffer[j++] = '\n';
 
