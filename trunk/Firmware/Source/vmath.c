@@ -7,11 +7,11 @@
 //
 /// \brief Vector algebra functions
 ///
-//  CHANGES doxygen
+//  CHANGES Lint: inclusion of freertos.h replaced with stm32f10x.h
 //
 //============================================================================*/
 
-#include "FreeRTOS.h"
+#include "stm32f10x.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
