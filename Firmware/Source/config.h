@@ -10,7 +10,6 @@
 /// \file
 ///
 // CHANGES modified altitude hold parameters, 
-//         rad <-> deg conversion macros moved here from DCM.c
 //
 //============================================================================*/
 
@@ -84,8 +83,8 @@
    when within HEIGHT_MARGIN of the target height.
    Use ALT_HOLD_THROTTLE_MIN when above HEIGHT_MARGIN of the target height.
    Throttle values are from -1.0 to +1.0.*/
-#define ALT_HOLD_THROTTLE_MIN   -0.2f
-#define ALT_HOLD_THROTTLE_MAX   0.4f
+#define ALT_HOLD_THROTTLE_MIN   0.0f
+#define ALT_HOLD_THROTTLE_MAX   0.6f
 
 #define HEIGHTMAX           1500.0f     //! maximum target height [m]
 
