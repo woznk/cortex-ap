@@ -23,7 +23,7 @@
 ///   when < -180° or > 180°. Cross produt and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
-//  CHANGES removed minor defects detectd by static analysis
+//  CHANGES Lint: added missing #inclusions
 //
 //============================================================================*/
 
@@ -32,6 +32,8 @@
 #include "queue.h"
 
 #include "stm32f10x.h"
+#include "stm32f10x_usart.h"
+#include "misc.h"
 #include "ppmdriver.h"
 #include "dcm.h"
 #include "math.h"
