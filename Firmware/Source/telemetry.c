@@ -41,9 +41,11 @@
 ///                         |                        |
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
-/// \todo add parser for ardupilot / mnav protocols
+/// \todo add mavlink protocol, see:
+///  http://www.qgroundcontrol.org/mavlink/start
+///  http://www.qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
 ///
-//  CHANGES modified after Lint analysis
+//  CHANGES added links to mavlink informations
 //
 //============================================================================*/
 
