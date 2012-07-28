@@ -531,10 +531,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>14</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>95</TopLine>
-      <CurrentLine>107</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -545,10 +545,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>34</ColumnNumber>
+      <ColumnNumber>97</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>199</TopLine>
-      <CurrentLine>209</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -601,10 +601,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>40</ColumnNumber>
+      <ColumnNumber>14</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>70</TopLine>
-      <CurrentLine>88</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\DCM.c</PathWithFileName>
       <FilenameWithoutPath>DCM.c</FilenameWithoutPath>
@@ -643,27 +643,27 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>32</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>0</TopLine>
       <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\Source\telemetry.c</PathWithFileName>
-      <FilenameWithoutPath>telemetry.c</FilenameWithoutPath>
+      <PathWithFileName>..\Source\attitude.c</PathWithFileName>
+      <FilenameWithoutPath>attitude.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>1</GroupNumber>
-      <FileNumber>11</FileNumber>
+      <FileNumber>0</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>53</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>193</TopLine>
-      <CurrentLine>207</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\Source\attitude.c</PathWithFileName>
-      <FilenameWithoutPath>attitude.c</FilenameWithoutPath>
+      <PathWithFileName>..\Source\mav_telemetry.c</PathWithFileName>
+      <FilenameWithoutPath>mav_telemetry.c</FilenameWithoutPath>
     </File>
   </Group>
 
@@ -1044,8 +1044,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>153</TopLine>
-      <CurrentLine>153</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\startup_stm32f10x_md_vl.s</PathWithFileName>
       <FilenameWithoutPath>startup_stm32f10x_md_vl.s</FilenameWithoutPath>
@@ -1053,9 +1053,35 @@
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cortex-ap\Firmware\Source\config.h</PathWithFilename>
-    <TopLine>13</TopLine>
-    <CurrentLine>22</CurrentLine>
+    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\Mavlink\protocol.h</PathWithFilename>
+    <TopLine>227</TopLine>
+    <CurrentLine>240</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
+  <AlienFiles>
+    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\Mavlink\common\mavlink_msg_heartbeat.h</PathWithFilename>
+    <TopLine>168</TopLine>
+    <CurrentLine>180</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -1083,43 +1109,19 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>5</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
-          <Name>..\Source\attitude.c</Name>
-          <ColumnNumber>53</ColumnNumber>
-          <TopLine>193</TopLine>
-          <CurrentLine>207</CurrentLine>
+          <Name>..\Libraries\Mavlink\ardupilotmega\../common/./mavlink_msg_heartbeat.h</Name>
+          <ColumnNumber>15</ColumnNumber>
+          <TopLine>168</TopLine>
+          <CurrentLine>180</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\config.h</Name>
-          <ColumnNumber>48</ColumnNumber>
-          <TopLine>13</TopLine>
-          <CurrentLine>22</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\DCM.c</Name>
-          <ColumnNumber>40</ColumnNumber>
-          <TopLine>70</TopLine>
-          <CurrentLine>88</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>153</TopLine>
-          <CurrentLine>153</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\main.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>95</TopLine>
-          <CurrentLine>107</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\nav.c</Name>
-          <ColumnNumber>34</ColumnNumber>
-          <TopLine>199</TopLine>
-          <CurrentLine>209</CurrentLine>
+          <Name>..\Libraries\Mavlink\ardupilotmega\../protocol.h</Name>
+          <ColumnNumber>54</ColumnNumber>
+          <TopLine>227</TopLine>
+          <CurrentLine>240</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
