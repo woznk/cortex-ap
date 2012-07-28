@@ -5,7 +5,7 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief Simulator interface
+/// \brief telemetry interface
 ///
 /// \file
 /// Sistemi di riferimento:                                             \code
@@ -45,7 +45,7 @@
 ///  http://www.qgroundcontrol.org/mavlink/start
 ///  http://www.qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
 ///
-//  CHANGES added links to mavlink informations
+//  CHANGES corrected description of telemetry parser function
 //
 //============================================================================*/
 
@@ -312,14 +312,12 @@ static void Telemetry_Send_DCM(void) {
 //----------------------------------------------------------------------------
 //
 /// \brief   parse telemetry data
-/// \returns TRUE when new GPS data are available
+/// \returns -
 /// \remarks telemetry is used to upload different information during flight
 ///          and during simulation:
 ///
 ///          INFORMATION  SIMULATION  FLIGHT  NOTE
 ///          ---------------------------------------------------------------
-///          GPS data         X         -     during flight, GPS data comes
-///                                           from actual GPS receiver
 ///          sensor data      X         -     during flight, sensor data
 ///                                           comes from actual gyroscopes,
 ///                                           accelerometers and pressure
@@ -334,12 +332,9 @@ static void Telemetry_Send_DCM(void) {
 ///
 ///          PREAMBLE  MESSAGE CONTENT  DATA FIELDS DATA FORMAT
 ///          -------------------------------------------------------------
-///             $G     GPS data          see NMEA    NMEA sentence
 ///             $S     gyro,accel,speed     7        16 bit decimal integers
 ///             $K     PID gains            6        16 bit decimal integers
 ///
-///         GPS data is forwarded to navigation task, forcing characters in
-///         the GPS UART buffer, as they had been received from actual GPS.
 ///         Parsing of sensor data and PID gains is a simple string to float
 ///         conversion. Sensor data and gains have no final checksum.
 ///
