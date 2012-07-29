@@ -45,7 +45,7 @@
 ///  http://www.qgroundcontrol.org/mavlink/start
 ///  http://www.qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
 ///
-//  CHANGES corrected description of telemetry parser function
+//  CHANGES removed unneeded #inclusions, DCM update rate to 4 Hz
 //
 //============================================================================*/
 
@@ -60,7 +60,6 @@
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
 #include "math.h"
-#include "gps.h"
 #include "nav.h"
 #include "DCM.h"
 #include "log.h"
@@ -193,7 +192,7 @@ void Telemetry_Task( void *pvParameters )
         Telemetry_Send_Controls();              // update simulator controls
 #endif
         Telemetry_Parse();                      // parse uplink data
-        if (++ucCycles >= TELEMETRY_FREQUENCY) {// every second
+        if (++ucCycles >= (TELEMETRY_FREQUENCY / 4)) {// every .125 second
             ucCycles = 0;                       // reset cycle counter
             Telemetry_Send_Waypoint();          // send waypoint information
 #if 1
