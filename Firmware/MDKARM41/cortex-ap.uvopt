@@ -545,10 +545,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>34</ColumnNumber>
+      <ColumnNumber>35</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>199</TopLine>
-      <CurrentLine>209</CurrentLine>
+      <TopLine>213</TopLine>
+      <CurrentLine>223</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -601,10 +601,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>40</ColumnNumber>
+      <ColumnNumber>35</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>70</TopLine>
-      <CurrentLine>88</CurrentLine>
+      <TopLine>316</TopLine>
+      <CurrentLine>321</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\DCM.c</PathWithFileName>
       <FilenameWithoutPath>DCM.c</FilenameWithoutPath>
@@ -643,10 +643,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>32</ColumnNumber>
+      <ColumnNumber>66</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>181</TopLine>
+      <CurrentLine>195</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\telemetry.c</PathWithFileName>
       <FilenameWithoutPath>telemetry.c</FilenameWithoutPath>
@@ -669,7 +669,7 @@
 
   <Group>
     <GroupName>Libraries</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <File>
@@ -1078,13 +1078,57 @@
     </WindowPosition>
   </AlienFiles>
 
+  <AlienFiles>
+    <PathWithFilename>C:\Work\cortex-ap\Firmware\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h</PathWithFilename>
+    <TopLine>72</TopLine>
+    <CurrentLine>75</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
   <MDIGroups>
     <Orientation>1</Orientation>
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>5</ActiveTab>
+      <ActiveTab>1</ActiveTab>
       <Documents>
+        <Doc>
+          <Name>..\Source\main.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>95</TopLine>
+          <CurrentLine>107</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\nav.c</Name>
+          <ColumnNumber>35</ColumnNumber>
+          <TopLine>213</TopLine>
+          <CurrentLine>223</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\telemetry.c</Name>
+          <ColumnNumber>66</ColumnNumber>
+          <TopLine>181</TopLine>
+          <CurrentLine>195</CurrentLine>
+        </Doc>
         <Doc>
           <Name>..\Source\attitude.c</Name>
           <ColumnNumber>53</ColumnNumber>
@@ -1099,9 +1143,9 @@
         </Doc>
         <Doc>
           <Name>..\Source\DCM.c</Name>
-          <ColumnNumber>40</ColumnNumber>
-          <TopLine>70</TopLine>
-          <CurrentLine>88</CurrentLine>
+          <ColumnNumber>35</ColumnNumber>
+          <TopLine>316</TopLine>
+          <CurrentLine>321</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
@@ -1110,16 +1154,10 @@
           <CurrentLine>153</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\main.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>95</TopLine>
-          <CurrentLine>107</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\nav.c</Name>
-          <ColumnNumber>34</ColumnNumber>
-          <TopLine>199</TopLine>
-          <CurrentLine>209</CurrentLine>
+          <Name>..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h</Name>
+          <ColumnNumber>8</ColumnNumber>
+          <TopLine>72</TopLine>
+          <CurrentLine>75</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
