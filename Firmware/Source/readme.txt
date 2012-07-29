@@ -73,6 +73,41 @@
      http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
      http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
      
+     29/07/12
+     Creato branch MAVLINK per integrazione del protocollo Mavlink:
+
+     - seguite istruzioni per l'integrazione contenute in:
+        http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
+     - modificati tutti gli "inline" come "__inline", 
+     - incluso header mavlink.h contenuto nella cartella "common".
+
+     Il codice generato richiede più RAM di quella disponibile nel STM32F100.
+     Provato a includere file mavlink.h di altre cartelle:
+     
+     - "minimal",
+     - "ardupilotmega", 
+     - "matrixpilot"
+     
+     sempre troppa RAM.
+     Controllato la mappa di memoria generata dal linker: 
+
+     - nav.c piu' di 1K per le strutture dati dei file, 
+     - log.c piu' di 1K per le strutture dati dei file, 
+     - heap_1.c piu' 3K per l'heap, 
+     - startup_stm32f10x_md_vl.c 1K per lo stack.
+     
+     Possibili soluzioni:
+
+     - un'unica struttura dati di file, accesso singolo
+     - ridurre le dimensionio dell'heap non può essere ridotto, il sistema si pianta
+     - ridurre lo stack in startup_stm32f10x_md_vl.c
+
+     Risultato:
+
+     - da provare
+     - l'heap non può essere ridotto, il sistema si pianta
+     - ridotto lo stack a 512 bytes, funziona
+
 @par Navigation
      
      Calcolare le differenze di longitudine e latitudine come: 
