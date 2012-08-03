@@ -108,6 +108,11 @@
      - l'heap non può essere ridotto, il sistema si pianta
      - ridotto lo stack a 512 bytes, funziona
 
+     03/08/2012
+
+     link all'implementazione Arduino del protocollo MultiWii
+     https://github.com/wertarbyte/multiwii-firmware/blob/master/Serial.ino
+
 @par Navigation
      
      Calcolare le differenze di longitudine e latitudine come: 
