@@ -346,7 +346,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER STM32F10X_MD_VL</Define>
               <Undefine></Undefine>
-              <IncludePath>.\;..\Utilities;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Libraries\fat_sd;..\Libraries\I2C_MEMS_Driver;..\Libraries\L3G4200_Driver;..\Libraries\ADXL345_Driver;..\Libraries\BMP085_Driver;..\Libraries\FreeRTOSV7.1.0\Source\include;..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3;..\Source;..\Libraries\Mavlink\minimal</IncludePath>
+              <IncludePath>.\;..\Utilities;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Libraries\fat_sd;..\Libraries\I2C_MEMS_Driver;..\Libraries\L3G4200_Driver;..\Libraries\ADXL345_Driver;..\Libraries\BMP085_Driver;..\Libraries\FreeRTOSV7.1.0\Source\include;..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3;..\Source;..\Libraries\Mavlink\matrixpilot</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
