@@ -545,10 +545,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>28</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>579</TopLine>
-      <CurrentLine>588</CurrentLine>
+      <TopLine>594</TopLine>
+      <CurrentLine>597</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -657,10 +657,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>38</ColumnNumber>
+      <ColumnNumber>37</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>35</TopLine>
-      <CurrentLine>56</CurrentLine>
+      <TopLine>246</TopLine>
+      <CurrentLine>255</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\mav_telemetry.c</PathWithFileName>
       <FilenameWithoutPath>mav_telemetry.c</FilenameWithoutPath>
@@ -1057,13 +1057,13 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>3</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
           <Name>..\Source\mav_telemetry.c</Name>
-          <ColumnNumber>38</ColumnNumber>
-          <TopLine>35</TopLine>
-          <CurrentLine>56</CurrentLine>
+          <ColumnNumber>37</ColumnNumber>
+          <TopLine>246</TopLine>
+          <CurrentLine>255</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
@@ -1079,9 +1079,9 @@
         </Doc>
         <Doc>
           <Name>..\Source\nav.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>579</TopLine>
-          <CurrentLine>588</CurrentLine>
+          <ColumnNumber>28</ColumnNumber>
+          <TopLine>594</TopLine>
+          <CurrentLine>597</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</Name>
