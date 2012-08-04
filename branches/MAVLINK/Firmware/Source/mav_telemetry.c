@@ -43,7 +43,7 @@
 #endif
 #define   VAR_GLOBAL
 
-#define TELEMETRY_FREQUENCY 1
+#define TELEMETRY_FREQUENCY 10
 #define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY)
 #define RX_BUFFER_LENGTH    48
 #define TX_BUFFER_LENGTH    48
@@ -81,14 +81,14 @@ VAR_STATIC uint8_t system_state;
 VAR_STATIC uint8_t autopilot_type;
 
 VAR_STATIC uint16_t len;
-//VAR_STATIC uint16_t packet_drops = 0;
+VAR_STATIC uint16_t packet_drops = 0;
 //VAR_STATIC uint16_t mode = MAV_MODE_UNINIT;         // Defined in mavlink_types.h, which is included by mavlink.h
-//VAR_STATIC uint16_t m_parameter_i = 0;
+VAR_STATIC uint16_t m_parameter_i = 0;
 VAR_STATIC uint32_t custom_mode;
 
 VAR_STATIC mavlink_system_t mavlink_system;
-//VAR_STATIC mavlink_param_set_t set;
-//VAR_STATIC mavlink_status_t status;
+VAR_STATIC mavlink_param_set_t set;
+VAR_STATIC mavlink_status_t status;
 VAR_STATIC mavlink_message_t msg;                   // Initialize the required buffers
 
 VAR_STATIC uint8_t buf[MAVLINK_MAX_PACKET_LEN];
@@ -101,6 +101,8 @@ VAR_STATIC uint8_t ucRindex;                        // uplink read index
 
 static void Telemetry_Init( void );
 static void Telemetry_Downlink (uint8_t * buf, uint16_t len);
+static void communication_queued_send(void);
+static void communication_receive(void);
 
 /*---------------------------------- Functions -------------------------------*/
 
@@ -159,16 +161,8 @@ void Telemetry_Task( void *pvParameters )
                                     system_state);
         len = mavlink_msg_to_send_buffer(buf, &msg);        // Copy the message to the send buffer
         Telemetry_Downlink(buf, len);                       // Send the message
-/*
-        if (mavlink_parse_char( MAVLINK_COMM_0,             // See onboard integration tutorial
-                                uart0_get_char(),
-                                &msg,
-                                &status))
-        {
-            handle_mavlink_message(MAVLINK_COMM_0, &msg);   // Process parameter request, if occured
-        }
+        communication_receive();                            // Process parameter request, if occured
         communication_queued_send();                        // Send parameters at 10 Hz, if previously requested
-*/
     }
 }
 
@@ -245,7 +239,6 @@ void USART1_IRQHandler( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-/*
 static void handle_mavlink_message(mavlink_channel_t chan,
                                    mavlink_message_t* msg)
 {
@@ -302,7 +295,7 @@ static void handle_mavlink_message(mavlink_channel_t chan,
             break;
     }
 }
-*/
+
 
 //----------------------------------------------------------------------------
 //
@@ -315,7 +308,7 @@ static void handle_mavlink_message(mavlink_channel_t chan,
 ///          Call this function with xx Hertz to increase/decrease the bandwidth.
 ///
 //----------------------------------------------------------------------------
-/*
+
 static void communication_queued_send(void)
 {
     if (m_parameter_i < ONBOARD_PARAM_COUNT)     //send parameters one by one
@@ -329,7 +322,7 @@ static void communication_queued_send(void)
         m_parameter_i++;
     }
 }
-*/
+
 
 //----------------------------------------------------------------------------
 //
@@ -340,7 +333,7 @@ static void communication_queued_send(void)
 ///          handles their value by calling the appropriate functions.
 ///
 //----------------------------------------------------------------------------
-/*
+
 static void communication_receive(void)
 {
     uint8_t c;
@@ -375,7 +368,7 @@ static void communication_receive(void)
 
 	packet_drops += status.packet_rx_drop_count;    // Update global packet drops counter
 }
-*/
+
 
 //----------------------------------------------------------------------------
 //
