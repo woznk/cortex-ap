@@ -387,14 +387,14 @@
           <GroupName>User</GroupName>
           <Files>
             <File>
-              <FileName>MultiWii.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Source\MultiWii.c</FilePath>
-            </File>
-            <File>
               <FileName>test_telemetry.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\test_telemetry.c</FilePath>
+            </File>
+            <File>
+              <FileName>multiwii.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Source\multiwii.c</FilePath>
             </File>
           </Files>
         </Group>

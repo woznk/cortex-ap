@@ -219,23 +219,9 @@
 
   <Group>
     <GroupName>User</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
-    <File>
-      <GroupNumber>1</GroupNumber>
-      <FileNumber>1</FileNumber>
-      <FileType>1</FileType>
-      <tvExp>0</tvExp>
-      <Focus>0</Focus>
-      <ColumnNumber>122</ColumnNumber>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1</TopLine>
-      <CurrentLine>23</CurrentLine>
-      <bDave2>0</bDave2>
-      <PathWithFileName>..\..\Source\MultiWii.c</PathWithFileName>
-      <FilenameWithoutPath>MultiWii.c</FilenameWithoutPath>
-    </File>
     <File>
       <GroupNumber>1</GroupNumber>
       <FileNumber>2</FileNumber>
@@ -249,6 +235,20 @@
       <bDave2>0</bDave2>
       <PathWithFileName>.\test_telemetry.c</PathWithFileName>
       <FilenameWithoutPath>test_telemetry.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>1</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>122</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>1</TopLine>
+      <CurrentLine>23</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\..\Source\multiwii.c</PathWithFileName>
+      <FilenameWithoutPath>multiwii.c</FilenameWithoutPath>
     </File>
   </Group>
 
@@ -454,22 +454,22 @@
       <ActiveTab>1</ActiveTab>
       <Documents>
         <Doc>
-          <Name>.\test_telemetry.c</Name>
-          <ColumnNumber>30</ColumnNumber>
-          <TopLine>103</TopLine>
-          <CurrentLine>103</CurrentLine>
+          <Name>..\..\Source\config.h</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>104</TopLine>
+          <CurrentLine>117</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\..\Source\MultiWii.c</Name>
+          <Name>..\..\Source\multiwii.c</Name>
           <ColumnNumber>122</ColumnNumber>
           <TopLine>1</TopLine>
           <CurrentLine>23</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\..\Source\config.h</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>104</TopLine>
-          <CurrentLine>117</CurrentLine>
+          <Name>.\test_telemetry.c</Name>
+          <ColumnNumber>30</ColumnNumber>
+          <TopLine>103</TopLine>
+          <CurrentLine>103</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
