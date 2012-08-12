@@ -1,0 +1,51 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+C:\Work\cortex-ap\Firmware\Test\Telemetry\Test_Telemetry.uvproj
+Project File Date:  08/12/2012
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling MultiWii.c...
+linking...
+Program Size: Code=4910 RO-data=338 RW-data=128 ZI-data=3864  
+"Test_Telemetry.axf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+compiling MultiWii.c...
+linking...
+Program Size: Code=4910 RO-data=370 RW-data=128 ZI-data=3864  
+"Test_Telemetry.axf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+compiling MultiWii.c...
+..\..\Source\config.h(116): warning:  #1-D: last line of file ends without a newline
+..\..\Source\MultiWii.c(344): error:  #29: expected an expression
+..\..\Source\MultiWii.c(345): error:  #65: expected a ";"
+..\..\Source\MultiWii.c(475): error:  #29: expected an expression
+..\..\Source\MultiWii.c(479): warning:  #12-D: parsing restarts here after previous syntax error
+compiling test_telemetry.c...
+..\..\Source\config.h(116): warning:  #1-D: last line of file ends without a newline
+Target not created
+Build target 'Target 1'
+compiling MultiWii.c...
+..\..\Source\config.h(116): warning:  #1-D: last line of file ends without a newline
+..\..\Source\MultiWii.c(475): error:  #29: expected an expression
+..\..\Source\MultiWii.c(479): warning:  #12-D: parsing restarts here after previous syntax error
+Target not created
+Build target 'Target 1'
+compiling MultiWii.c...
+..\..\Source\config.h(116): warning:  #1-D: last line of file ends without a newline
+linking...
+Program Size: Code=4898 RO-data=370 RW-data=128 ZI-data=3864  
+"Test_Telemetry.axf" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling MultiWii.c...
+compiling test_telemetry.c...
+linking...
+Program Size: Code=4898 RO-data=370 RW-data=128 ZI-data=3864  
+"Test_Telemetry.axf" - 0 Error(s), 0 Warning(s).
+Build target 'Target 1'
+linking...
+Program Size: Code=4898 RO-data=370 RW-data=128 ZI-data=3864  
+"Test_Telemetry.axf" - 0 Error(s), 0 Warning(s).

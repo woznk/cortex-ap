@@ -1,0 +1,30 @@
+*** Creating Trace Output File 'Test_Telemetry.tra' Ok.
+### Preparing for ADS-LD.
+### Creating ADS-LD Command Line
+### List of Objects: adding '"multiwii.o"'
+### List of Objects: adding '"test_telemetry.o"'
+### List of Objects: adding '"misc.o"'
+### List of Objects: adding '".\startup_stm32f10x_md_vl.o"'
+### List of Objects: adding '"core_cm3.o"'
+### List of Objects: adding '"system_stm32f10x.o"'
+### List of Objects: adding '"port.o"'
+### List of Objects: adding '"heap_1.o"'
+### List of Objects: adding '"timers.o"'
+### List of Objects: adding '"croutine.o"'
+### List of Objects: adding '"list.o"'
+### List of Objects: adding '"queue.o"'
+### List of Objects: adding '"tasks.o"'
+### ADS-LD Command completed:
+--cpu Cortex-M3 "multiwii.o" "test_telemetry.o" "misc.o" ".\startup_stm32f10x_md_vl.o" "core_cm3.o" "system_stm32f10x.o" "port.o" "heap_1.o" "timers.o" "croutine.o" "list.o" "queue.o" "tasks.o" --library_type=microlib --ro-base 0x08000000 --entry 0x08000000 --rw-base 0x20000000 --entry Reset_Handler --first __Vectors --strict --autoat --summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\Test_Telemetry.map" -o "Test_Telemetry.axf"### Preparing Environment (PrepEnvAds)
+### ADS-LD Output File: 'Test_Telemetry.axf'
+### ADS-LD Command File: 'Test_Telemetry.lnp'
+### Checking for dirty Components...
+### Creating CmdFile 'Test_Telemetry.lnp', Handle=0x0000030C
+### Writing '.lnp' file
+### ADS-LD Command file 'Test_Telemetry.lnp' is ready.
+### ADS-LD: About to start ADS-LD Thread.
+### ADS-LD: executed with 0 errors
+### Updating obj list
+### LDADS_file() completed.

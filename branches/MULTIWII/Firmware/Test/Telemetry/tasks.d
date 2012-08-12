@@ -1,0 +1,15 @@
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\tasks.c
+tasks.o: C:\Programmi\Keil\ARM\RV31\INC\stdio.h
+tasks.o: C:\Programmi\Keil\ARM\RV31\INC\stdlib.h
+tasks.o: C:\Programmi\Keil\ARM\RV31\INC\string.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOS.h
+tasks.o: C:\Programmi\Keil\ARM\RV31\INC\stddef.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\projdefs.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\portable.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3\portmacro.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\mpu_wrappers.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\task.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\list.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\timers.h
+tasks.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\StackMacros.h

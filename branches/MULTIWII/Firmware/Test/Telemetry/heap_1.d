@@ -1,0 +1,11 @@
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\portable\MemMang\heap_1.c
+heap_1.o: C:\Programmi\Keil\ARM\RV31\INC\stdlib.h
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOS.h
+heap_1.o: C:\Programmi\Keil\ARM\RV31\INC\stddef.h
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\projdefs.h
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\portable.h
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3\portmacro.h
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\mpu_wrappers.h
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\task.h
+heap_1.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\list.h

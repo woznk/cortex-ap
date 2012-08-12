@@ -1,0 +1,12 @@
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\queue.c
+queue.o: C:\Programmi\Keil\ARM\RV31\INC\stdlib.h
+queue.o: C:\Programmi\Keil\ARM\RV31\INC\string.h
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOS.h
+queue.o: C:\Programmi\Keil\ARM\RV31\INC\stddef.h
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\projdefs.h
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\portable.h
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3\portmacro.h
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\mpu_wrappers.h
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\task.h
+queue.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\list.h

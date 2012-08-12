@@ -1,0 +1,11 @@
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\croutine.c
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOS.h
+croutine.o: C:\Programmi\Keil\ARM\RV31\INC\stddef.h
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\projdefs.h
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\FreeRTOSConfig.h
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\portable.h
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3\portmacro.h
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\mpu_wrappers.h
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\task.h
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\list.h
+croutine.o: ..\..\Libraries\FreeRTOSV7.1.0\Source\include\croutine.h

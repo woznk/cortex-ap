@@ -1,0 +1,496 @@
+ARM Linker, 4.1 [Build 713] [Standard]
+
+==============================================================================
+
+Section Cross References
+
+    multiwii.o(.text) refers to ffltui.o(.text) for __aeabi_ui2f
+    multiwii.o(.text) refers to multiwii.o(i.MSP_Init_Response) for MSP_Init_Response
+    multiwii.o(.text) refers to ffixui.o(.text) for __aeabi_f2uiz
+    multiwii.o(.text) refers to multiwii.o(.data) for MSP_Offset
+    multiwii.o(.text) refers to multiwii.o(.bss) for ucRxBuffer
+    multiwii.o(.text) refers to multiwii.o(.constdata) for pidnames
+    test_telemetry.o(.text) refers to multiwii.o(.text) for Telemetry_Task
+    startup_stm32f10x_md_vl.o(RESET) refers to startup_stm32f10x_md_vl.o(STACK) for __initial_sp
+    startup_stm32f10x_md_vl.o(RESET) refers to startup_stm32f10x_md_vl.o(.text) for Reset_Handler
+    startup_stm32f10x_md_vl.o(RESET) refers to port.o(.emb_text) for vPortSVCHandler
+    startup_stm32f10x_md_vl.o(RESET) refers to port.o(.text) for xPortSysTickHandler
+    startup_stm32f10x_md_vl.o(.text) refers to system_stm32f10x.o(.text) for SystemInit
+    startup_stm32f10x_md_vl.o(.text) refers to entry.o(.ARM.Collect$$$$00000000) for __main
+    system_stm32f10x.o(.text) refers to system_stm32f10x.o(.data) for SystemCoreClock
+    port.o(.emb_text) refers to tasks.o(.text) for vTaskSwitchContext
+    port.o(.emb_text) refers to tasks.o(.data) for pxCurrentTCB
+    port.o(.text) refers to port.o(.emb_text) for vPortStartFirstTask
+    port.o(.text) refers to tasks.o(.text) for vTaskIncrementTick
+    port.o(.text) refers to port.o(.data) for uxCriticalNesting
+    heap_1.o(.text) refers to tasks.o(.text) for vTaskSuspendAll
+    heap_1.o(.text) refers to heap_1.o(.data) for xNextFreeByte
+    heap_1.o(.text) refers to heap_1.o(.bss) for xHeap
+    croutine.o(.text) refers to list.o(.text) for vListInitialise
+    croutine.o(.text) refers to heap_1.o(.text) for pvPortMalloc
+    croutine.o(.text) refers to port.o(.emb_text) for vPortSetInterruptMask
+    croutine.o(.text) refers to tasks.o(.text) for xTaskGetTickCount
+    croutine.o(.text) refers to croutine.o(.bss) for pxReadyCoRoutineLists
+    croutine.o(.text) refers to croutine.o(.data) for pxDelayedCoRoutineList
+    queue.o(.text) refers to heap_1.o(.text) for pvPortMalloc
+    queue.o(.text) refers to list.o(.text) for vListInitialise
+    queue.o(.text) refers to port.o(.text) for vPortEnterCritical
+    queue.o(.text) refers to tasks.o(.text) for xTaskRemoveFromEventList
+    queue.o(.text) refers to memcpya.o(.text) for __aeabi_memcpy
+    queue.o(.text) refers to port.o(.emb_text) for vPortSetInterruptMask
+    tasks.o(.text) refers to list.o(.text) for vListInitialise
+    tasks.o(.text) refers to strncpy.o(.text) for strncpy
+    tasks.o(.text) refers to heap_1.o(.text) for pvPortMalloc
+    tasks.o(.text) refers to memseta.o(.text) for __aeabi_memset
+    tasks.o(.text) refers to port.o(.text) for pxPortInitialiseStack
+    tasks.o(.text) refers to tasks.o(.bss) for pxReadyTasksLists
+    tasks.o(.text) refers to tasks.o(.data) for pxDelayedTaskList
+    tasks.o(.text) refers to port.o(.emb_text) for vPortSetInterruptMask
+    entry.o(.ARM.Collect$$$$00000000) refers (Special) to entry7.o(.ARM.Collect$$$$00000007) for _main_init
+    entry.o(.ARM.Collect$$$$00000000) refers (Special) to entry5.o(.ARM.Collect$$$$00000004) for _main_scatterload
+    entry.o(.ARM.Collect$$$$00000000) refers (Special) to entry2.o(.ARM.Collect$$$$00000001) for _main_stk
+    ffltui.o(.text) refers (Special) to iusefp.o(.text) for __I$use$fp
+    ffltui.o(.text) refers to fepilogue.o(.text) for _float_epilogue
+    ffixui.o(.text) refers (Special) to iusefp.o(.text) for __I$use$fp
+    entry2.o(.ARM.Collect$$$$00000001) refers to entry2.o(.ARM.Collect$$$$00002712) for __lit__00000000
+    entry2.o(.ARM.Collect$$$$00002712) refers to startup_stm32f10x_md_vl.o(STACK) for __initial_sp
+    entry2.o(__vectab_stack_and_reset_area) refers to startup_stm32f10x_md_vl.o(STACK) for __initial_sp
+    entry2.o(__vectab_stack_and_reset_area) refers to entry.o(.ARM.Collect$$$$00000000) for __main
+    entry5.o(.ARM.Collect$$$$00000004) refers to init.o(.text) for __scatterload
+    entry7.o(.ARM.Collect$$$$00000007) refers to test_telemetry.o(.text) for main
+    init.o(.text) refers to entry5.o(.ARM.Collect$$$$00000004) for __main_after_scatterload
+    multiwii.o(i.MSP_Init_Response) refers to multiwii.o(.bss) for ucTxBuffer
+    multiwii.o(i.MSP_Init_Response) refers to multiwii.o(.data) for MSP_Command
+
+
+==============================================================================
+
+Removing Unused input sections from the image.
+
+    Removing misc.o(.text), (256 bytes).
+    Removing startup_stm32f10x_md_vl.o(HEAP), (0 bytes).
+    Removing core_cm3.o(.emb_text), (32 bytes).
+    Removing croutine.o(.text), (772 bytes).
+    Removing croutine.o(.bss), (100 bytes).
+    Removing croutine.o(.data), (28 bytes).
+    Removing queue.o(.text), (1328 bytes).
+
+7 unused section(s) (total 2516 bytes) removed from the image.
+
+==============================================================================
+
+Image Symbol Table
+
+    Local Symbols
+
+    Symbol Name                              Value     Ov Type        Size  Object(Section)
+
+    ../../microlib/fpepilogue.c              0x00000000   Number         0  fepilogue.o ABSOLUTE
+    ../../microlib/fpfix.c                   0x00000000   Number         0  ffixui.o ABSOLUTE
+    ../../microlib/fpflt.c                   0x00000000   Number         0  ffltui.o ABSOLUTE
+    ../../microlib/init/entry.s              0x00000000   Number         0  entry5.o ABSOLUTE
+    ../../microlib/init/entry.s              0x00000000   Number         0  entry.o ABSOLUTE
+    ../../microlib/init/entry.s              0x00000000   Number         0  entry7.o ABSOLUTE
+    ../../microlib/init/entry.s              0x00000000   Number         0  entry2.o ABSOLUTE
+    ../../microlib/string/memcpy.c           0x00000000   Number         0  memcpyb.o ABSOLUTE
+    ../../microlib/string/memcpy.c           0x00000000   Number         0  memcpya.o ABSOLUTE
+    ../../microlib/string/memset.c           0x00000000   Number         0  memseta.o ABSOLUTE
+    ../../microlib/string/strncpy.c          0x00000000   Number         0  strncpy.o ABSOLUTE
+    ../../microlib/stubs.s                   0x00000000   Number         0  iusefp.o ABSOLUTE
+    ..\..\Libraries\CMSIS\CM3\CoreSupport\core_cm3.c 0x00000000   Number         0  core_cm3.o ABSOLUTE
+    ..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\system_stm32f10x.c 0x00000000   Number         0  system_stm32f10x.o ABSOLUTE
+    ..\..\Libraries\FreeRTOSV7.1.0\Source\croutine.c 0x00000000   Number         0  croutine.o ABSOLUTE
+    ..\..\Libraries\FreeRTOSV7.1.0\Source\list.c 0x00000000   Number         0  list.o ABSOLUTE
+    ..\..\Libraries\FreeRTOSV7.1.0\Source\portable\MemMang\heap_1.c 0x00000000   Number         0  heap_1.o ABSOLUTE
+    ..\..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3\port.c 0x00000000   Number         0  port.o ABSOLUTE
+    ..\..\Libraries\FreeRTOSV7.1.0\Source\queue.c 0x00000000   Number         0  queue.o ABSOLUTE
+    ..\..\Libraries\FreeRTOSV7.1.0\Source\tasks.c 0x00000000   Number         0  tasks.o ABSOLUTE
+    ..\..\Libraries\FreeRTOSV7.1.0\Source\timers.c 0x00000000   Number         0  timers.o ABSOLUTE
+    ..\..\Libraries\STM32F10x_StdPeriph_Driver\src\misc.c 0x00000000   Number         0  misc.o ABSOLUTE
+    ..\..\Source\MultiWii.c                  0x00000000   Number         0  multiwii.o ABSOLUTE
+    ..\..\Source\startup_stm32f10x_md_vl.s   0x00000000   Number         0  startup_stm32f10x_md_vl.o ABSOLUTE
+    ..\\..\\Libraries\\CMSIS\\CM3\\CoreSupport\\core_cm3.c 0x00000000   Number         0  core_cm3.o ABSOLUTE
+    ..\\..\\Libraries\\FreeRTOSV7.1.0\\Source\\portable\\RVDS\\ARM_CM3\\port.c 0x00000000   Number         0  port.o ABSOLUTE
+    dc.s                                     0x00000000   Number         0  dc.o ABSOLUTE
+    handlers.s                               0x00000000   Number         0  handlers.o ABSOLUTE
+    init.s                                   0x00000000   Number         0  init.o ABSOLUTE
+    test_telemetry.c                         0x00000000   Number         0  test_telemetry.o ABSOLUTE
+    RESET                                    0x08000000   Section      288  startup_stm32f10x_md_vl.o(RESET)
+    .ARM.Collect$$$$00000000                 0x08000120   Section        0  entry.o(.ARM.Collect$$$$00000000)
+    .ARM.Collect$$$$00000001                 0x08000120   Section        4  entry2.o(.ARM.Collect$$$$00000001)
+    .ARM.Collect$$$$00000004                 0x08000124   Section        4  entry5.o(.ARM.Collect$$$$00000004)
+    .ARM.Collect$$$$00000007                 0x08000128   Section        8  entry7.o(.ARM.Collect$$$$00000007)
+    .ARM.Collect$$$$00002712                 0x08000130   Section        4  entry2.o(.ARM.Collect$$$$00002712)
+    __lit__00000000                          0x08000130   Data           4  entry2.o(.ARM.Collect$$$$00002712)
+    .emb_text                                0x08000134   Section      140  port.o(.emb_text)
+    .text                                    0x080001c0   Section        0  multiwii.o(.text)
+    Telemetry_Init                           0x08000561   Thumb Code    22  multiwii.o(.text)
+    .text                                    0x080005d4   Section        0  test_telemetry.o(.text)
+    .text                                    0x080005e8   Section       36  startup_stm32f10x_md_vl.o(.text)
+    .text                                    0x0800060c   Section        0  system_stm32f10x.o(.text)
+    SetSysClockTo24                          0x0800060d   Thumb Code   164  system_stm32f10x.o(.text)
+    SetSysClock                              0x080006b1   Thumb Code     8  system_stm32f10x.o(.text)
+    .text                                    0x080007bc   Section        0  port.o(.text)
+    prvSetupTimerInterrupt                   0x080007e3   Thumb Code    18  port.o(.text)
+    .text                                    0x08000884   Section        0  heap_1.o(.text)
+    .text                                    0x080008f4   Section        0  list.o(.text)
+    .text                                    0x08000994   Section        0  tasks.o(.text)
+    prvInitialiseTaskLists                   0x08000995   Thumb Code    68  tasks.o(.text)
+    prvInitialiseTCBVariables                0x080009d9   Thumb Code    78  tasks.o(.text)
+    prvAllocateTCBAndStack                   0x08000a27   Thumb Code    62  tasks.o(.text)
+    prvAddCurrentTaskToDelayedList           0x08000d11   Thumb Code    62  tasks.o(.text)
+    prvCheckTasksWaitingTermination          0x0800102b   Thumb Code     2  tasks.o(.text)
+    prvIdleTask                              0x0800102d   Thumb Code    20  tasks.o(.text)
+    .text                                    0x080012e4   Section        0  memseta.o(.text)
+    .text                                    0x0800130a   Section        0  strncpy.o(.text)
+    .text                                    0x08001322   Section        0  ffltui.o(.text)
+    .text                                    0x0800132c   Section        0  ffixui.o(.text)
+    .text                                    0x08001354   Section        0  iusefp.o(.text)
+    .text                                    0x08001354   Section        0  fepilogue.o(.text)
+    .text                                    0x080013c0   Section       36  init.o(.text)
+    i.MSP_Init_Response                      0x080013e4   Section        0  multiwii.o(i.MSP_Init_Response)
+    i.__scatterload_copy                     0x08001424   Section       14  handlers.o(i.__scatterload_copy)
+    i.__scatterload_null                     0x08001432   Section        2  handlers.o(i.__scatterload_null)
+    i.__scatterload_zeroinit                 0x08001434   Section       14  handlers.o(i.__scatterload_zeroinit)
+    .constdata                               0x08001442   Section       48  multiwii.o(.constdata)
+    .data                                    0x20000000   Section       41  multiwii.o(.data)
+    fGain                                    0x20000000   Data          32  multiwii.o(.data)
+    counter                                  0x20000020   Data           1  multiwii.o(.data)
+    ucRxWindex                               0x20000021   Data           1  multiwii.o(.data)
+    ucRxRindex                               0x20000022   Data           1  multiwii.o(.data)
+    ucTxWindex                               0x20000023   Data           1  multiwii.o(.data)
+    xStatus                                  0x20000024   Data           1  multiwii.o(.data)
+    MSP_Checksum                             0x20000025   Data           1  multiwii.o(.data)
+    MSP_Command                              0x20000026   Data           1  multiwii.o(.data)
+    MSP_Size                                 0x20000027   Data           1  multiwii.o(.data)
+    MSP_Offset                               0x20000028   Data           1  multiwii.o(.data)
+    .data                                    0x2000002c   Section       20  system_stm32f10x.o(.data)
+    .data                                    0x20000040   Section        4  port.o(.data)
+    uxCriticalNesting                        0x20000040   Data           4  port.o(.data)
+    .data                                    0x20000044   Section        4  heap_1.o(.data)
+    xNextFreeByte                            0x20000044   Data           4  heap_1.o(.data)
+    .data                                    0x20000048   Section       56  tasks.o(.data)
+    uxCurrentNumberOfTasks                   0x2000004c   Data           4  tasks.o(.data)
+    xTickCount                               0x20000050   Data           4  tasks.o(.data)
+    uxTopUsedPriority                        0x20000054   Data           4  tasks.o(.data)
+    uxTopReadyPriority                       0x20000058   Data           4  tasks.o(.data)
+    xSchedulerRunning                        0x2000005c   Data           4  tasks.o(.data)
+    uxSchedulerSuspended                     0x20000060   Data           4  tasks.o(.data)
+    uxMissedTicks                            0x20000064   Data           4  tasks.o(.data)
+    xMissedYield                             0x20000068   Data           4  tasks.o(.data)
+    xNumOfOverflows                          0x2000006c   Data           4  tasks.o(.data)
+    uxTCBNumber                              0x20000070   Data           4  tasks.o(.data)
+    xNextTaskUnblockTime                     0x20000074   Data           4  tasks.o(.data)
+    pxDelayedTaskList                        0x20000078   Data           4  tasks.o(.data)
+    pxOverflowDelayedTaskList                0x2000007c   Data           4  tasks.o(.data)
+    .bss                                     0x20000080   Section       96  multiwii.o(.bss)
+    ucRxBuffer                               0x20000080   Data          48  multiwii.o(.bss)
+    ucTxBuffer                               0x200000b0   Data          48  multiwii.o(.bss)
+    .bss                                     0x200000e0   Section     3072  heap_1.o(.bss)
+    xHeap                                    0x200000e0   Data        3072  heap_1.o(.bss)
+    .bss                                     0x20000ce0   Section      180  tasks.o(.bss)
+    pxReadyTasksLists                        0x20000ce0   Data         100  tasks.o(.bss)
+    xDelayedTaskList1                        0x20000d44   Data          20  tasks.o(.bss)
+    xDelayedTaskList2                        0x20000d58   Data          20  tasks.o(.bss)
+    xPendingReadyList                        0x20000d6c   Data          20  tasks.o(.bss)
+    xSuspendedTaskList                       0x20000d80   Data          20  tasks.o(.bss)
+    STACK                                    0x20000d98   Section      512  startup_stm32f10x_md_vl.o(STACK)
+
+    Global Symbols
+
+    Symbol Name                              Value     Ov Type        Size  Object(Section)
+
+    BuildAttributes$$THM_ISAv4$P$D$K$B$S$PE$A:L22UL41UL21$X:L11$S22US41US21$IEEE1$IW$USESV6$~STKCKD$USESV7$~SHL$OTIME$ROPI$EBA8$MICROLIB$REQ8$PRES8$EABIv2 0x00000000   Number         0  anon$$obj.o ABSOLUTE
+    __ARM_use_no_argv                        0x00000000   Number         0  test_telemetry.o ABSOLUTE
+    __decompress                              - Undefined Weak Reference
+    __Vectors_Size                           0x00000120   Number         0  startup_stm32f10x_md_vl.o ABSOLUTE
+    __Vectors                                0x08000000   Data           4  startup_stm32f10x_md_vl.o(RESET)
+    __Vectors_End                            0x08000120   Data           0  startup_stm32f10x_md_vl.o(RESET)
+    __main                                   0x08000121   Thumb Code     0  entry.o(.ARM.Collect$$$$00000000)
+    _main_stk                                0x08000121   Thumb Code     0  entry2.o(.ARM.Collect$$$$00000001)
+    _main_scatterload                        0x08000125   Thumb Code     0  entry5.o(.ARM.Collect$$$$00000004)
+    __main_after_scatterload                 0x08000129   Thumb Code     0  entry5.o(.ARM.Collect$$$$00000004)
+    _main_init                               0x08000129   Thumb Code     0  entry7.o(.ARM.Collect$$$$00000007)
+    vPortSVCHandler                          0x08000135   Thumb Code    28  port.o(.emb_text)
+    vPortStartFirstTask                      0x08000155   Thumb Code    16  port.o(.emb_text)
+    xPortPendSVHandler                       0x08000169   Thumb Code    56  port.o(.emb_text)
+    vPortSetInterruptMask                    0x080001a5   Thumb Code    14  port.o(.emb_text)
+    vPortClearInterruptMask                  0x080001b3   Thumb Code    14  port.o(.emb_text)
+    read8                                    0x080001c1   Thumb Code    36  multiwii.o(.text)
+    read16                                   0x080001e5   Thumb Code    22  multiwii.o(.text)
+    read32                                   0x080001fb   Thumb Code    20  multiwii.o(.text)
+    MSP_Append_8                             0x0800020f   Thumb Code    32  multiwii.o(.text)
+    MSP_Append_16                            0x0800022f   Thumb Code    20  multiwii.o(.text)
+    MSP_Append_32                            0x08000243   Thumb Code    34  multiwii.o(.text)
+    MSP_Append_Name                          0x08000265   Thumb Code    22  multiwii.o(.text)
+    MSP_Parse_Command                        0x0800027b   Thumb Code   436  multiwii.o(.text)
+    MSP_Receive                              0x0800042f   Thumb Code   306  multiwii.o(.text)
+    Telemetry_Task                           0x08000577   Thumb Code    12  multiwii.o(.text)
+    Telemetry_Get_Speed                      0x08000583   Thumb Code     4  multiwii.o(.text)
+    Telemetry_Get_Altitude                   0x08000587   Thumb Code     4  multiwii.o(.text)
+    Telemetry_Get_Gain                       0x0800058b   Thumb Code    20  multiwii.o(.text)
+    Telemetry_Get_Sensors                    0x0800059f   Thumb Code    54  multiwii.o(.text)
+    vApplicationStackOverflowHook            0x080005d5   Thumb Code     4  test_telemetry.o(.text)
+    main                                     0x080005d9   Thumb Code    10  test_telemetry.o(.text)
+    RCC_Configuration                        0x080005e3   Thumb Code     2  test_telemetry.o(.text)
+    GPIO_Configuration                       0x080005e5   Thumb Code     2  test_telemetry.o(.text)
+    Reset_Handler                            0x080005e9   Thumb Code     8  startup_stm32f10x_md_vl.o(.text)
+    NMI_Handler                              0x080005f1   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    HardFault_Handler                        0x080005f3   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    MemManage_Handler                        0x080005f5   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    BusFault_Handler                         0x080005f7   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    UsageFault_Handler                       0x080005f9   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    SVC_Handler                              0x080005fb   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    DebugMon_Handler                         0x080005fd   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    PendSV_Handler                           0x080005ff   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    SysTick_Handler                          0x08000601   Thumb Code     2  startup_stm32f10x_md_vl.o(.text)
+    ADC1_IRQHandler                          0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    CEC_IRQHandler                           0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    DMA1_Channel1_IRQHandler                 0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    DMA1_Channel2_IRQHandler                 0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    DMA1_Channel3_IRQHandler                 0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    DMA1_Channel4_IRQHandler                 0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    DMA1_Channel5_IRQHandler                 0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    DMA1_Channel6_IRQHandler                 0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    DMA1_Channel7_IRQHandler                 0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    EXTI0_IRQHandler                         0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    EXTI15_10_IRQHandler                     0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    EXTI1_IRQHandler                         0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    EXTI2_IRQHandler                         0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    EXTI3_IRQHandler                         0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    EXTI4_IRQHandler                         0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    EXTI9_5_IRQHandler                       0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    FLASH_IRQHandler                         0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    I2C1_ER_IRQHandler                       0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    I2C1_EV_IRQHandler                       0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    I2C2_ER_IRQHandler                       0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    I2C2_EV_IRQHandler                       0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    PVD_IRQHandler                           0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    RCC_IRQHandler                           0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    RTCAlarm_IRQHandler                      0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    RTC_IRQHandler                           0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    SPI1_IRQHandler                          0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    SPI2_IRQHandler                          0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TAMPER_IRQHandler                        0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM1_BRK_TIM15_IRQHandler                0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM1_CC_IRQHandler                       0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM1_TRG_COM_TIM17_IRQHandler            0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM1_UP_TIM16_IRQHandler                 0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM2_IRQHandler                          0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM3_IRQHandler                          0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM4_IRQHandler                          0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM6_DAC_IRQHandler                      0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    TIM7_IRQHandler                          0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    USART1_IRQHandler                        0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    USART2_IRQHandler                        0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    USART3_IRQHandler                        0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    WWDG_IRQHandler                          0x08000603   Thumb Code     0  startup_stm32f10x_md_vl.o(.text)
+    SystemInit                               0x080006b9   Thumb Code    80  system_stm32f10x.o(.text)
+    SystemCoreClockUpdate                    0x08000709   Thumb Code   150  system_stm32f10x.o(.text)
+    pxPortInitialiseStack                    0x080007bd   Thumb Code    38  port.o(.text)
+    xPortStartScheduler                      0x080007f5   Thumb Code    44  port.o(.text)
+    vPortEndScheduler                        0x08000821   Thumb Code     2  port.o(.text)
+    vPortYieldFromISR                        0x08000823   Thumb Code    10  port.o(.text)
+    vPortEnterCritical                       0x0800082d   Thumb Code    20  port.o(.text)
+    vPortExitCritical                        0x08000841   Thumb Code    26  port.o(.text)
+    xPortSysTickHandler                      0x0800085b   Thumb Code    28  port.o(.text)
+    pvPortMalloc                             0x08000885   Thumb Code    82  heap_1.o(.text)
+    vPortFree                                0x080008d7   Thumb Code     2  heap_1.o(.text)
+    vPortInitialiseBlocks                    0x080008d9   Thumb Code    10  heap_1.o(.text)
+    xPortGetFreeHeapSize                     0x080008e3   Thumb Code    10  heap_1.o(.text)
+    vListInitialise                          0x080008f5   Thumb Code    28  list.o(.text)
+    vListInitialiseItem                      0x08000911   Thumb Code     8  list.o(.text)
+    vListInsertEnd                           0x08000919   Thumb Code    30  list.o(.text)
+    vListInsert                              0x08000937   Thumb Code    54  list.o(.text)
+    vListRemove                              0x0800096d   Thumb Code    40  list.o(.text)
+    xTaskGenericCreate                       0x08000a65   Thumb Code   248  tasks.o(.text)
+    vTaskIncrementTick                       0x08000b5d   Thumb Code   234  tasks.o(.text)
+    xTaskResumeAll                           0x08000c47   Thumb Code   202  tasks.o(.text)
+    vTaskSuspendAll                          0x08000d4f   Thumb Code    14  tasks.o(.text)
+    vTaskDelayUntil                          0x08000d5d   Thumb Code   186  tasks.o(.text)
+    vTaskDelay                               0x08000e17   Thumb Code    54  tasks.o(.text)
+    vTaskSwitchContext                       0x08000e4d   Thumb Code    96  tasks.o(.text)
+    vTaskSuspend                             0x08000ead   Thumb Code   106  tasks.o(.text)
+    xTaskIsTaskSuspended                     0x08000f17   Thumb Code    62  tasks.o(.text)
+    vTaskResume                              0x08000f55   Thumb Code    92  tasks.o(.text)
+    xTaskResumeFromISR                       0x08000fb1   Thumb Code   122  tasks.o(.text)
+    vTaskStartScheduler                      0x08001041   Thumb Code    54  tasks.o(.text)
+    vTaskEndScheduler                        0x08001077   Thumb Code    20  tasks.o(.text)
+    xTaskGetTickCount                        0x0800108b   Thumb Code    18  tasks.o(.text)
+    xTaskGetTickCountFromISR                 0x0800109d   Thumb Code    22  tasks.o(.text)
+    uxTaskGetNumberOfTasks                   0x080010b3   Thumb Code     6  tasks.o(.text)
+    vTaskPlaceOnEventList                    0x080010b9   Thumb Code    64  tasks.o(.text)
+    xTaskRemoveFromEventList                 0x080010f9   Thumb Code   100  tasks.o(.text)
+    vTaskSetTimeOutState                     0x0800115d   Thumb Code    14  tasks.o(.text)
+    xTaskCheckForTimeOut                     0x0800116b   Thumb Code   158  tasks.o(.text)
+    vTaskMissedYield                         0x08001209   Thumb Code    10  tasks.o(.text)
+    xTaskGetCurrentTaskHandle                0x08001213   Thumb Code     6  tasks.o(.text)
+    vTaskPriorityInherit                     0x08001219   Thumb Code   116  tasks.o(.text)
+    vTaskPriorityDisinherit                  0x0800128d   Thumb Code    70  tasks.o(.text)
+    __aeabi_memset                           0x080012e5   Thumb Code    14  memseta.o(.text)
+    __aeabi_memset4                          0x080012e5   Thumb Code     0  memseta.o(.text)
+    __aeabi_memset8                          0x080012e5   Thumb Code     0  memseta.o(.text)
+    __aeabi_memclr                           0x080012f3   Thumb Code     4  memseta.o(.text)
+    __aeabi_memclr4                          0x080012f3   Thumb Code     0  memseta.o(.text)
+    __aeabi_memclr8                          0x080012f3   Thumb Code     0  memseta.o(.text)
+    _memset$wrapper                          0x080012f7   Thumb Code    20  memseta.o(.text)
+    strncpy                                  0x0800130b   Thumb Code    24  strncpy.o(.text)
+    __aeabi_ui2f                             0x08001323   Thumb Code    10  ffltui.o(.text)
+    __aeabi_f2uiz                            0x0800132d   Thumb Code    40  ffixui.o(.text)
+    __I$use$fp                               0x08001355   Thumb Code     0  iusefp.o(.text)
+    _float_round                             0x08001355   Thumb Code    18  fepilogue.o(.text)
+    _float_epilogue                          0x08001367   Thumb Code    90  fepilogue.o(.text)
+    __scatterload                            0x080013c1   Thumb Code    28  init.o(.text)
+    __scatterload_rt2                        0x080013c1   Thumb Code     0  init.o(.text)
+    MSP_Init_Response                        0x080013e5   Thumb Code    48  multiwii.o(i.MSP_Init_Response)
+    __scatterload_copy                       0x08001425   Thumb Code    14  handlers.o(i.__scatterload_copy)
+    __scatterload_null                       0x08001433   Thumb Code     2  handlers.o(i.__scatterload_null)
+    __scatterload_zeroinit                   0x08001435   Thumb Code    14  handlers.o(i.__scatterload_zeroinit)
+    pidnames                                 0x08001442   Data          48  multiwii.o(.constdata)
+    Region$$Table$$Base                      0x08001474   Number         0  anon$$obj.o(Region$$Table)
+    Region$$Table$$Limit                     0x08001494   Number         0  anon$$obj.o(Region$$Table)
+    SystemCoreClock                          0x2000002c   Data           4  system_stm32f10x.o(.data)
+    AHBPrescTable                            0x20000030   Data          16  system_stm32f10x.o(.data)
+    pxCurrentTCB                             0x20000048   Data           4  tasks.o(.data)
+    __initial_sp                             0x20000f98   Data           0  startup_stm32f10x_md_vl.o(STACK)
+
+
+
+==============================================================================
+
+Memory Map of the image
+
+  Image Entry point : 0x080005e9
+
+  Load Region LR_1 (Base: 0x08000000, Size: 0x00001514, Max: 0xffffffff, ABSOLUTE)
+
+    Execution Region ER_RO (Base: 0x08000000, Size: 0x00001494, Max: 0xffffffff, ABSOLUTE)
+
+    Base Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x08000000   0x00000120   Data   RO          150    RESET               startup_stm32f10x_md_vl.o
+    0x08000120   0x00000000   Code   RO          310  * .ARM.Collect$$$$00000000  mc_w.l(entry.o)
+    0x08000120   0x00000004   Code   RO          325    .ARM.Collect$$$$00000001  mc_w.l(entry2.o)
+    0x08000124   0x00000004   Code   RO          328    .ARM.Collect$$$$00000004  mc_w.l(entry5.o)
+    0x08000128   0x00000008   Code   RO          329    .ARM.Collect$$$$00000007  mc_w.l(entry7.o)
+    0x08000130   0x00000004   Code   RO          326    .ARM.Collect$$$$00002712  mc_w.l(entry2.o)
+    0x08000134   0x0000008c   Code   RO          184    .emb_text           port.o
+    0x080001c0   0x00000414   Code   RO            1    .text               multiwii.o
+    0x080005d4   0x00000012   Code   RO          118    .text               test_telemetry.o
+    0x080005e6   0x00000002   PAD
+    0x080005e8   0x00000024   Code   RO          151  * .text               startup_stm32f10x_md_vl.o
+    0x0800060c   0x000001b0   Code   RO          166    .text               system_stm32f10x.o
+    0x080007bc   0x000000c8   Code   RO          185    .text               port.o
+    0x08000884   0x00000070   Code   RO          202    .text               heap_1.o
+    0x080008f4   0x000000a0   Code   RO          251    .text               list.o
+    0x08000994   0x00000950   Code   RO          278    .text               tasks.o
+    0x080012e4   0x00000026   Code   RO          315    .text               mc_w.l(memseta.o)
+    0x0800130a   0x00000018   Code   RO          317    .text               mc_w.l(strncpy.o)
+    0x08001322   0x0000000a   Code   RO          321    .text               mf_w.l(ffltui.o)
+    0x0800132c   0x00000028   Code   RO          323    .text               mf_w.l(ffixui.o)
+    0x08001354   0x00000000   Code   RO          330    .text               mc_w.l(iusefp.o)
+    0x08001354   0x0000006c   Code   RO          331    .text               mf_w.l(fepilogue.o)
+    0x080013c0   0x00000024   Code   RO          333    .text               mc_w.l(init.o)
+    0x080013e4   0x00000040   Code   RO           16    i.MSP_Init_Response  multiwii.o
+    0x08001424   0x0000000e   Code   RO          337    i.__scatterload_copy  mc_w.l(handlers.o)
+    0x08001432   0x00000002   Code   RO          338    i.__scatterload_null  mc_w.l(handlers.o)
+    0x08001434   0x0000000e   Code   RO          339    i.__scatterload_zeroinit  mc_w.l(handlers.o)
+    0x08001442   0x00000030   Data   RO            3    .constdata          multiwii.o
+    0x08001472   0x00000002   PAD
+    0x08001474   0x00000020   Data   RO          335    Region$$Table       anon$$obj.o
+
+
+    Execution Region ER_RW (Base: 0x20000000, Size: 0x00000080, Max: 0xffffffff, ABSOLUTE)
+
+    Base Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x20000000   0x00000029   Data   RW            4    .data               multiwii.o
+    0x20000029   0x00000003   PAD
+    0x2000002c   0x00000014   Data   RW          167    .data               system_stm32f10x.o
+    0x20000040   0x00000004   Data   RW          186    .data               port.o
+    0x20000044   0x00000004   Data   RW          204    .data               heap_1.o
+    0x20000048   0x00000038   Data   RW          280    .data               tasks.o
+
+
+    Execution Region ER_ZI (Base: 0x20000080, Size: 0x00000f18, Max: 0xffffffff, ABSOLUTE)
+
+    Base Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x20000080   0x00000060   Zero   RW            2    .bss                multiwii.o
+    0x200000e0   0x00000c00   Zero   RW          203    .bss                heap_1.o
+    0x20000ce0   0x000000b4   Zero   RW          279    .bss                tasks.o
+    0x20000d94   0x00000004   PAD
+    0x20000d98   0x00000200   Zero   RW          148    STACK               startup_stm32f10x_md_vl.o
+
+
+==============================================================================
+
+Image component sizes
+
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
+
+       112          8          0          4       3072       3144   heap_1.o
+       160          0          0          0          0       1789   list.o
+      1108         74         48         41         96      15712   multiwii.o
+       340         26          0          4          0       2537   port.o
+        36          8        288          0        512        780   startup_stm32f10x_md_vl.o
+       432         30          0         20          0       1899   system_stm32f10x.o
+      2384        150          0         56        180      11454   tasks.o
+        18          0          0          0          0       1334   test_telemetry.o
+
+    ----------------------------------------------------------------------
+      4592        296        370        128       3864      38649   Object Totals
+         0          0         32          0          0          0   (incl. Generated)
+         2          0          2          3          4          0   (incl. Padding)
+
+    ----------------------------------------------------------------------
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Library Member Name
+
+         0          0          0          0          0          0   entry.o
+         8          4          0          0          0          0   entry2.o
+         4          0          0          0          0          0   entry5.o
+         8          4          0          0          0          0   entry7.o
+        30          0          0          0          0          0   handlers.o
+        36          8          0          0          0         68   init.o
+         0          0          0          0          0          0   iusefp.o
+        38          0          0          0          0        108   memseta.o
+        24          0          0          0          0         76   strncpy.o
+       108          0          0          0          0        168   fepilogue.o
+        40          0          0          0          0         68   ffixui.o
+        10          0          0          0          0         68   ffltui.o
+
+    ----------------------------------------------------------------------
+       306         16          0          0          0        556   Library Totals
+         0          0          0          0          0          0   (incl. Padding)
+
+    ----------------------------------------------------------------------
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Library Name
+
+       148         16          0          0          0        252   mc_w.l
+       158          0          0          0          0        304   mf_w.l
+
+    ----------------------------------------------------------------------
+       306         16          0          0          0        556   Library Totals
+
+    ----------------------------------------------------------------------
+
+==============================================================================
+
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
+
+      4898        312        370        128       3864      38061   Grand Totals
+      4898        312        370        128       3864      38061   ELF Image Totals
+      4898        312        370        128          0          0   ROM Totals
+
+==============================================================================
+
+    Total RO  Size (Code + RO Data)                 5268 (   5.14kB)
+    Total RW  Size (RW Data + ZI Data)              3992 (   3.90kB)
+    Total ROM Size (Code + RO Data + RW Data)       5396 (   5.27kB)
+
+==============================================================================
+
