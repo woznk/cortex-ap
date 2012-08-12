@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// CHANGES modified altitude hold parameters, 
+// CHANGES added definition of sensor types for multiwii telemetry
 //
 //============================================================================*/
 
@@ -103,3 +103,14 @@
 #define FLIGHTGEAR  2                   // Simulator Flightgear
 
 #define SIMULATOR   XPLANE
+
+/* Sensor Type definitions */
+
+#define ACC         1
+#define MAG         0
+#define GYRO        1
+#define BARO        1
+#define GPS_SERIAL  1
+#define GPS_BAUD    4800
+#define GPS         1
+#define SONAR       0
