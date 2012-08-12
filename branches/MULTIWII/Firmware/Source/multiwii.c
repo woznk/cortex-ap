@@ -10,7 +10,7 @@
 /// \file
 ///  see: https://github.com/wertarbyte/multiwii-firmware/blob/master/Serial.ino
 ///
-//  CHANGES
+//  CHANGES removed unused #definitions
 //
 //============================================================================*/
 
@@ -49,7 +49,6 @@
 #define RX_BUFFER_LENGTH    48
 #define TX_BUFFER_LENGTH    48
 #define PAYLOAD_SIZE        16
-#define PID_NAMES_LENGTH    16
 
 #define VERSION				0	// append multiwii version
 #define MULTITYPE           0	// append type of multicopter
@@ -109,8 +108,6 @@ typedef enum E_STATE {
 /*----------------------------------- Types ----------------------------------*/
 
 /*---------------------------------- Constants -------------------------------*/
-
-//const uint8_t pidnames[PID_NAMES_LENGTH] = "Pitch,Roll,Nav ";
 
 const uint8_t pidnames[] =
   "ROLL;"
