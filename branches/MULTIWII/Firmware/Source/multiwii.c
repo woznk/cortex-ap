@@ -8,9 +8,42 @@
 /// \brief multiwii telemetry interface
 ///
 /// \file
-///  see: https://github.com/wertarbyte/multiwii-firmware/blob/master/Serial.ino
+/// - Protocol summary:
+/// \code
+///   byte | character | meaning
+/// -------+-----------+------------------------
+///    1   |   '$'     | start character
+///    2   |   'M'     | MultiWii protocol
+///    3   |   '<'     | direction of message
+///    4   |    n      | payload size, max 255
+///   ...  |           | payload, empty if n = 0
+///   n+5  |    c      | checksum
+/// -------+-----------+------------------------
+/// \endcode
+/// - for more info on protocol see:
+/// \n         http://www.multiwii.com/forum/viewtopic.php?f=8&t=1516
+/// - for Arduino implementation see:
+/// \n         https://github.com/wertarbyte/multiwii-firmware/blob/master/Serial.ino
+/// - for compatible GUI see:
+/// \n WinGUI
+/// \n         http://www.multiwii.com/forum/viewtopic.php?f=8&t=1229
+/// \n mwGui
+/// \n         http://www.multiwii.com/forum/viewtopic.php?f=8&t=1791
+/// \n Android
+/// \n         http://www.multiwii.com/forum/viewtopic.php?f=6&t=133
+/// \n         https://play.google.com/store/apps/details?id=net.xrotor.andmultiwiiconf
+/// \n         https://play.google.com/store/apps/details?id=net.loide.games.bicopter
+/// \n         https://play.google.com/store/apps/details?id=com.naze32.configurator
+/// - for VT100 terminal type addition see
+/// \n         http://www.multiwii.com/forum/viewtopic.php?f=7&t=1096
 ///
-//  Change  removed unused #definitions
+/// \todo
+/// Complete implementation of MSP_SET_PID command.\n
+/// MultiWii protocol sends only one byte for each gain, whereas gains are
+/// currently implemented as float.\n
+/// Determine if GUI sends only modified gains or all gains together.
+///
+//  Change added protocol description and references
 //
 //============================================================================*/
 
@@ -50,8 +83,8 @@
 #define TX_BUFFER_LENGTH    48  //!< length of transmit buffer
 #define PAYLOAD_SIZE        16  //!< maximum size of payload
 
-#define VERSION				0	//!< append multiwii version
-#define MULTITYPE           0	//!< append type of multicopter
+#define VERSION             0	//!< multiwii version
+#define MULTITYPE           0	//!< type of multicopter
 #define MSP_VERSION         0   //!< Multiwii Serial Protocol 0
 
 /* outgoing messages */
@@ -76,7 +109,7 @@
 #define MSP_WP              118 //!< get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
 #define MSP_HEADING         125 //!< headings and MAG configuration
 #define MSP_DEBUGMSG        253 //!< debug string buffer
-#define MSP_DEBUG           254 //!< debug1,debug2,debug3,debug4
+#define MSP_DEBUG           254 //!< debug1, debug2, debug3, debug4
 
 /* incoming messages */
 #define MSP_SET_RAW_RC      200 //!< 8 rc chan
@@ -90,7 +123,7 @@
 #define MSP_RESET_CONF      208 //!< reset configuration
 #define MSP_WP_SET          209 //!< sets a given WP (WP#, lat, lon, alt, flags)
 
-#define MSP_EEPROM_WRITE    250 //!< no param
+#define MSP_EEPROM_WRITE    250 //!< save configuration to eeprom
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -162,7 +195,7 @@ static void Telemetry_Init( void );
 /// \brief   reads a byte from message payload
 /// \return  byte read
 /// \param   -
-/// \remarks
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 uint8_t read8(void) {
@@ -180,7 +213,7 @@ uint8_t read8(void) {
 /// \brief   reads a word from message payload
 /// \return  word read
 /// \param   -
-/// \remarks
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 uint16_t read16(void) {
@@ -195,7 +228,7 @@ uint16_t read16(void) {
 /// \brief   reads a long word from message payload
 /// \return  long word read
 /// \param   -
-/// \remarks
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 uint32_t read32(void) {
@@ -209,7 +242,7 @@ uint32_t read32(void) {
 /// \brief   Initialize multi Wii response message
 /// \return  -
 /// \param   length = message length
-/// \remarks
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 void __inline MSP_Init_Response(uint8_t length) {
@@ -227,7 +260,7 @@ void __inline MSP_Init_Response(uint8_t length) {
 /// \brief   Initialize multi Wii error message
 /// \return  -
 /// \param   length = message length
-/// \remarks
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 void __inline MSP_Init_Error(uint8_t length) {
@@ -259,7 +292,7 @@ void MSP_Append_8(uint8_t a) {
 /// \brief   Append a word to outgoing message
 /// \return  -
 /// \param   a = message word
-/// \remarks
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 void MSP_Append_16(int16_t a) {
