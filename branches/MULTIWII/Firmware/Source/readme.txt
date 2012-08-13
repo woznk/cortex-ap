@@ -124,17 +124,48 @@
      - creato un progetto per il test del protocollo con target STM32F103RB
      - la struttura del file è inadatta al test di unità.
 
+     13/08/12
+     installato il programma MultiWiiGUI:
+
+     - dopo la connessione il programma invia per alcuni secondi le richieste:
+
+	MSP_IDENT      multitype + multiwii version + protocol version + capability variable
+	MSP_RC_TUNING  rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+	MSP_PID        16 PID
+	MSP_BOX        16 checkbox
+	MSP_MISC       powermeter trig + 8 free 
+
+     - poi il programma invia con frequenze diverse le richieste:
+
+	MSP_STATUS     cycletime & errors_count & sensor present & box activation
+	MSP_RAW_IMU    raw IMU data, 9 DOF
+	MSP_SERVO      8 servos
+	MSP_MOTOR      8 motors
+	MSP_RC         8 rc channels
+	MSP_RAW_GPS    fix, numsat, lat, lon, alt, speed
+	MSP_COMP_GPS   distance home, direction home
+	MSP_ATTITUDE   roll, pitch, heading
+	MSP_ALTITUDE   altitude
+	MSP_BAT        vbat, powermetersum
+	MSP_MISC       powermeter trig + 8 free
+	MSP_DEBUG      debug1, debug2, debug3, debug4
+
+     - alla pressione del pulsante "Write Settings" vengono aggiornati tutti i parametri,
+       inviando i seguenti comandi:
+
+	comando          lunghezza significato 
+	-------------------------------------------------
+	MSP_SET_PID           30   set PID
+	MSP_SET_BOX           28   set checkboxes
+	MSP_SET_RC_TUNING     7    set rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+	MSP_SET_MISC          2    set powermeter trig + 8 free 
+	MSP_EEPROM_WRITE      0    save configuration to eeprom
+	MSP_PID               0    request PID
+
+
 @par Navigation
      
-     Calcolare le differenze di longitudine e latitudine come: 
-
-         Delta Lat = Lat2 - Lat1
-         Delta Lon = (Lon2 - Lon1) * cos((Lat1 + Lat2)/2)
-
-     Calcolare la distanza dal punto come:
-
-         Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
-
+     vedi i todo in nav.c
 
 @par Modifiche hardware
      
