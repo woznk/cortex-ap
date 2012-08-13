@@ -88,7 +88,7 @@
 ///    +-------+-------+-------+
 ///                                                                     \endcode
 ///
-//  CHANGES corretto segno accelerazione Z. aumentato tempo di assestamento
+//  Change  corretto segno accelerazione Z. aumentato tempo di assestamento
 //
 //============================================================================*/
 

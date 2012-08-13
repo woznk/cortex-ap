@@ -6,8 +6,11 @@
 // $Author: $
 //
 /// \brief  Servo driver
-//  CHANGES result of merge of NAV branch:
-//          added array iServoPosition[] and function Servo_Get() to store 
+///
+/// \file
+///
+//  Change  result of merge of NAV branch:
+//          added array iServoPosition[] and function Servo_Get() to store
 //          and return servo positions
 //
 //============================================================================*/
@@ -28,11 +31,12 @@
 #endif
 #define VAR_GLOBAL
 
-#define PRESCALER      23
-#define PERIOD         19999
+#define PRESCALER      23       ///< timer prescaler
+#define PERIOD         19999    ///< timer period
 
 /*----------------------------------- Macros ---------------------------------*/
 
+/// saturate servo position
 #define SATURATE(p)    if (p < SERVO_MIN) { p = SERVO_MIN; } \
                        if (p > SERVO_MAX) { p = SERVO_MAX; }
 
@@ -46,6 +50,7 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
+/// position of servos
 VAR_STATIC int16_t iServoPosition[SERVO_NUMBER] = {
     SERVO_NEUTRAL,  // aileron
     SERVO_NEUTRAL,  // rudder
@@ -53,6 +58,7 @@ VAR_STATIC int16_t iServoPosition[SERVO_NUMBER] = {
     SERVO_NEUTRAL   // throttle
 };
 
+/// sign of servo values
 VAR_STATIC int16_t iServoSign[SERVO_NUMBER] = {
     -1,             // aileron reversed
      1,             // rudder normal

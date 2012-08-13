@@ -5,10 +5,11 @@
 // $Date:  $
 // $Author: $
 //
-/// \file
 /// \brief  Navigation task header file
 ///
-//  CHANGES added Nav_Pitch() function
+/// \file
+///
+//  Change  added Nav_Pitch() function
 //
 //============================================================================
 

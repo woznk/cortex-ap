@@ -7,7 +7,9 @@
 //
 /// \brief Vector algebra functions
 ///
-//  CHANGES Lint: inclusion of freertos.h replaced with stm32f10x.h
+/// \file
+///
+//  Change  Lint: inclusion of freertos.h replaced with stm32f10x.h
 //
 //============================================================================*/
 

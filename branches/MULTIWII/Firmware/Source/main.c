@@ -7,6 +7,8 @@
 //
 /// \brief main program
 ///
+/// \file
+///
 /// \todo move task definitions in the main.c file, export relevant functions
 /// from specific modules and call them from inside task, this should improve
 /// testability.

@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES removed minor defects detectd by static analysis
+//  Change  removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -69,7 +69,7 @@ static void Log_Write(uint16_t *data, uint8_t num);
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief
+/// \brief   log task
 /// \return  -
 /// \remarks -
 ///
@@ -116,9 +116,13 @@ void Log_Task( void *pvParameters ) {
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief
-/// \remarks
-///
+/// \brief   write some 16 bit variables to SD card
+/// \param   data = pointer to variable
+/// \param   num = number of variables to be written
+/// \return  -
+/// \remarks increases counter of samples at each function call.
+///          closes log file if there is no file space, or if sample counter
+///          exceeded maximum or if RC was temporarily shut off.
 ///
 ///----------------------------------------------------------------------------
 static void Log_Write(uint16_t *data, uint8_t num)

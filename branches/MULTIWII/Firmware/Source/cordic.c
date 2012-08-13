@@ -5,10 +5,11 @@
 // $Date:  $
 // $Author: $
 //
+/// \brief CORDIC computations
+///
 /// \file
 ///
-//
-//  CHANGES     cosmetics
+//  Change cosmetics
 //
 //============================================================================*/
 

@@ -42,7 +42,7 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  CHANGES removed unneeded #inclusions, DCM update rate to 4 Hz
+//  Change  removed unneeded #inclusions, DCM update rate to 4 Hz
 //
 //============================================================================*/
 

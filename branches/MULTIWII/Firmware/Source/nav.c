@@ -5,7 +5,7 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief Navigation task
+/// \brief navigation task
 ///
 /// \file
 /// - Initialization:
@@ -23,7 +23,7 @@
 ///   when < -180° or > 180°. Cross produt and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
-//  CHANGES Lint: added missing #inclusions
+//  Change  Lint: added missing #inclusions
 //
 //============================================================================*/
 

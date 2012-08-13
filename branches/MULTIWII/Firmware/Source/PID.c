@@ -6,9 +6,10 @@
 // $Author: $
 //
 /// \brief PID controls
+///
 /// \file
 ///
-//  CHANGES removed minor defects detectd by static analysis
+//  Change  removed minor defects detectd by static analysis
 //
 //============================================================================*/
 

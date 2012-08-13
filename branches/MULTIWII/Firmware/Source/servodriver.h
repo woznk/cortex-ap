@@ -6,7 +6,10 @@
 // $Author: $
 //
 /// \brief  Servo driver header file
-//  CHANGES result of merge of NAV branch:
+///
+/// \file
+///
+//  Change  result of merge of NAV branch:
 //          added function Servo_Get() return servo positions
 //
 //============================================================================*/

@@ -5,10 +5,12 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief Simulation interface
+/// \brief telemetry interface header file
+///
 /// \file
 ///
-//  CHANGES added Telemetry_Get_Altitude() function
+///
+//  Change  added Telemetry_Get_Altitude() function
 //
 //============================================================================
 

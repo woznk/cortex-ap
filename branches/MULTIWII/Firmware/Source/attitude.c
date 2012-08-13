@@ -7,6 +7,8 @@
 //
 /// \brief attitude control
 ///
+/// \file
+///
 // Change: removed minor defects detectd by static analysis
 //
 //============================================================================*/

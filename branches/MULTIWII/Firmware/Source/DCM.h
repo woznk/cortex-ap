@@ -5,11 +5,11 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief Direction Cosine Matrix calculations
+/// \brief Direction Cosine Matrix calculations header file
 ///
 /// \file
 ///
-//  CHANGES removed minor defects detectd by static analysis
+//  Change  removed minor defects detectd by static analysis
 //
 //============================================================================
 

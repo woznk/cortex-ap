@@ -5,8 +5,8 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief
-///  PPM input driver
+/// \brief PPM input driver
+///
 /// \file
 ///                                                 content of
 ///  ucPulseIndex     aliases                      ulPulseBuffer[]
@@ -29,7 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES result of merge of NAV branch:
+//  Change  result of merge of NAV branch:
 //          modes MODE_ROLL_TUNE and MODE_PITCH_TUNE renamed MODE_STAB and
 //          MODE_NAV respectively
 //

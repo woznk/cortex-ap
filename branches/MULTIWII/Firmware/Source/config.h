@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// CHANGES added definition of sensor types for multiwii telemetry
+// Change  added definition of sensor types for multiwii telemetry
 //
 //============================================================================*/
 

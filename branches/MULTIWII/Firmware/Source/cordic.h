@@ -5,6 +5,8 @@
 // $Date:  $
 // $Author: $
 //
+/// \brief CORDIC computations header file
+///
 /// \file
 ///
 //  CHANGE argument and return value of cordic_atan( ) of type 'long'

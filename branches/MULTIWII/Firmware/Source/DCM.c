@@ -5,8 +5,7 @@
 // $Date:  $
 // $Author: $
 ///
-/// \brief
-/// Direction Cosine Matrix calculations
+/// \brief Direction Cosine Matrix calculations
 ///
 /// \file
 /// Meaning of DCM_Matrix rows / columns:
@@ -79,7 +78,7 @@
 ///
 /// \endcode
 ///
-//  CHANGES rad <-> deg conversion macros moved to config.h
+//  Change  rad <-> deg conversion macros moved to config.h
 //
 //=============================================================================+
 

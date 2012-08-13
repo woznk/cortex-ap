@@ -10,7 +10,7 @@
 /// \file
 ///  see: https://github.com/wertarbyte/multiwii-firmware/blob/master/Serial.ino
 ///
-//  CHANGES removed unused #definitions
+//  Change  removed unused #definitions
 //
 //============================================================================*/
 
