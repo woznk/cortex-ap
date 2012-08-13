@@ -9,14 +9,16 @@
 ///
 /// \file
 ///
-/// \todo move task definitions in the main.c file, export relevant functions
+/// \todo
+/// 1) Move task definitions in the main.c file, export relevant functions
 /// from specific modules and call them from inside task, this should improve
 /// testability.
 ///
-/// \todo use only one data structure for SD file read/write, add a semaphore
+/// \todo
+/// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: removed minor defects detectd by static analysis
+// Change: added todos
 //
 //============================================================================*/
 
