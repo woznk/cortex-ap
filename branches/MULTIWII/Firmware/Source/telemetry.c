@@ -41,9 +41,6 @@
 ///                         |                        |
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
-/// \todo add mavlink protocol, see:
-///  http://www.qgroundcontrol.org/mavlink/start
-///  http://www.qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
 ///
 //  CHANGES removed unneeded #inclusions, DCM update rate to 4 Hz
 //
@@ -79,16 +76,17 @@
 #endif
 #define   VAR_GLOBAL
 
-#define TELEMETRY_FREQUENCY 50
-#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY)
-#define RX_BUFFER_LENGTH    48
-#define TX_BUFFER_LENGTH    48
-#define TEL_DCM_LENGTH      (1 + (9 * 4))
+#define TELEMETRY_FREQUENCY 50              //!< frequency of telemetry task
+#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
+#define RX_BUFFER_LENGTH    48              //!< length of receive buffer
+#define TX_BUFFER_LENGTH    48              //!< length of transmit buffer
+#define TEL_DCM_LENGTH      (1 + (9 * 4))   //!< length of DCM message
 
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
 
+/// telemetry message types
 typedef enum E_TELEMETRY {
     TEL_NULL,
     TEL_GPS_POSITION = 0xF0,
@@ -101,6 +99,7 @@ typedef enum E_TELEMETRY {
     TEL_DCM
 } wait_code_t;
 
+/// telemetry parser stati
 typedef enum E_PARSER {
     PARSE_PREAMBLE = 0, // preamble
     PARSE_TYPE,         // 1: data type ('S'= sensor, 'K'= gains)
@@ -140,25 +139,25 @@ typedef enum E_PARSER {
 "$K,8799,1299, 899, 199,4999,4999\r\n"
 "$S,560,112,-12,12345,0,1023,110\n"
 */
-VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    // uplink data buffer
-VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    // downlink data buffer
-VAR_STATIC uint8_t ucWindex;                        // uplink write index
-VAR_STATIC uint8_t ucRindex;                        // uplink read index
-VAR_STATIC parser_status_t xStatus;                 // status of parser
-VAR_STATIC float fTemp;                             // temporary for parser
-VAR_STATIC float fTrueAirSpeed;                     // simulator true air speed
-VAR_STATIC float fAltitude;                         // simulator altitude
-VAR_STATIC float fSensor[8];                        // simulator sensor data
-VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {         // gains for PID loops
-    PITCH_KP,                                       // default pitch kp
-    PITCH_KI,                                       // default pitch ki
-    ROLL_KP,                                        // default roll kp
-    ROLL_KI,                                        // default roll ki
-    NAV_KP,                                         // default direction kp
-    NAV_KI,                                         // default direction ki
-    0.0f,                                           // dummy placeholder
-    0.0f                                            // dummy placeholder
-};
+VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    //!< uplink data buffer
+VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    //!< downlink data buffer
+VAR_STATIC uint8_t ucWindex;                        //!< uplink write index
+VAR_STATIC uint8_t ucRindex;                        //!< uplink read index
+VAR_STATIC parser_status_t xStatus;                 //!< status of parser
+VAR_STATIC float fTemp;                             //!< temporary for parser
+VAR_STATIC float fTrueAirSpeed;                     //!< simulator true air speed
+VAR_STATIC float fAltitude;                         //!< simulator altitude
+VAR_STATIC float fSensor[8];                        //!< simulator sensor data
+VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
+    PITCH_KP,                                       //!< default pitch kp
+    PITCH_KI,                                       //!< default pitch ki
+    ROLL_KP,                                        //!< default roll kp
+    ROLL_KI,                                        //!< default roll ki
+    NAV_KP,                                         //!< default direction kp
+    NAV_KI,                                         //!< default direction ki
+    0.0f,                                           //!< dummy placeholder
+    0.0f                                            //!< dummy placeholder
+};                                                  //!< gains for PID loops
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -555,7 +554,7 @@ float Telemetry_Get_Altitude(void) {
 ///----------------------------------------------------------------------------
 ///
 /// \brief   Get PID gain
-/// \param   gain, gain number
+/// \param   gain = gain number
 /// \return  gain value
 /// \remarks -
 ///
@@ -571,7 +570,7 @@ float Telemetry_Get_Gain(telEnum_Gain gain) {
 ///----------------------------------------------------------------------------
 ///
 /// \brief   Get sensor value
-/// \param   puiSensor, pointer to sensor data array
+/// \param   piSensor = pointer to sensor data array
 /// \return  -
 /// \remarks -
 ///

@@ -25,20 +25,22 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
+/// telemetry message structure
 typedef struct {
-    uint8_t ucLength;
-    uint16_t *pcData;
+    uint8_t ucLength;   //!< length of message
+    uint16_t *pcData;   //!< pointer to message content
 } telStruct_Message;
 
+/// PID gains
 typedef enum {
-    TEL_PITCH_KP = 0,
-    TEL_PITCH_KI,
-    TEL_ROLL_KP,
-    TEL_ROLL_KI,
-    TEL_NAV_KP,
-    TEL_NAV_KI,
-    TEL_ALT_KP,
-    TEL_ALT_KI,
+    TEL_PITCH_KP = 0,   ///<
+    TEL_PITCH_KI,       ///<
+    TEL_ROLL_KP,        ///<
+    TEL_ROLL_KI,        ///<
+    TEL_NAV_KP,         ///<
+    TEL_NAV_KI,         ///<
+    TEL_ALT_KP,         ///<
+    TEL_ALT_KI,         ///<
     TEL_GAIN_NUMBER
 } telEnum_Gain;
 

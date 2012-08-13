@@ -23,16 +23,18 @@
 
 /*------------------------------------ Types ---------------------------------*/
 
+/// log message structure
 typedef struct
 {
-  uint8_t ucLength;
-  uint16_t *pcData;
+  uint8_t ucLength;   //!< length of message
+  uint16_t *pcData;   //!< pointer to message content
 } xLog_Message;
 
 /*---------------------------------- Constants -------------------------------*/
 
 /*----------------------------------- Globals --------------------------------*/
 
+/// queue of log messages
 VAR_GLOBAL xQueueHandle xLog_Queue;
 
 /*---------------------------------- Interface -------------------------------*/

@@ -48,7 +48,7 @@
 ///----------------------------------------------------------------------------
 ///
 /// \brief   PID initialization
-/// \param
+/// \param   pxPid = pointer to PID structure
 /// \return  -
 /// \remarks
 ///
@@ -63,10 +63,11 @@ void PID_Init(xPID * pxPid)
 ///----------------------------------------------------------------------------
 ///
 /// \brief   PID computing
-/// \param
-/// \param
-/// \return  -
-/// \remarks
+/// \param   pxPid = pointer to PID structure
+/// \param   fSetpoint = PID setpoint
+/// \param   fInput = PID input
+/// \return  PID output
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)

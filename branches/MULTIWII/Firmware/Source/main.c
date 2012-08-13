@@ -7,6 +7,13 @@
 //
 /// \brief main program
 ///
+/// \todo move task definitions in the main.c file, export relevant functions
+/// from specific modules and call them from inside task, this should improve
+/// testability.
+///
+/// \todo use only one data structure for SD file read/write, add a semaphore
+/// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
+///
 // Change: removed minor defects detectd by static analysis
 //
 //============================================================================*/
@@ -32,7 +39,7 @@
 #include "led.h"
 #include "nav.h"
 
-/** @addtogroup cortex-ap
+/** @addtogroup cortex_ap
   * @{
   */
 
@@ -52,17 +59,12 @@
 #define VAR_GLOBAL
 
 /* Task priorities. */
-#define mainAHRS_PRIORITY       ( tskIDLE_PRIORITY + 4 )
-#define mainDISK_PRIORITY       ( tskIDLE_PRIORITY + 3 )
-#define mainATTITUDE_PRIORITY   ( tskIDLE_PRIORITY + 3 )
-#define mainLOG_PRIORITY        ( tskIDLE_PRIORITY + 2 )
-#define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )
-#define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )
-
-#define LOG_SENSORS       0
-#define LOG_DCM           0
-#define LOG_PPM           0
-#define LOG_SERVO         0
+#define mainAHRS_PRIORITY       ( tskIDLE_PRIORITY + 4 )    ///< AHRS priority
+#define mainDISK_PRIORITY       ( tskIDLE_PRIORITY + 3 )    ///< SD file priority
+#define mainATTITUDE_PRIORITY   ( tskIDLE_PRIORITY + 3 )    ///< attitude priority
+#define mainLOG_PRIORITY        ( tskIDLE_PRIORITY + 2 )    ///< log priority
+#define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )    ///< telemetry priority
+#define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )    ///< navigation priority
 
 /*----------------------------------- Macros ---------------------------------*/
 

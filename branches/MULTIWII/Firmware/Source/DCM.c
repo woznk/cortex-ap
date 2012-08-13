@@ -103,21 +103,17 @@
 #endif
 #define VAR_GLOBAL
 
-//! Valore iniziale guadagno proporzionale compensazione rollio beccheggio
-#define PITCHROLL_KP 0.03f
-/// Typical values 0.1f, 0.015f, 0.01f, 0.0013f
+/// Initial P gain for roll/pitch compensation
+#define PITCHROLL_KP    0.03f       // Typical values 0.1f, 0.015f, 0.01f, 0.0013f
 
-//! Valore iniziale guadagno integrale compensazione rollio beccheggio
-#define PITCHROLL_KI 0.000005f
-/// Typical values 0.000005f, 0.000002f
+/// Initial I gain for roll/pitch compensation
+#define PITCHROLL_KI    0.000005f   // Typical values 0.000005f, 0.000002f
 
-//! Valore iniziale guadagno proporzionale compensazione imbardata
-#define YAW_KP 0.5f
-/// Typical values 0.5f, 0.27f
+/// Initial P gain for yaw compensation
+#define YAW_KP          0.5f        // Typical values 0.5f, 0.27f
 
-//! Valore iniziale guadagno integrale compensazione imbardata
-#define YAW_KI 0.0005f
-/// Typical values 0.0005f
+/// Initial P gain for yaw compensation
+#define YAW_KI          0.0005f     // Typical values 0.0005f
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -129,61 +125,91 @@
 
 /*---------------------------------- Globals ---------------------------------*/
 
-//! Direction Cosine Matrix
-VAR_GLOBAL float DCM_Matrix[3][3] = { { 1.0f, 0.0f, 0.0f },
-                                      { 0.0f, 1.0f, 0.0f },
-                                      { 0.0f, 0.0f, 1.0f }
-                                    };
-//! Raw gyroscope data
-VAR_GLOBAL float Gyro_Vector[3] = { 0.0f, 0.0f, 0.0f };
-//! g-corrected gyroscope data
-VAR_GLOBAL float Omega_Vector[3] = { 0.0f, 0.0f, 0.0f };
-//! Guadagno di conversione da ADC a velocita' angolare in deg/s
+/// Direction Cosine Matrix
+VAR_GLOBAL float DCM_Matrix[3][3] =
+{
+    { 1.0f, 0.0f, 0.0f },
+    { 0.0f, 1.0f, 0.0f },
+    { 0.0f, 0.0f, 1.0f }
+};
+
+/// Raw gyroscope data
+VAR_GLOBAL float Gyro_Vector[3] =
+{ 0.0f, 0.0f, 0.0f };
+
+/// g-corrected gyroscope data
+VAR_GLOBAL float Omega_Vector[3] =
+{ 0.0f, 0.0f, 0.0f };
+
+/// Conversion gain from ADC to angular speed in deg/s
 VAR_GLOBAL float Gyro_Gain = GYRO_GAIN;
-//! Guadagno di conversione da ADC ad accelerazione in m/s/s
+
+/// Conversion gain from ADC to acceleration in m/s/s
 VAR_GLOBAL float Accel_Gain = ACCEL_GAIN;
-//! Guadagno proporzionale compensazione rollio beccheggio
+
+/// Proportional gain roll/pitch compensation
 VAR_GLOBAL float PitchRoll_Kp = PITCHROLL_KP;
-//! Guadagno integrale compensazione rollio beccheggio
+
+/// Integral gain roll/pitch compensation
 VAR_GLOBAL float PitchRoll_Ki = PITCHROLL_KI;
-//! Guadagno proporzionale compensazione imbardata
+
+/// Proportional gain yaw compensation
 VAR_GLOBAL float Yaw_Kp = YAW_KP;
-//! Guadagno integrale compensazione imbardata
+
+/// Integral gain yaw compensation
 VAR_GLOBAL float Yaw_Ki = YAW_KI;
-//! Velocita' 3D
+
+/// Velocity 3D
 VAR_GLOBAL float fGround_Speed = 0.0f;
 
 /*----------------------------------- Locals ---------------------------------*/
 
+/// Gyros here
 float Update_Matrix[3][3] = {
     { 1.0f, 0.0f, 0.0f },
     { 0.0f, 1.0f, 0.0f },
     { 0.0f, 0.0f, 1.0f }
-}; // Gyros here
+};
 
+/// Temporary matrix
 float Temporary_Matrix[3][3] = {
     { 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f }
 };
 
-//! Acceleration vector
-float Accel_Vector[3] = { 0.0f, 0.0f, 0.0f };
-//! Temporary for intermediate calculation
-float Omega[3] = { 0.0f, 0.0f, 0.0f };
-//! Omega Proportional correction
-float Omega_P[3] = { 0.0f, 0.0f, 0.0f };
-//! Omega Integral correction
-float Omega_I[3] = { 0.0f, 0.0f, 0.0f };
+/// Acceleration vector
+float Accel_Vector[3] =
+    { 0.0f, 0.0f, 0.0f };
 
-float errorRollPitch[3] = { 0.0f, 0.0f, 0.0f };
-float errorYaw[3] = { 0.0f, 0.0f, 0.0f };
+/// Temporary for intermediate calculation
+float Omega[3] =
+    { 0.0f, 0.0f, 0.0f };
+
+/// Omega proportional correction
+float Omega_P[3] =
+    { 0.0f, 0.0f, 0.0f };
+
+/// Omega integral correction
+float Omega_I[3] =
+    { 0.0f, 0.0f, 0.0f };
+
+/// roll/pitch error vector
+float errorRollPitch[3] =
+    { 0.0f, 0.0f, 0.0f };
+
+/// yaw error vector
+float errorYaw[3] =
+    { 0.0f, 0.0f, 0.0f };
+
+/// course error in deg
 float errorCourse = 180.0f;
-//! Course overground X axis
-float COGX = 1.0f;
-//! Course overground Y axis
-float COGY = 0.0f;
 
+/// Course overground X axis
+float COGX = 1.0f;
+
+/// Course overground Y axis
+float COGY = 0.0f;
 
 /*--------------------------------- Prototypes -------------------------------*/
 

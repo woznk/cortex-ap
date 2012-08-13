@@ -32,7 +32,6 @@
 /*---------------------------------- Interface -------------------------------*/
 
 void Navigation_Task( void *pvParameters );
-void Navigation_Init( void );
 float Nav_Heading ( void );
 float Nav_Bearing ( void );
 float Nav_Bank ( void );

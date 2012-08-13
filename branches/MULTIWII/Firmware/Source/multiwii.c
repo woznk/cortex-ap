@@ -44,71 +44,73 @@
 #endif
 #define   VAR_GLOBAL
 
-#define TELEMETRY_FREQUENCY 50
-#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY)
-#define RX_BUFFER_LENGTH    48
-#define TX_BUFFER_LENGTH    48
-#define PAYLOAD_SIZE        16
+#define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task
+#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
+#define RX_BUFFER_LENGTH    48  //!< length of receive buffer
+#define TX_BUFFER_LENGTH    48  //!< length of transmit buffer
+#define PAYLOAD_SIZE        16  //!< maximum size of payload
 
-#define VERSION				0	// append multiwii version
-#define MULTITYPE           0	// append type of multicopter
-#define MSP_VERSION         0   // Multiwii Serial Protocol 0
+#define VERSION				0	//!< append multiwii version
+#define MULTITYPE           0	//!< append type of multicopter
+#define MSP_VERSION         0   //!< Multiwii Serial Protocol 0
 
 /* outgoing messages */
-#define MSP_IDENT           100 // multitype + multiwii version + protocol version + capability variable
-#define MSP_STATUS          101 // cycletime & errors_count & sensor present & box activation
-#define MSP_RAW_IMU         102 // 9 DOF
-#define MSP_SERVO           103 // 8 servos
-#define MSP_MOTOR           104 // 8 motors
-#define MSP_RC              105 // 8 rc chan
-#define MSP_RAW_GPS         106 // fix, numsat, lat, lon, alt, speed
-#define MSP_COMP_GPS        107 // distance home, direction home
-#define MSP_ATTITUDE        108 // 2 angles 1 heading
-#define MSP_ALTITUDE        109 // 1 altitude
-#define MSP_BAT             110 // vbat, powermetersum
-#define MSP_RC_TUNING       111 // rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
-#define MSP_PID             112 // up to 16 PID
-#define MSP_BOX             113 // up to 16 checkbox
-#define MSP_MISC            114 // powermeter trig + 8 free for future use
-#define MSP_MOTOR_PINS      115 // which pins are in use for motors & servos, for GUI
-#define MSP_BOXNAMES        116 // the aux switch names
-#define MSP_PIDNAMES        117 // the PID names
-#define MSP_WP              118 // get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
-#define MSP_HEADING         125 // headings and MAG configuration
-#define MSP_DEBUGMSG        253 // debug string buffer
-#define MSP_DEBUG           254 // debug1,debug2,debug3,debug4
+#define MSP_IDENT           100 //!< multitype + multiwii version + protocol version + capability variable
+#define MSP_STATUS          101 //!< cycletime & errors_count & sensor present & box activation
+#define MSP_RAW_IMU         102 //!< raw IMU data, 9 DOF
+#define MSP_SERVO           103 //!< 8 servos
+#define MSP_MOTOR           104 //!< 8 motors
+#define MSP_RC              105 //!< 8 rc channels
+#define MSP_RAW_GPS         106 //!< fix, numsat, lat, lon, alt, speed
+#define MSP_COMP_GPS        107 //!< distance home, direction home
+#define MSP_ATTITUDE        108 //!< roll, pitch, heading
+#define MSP_ALTITUDE        109 //!< 1 altitude
+#define MSP_BAT             110 //!< vbat, powermetersum
+#define MSP_RC_TUNING       111 //!< rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+#define MSP_PID             112 //!< up to 16 PID
+#define MSP_BOX             113 //!< up to 16 checkbox
+#define MSP_MISC            114 //!< powermeter trig + 8 free for future use
+#define MSP_MOTOR_PINS      115 //!< which pins are in use for motors & servos, for GUI
+#define MSP_BOXNAMES        116 //!< the aux switch names
+#define MSP_PIDNAMES        117 //!< the PID names
+#define MSP_WP              118 //!< get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
+#define MSP_HEADING         125 //!< headings and MAG configuration
+#define MSP_DEBUGMSG        253 //!< debug string buffer
+#define MSP_DEBUG           254 //!< debug1,debug2,debug3,debug4
 
 /* incoming messages */
-#define MSP_SET_RAW_RC      200 // 8 rc chan
-#define MSP_SET_RAW_GPS     201 // fix, numsat, lat, lon, alt, speed
-#define MSP_SET_PID         202 // up to 16 PID
-#define MSP_SET_BOX         203 // up to 16 checkbox
-#define MSP_SET_RC_TUNING   204 // rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
-#define MSP_ACC_CALIBRATION 205 // no param
-#define MSP_MAG_CALIBRATION 206 // no param
-#define MSP_SET_MISC        207 // powermeter trig + 8 free for future use
-#define MSP_RESET_CONF      208 // no param
-#define MSP_WP_SET          209 // sets a given WP (WP#, lat, lon, alt, flags)
+#define MSP_SET_RAW_RC      200 //!< 8 rc chan
+#define MSP_SET_RAW_GPS     201 //!< fix, numsat, lat, lon, alt, speed
+#define MSP_SET_PID         202 //!< set up to 16 PID
+#define MSP_SET_BOX         203 //!< set up to 16 checkbox
+#define MSP_SET_RC_TUNING   204 //!< rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+#define MSP_ACC_CALIBRATION 205 //!< calibrate accelerometers
+#define MSP_MAG_CALIBRATION 206 //!< calibrate magnetometers
+#define MSP_SET_MISC        207 //!< powermeter trig + 8 free for future use
+#define MSP_RESET_CONF      208 //!< reset configuration
+#define MSP_WP_SET          209 //!< sets a given WP (WP#, lat, lon, alt, flags)
 
-#define MSP_EEPROM_WRITE    250 // no param
+#define MSP_EEPROM_WRITE    250 //!< no param
 
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
 
+/// Status of multiwii header parser
 typedef enum E_STATE {
-    IDLE,
-    HEADER_START,
-    HEADER_M,
-    HEADER_ARROW,
-    HEADER_SIZE,
-    HEADER_CMD,
+    IDLE,           //!< waiting
+    HEADER_START,   //!< start of header, $ received
+    HEADER_M,       //!< multiwii protocol, M received
+    HEADER_ARROW,   //!< direction of message, > or < received
+    HEADER_SIZE,    //!< size of payload
+    HEADER_CMD,     //!< command identifier
   } enum_status_t;
 
 /*----------------------------------- Types ----------------------------------*/
 
 /*---------------------------------- Constants -------------------------------*/
 
+/// Names of multiwii PID
 const uint8_t pidnames[] =
   "ROLL;"
   "PITCH;"
@@ -125,28 +127,28 @@ const uint8_t pidnames[] =
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    // uplink data buffer
-VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    // downlink data buffer
-VAR_STATIC uint8_t ucRxWindex;                      // uplink write index
-VAR_STATIC uint8_t ucRxRindex;                      // uplink read index
-VAR_STATIC uint8_t ucTxWindex;                      // downlink write index
+VAR_STATIC enum_status_t xStatus;                   //!< status of communication
+VAR_STATIC uint8_t MSP_Checksum;                    //!< message checksum
+VAR_STATIC uint8_t MSP_Command;                     //!< command identifier
+VAR_STATIC uint8_t MSP_Size;                        //!< payload size
+VAR_STATIC uint8_t MSP_Offset;                      //!< payload offset
+VAR_STATIC uint8_t ucRxWindex;                      //!< uplink write index
+VAR_STATIC uint8_t ucRxRindex;                      //!< uplink read index
+VAR_STATIC uint8_t ucTxWindex;                      //!< downlink write index
 
-VAR_STATIC enum_status_t xStatus;                   // status of communication
-VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {         // gains for PID loops
-    PITCH_KP,                                       // default pitch kp
-    PITCH_KI,                                       // default pitch ki
-    ROLL_KP,                                        // default roll kp
-    ROLL_KI,                                        // default roll ki
-    NAV_KP,                                         // default direction kp
-    NAV_KI,                                         // default direction ki
-    0.0f,                                           // dummy placeholder
-    0.0f                                            // dummy placeholder
-};
+VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    //!< uplink data buffer
+VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    //!< downlink data buffer
+VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
+    PITCH_KP,                                       //!< default pitch kp
+    PITCH_KI,                                       //!< default pitch ki
+    ROLL_KP,                                        //!< default roll kp
+    ROLL_KI,                                        //!< default roll ki
+    NAV_KP,                                         //!< default direction kp
+    NAV_KI,                                         //!< default direction ki
+    0.0f,                                           //!< dummy placeholder
+    0.0f                                            //!< dummy placeholder
+};                                                  //!< gains for PID loops
 
-VAR_STATIC uint8_t MSP_Checksum;
-VAR_STATIC uint8_t MSP_Command;
-VAR_STATIC uint8_t MSP_Size;
-VAR_STATIC uint8_t MSP_Offset;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -155,6 +157,14 @@ static void Telemetry_Init( void );
 /*---------------------------------- Functions -------------------------------*/
 
 
+///----------------------------------------------------------------------------
+///
+/// \brief   reads a byte from message payload
+/// \return  byte read
+/// \param   -
+/// \remarks
+///
+///----------------------------------------------------------------------------
 uint8_t read8(void) {
   uint8_t t;
   t = ucRxBuffer[MSP_Offset++] & 0xFF;
@@ -165,6 +175,14 @@ uint8_t read8(void) {
 }
 
 
+///----------------------------------------------------------------------------
+///
+/// \brief   reads a word from message payload
+/// \return  word read
+/// \param   -
+/// \remarks
+///
+///----------------------------------------------------------------------------
 uint16_t read16(void) {
   uint16_t t = read8();
   t += (uint16_t)read8() << 8;
@@ -172,6 +190,14 @@ uint16_t read16(void) {
 }
 
 
+///----------------------------------------------------------------------------
+///
+/// \brief   reads a long word from message payload
+/// \return  long word read
+/// \param   -
+/// \remarks
+///
+///----------------------------------------------------------------------------
 uint32_t read32(void) {
   uint32_t t = read16();
   t += (uint32_t)read16() << 16;
@@ -588,7 +614,7 @@ float Telemetry_Get_Gain(telEnum_Gain gain) {
 ///----------------------------------------------------------------------------
 ///
 /// \brief   Get sensor value
-/// \param   puiSensor, pointer to sensor data array
+/// \param   piSensor = pointer to sensor data array
 /// \return  -
 /// \remarks -
 ///

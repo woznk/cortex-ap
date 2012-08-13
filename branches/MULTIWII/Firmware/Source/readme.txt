@@ -60,7 +60,7 @@
      Al di sotto di 100 m dal ivello del mare e in atmosfera standard l'errore
      è inferiore al centimetro.
 
-@par Telemetria
+@par Telemetria MAVLink
      
      link all'elenco dei comandi MAVLink implementati su ArduPilot Mega:
      http://code.google.com/p/ardupilot-mega/wiki/MAVLink
@@ -68,7 +68,7 @@
      link all'elenco dei parametri ArduPilot Mega modificabili tramite MAVLink:
      http://code.google.com/p/ardupilot-mega/wiki/MAVParam
 
-     link alle specifiche del protocollo:
+     link alle specifiche del protocollo MAVLink:
      http://qgroundcontrol.org/mavlink/start
      http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
      http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
@@ -98,20 +98,31 @@
      
      Possibili soluzioni:
 
-     - un'unica struttura dati di file, accesso singolo
-     - ridurre le dimensionio dell'heap non può essere ridotto, il sistema si pianta
-     - ridurre lo stack in startup_stm32f10x_md_vl.c
+     1 un'unica struttura dati di file, accesso singolo
+     2 ridurre le dimensioni dell'heap 
+     3 ridurre lo stack in startup_stm32f10x_md_vl.c
 
      Risultato:
 
-     - da provare
-     - l'heap non può essere ridotto, il sistema si pianta
-     - ridotto lo stack a 512 bytes, funziona
+     1 da provare
+     2 l'heap non può essere ridotto, il sistema si pianta
+     3 ridotto lo stack a 512 bytes, funziona
+
+@par Telemetria MultiWii
 
      03/08/2012
 
      link all'implementazione Arduino del protocollo MultiWii
      https://github.com/wertarbyte/multiwii-firmware/blob/master/Serial.ino
+
+     12/08/12
+     creato branch MULTIWII per integrazione protocollo MultiWii:
+
+     - implementati solo alcuni comandi
+     - eliminato il buffer per la memorizzazione del messaggio
+     - utilizzato un indice del buffer UART per l'inizio del messaggio
+     - creato un progetto per il test del protocollo con target STM32F103RB
+     - la struttura del file è inadatta al test di unità.
 
 @par Navigation
      

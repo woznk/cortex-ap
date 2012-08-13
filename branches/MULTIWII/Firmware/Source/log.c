@@ -36,8 +36,8 @@
 #endif
 #define   VAR_GLOBAL
 
-#define FILE_BUFFER_LENGTH 128
-#define MAX_SAMPLES        20000 // Max number of samples that can be written
+#define FILE_BUFFER_LENGTH 128      //!< Length of file buffer
+#define MAX_SAMPLES        20000    //!< Max number of samples that can be written
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -49,18 +49,17 @@
 
 /*---------------------------------- Globals ---------------------------------*/
 
-VAR_GLOBAL xQueueHandle xLog_Queue;
+VAR_GLOBAL xQueueHandle xLog_Queue; //!< Queue for log messages
 
 /*----------------------------------- Locals ---------------------------------*/
 
 
-VAR_STATIC uint8_t szFileName[16] = "log0.txt";     // File name
-VAR_STATIC FATFS stFat;                             // FAT
-VAR_STATIC FIL stFile;                              // File object
-VAR_STATIC uint8_t szString[48];                    //
-VAR_STATIC bool bFileOk = FALSE;                    // File status
-VAR_STATIC uint16_t uiSamples;
-
+VAR_STATIC uint8_t szFileName[16] = "log0.txt"; //!< file name
+VAR_STATIC FATFS stFat;                         //!< FAT
+VAR_STATIC FIL stFile;                          //!< file object
+VAR_STATIC uint8_t szString[48];                //!< generic string
+VAR_STATIC bool bFileOk = FALSE;                //!< file status
+VAR_STATIC uint16_t uiSamples;                  //!< sample counter
 
 /*--------------------------------- Prototypes -------------------------------*/
 
