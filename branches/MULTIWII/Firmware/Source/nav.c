@@ -23,7 +23,20 @@
 ///   when < -180° or > 180°. Cross produt and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
-//  Change  Lint: added missing #inclusions
+/// \todo
+/// 1) Compute longitude and latitude differences as :
+/// \code
+///     Delta Lat = Lat2 - Lat1
+///     Delta Lon = (Lon2 - Lon1) * cos((Lat1 + Lat2)/2)
+/// \endcode
+///
+/// \todo
+/// 2) Compute distance from waypoint as :
+/// \endcode
+///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
+/// \endcode
+///
+//  Change added todos
 //
 //============================================================================*/
 
