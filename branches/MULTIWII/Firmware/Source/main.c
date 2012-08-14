@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added todos
+// Change: added driver for USART 1
 //
 //============================================================================*/
 
@@ -34,6 +34,7 @@
 #include "adxl345_driver.h"
 #include "servodriver.h"
 #include "ppmdriver.h"
+#include "usart1driver.h"
 #include "diskio.h"
 
 #include "config.h"
@@ -120,6 +121,7 @@ int32_t main(void)
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
   RCC_Configuration();                              // System Clocks Configuration
   GPIO_Configuration();                             // GPIO Configuration
+  USART1_Init();              						// Initialize USART1 for telemetry
   Servo_Init();                                     // Initialize PWM timers as servo outputs
   PPM_Init();                                       // Initialize capture timers as RRC input
   I2C_MEMS_Init();                                  // I2C peripheral initialization
