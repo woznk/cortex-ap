@@ -42,7 +42,7 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  Change  removed unneeded #inclusions, DCM update rate to 4 Hz
+//  Change USART 1 functions moved to usart1driver.c
 //
 //============================================================================*/
 
@@ -62,6 +62,7 @@
 #include "log.h"
 #include "config.h"
 #include "servodriver.h"
+#include "usart1driver.h"
 #include "telemetry.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -78,9 +79,6 @@
 
 #define TELEMETRY_FREQUENCY 50              //!< frequency of telemetry task
 #define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
-#define RX_BUFFER_LENGTH    48              //!< length of receive buffer
-#define TX_BUFFER_LENGTH    48              //!< length of transmit buffer
-#define TEL_DCM_LENGTH      (1 + (9 * 4))   //!< length of DCM message
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -139,10 +137,6 @@ typedef enum E_PARSER {
 "$K,8799,1299, 899, 199,4999,4999\r\n"
 "$S,560,112,-12,12345,0,1023,110\n"
 */
-VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    //!< uplink data buffer
-VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    //!< downlink data buffer
-VAR_STATIC uint8_t ucWindex;                        //!< uplink write index
-VAR_STATIC uint8_t ucRindex;                        //!< uplink read index
 VAR_STATIC parser_status_t xStatus;                 //!< status of parser
 VAR_STATIC float fTemp;                             //!< temporary for parser
 VAR_STATIC float fTrueAirSpeed;                     //!< simulator true air speed
@@ -205,107 +199,16 @@ void Telemetry_Task( void *pvParameters )
 //
 /// \brief   Initialize telemetry
 /// \return  -
-/// \remarks configures USART1.
-///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
-///          for direct register initialization of USART 1
+/// \remarks -
 ///
 //----------------------------------------------------------------------------
 static void Telemetry_Init( void ) {
 
-    USART_InitTypeDef USART_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
-    /* Initialize USART1 structure */
-    USART_InitStructure.USART_BaudRate = 115200;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-
-    USART_Init(USART1, &USART_InitStructure);       // configure USART1
-
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);  // enable USART1 interrupt
-    //USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-
-    /* Configure NVIC for USART1 interrupt */
-    NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init( &NVIC_InitStructure );
-
-    USART_Cmd(USART1, ENABLE);                      // enable the USART1
-
-    ucWindex = 0;                                   // clear write index
-    ucRindex = 0;                                   // clear read index
-    xStatus = PARSE_PREAMBLE;                       // reset parser status
-    fTemp = 0.0f;                                   // clear parser temporary
-    fTrueAirSpeed = 0.0f;                           // clear true air speed
+    xStatus = PARSE_PREAMBLE;   // reset parser status
+    fTemp = 0.0f;               // clear parser temporary
+    fTrueAirSpeed = 0.0f;       // clear true air speed
 }
 
-///----------------------------------------------------------------------------
-///
-/// \brief   sends data via telemetry USART
-/// \return  -
-/// \param   data, pointer to message
-/// \param   num number of elements
-/// \remarks message is an array of 'num' words, each word is 16 bit.
-///          Each element is converted to an hexadecimal string and sent to UART
-///
-///----------------------------------------------------------------------------
-static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
-{
-    uint32_t l_temp;
-    uint8_t digit, i, j = 0;
-
-    for (i = 0; i < num; i++) {
-        l_temp = *data++;
-        ucTxBuffer[j++] = ' ';
-        digit = ((l_temp >> 12) & 0x0000000F);
-        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
-        digit = ((l_temp >> 8) & 0x0000000F);
-        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
-        digit = ((l_temp >> 4) & 0x0000000F);
-        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
-        digit = (l_temp & 0x0000000F);
-        ucTxBuffer[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
-    }
-    ucTxBuffer[j++] = '\n';
-
-    for (j = 0; j < (i * 5) + 1; j++) {
-      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
-      }
-      USART_SendData(USART1, ucTxBuffer[j]);
-    }
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief   sends DCM matrix via telemetry USART
-/// \return  -
-/// \remarks entries of DCM matrix are converted to hexadecimal string and sent
-///          to UART
-///
-///----------------------------------------------------------------------------
-static void Telemetry_Send_DCM(void) {
-
-    uint8_t x, y, j;
-    float * pfTemp;
-
-    ucTxBuffer[0] = TEL_DCM;
-    pfTemp = (float *)&(ucTxBuffer[1]);
-    for (y = 0; y < 3; y++) {
-      for (x = 0; x < 3; x++) {
-          *pfTemp++ = DCM_Matrix[y][x];
-      }
-    }
-    for (j = 0; j < TEL_DCM_LENGTH; j++) {
-      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
-      }
-      USART_SendData(USART1, ucTxBuffer[j]);
-    }
-}
 
 //----------------------------------------------------------------------------
 //
@@ -340,13 +243,7 @@ static void Telemetry_Send_DCM(void) {
 static void Telemetry_Parse ( void )
 {
     uint8_t c;
-    while (ucRindex != ucWindex) {          // received another character
-        c = ucRxBuffer[ucRindex++];         // read character
-
-        if (ucRindex >= RX_BUFFER_LENGTH) { // update read index
-            ucRindex = 0;
-        }
-
+    while (USART1_Getch(&c)) {          // received another character
         switch (xStatus) {
             case PARSE_PREAMBLE :   /* ------------- preamble -------------- */
                 if (c == '$') { xStatus++; }    // preamble ok
@@ -469,23 +366,13 @@ static void Telemetry_Parse ( void )
 //----------------------------------------------------------------------------
 void Telemetry_Send_Controls(void)
 {
-    uint8_t j;
-    float *pfBuff;
+    USART1_Putch(TEL_SERVO_POS);                    // telemetry wait code
+    USART1_Putf((float)Servo_Get(SERVO_ELEVATOR));  // elevator
+    USART1_Putf((float)Servo_Get(SERVO_AILERON));   // ailerons
+    USART1_Putf((float)Servo_Get(SERVO_RUDDER));    // rudder
+    USART1_Putf((float)Servo_Get(SERVO_THROTTLE));  // throttle
 
-    ucTxBuffer[0] = TEL_SERVO_POS;                  // telemetry wait code
-
-    pfBuff = (float *)&ucTxBuffer[1];               // starting of data field
-
-    *pfBuff++ = (float)Servo_Get(SERVO_ELEVATOR);   // elevator
-    *pfBuff++ = (float)Servo_Get(SERVO_AILERON);    // ailerons
-    *pfBuff++ = (float)Servo_Get(SERVO_RUDDER);     // rudder
-    *pfBuff   = (float)Servo_Get(SERVO_THROTTLE);   // throttle
-
-    for (j = 0; j < 17; j++) {
-      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
-      }
-      USART_SendData(USART1, ucTxBuffer[j]);
-    }
+    USART1_Transmit();                              // send data
 }
 
 //----------------------------------------------------------------------------
@@ -508,25 +395,66 @@ void Telemetry_Send_Controls(void)
 //----------------------------------------------------------------------------
 static void Telemetry_Send_Waypoint(void)
 {
-    uint8_t j;
-    uint16_t *puiBuff;
+    USART1_Putch(TEL_WAYPOINT);                 // telemetry wait code
+    USART1_Putch(Nav_Wpt_Index());              // waypoint index
+    USART1_Putw((uint16_t)Nav_Bearing());       // bearing to waypoint
+    USART1_Putw((uint16_t)Nav_Wpt_Altitude());  // waypoint altitude
+    USART1_Putw(Nav_Distance());                // distance to waypoint
+    USART1_Putw((uint16_t)Nav_Heading());       // heading
 
-    ucTxBuffer[0] = TEL_WAYPOINT;               // telemetry wait code
+    USART1_Transmit();                          // send data
+}
 
-    ucTxBuffer[1] = Nav_Wpt_Index();            // waypoint index
+///----------------------------------------------------------------------------
+///
+/// \brief   sends data via telemetry USART
+/// \return  -
+/// \param   data, pointer to message
+/// \param   num number of elements
+/// \remarks message is an array of 'num' words, each word is 16 bit.
+///          Each element is converted to an hexadecimal string and sent to UART
+///
+///----------------------------------------------------------------------------
+static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
+{
+    uint32_t l_temp;
+    uint8_t digit, i = 0;
 
-    puiBuff = (uint16_t *)&ucTxBuffer[2];       // starting of data field
-
-    *puiBuff++ = (uint16_t)Nav_Bearing();       // bearing to waypoint
-    *puiBuff++ = (uint16_t)Nav_Wpt_Altitude();  // waypoint altitude
-    *puiBuff++ = Nav_Distance();                // distance to waypoint
-    *puiBuff   = (uint16_t)Nav_Heading();       // heading
-
-    for (j = 0; j < 10; j++) {
-      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
-      }
-      USART_SendData(USART1, ucTxBuffer[j]);
+    for (i = 0; i < num; i++) {
+        l_temp = *data++;
+        USART1_Putch(' ');
+        digit = ((l_temp >> 12) & 0x0000000F);
+        USART1_Putch(((digit < 10) ? (digit + '0') : ((digit - 10) + 'A')));
+        digit = ((l_temp >> 8) & 0x0000000F);
+        USART1_Putch(((digit < 10) ? (digit + '0') : ((digit - 10) + 'A')));
+        digit = ((l_temp >> 4) & 0x0000000F);
+        USART1_Putch(((digit < 10) ? (digit + '0') : ((digit - 10) + 'A')));
+        digit = (l_temp & 0x0000000F);
+        USART1_Putch(((digit < 10) ? (digit + '0') : ((digit - 10) + 'A')));
     }
+    USART1_Putch('\n');
+
+    USART1_Transmit();                      // send data
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   sends DCM matrix via telemetry USART
+/// \return  -
+/// \remarks entries of DCM matrix are sent as raw bytes
+///
+///----------------------------------------------------------------------------
+static void Telemetry_Send_DCM(void) {
+
+    uint8_t x, y;
+
+    USART1_Putch(TEL_DCM);                  // telemetry wait code
+    for (y = 0; y < 3; y++) {               // 3 rows
+      for (x = 0; x < 3; x++) {             // 3 columns
+          USART1_Putf(DCM_Matrix[y][x]);    // DCM entry
+      }
+    }
+    USART1_Transmit();                      // send data
 }
 
 ///----------------------------------------------------------------------------
@@ -581,27 +509,5 @@ void Telemetry_Get_Sensors(int16_t * piSensor) {
     for (j = 0; j < 6; j++) {
         *piSensor++ = (int16_t)fSensor[j];
     }
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   telemetry USART interrupt handler
-/// \param   -
-/// \returns -
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-void USART1_IRQHandler( void ) {
-//  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-//  portCHAR cChar;
-
-	if (USART_GetITStatus(USART1, USART_IT_RXNE) == SET) {
-//		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
-		ucRxBuffer[ucWindex++] = USART_ReceiveData( USART1 );
-        if (ucWindex >= RX_BUFFER_LENGTH) {
-            ucWindex = 0;
-        }
-    }
-//	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 }
 
