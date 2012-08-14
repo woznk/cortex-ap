@@ -32,7 +32,7 @@
 ///
 /// \todo
 /// 2) Compute distance from waypoint as :
-/// \endcode
+/// \code
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
