@@ -42,7 +42,8 @@
 /// MultiWii protocol sends only one byte for each gain, whereas gains are
 /// currently implemented as float.\n
 ///
-//  Change telemetry task moved to main.c, removed Telemetry_Init()
+//  Change increased max size of payload, corrected functions MSP_Init_Response
+//         and MSP_Init_Error
 //
 //============================================================================*/
 
@@ -69,7 +70,7 @@
 #endif
 #define   VAR_GLOBAL
 
-#define PAYLOAD_SIZE        16  //!< maximum size of payload
+#define PAYLOAD_SIZE        32  //!< maximum size of payload
 
 #define VERSION             0	//!< multiwii version
 #define MULTITYPE           0	//!< type of multicopter
@@ -211,40 +212,6 @@ static uint32_t read32(void) {
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   Initialize multi Wii response message
-/// \return  -
-/// \param   length = message length
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-static void __inline MSP_Init_Response(uint8_t length) {
-  USART1_Putch('$');            // header
-  USART1_Putch('M');            // multiwii protocol
-  USART1_Putch('>');            // outgoing message
-  USART1_Putch(length);         // message length
-  USART1_Putch(MSP_Command);    // command
-  MSP_Checksum = 0;             // clear checksum
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief   Initialize multi Wii error message
-/// \return  -
-/// \param   length = message length
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-static void __inline MSP_Init_Error(uint8_t length) {
-  USART1_Putch('$');            // header
-  USART1_Putch('M');            // multiwii protocol
-  USART1_Putch('!');            // error message
-  USART1_Putch(length);         // message length
-  USART1_Putch(MSP_Command);    // command
-  MSP_Checksum = 0;             // clear checksum
-}
-
-///----------------------------------------------------------------------------
-///
 /// \brief   Append a byte to outgoing message
 /// \return  -
 /// \param   a = message byte
@@ -283,7 +250,7 @@ static void MSP_Append_32(uint32_t a) {
   MSP_Append_8((a >> 16) & 0xFF);
   MSP_Append_8((a >> 24) & 0xFF);
 }
-   
+
 ///----------------------------------------------------------------------------
 ///
 /// \brief   Append a null terminated string to outgoing message
@@ -296,6 +263,40 @@ static void MSP_Append_Name(const uint8_t* s) {
   while (*s != 0) {
   	MSP_Append_8(*s++);
   }
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Initialize multi Wii response message
+/// \return  -
+/// \param   length = message length
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+static void __inline MSP_Init_Response(uint8_t length) {
+  MSP_Append_8('$');            // header
+  MSP_Append_8('M');            // multiwii protocol
+  MSP_Append_8('>');            // outgoing message
+  MSP_Checksum = 0;             // clear checksum
+  MSP_Append_8(length);         // message length
+  MSP_Append_8(MSP_Command);    // command
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Initialize multi Wii error message
+/// \return  -
+/// \param   length = message length
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+static void __inline MSP_Init_Error(uint8_t length) {
+  MSP_Append_8('$');            // header
+  MSP_Append_8('M');            // multiwii protocol
+  MSP_Append_8('!');            // error message
+  MSP_Checksum = 0;             // clear checksum
+  MSP_Append_8(length);         // message length
+  MSP_Append_8(MSP_Command);    // command
 }
 
 ///----------------------------------------------------------------------------
