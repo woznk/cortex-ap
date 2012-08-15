@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added driver for USART 1
+// Change: moved telemetry task here from telemetry.c, according todo 1)
 //
 //============================================================================*/
 
@@ -71,6 +71,12 @@
 #define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )    ///< telemetry priority
 #define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )    ///< navigation priority
 
+/* Task frequencies. */
+#define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task
+
+/* Task delays. */
+#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
+
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
@@ -101,6 +107,35 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
     ( void ) pxTask;
     ( void ) pcTaskName;
     while (1);
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief  telemetry task
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Telemetry_Task( void *pvParameters )
+{
+    uint8_t ucCycles = 0;
+    portTickType Last_Wake_Time;                //
+    Last_Wake_Time = xTaskGetTickCount();       //
+
+    while (TRUE) {
+        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
+#if defined TELEMETRY_MULTIWII
+        MSP_Receive();          				//
+#elif defined TELEMETRY_ARDUPILOT
+		Telemetry_Send_Controls();              // update simulator controls
+		Telemetry_Parse();                      // parse uplink data
+		if (++ucCycles >= (TELEMETRY_FREQUENCY / 4)) {// every .125 second
+			ucCycles = 0;                       // reset cycle counter
+			Telemetry_Send_Waypoint();          // send waypoint information
+			Telemetry_Send_DCM();
+		}
+#endif
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -243,7 +278,7 @@ void GPIO_Configuration(void)
   GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
-
+ 
 #ifdef  USE_FULL_ASSERT
 ///----------------------------------------------------------------------------
 ///
