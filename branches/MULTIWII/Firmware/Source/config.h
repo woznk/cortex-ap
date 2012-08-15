@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change  added definition of sensor types for multiwii telemetry
+// Change added definition of telemetry types
 //
 //============================================================================*/
 
@@ -83,20 +83,17 @@
    when within HEIGHT_MARGIN of the target height.
    Use ALT_HOLD_THROTTLE_MIN when above HEIGHT_MARGIN of the target height.
    Throttle values are from -1.0 to +1.0.*/
-#define ALT_HOLD_THROTTLE_MIN   0.0f    //!< min throttle foe altitude hold
-#define ALT_HOLD_THROTTLE_MAX   0.6f    //!< max throttle for altitude hold
+#define ALT_HOLD_THROTTLE_MIN   0.0f        //!< min throttle foe altitude hold
+#define ALT_HOLD_THROTTLE_MAX   0.6f        //!< max throttle for altitude hold
 
-#define HEIGHTMAX           1500.0f     //!< maximum target height [m]
+#define HEIGHTMAX               1500.0f     //!< maximum target height [m]
+#define HEIGHT_MARGIN           20.0f       //!< height margin [m]
 
-#define HEIGHT_MARGIN       20.0f       //!< height margin [m]
+#define MINIMUMTHROTTLE         -0.3f       //!< minimum throttle
 
-#define MINIMUMTHROTTLE     -0.3f       //!< minimum throttle
-
-#define PITCHATMINTHROTTLE  ToRad(0.1f) //!< Pitch angle at minimum throttle [rad]
-
-#define PITCHATMAXTHROTTLE  ToRad(8.0f) //!< Pitch angle at maximum throttle [rad]
-
-#define PITCHATZEROTHROTTLE ToRad(-6.0f)//!< Pitch angle while gliding [rad]
+#define PITCHATMINTHROTTLE      ToRad(0.1f) //!< Pitch angle at minimum throttle [rad]
+#define PITCHATMAXTHROTTLE      ToRad(8.0f) //!< Pitch angle at maximum throttle [rad]
+#define PITCHATZEROTHROTTLE     ToRad(-6.0f)//!< Pitch angle while gliding [rad]
 
 /* Simulator option definitions */
 #define SIM_NONE    0                   //!< No simulator option
@@ -115,7 +112,11 @@
 #define SONAR       0                   //!< Sonar not available
 
 /* Log definitions */
-#define LOG_SENSORS       0             //!< enable log of sensor data
-#define LOG_DCM           0             //!< enable log of DCM matrix
-#define LOG_PPM           0             //!< enable log of RC channels
-#define LOG_SERVO         0             //!< enable log of servo positions
+#define LOG_SENSORS 0                   //!< enable log of sensor data
+#define LOG_DCM     0                   //!< enable log of DCM matrix
+#define LOG_PPM     0                   //!< enable log of RC channels
+#define LOG_SERVO   0                   //!< enable log of servo positions
+
+/*! Telemetry type definition */
+//#define TELEMETRY_MULTIWII
+#define TELEMETRY_ARDUPILOT
