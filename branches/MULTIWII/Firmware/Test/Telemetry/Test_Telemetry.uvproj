@@ -43,14 +43,14 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\</OutputDirectory>
+          <OutputDirectory>.\obj\</OutputDirectory>
           <OutputName>Test_Telemetry</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
-          <ListingPath>.\</ListingPath>
+          <ListingPath>.\lst\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
@@ -396,6 +396,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\Source\multiwii.c</FilePath>
             </File>
+            <File>
+              <FileName>usart1driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\usart1driver.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -427,16 +432,6 @@
           <GroupName>FreeRTOS</GroupName>
           <Files>
             <File>
-              <FileName>port.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3\port.c</FilePath>
-            </File>
-            <File>
-              <FileName>heap_1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\Libraries\FreeRTOSV7.1.0\Source\portable\MemMang\heap_1.c</FilePath>
-            </File>
-            <File>
               <FileName>timers.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Libraries\FreeRTOSV7.1.0\Source\timers.c</FilePath>
@@ -460,6 +455,16 @@
               <FileName>tasks.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</FilePath>
+            </File>
+            <File>
+              <FileName>heap_1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Libraries\FreeRTOSV7.1.0\Source\portable\MemMang\heap_1.c</FilePath>
+            </File>
+            <File>
+              <FileName>port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3\port.c</FilePath>
             </File>
           </Files>
         </Group>
