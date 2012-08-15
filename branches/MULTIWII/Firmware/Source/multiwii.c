@@ -41,9 +41,9 @@
 /// Complete implementation of MSP_SET_PID command.\n
 /// MultiWii protocol sends only one byte for each gain, whereas gains are
 /// currently implemented as float.\n
-/// Determine if GUI sends only modified gains or all gains together.
 ///
-//  Change added protocol description and references
+//  Change added driver for USART 1, restored buffer for incoming message,
+//         removed Telemetry_Init()
 //
 //============================================================================*/
 
@@ -56,13 +56,13 @@
 #include "misc.h"
 
 #include "stm32f10x.h"
-#include "stm32f10x_usart.h"
 #include "math.h"
 #include "nav.h"
 #include "DCM.h"
 #include "log.h"
 #include "config.h"
 #include "servodriver.h"
+#include "usart1driver.h"
 #include "telemetry.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -79,8 +79,6 @@
 
 #define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task
 #define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
-#define RX_BUFFER_LENGTH    48  //!< length of receive buffer
-#define TX_BUFFER_LENGTH    48  //!< length of transmit buffer
 #define PAYLOAD_SIZE        16  //!< maximum size of payload
 
 #define VERSION             0	//!< multiwii version
@@ -160,17 +158,12 @@ const uint8_t pidnames[] =
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC enum_status_t xStatus;                   //!< status of communication
+VAR_STATIC enum_status_t MSP_Status = IDLE;         //!< status of communication
 VAR_STATIC uint8_t MSP_Checksum;                    //!< message checksum
 VAR_STATIC uint8_t MSP_Command;                     //!< command identifier
 VAR_STATIC uint8_t MSP_Size;                        //!< payload size
-VAR_STATIC uint8_t MSP_Offset;                      //!< payload offset
-VAR_STATIC uint8_t ucRxWindex;                      //!< uplink write index
-VAR_STATIC uint8_t ucRxRindex;                      //!< uplink read index
-VAR_STATIC uint8_t ucTxWindex;                      //!< downlink write index
-
-VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    //!< uplink data buffer
-VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    //!< downlink data buffer
+VAR_STATIC uint8_t MSP_Index;                       //!< payload index
+VAR_STATIC uint8_t MSP_Buffer[48];                  //!< payload buffer
 VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
     PITCH_KP,                                       //!< default pitch kp
     PITCH_KI,                                       //!< default pitch ki
@@ -182,13 +175,9 @@ VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
     0.0f                                            //!< dummy placeholder
 };                                                  //!< gains for PID loops
 
-
 /*--------------------------------- Prototypes -------------------------------*/
 
-static void Telemetry_Init( void );
-
 /*---------------------------------- Functions -------------------------------*/
-
 
 ///----------------------------------------------------------------------------
 ///
@@ -198,15 +187,9 @@ static void Telemetry_Init( void );
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-uint8_t read8(void) {
-  uint8_t t;
-  t = ucRxBuffer[MSP_Offset++] & 0xFF;
-  if (MSP_Offset >= RX_BUFFER_LENGTH) { // update offset
-      MSP_Offset = 0;                   // wrap around
-  }
-  return t;
+static uint8_t read8(void) {
+   return (MSP_Buffer[MSP_Index++] & 0xFF);
 }
-
 
 ///----------------------------------------------------------------------------
 ///
@@ -216,12 +199,11 @@ uint8_t read8(void) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-uint16_t read16(void) {
+static uint16_t read16(void) {
   uint16_t t = read8();
   t += (uint16_t)read8() << 8;
   return t;
 }
-
 
 ///----------------------------------------------------------------------------
 ///
@@ -231,7 +213,7 @@ uint16_t read16(void) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-uint32_t read32(void) {
+static uint32_t read32(void) {
   uint32_t t = read16();
   t += (uint32_t)read16() << 16;
   return t;
@@ -245,14 +227,13 @@ uint32_t read32(void) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void __inline MSP_Init_Response(uint8_t length) {
-  ucTxBuffer[0] = '$';              // header
-  ucTxBuffer[1] = 'M';              //
-  ucTxBuffer[2] = '>';              // outgoing message
-  ucTxBuffer[3] = length;           // message length
-  ucTxBuffer[4] = MSP_Command;      // command
-  MSP_Checksum = 0;                 // clear checksum
-  ucTxWindex = 5;                   // initialize write index
+static void __inline MSP_Init_Response(uint8_t length) {
+  USART1_Putch('$');            // header
+  USART1_Putch('M');            // multiwii protocol
+  USART1_Putch('>');            // outgoing message
+  USART1_Putch(length);         // message length
+  USART1_Putch(MSP_Command);    // command
+  MSP_Checksum = 0;             // clear checksum
 }
 
 ///----------------------------------------------------------------------------
@@ -263,14 +244,13 @@ void __inline MSP_Init_Response(uint8_t length) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void __inline MSP_Init_Error(uint8_t length) {
-  ucTxBuffer[0] = '$';              // header
-  ucTxBuffer[1] = 'M';              //
-  ucTxBuffer[2] = '!';              // error message
-  ucTxBuffer[3] = length;           // message length
-  ucTxBuffer[4] = MSP_Command;      // command
-  MSP_Checksum = 0;                 // clear checksum
-  ucTxWindex = 5;                   // initialize write index
+static void __inline MSP_Init_Error(uint8_t length) {
+  USART1_Putch('$');            // header
+  USART1_Putch('M');            // multiwii protocol
+  USART1_Putch('!');            // error message
+  USART1_Putch(length);         // message length
+  USART1_Putch(MSP_Command);    // command
+  MSP_Checksum = 0;             // clear checksum
 }
 
 ///----------------------------------------------------------------------------
@@ -281,8 +261,8 @@ void __inline MSP_Init_Error(uint8_t length) {
 /// \remarks
 ///
 ///----------------------------------------------------------------------------
-void MSP_Append_8(uint8_t a) {
-  ucTxBuffer[ucTxWindex++] = a;
+static void MSP_Append_8(uint8_t a) {
+  USART1_Putch(a);
   MSP_Checksum ^= a;
 }
 
@@ -295,7 +275,7 @@ void MSP_Append_8(uint8_t a) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void MSP_Append_16(int16_t a) {
+static void MSP_Append_16(int16_t a) {
   MSP_Append_8((a     ) & 0xFF);
   MSP_Append_8((a >> 8) & 0xFF);
 }
@@ -309,7 +289,7 @@ void MSP_Append_16(int16_t a) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void MSP_Append_32(uint32_t a) {
+static void MSP_Append_32(uint32_t a) {
   MSP_Append_8((a      ) & 0xFF);
   MSP_Append_8((a >>  8) & 0xFF);
   MSP_Append_8((a >> 16) & 0xFF);
@@ -325,7 +305,7 @@ void MSP_Append_32(uint32_t a) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void MSP_Append_Name(const uint8_t* s) {
+static void MSP_Append_Name(const uint8_t* s) {
   while (*s != 0) {
   	MSP_Append_8(*s++);
   }
@@ -451,16 +431,12 @@ void MSP_Parse_Command( void ) {
      MSP_Init_Response(0);              // initialize response
      break;
 
-   default :                           // indicate error "$M!"
-     MSP_Init_Error(0);                // initialize error message
+   default :                            // indicate error "$M!"
+     MSP_Init_Error(0);                 // initialize error message
      break;
   }
-  MSP_Append_8(MSP_Checksum);
-  for (i = 0; i < ucTxBuffer[3] + 3; i++) {
-    while (0/*USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET*/) {
-    }
-//    USART_SendData(USART1, ucTxBuffer[i]);
-  }
+  MSP_Append_8(MSP_Checksum);           // append message checksum
+  USART1_Transmit();                    // transmit
 }
 
 
@@ -473,114 +449,66 @@ void MSP_Parse_Command( void ) {
 ///----------------------------------------------------------------------------
 void MSP_Receive( void ) {
   uint8_t c;
-  static uint8_t counter;
 
-  while (ucRxRindex != ucRxWindex) {      // receive buffer not empty
-    c = ucRxBuffer[ucRxRindex++];         // read character
-    if (ucRxRindex >= RX_BUFFER_LENGTH) { // update read index
-        ucRxRindex = 0;                   // wrap around
-    }
-    switch (xStatus) {
-        case IDLE:                        // idle
-            if (c == '$') {               // message start
-                xStatus = HEADER_START;   //
-            } else {                      //
-                xStatus = IDLE;           //
+  while (USART1_Getch(&c)) {                // received another character
+    switch (MSP_Status) {
+        case IDLE:                          // idle
+            if (c == '$') {                 // message start
+                MSP_Status = HEADER_START;  //
+            } else {                        //
+                MSP_Status = IDLE;          //
             }
             break;
 
-        case HEADER_START:                // message started
-            if (c == 'M') {               // Multiwii protocol
-                xStatus = HEADER_M;       //
-            } else {                      //
-                xStatus = IDLE;           //
+        case HEADER_START:                  // message started
+            if (c == 'M') {                 // Multiwii protocol
+                MSP_Status = HEADER_M;      //
+            } else {                        //
+                MSP_Status = IDLE;          //
             }
             break;
 
-        case HEADER_M:                    //
-            if (c == '<') {               // incoming message
-                xStatus = HEADER_ARROW;   //
-            } else {                      //
-                xStatus = IDLE;           //
+        case HEADER_M:                      //
+            if (c == '<') {                 // incoming message
+                MSP_Status = HEADER_ARROW;  //
+            } else {                        //
+                MSP_Status = IDLE;          //
             }
             break;
 
-        case HEADER_ARROW:                //
-            if (c > PAYLOAD_SIZE) {       // payload size too big
-                xStatus = IDLE;           // ignore rest of message
-            } else {                      // payload size fits
-                counter = 0;              // clear payload bytes counter
-                MSP_Size = c;             // save payload size
-                MSP_Checksum = 0;         // clear message checksum
-                MSP_Checksum ^= c;        // start computing checksum
-                xStatus = HEADER_SIZE;    //
+        case HEADER_ARROW:                  //
+            if (c > PAYLOAD_SIZE) {         // payload size too big
+                MSP_Status = IDLE;          // ignore rest of message
+            } else {                        // payload size fits
+                MSP_Size = c;               // save payload size
+                MSP_Index = 0;              // clear payload index
+                MSP_Checksum = 0;           // clear message checksum
+                MSP_Checksum ^= c;          // start computing checksum
+                MSP_Status = HEADER_SIZE;   //
             }
             break;
 
-        case HEADER_SIZE:                 //
-            MSP_Command = c;              // save command byte
-            MSP_Offset = ucRxRindex;      // save offset of message start
-            MSP_Checksum ^= c;            // keep computing checksum
-            xStatus = HEADER_CMD;         //
-            break;                        //
+        case HEADER_SIZE:                   //
+            MSP_Command = c;                // save command byte
+            MSP_Checksum ^= c;              // keep computing checksum
+            MSP_Status = HEADER_CMD;        //
+            break;                          //
 
-        case HEADER_CMD:                  //
-            if (counter < MSP_Size) {     // not all expected bytes have been received
-                MSP_Checksum ^= c;        // compute checksum
-                counter++;
+        case HEADER_CMD:                    //
+            if (MSP_Index < MSP_Size) {     // not all expected bytes have been received
+                MSP_Checksum ^= c;          // compute checksum
+                MSP_Buffer[MSP_Index++] = c;// store received byte
             } else if (MSP_Checksum == c) { // calculated and transferred checksums match
-                MSP_Parse_Command();      // valid packet, evaluate it
-                xStatus = IDLE;           //
+                MSP_Parse_Command();        // valid packet, evaluate it
+                MSP_Status = IDLE;          //
             }
             break;
 
         default :
-            xStatus = IDLE;               //
+            MSP_Status = IDLE;              //
             break;
     }
   }
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Initialize telemetry
-/// \return  -
-/// \remarks configures USART1.
-///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
-///          for direct register initialization of USART 1
-///
-//----------------------------------------------------------------------------
-static void Telemetry_Init( void ) {
-/*
-    USART_InitTypeDef USART_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
-    // Initialize USART1 structure
-    USART_InitStructure.USART_BaudRate = 115200;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-
-    USART_Init(USART1, &USART_InitStructure);       // configure USART1
-
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);  // enable USART1 interrupt
-    //USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-
-    // Configure NVIC for USART1 interrupt
-    NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init( &NVIC_InitStructure );
-
-    USART_Cmd(USART1, ENABLE);                      // enable the USART1
-*/
-    ucRxWindex = 0;                                 // clear uplink write index
-    ucRxRindex = 0;                                 // clear uplink read index
-    ucTxWindex = 0;                                 // clear downlink write index
-    xStatus = IDLE;                                 // reset reception status
 }
 
 ///----------------------------------------------------------------------------
@@ -598,7 +526,6 @@ void Telemetry_Task( void *pvParameters )
     portTickType Last_Wake_Time;                //
     Last_Wake_Time = xTaskGetTickCount();       //
 */
-    Telemetry_Init();                           // telemetry initialization
 
     while (TRUE) {
 //        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
