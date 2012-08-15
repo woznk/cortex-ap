@@ -42,28 +42,20 @@
 /// MultiWii protocol sends only one byte for each gain, whereas gains are
 /// currently implemented as float.\n
 ///
-//  Change added driver for USART 1, restored buffer for incoming message,
-//         removed Telemetry_Init()
+//  Change telemetry task moved to main.c, removed Telemetry_Init()
 //
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-
 #include "misc.h"
 
-#include "stm32f10x.h"
-#include "math.h"
+#include "config.h"
 #include "nav.h"
 #include "DCM.h"
-#include "log.h"
-#include "config.h"
 #include "servodriver.h"
 #include "usart1driver.h"
-#include "telemetry.h"
+#include "multiwii.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
@@ -77,8 +69,6 @@
 #endif
 #define   VAR_GLOBAL
 
-#define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task
-#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
 #define PAYLOAD_SIZE        16  //!< maximum size of payload
 
 #define VERSION             0	//!< multiwii version
@@ -266,7 +256,6 @@ static void MSP_Append_8(uint8_t a) {
   MSP_Checksum ^= a;
 }
 
-
 ///----------------------------------------------------------------------------
 ///
 /// \brief   Append a word to outgoing message
@@ -279,7 +268,6 @@ static void MSP_Append_16(int16_t a) {
   MSP_Append_8((a     ) & 0xFF);
   MSP_Append_8((a >> 8) & 0xFF);
 }
-
 
 ///----------------------------------------------------------------------------
 ///
@@ -295,8 +283,7 @@ static void MSP_Append_32(uint32_t a) {
   MSP_Append_8((a >> 16) & 0xFF);
   MSP_Append_8((a >> 24) & 0xFF);
 }
-
-
+   
 ///----------------------------------------------------------------------------
 ///
 /// \brief   Append a null terminated string to outgoing message
@@ -310,7 +297,6 @@ static void MSP_Append_Name(const uint8_t* s) {
   	MSP_Append_8(*s++);
   }
 }
-
 
 ///----------------------------------------------------------------------------
 ///
@@ -439,7 +425,6 @@ void MSP_Parse_Command( void ) {
   USART1_Transmit();                    // transmit
 }
 
-
 ///----------------------------------------------------------------------------
 ///
 /// \brief   manages multi wii serial protocol reception
@@ -509,28 +494,6 @@ void MSP_Receive( void ) {
             break;
     }
   }
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief  telemetry task
-/// \return  -
-/// \remarks waits for a message to be added to telemetry queue and sends it
-///          to the UART
-///
-///----------------------------------------------------------------------------
-void Telemetry_Task( void *pvParameters )
-{
-/*
-    uint8_t ucCycles = 0;                       //
-    portTickType Last_Wake_Time;                //
-    Last_Wake_Time = xTaskGetTickCount();       //
-*/
-
-    while (TRUE) {
-//        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
-        MSP_Receive();          				//
-    }
 }
 
 ///----------------------------------------------------------------------------
