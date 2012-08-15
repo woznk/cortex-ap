@@ -10,7 +10,7 @@
 /// \file
 ///
 ///
-//  Change  added Telemetry_Get_Altitude() function
+//  Change exported all functions
 //
 //============================================================================
 
@@ -54,10 +54,13 @@ typedef enum {
 
 /*---------------------------------- Interface -------------------------------*/
 
-void Telemetry_Task( void *pvParameters );
+void Telemetry_Parse( void );
+void Telemetry_Send_Message(uint16_t *data, uint8_t num);
+void Telemetry_Send_DCM( void );
+void Telemetry_Send_Controls( void );
+void Telemetry_Send_Waypoint( void );
 void Telemetry_Get_Sensors(int16_t * piSensors);
 float Telemetry_Get_Gain(telEnum_Gain gain);
-void Telemetry_Send_Controls(void);
 float Telemetry_Get_Speed(void);
 float Telemetry_Get_Altitude(void);
 
