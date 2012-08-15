@@ -42,25 +42,18 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  Change USART 1 functions moved to usart1driver.c
+//  Change telemetry task moved to main.c, removed Telemetry_Init(), exported 
+//         all other functions 
 //
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-
 #include "misc.h"
 
-#include "stm32f10x.h"
-#include "stm32f10x_usart.h"
-#include "math.h"
+#include "config.h"
 #include "nav.h"
 #include "DCM.h"
-#include "log.h"
-#include "config.h"
 #include "servodriver.h"
 #include "usart1driver.h"
 #include "telemetry.h"
@@ -76,9 +69,6 @@
 #   undef VAR_GLOBAL
 #endif
 #define   VAR_GLOBAL
-
-#define TELEMETRY_FREQUENCY 50              //!< frequency of telemetry task
-#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -137,9 +127,9 @@ typedef enum E_PARSER {
 "$K,8799,1299, 899, 199,4999,4999\r\n"
 "$S,560,112,-12,12345,0,1023,110\n"
 */
-VAR_STATIC parser_status_t xStatus;                 //!< status of parser
-VAR_STATIC float fTemp;                             //!< temporary for parser
-VAR_STATIC float fTrueAirSpeed;                     //!< simulator true air speed
+VAR_STATIC parser_status_t xStatus = PARSE_PREAMBLE;//!< status of parser
+VAR_STATIC float fTemp = 0.0f;                      //!< temporary for parser
+VAR_STATIC float fTrueAirSpeed = 0.0f;              //!< simulator true air speed
 VAR_STATIC float fAltitude;                         //!< simulator altitude
 VAR_STATIC float fSensor[8];                        //!< simulator sensor data
 VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
@@ -155,60 +145,7 @@ VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-static void Telemetry_Init( void );
-static void Telemetry_Send_Message(uint16_t *data, uint8_t num);
-static void Telemetry_Send_DCM( void );
-static void Telemetry_Parse( void );
-static void Telemetry_Send_Waypoint( void );
-
 /*---------------------------------- Functions -------------------------------*/
-
-///----------------------------------------------------------------------------
-///
-/// \brief  telemetry task
-/// \return  -
-/// \remarks waits for a message to be added to telemetry queue and sends it
-///          to the UART
-///
-///----------------------------------------------------------------------------
-void Telemetry_Task( void *pvParameters )
-{
-    uint8_t ucCycles = 0;
-    portTickType Last_Wake_Time;
-
-    Last_Wake_Time = xTaskGetTickCount();       //
-    Telemetry_Init();                           // telemetry initialization
-
-    while (TRUE) {
-        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
-#if 1
-        Telemetry_Send_Controls();              // update simulator controls
-#endif
-        Telemetry_Parse();                      // parse uplink data
-        if (++ucCycles >= (TELEMETRY_FREQUENCY / 4)) {// every .125 second
-            ucCycles = 0;                       // reset cycle counter
-            Telemetry_Send_Waypoint();          // send waypoint information
-#if 1
-            Telemetry_Send_DCM();
-#endif
-        }
-    }
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Initialize telemetry
-/// \return  -
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-static void Telemetry_Init( void ) {
-
-    xStatus = PARSE_PREAMBLE;   // reset parser status
-    fTemp = 0.0f;               // clear parser temporary
-    fTrueAirSpeed = 0.0f;       // clear true air speed
-}
-
 
 //----------------------------------------------------------------------------
 //
@@ -240,7 +177,7 @@ static void Telemetry_Init( void ) {
 ///         conversion. Sensor data and gains have no final checksum.
 ///
 //----------------------------------------------------------------------------
-static void Telemetry_Parse ( void )
+void Telemetry_Parse ( void )
 {
     uint8_t c;
     while (USART1_Getch(&c)) {          // received another character
@@ -393,7 +330,7 @@ void Telemetry_Send_Controls(void)
 ///               7     distance MSB
 ///
 //----------------------------------------------------------------------------
-static void Telemetry_Send_Waypoint(void)
+void Telemetry_Send_Waypoint(void)
 {
     USART1_Putch(TEL_WAYPOINT);                 // telemetry wait code
     USART1_Putch(Nav_Wpt_Index());              // waypoint index
@@ -415,7 +352,7 @@ static void Telemetry_Send_Waypoint(void)
 ///          Each element is converted to an hexadecimal string and sent to UART
 ///
 ///----------------------------------------------------------------------------
-static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
+void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 {
     uint32_t l_temp;
     uint8_t digit, i = 0;
@@ -444,7 +381,7 @@ static void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 /// \remarks entries of DCM matrix are sent as raw bytes
 ///
 ///----------------------------------------------------------------------------
-static void Telemetry_Send_DCM(void) {
+void Telemetry_Send_DCM(void) {
 
     uint8_t x, y;
 
