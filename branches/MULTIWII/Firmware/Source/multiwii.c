@@ -36,14 +36,40 @@
 /// \n         https://play.google.com/store/apps/details?id=com.naze32.configurator
 /// - for VT100 terminal type addition see
 /// \n         http://www.multiwii.com/forum/viewtopic.php?f=7&t=1096
+/// - transmission order and scale factors of values for MSP_SET_PID command :
+///    -  1 roll P          10
+///    -  2 roll I          1000
+///    -  3 roll D          1
+///    -  4 pitch P         10
+///    -  5 pitch I         1000
+///    -  6 pitch D         1
+///    -  7 yaw P           10
+///    -  8 yaw I           1000
+///    -  9 yaw D           1
+///    - 10 altitude P      10
+///    - 11 altitude I      1000
+///    - 12 altitude D      1
+///    - 13 position P      100
+///    - 14 position I      100
+///    - 15 position D      ? (not used)
+///    - 16 position rate P 10
+///    - 17 position rate I 100
+///    - 18 position rate D 1000
+///    - 19 navigation P    10
+///    - 20 navigation I    100
+///    - 21 navigation D    1000
+///    - 22 level P         10
+///    - 23 level I         100
+///    - 24 level D         1
+///    - 25 magnetic P      10
+///    - 26 magnetic I      ? (not used)
+///    - 27 magnetic D      ? (not used)
+///    - 28 velocity P      10
+///    - 29 velocity I      100
+///    - 30 velocity D      1
 ///
-/// \todo
-/// Complete implementation of MSP_SET_PID command.\n
-/// MultiWii protocol sends only one byte for each gain, whereas gains are
-/// currently implemented as float.\n
-///
-//  Change increased max size of payload, corrected functions MSP_Init_Response
-//         and MSP_Init_Error
+//  Change added reset of MSP_index before calling command parser,
+//         completed implementation of MSP_SET_PID and MSP_PID commands
 //
 //============================================================================*/
 
@@ -155,7 +181,7 @@ VAR_STATIC uint8_t MSP_Command;                     //!< command identifier
 VAR_STATIC uint8_t MSP_Size;                        //!< payload size
 VAR_STATIC uint8_t MSP_Index;                       //!< payload index
 VAR_STATIC uint8_t MSP_Buffer[48];                  //!< payload buffer
-VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
+VAR_STATIC float fPIDGain[TEL_GAIN_NUMBER] = {
     PITCH_KP,                                       //!< default pitch kp
     PITCH_KI,                                       //!< default pitch ki
     ROLL_KP,                                        //!< default roll kp
@@ -311,11 +337,22 @@ void MSP_Parse_Command( void ) {
 
   switch (MSP_Command) {
 
-    case MSP_SET_PID:					// set PID values
-     for (i = 0; i < TEL_GAIN_NUMBER; i++) { // PITCH_KP, PITCH_KI
-	 	fGain[i] = read8();             // ROLL_KP, ROLL_KI,
-     }                                  // NAV_KP, NAV_KI,
-     MSP_Init_Response(0);				// initialize response
+    case MSP_SET_PID:                   // set PID values
+     i = TEL_ROLL_KP;                   // start with first gain
+     fPIDGain[i++] = read8() / 10.0f;   // roll P
+     fPIDGain[i++] = read8() / 1000.0f; // roll I
+     (void)read8();                     // skip roll D
+     fPIDGain[i++] = read8() / 10.0f;   // pitch P
+     fPIDGain[i++] = read8() / 1000.0f; // pitch I
+     (void)read32();                    // skip pitch D and yaw P, I, D
+     fPIDGain[i++] = read8() / 10.0f;   // alt P
+     fPIDGain[i++] = read8() / 1000.0f; // alt I
+     (void)read32();                    // skip alt D and pos P, I, D
+     (void)read16();                    // skip pos rate P, I
+     (void)read8();                     // skip pos rate D
+     fPIDGain[i++] = read8() / 10.0f;   // nav P
+     fPIDGain[i++] = read8() / 100.0f;  // nav I
+     MSP_Init_Response(0);              // initialize response
      break;
 
     case MSP_IDENT:                     // requested identification
@@ -374,11 +411,25 @@ void MSP_Parse_Command( void ) {
      MSP_Append_32(0);                  // EstAlt, estimated barometric altitude
      break;
 
-    case MSP_PID:                       // requested PID values
-     MSP_Init_Response(TEL_GAIN_NUMBER);// initialize response
-     for (i = 0; i < TEL_GAIN_NUMBER; i++) { //
-       MSP_Append_8(fGain[i]);	        // append gain
-     }
+    case MSP_PID:                                       // requested PID values
+     MSP_Init_Response(30);                             // initialize response
+     i = TEL_ROLL_KP;                                   // start with first gain
+     MSP_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // roll P
+     MSP_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // roll I
+     MSP_Append_8(0);                                   // roll D: skip
+     MSP_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // pitch P
+     MSP_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // pitch I
+     MSP_Append_32(0);                                  // skip pitch D, yaw P, I, D
+     MSP_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // alt P
+     MSP_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // alt I
+     MSP_Append_32(0);                                  // skip alt D and pos P, I, D
+     MSP_Append_16(0);                                  // skip pos rate P, I
+     MSP_Append_8(0);                                   // skip pos rate D
+     MSP_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // nav P
+     MSP_Append_8((uint8_t)(fPIDGain[i++] * 100.0f));   // nav I
+     MSP_Append_32(0);                                  // skip nav D and level P, I, D
+     MSP_Append_32(0);                                  // skip mag P, I, D and velocity P
+     MSP_Append_16(0);                                  // skip velocity I, D
      break;
 
     case MSP_PIDNAMES:                  // requested PID names
@@ -485,6 +536,7 @@ void MSP_Receive( void ) {
                 MSP_Checksum ^= c;          // compute checksum
                 MSP_Buffer[MSP_Index++] = c;// store received byte
             } else if (MSP_Checksum == c) { // calculated and transferred checksums match
+                MSP_Index = 0;              // clear payload index
                 MSP_Parse_Command();        // valid packet, evaluate it
                 MSP_Status = IDLE;          //
             }
@@ -529,7 +581,7 @@ float Telemetry_Get_Altitude(void) {
 ///----------------------------------------------------------------------------
 float Telemetry_Get_Gain(telEnum_Gain gain) {
     if (gain < TEL_GAIN_NUMBER) {
-        return fGain[gain];
+        return fPIDGain[gain];
     } else {
         return 1.0f;
     }
