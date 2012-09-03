@@ -68,8 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change added reset of MSP_index before calling command parser,
-//         completed implementation of MSP_SET_PID and MSP_PID commands
+//  Change added hexadecimal values of MultiWii protocol codes
 //
 //============================================================================*/
 
@@ -103,42 +102,42 @@
 #define MSP_VERSION         0   //!< Multiwii Serial Protocol 0
 
 /* outgoing messages */
-#define MSP_IDENT           100 //!< multitype + multiwii version + protocol version + capability variable
-#define MSP_STATUS          101 //!< cycletime & errors_count & sensor present & box activation
-#define MSP_RAW_IMU         102 //!< raw IMU data, 9 DOF
-#define MSP_SERVO           103 //!< 8 servos
-#define MSP_MOTOR           104 //!< 8 motors
-#define MSP_RC              105 //!< 8 rc channels
-#define MSP_RAW_GPS         106 //!< fix, numsat, lat, lon, alt, speed
-#define MSP_COMP_GPS        107 //!< distance home, direction home
-#define MSP_ATTITUDE        108 //!< roll, pitch, heading
-#define MSP_ALTITUDE        109 //!< 1 altitude
-#define MSP_BAT             110 //!< vbat, powermetersum
-#define MSP_RC_TUNING       111 //!< rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
-#define MSP_PID             112 //!< up to 16 PID
-#define MSP_BOX             113 //!< up to 16 checkbox
-#define MSP_MISC            114 //!< powermeter trig + 8 free for future use
-#define MSP_MOTOR_PINS      115 //!< which pins are in use for motors & servos, for GUI
-#define MSP_BOXNAMES        116 //!< the aux switch names
-#define MSP_PIDNAMES        117 //!< the PID names
-#define MSP_WP              118 //!< get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
-#define MSP_HEADING         125 //!< headings and MAG configuration
-#define MSP_DEBUGMSG        253 //!< debug string buffer
-#define MSP_DEBUG           254 //!< debug1, debug2, debug3, debug4
+#define MSP_IDENT           100 //!< 64 multitype + multiwii version + protocol version + capability variable
+#define MSP_STATUS          101 //!< 65 cycletime & errors_count & sensor present & box activation
+#define MSP_RAW_IMU         102 //!< 66 raw IMU data, 9 DOF
+#define MSP_SERVO           103 //!< 67 8 servos
+#define MSP_MOTOR           104 //!< 68 8 motors
+#define MSP_RC              105 //!< 69 8 rc channels
+#define MSP_RAW_GPS         106 //!< 6A fix, numsat, lat, lon, alt, speed
+#define MSP_COMP_GPS        107 //!< 6B distance home, direction home
+#define MSP_ATTITUDE        108 //!< 6C roll, pitch, heading
+#define MSP_ALTITUDE        109 //!< 6D 1 altitude
+#define MSP_BAT             110 //!< 6E vbat, powermetersum
+#define MSP_RC_TUNING       111 //!< 6F rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+#define MSP_PID             112 //!< 70 up to 16 PID
+#define MSP_BOX             113 //!< 71 up to 16 checkbox
+#define MSP_MISC            114 //!< 72 powermeter trig + 8 free for future use
+#define MSP_MOTOR_PINS      115 //!< 73 which pins are in use for motors & servos, for GUI
+#define MSP_BOXNAMES        116 //!< 74 the aux switch names
+#define MSP_PIDNAMES        117 //!< 75 the PID names
+#define MSP_WP              118 //!< 76 get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
+#define MSP_HEADING         125 //!< 7D headings and MAG configuration
+#define MSP_DEBUGMSG        253 //!< FD debug string buffer
+#define MSP_DEBUG           254 //!< FE debug1, debug2, debug3, debug4
 
 /* incoming messages */
-#define MSP_SET_RAW_RC      200 //!< 8 rc chan
-#define MSP_SET_RAW_GPS     201 //!< fix, numsat, lat, lon, alt, speed
-#define MSP_SET_PID         202 //!< set up to 16 PID
-#define MSP_SET_BOX         203 //!< set up to 16 checkbox
-#define MSP_SET_RC_TUNING   204 //!< rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
-#define MSP_ACC_CALIBRATION 205 //!< calibrate accelerometers
-#define MSP_MAG_CALIBRATION 206 //!< calibrate magnetometers
-#define MSP_SET_MISC        207 //!< powermeter trig + 8 free for future use
-#define MSP_RESET_CONF      208 //!< reset configuration
-#define MSP_WP_SET          209 //!< sets a given WP (WP#, lat, lon, alt, flags)
+#define MSP_SET_RAW_RC      200 //!< C8 8 rc chan
+#define MSP_SET_RAW_GPS     201 //!< C9 fix, numsat, lat, lon, alt, speed
+#define MSP_SET_PID         202 //!< CA set up to 16 PID
+#define MSP_SET_BOX         203 //!< CB set up to 16 checkbox
+#define MSP_SET_RC_TUNING   204 //!< CC rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+#define MSP_ACC_CALIBRATION 205 //!< CD calibrate accelerometers
+#define MSP_MAG_CALIBRATION 206 //!< CE calibrate magnetometers
+#define MSP_SET_MISC        207 //!< CF powermeter trig + 8 free for future use
+#define MSP_RESET_CONF      208 //!< D0 reset configuration
+#define MSP_WP_SET          209 //!< D1 sets a given WP (WP#, lat, lon, alt, flags)
 
-#define MSP_EEPROM_WRITE    250 //!< save configuration to eeprom
+#define MSP_EEPROM_WRITE    250 //!< FA save configuration to eeprom
 
 /*----------------------------------- Macros ---------------------------------*/
 
