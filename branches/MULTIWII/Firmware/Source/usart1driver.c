@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-///
+/// Change: changed baudrate to 38400
 //
 //============================================================================*/
 
@@ -75,7 +75,7 @@ void USART1_Init( void ) {
     NVIC_InitTypeDef NVIC_InitStructure;
 
     // Initialize USART1 structure
-    USART_InitStructure.USART_BaudRate = 115200;
+    USART_InitStructure.USART_BaudRate = 38400;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;
