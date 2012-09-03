@@ -18,7 +18,8 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: moved telemetry task here from telemetry.c, according todo 1)
+// Change: removed delay from telemetry task when in multiwii mode: now it works
+//         replaced inclusion of telemetry.h with multiwii.h
 //
 //============================================================================*/
 
@@ -38,7 +39,8 @@
 #include "diskio.h"
 
 #include "config.h"
-#include "telemetry.h"
+//#include "telemetry.h"
+#include "multiwii.h"
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
@@ -123,10 +125,10 @@ void Telemetry_Task( void *pvParameters )
     Last_Wake_Time = xTaskGetTickCount();       //
 
     while (TRUE) {
-        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
 #if defined TELEMETRY_MULTIWII
         MSP_Receive();          				//
 #elif defined TELEMETRY_ARDUPILOT
+        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
 		Telemetry_Send_Controls();              // update simulator controls
 		Telemetry_Parse();                      // parse uplink data
 		if (++ucCycles >= (TELEMETRY_FREQUENCY / 4)) {// every .125 second
