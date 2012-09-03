@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change added definition of telemetry types
+// Change enabled multiwii telemetry
 //
 //============================================================================*/
 
@@ -118,5 +118,5 @@
 #define LOG_SERVO   0                   //!< enable log of servo positions
 
 /*! Telemetry type definition */
-//#define TELEMETRY_MULTIWII
-#define TELEMETRY_ARDUPILOT
+#define TELEMETRY_MULTIWII
+//#define TELEMETRY_ARDUPILOT
