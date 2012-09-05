@@ -2,11 +2,11 @@
 
 = Do’s =
 
-# Development
+* Development
 
 Create a branch, add some feature / fix a bug, compile, do unit test, merge into trunk.
 
-# Coding
+* Coding
 
 Replace nested if() instructions with switch() instructions
 Always add the  default : branch to switch () instructions
@@ -14,7 +14,7 @@ Remove all “not reachable” code
 Remove all commented code
 Write one declaration and one instruction for each line
 
-# Names
+* Names
 
 Use long names.
 Separate words by underscores, never use leading underscore.
@@ -39,14 +39,14 @@ void Function_A (INT8U first_parameter, INT16U second_parameter)
 }
 }}}
 
-# Comments
+* Comments
 
 Concise, explicit, complete. 
 Explain the meaning and function of every variable declaration. 
 Explain the return value of functions. 
 Comment language blocks, and any line that is not crystal clear.
 
-# Functions
+* Functions
 
 Keep functions short.
 Keep functions simple.
@@ -54,7 +54,7 @@ Break large functions into several smaller ones.
 Document the meaning of the parameter in the comments.
 Define a prototype for every called functions.
 
-# Interrupt Service Routines
+* Interrupt Service Routines
 
 Keep ISRs short.
 Keep functions simple.
@@ -65,11 +65,11 @@ Never call functions inside ISRs.
 Variables written inside ISR must never be written also outside ISR. 
 Point interrupt vector tables entries not used by the system to an error handler. 
 
-# Nesting
+* Nesting
 
 Nesting levels shall not be more than 4.
 
-# Run-time check
+* Run-time check
 
 Check program flow 
 Check array indexes 
@@ -80,7 +80,7 @@ Check if parameters passed to functions contain valid data
 
 = Don’t’s =
 
-# Coding
+* Coding
 
 Don’t use dynamic allocation
 Don’t use break instructions within loops
