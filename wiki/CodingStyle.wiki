@@ -8,8 +8,8 @@ Create a branch, add some feature / fix a bug, compile, do unit test, merge into
 
 * Coding
 
-Replace nested 'if()' instructions with 'switch()' instructions.
-Always add the  'default :' branch to 'switch ()' instructions.
+Replace nested `if()` instructions with `switch()` instructions.
+Always add the  `default :` branch to `switch ()` instructions.
 Remove all “not reachable” code.
 Remove all commented code.
 Write one declaration and one instruction for each line.
@@ -86,12 +86,12 @@ Don’t use dynamic allocation
 Don’t use break instructions within loops
 Don’t use multiple entry-/ exit-points
 Don’t use goto 
-Don’t use procedural parameters such as 'Function_A(Function_B(x));'
+Don’t use procedural parameters such as `Function_A(Function_B(x));`
 Don’t use recursion
 Don’t use implicit conversion
 Don’t use common resources
 Don’t use magic numbers
 Limit use of global variables
 Limit use of pointers 
-Don’t do assignments inside 'if( )' conditions
-Don’t do multiple assignments as 'a = b = 0xFF;'
+Don’t do assignments inside `if( )` conditions
+Don’t do multiple assignments as `a = b = 0xFF;`
