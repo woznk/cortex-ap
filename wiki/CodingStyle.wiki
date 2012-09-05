@@ -8,7 +8,7 @@ Create a branch, add some feature / fix a bug, compile, do unit test, merge into
 
 * Coding
 
-Replace nested `if()` instructions with `switch()` instructions.
+Replace nested `if()` instructions with `switch()` instructions.\n
 Always add the  `default :` branch to `switch ()` instructions.
 Remove all “not reachable” code.
 Remove all commented code.
