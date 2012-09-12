@@ -1,0 +1,79 @@
+== !Cortex Auto Pilot Instruction ==
+
+_This is !Cortex-AP wiki. Use the sidebar menu below to navigate._
+
+ * [Introduction Introduction]
+ * [News Project news]
+ * [History Project history]
+ * ----
+ * *Instructions:*
+ * *[CortexAPQuick Quick Start Guide]*
+ * *Setup*
+  * *Cortex AP 1.0*
+   * [CortexAPboard The Cortex AP 1.0 Board]
+   * [MWiiInstallation Download and install the MultiWii software]
+   * [RC Connecting your RC equipment]
+   * [RCSetup First-time Setup]
+   * [CortexAPSensorCheck Checking the sensors]
+ * *Flying*
+  * [StartingCortexAP Starting up and calibrating Cortex AP]
+  * [Tuning Tuning Cortex AP ]
+   * [ConfigFiles Configuration files for common airframes]
+   * [MAVParam The MAVLink protocol parameters]
+   * [MWiiParam The Multi Wii protocol parameters]
+   * [GroundStation Using a Ground Station]
+    * [MultiWiiConfig Multi Wii configuration software]
+  * [Mission Mission planning and analysis]
+   * [MPWaypoint Planning a mission with waypoints and events]
+   * [MPGCS Using the Ground Station]
+   * [MPTlog Recording and playing back missions]
+   * [MPDatalog Downloading and analyzing your onboard flight data]
+   * [MPPID Configuring PID settings for your airframe]
+   * [MPTerminal Using the serial terminal]
+   * [Xplane Interfacing with a PC flight simulator]
+  * [FlightModes Flight Modes]
+   * [FlightModesStabilize Stabilize]
+   * [FlightModesFlyByWire Fly by Wire]
+   * [FlightModesAutoPilot Autopilot]
+   * [FlightModesReturnToLaunch Return to Launch (RTL)]
+   * [FlightModesLoiter Loiter]
+  * [Datalogging Datalogging]
+ * *Simulation*
+  * [Xplane Using the X-Plane PC flight simulator for a full hardware-in-the-loop UAV simulation]
+ * *Optional additions*
+  * [Telemetry Using wireless data for telemetry and in-flight commands]
+    * [CortexAP3DRadio 3DR Radio ]
+    * [AntennaTracking Automatic Ground Antenna Tracking]
+  * [OSD On-screen display (OSD) board]
+  * [Tracking Camera control (stabilization, tracking, etc)]
+  * [Airspeed Airspeed sensor]
+  * [Voltage Voltage and Current sensors]
+  * [I2C Other I2C sensors]
+  * ----
+  * [CLI Advanced configuration and testing with the Command Line Interpreter]
+   * [CortexAPModes Setting flight modes]
+   * [Test Test modes]
+    * [http://code.google.com/p/cortex-ap/wiki/RCinput RC Input]
+    * [http://code.google.com/p/cortex-ap/wiki/GPSInput GPS Input]
+    * [http://code.google.com/p/cortex-ap/wiki/IMU IMU Output]
+    * [http://code.google.com/p/cortex-ap/wiki/SensorInput ADC (Raw gyro and accelerometer sensor input)]
+    * [Battery Battery Input (optional)]
+    * [Waypoints Waypoint Display]
+    * [AirspeedTest Airspeed Sensor Output (optional)]
+    * [Airpressure Absolute pressure (Altitude) Sensor Output]
+    * [MagnetometerTest Magnetometer Output (optional)]
+    * [http://code.google.com/p/cortex-ap/wiki/GPSInputRaw Raw GPS Input]
+   * [AdvancedConfig Advanced configuration]
+    * [Logs Logs guide]
+    * [AirspeedGuide Airspeed Sensor Guide]
+    * [VoltageGuide Voltage Sensor Guide]
+ * *Troubleshooting*
+  * [Troubleshooting Troubleshooting Guide]
+ * *Appendix*
+  * [APM_Parameters Parameters and their meaning]
+  * [LED Correct LED behavior]
+  * [DebugTerminal Using the debug terminal GCS]
+  * [Guide Guide for contributors to the Cortex AP codebase]
+   * [CodingStyle Coding Conventions]
+   * [Keil Building ArduPlane with Keil]
+ * [Glossary Glossary]
