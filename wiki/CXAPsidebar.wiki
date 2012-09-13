@@ -18,7 +18,6 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
   * [StartingCortexAP Starting up and calibrating Cortex AP]
   * [Tuning Tuning Cortex AP ]
    * [ConfigFiles Configuration files for common airframes]
-   * [MAVParam The MAVLink protocol parameters]
    * [MWiiParam The Multi Wii protocol parameters]
    * [GroundStation Using a Ground Station]
     * [MultiWiiConfig Multi Wii configuration software]
@@ -28,7 +27,6 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
    * [MPTlog Recording and playing back missions]
    * [MPDatalog Downloading and analyzing your onboard flight data]
    * [MPPID Configuring PID settings for your airframe]
-   * [MPTerminal Using the serial terminal]
    * [Xplane Interfacing with a PC flight simulator]
   * [FlightModes Flight Modes]
    * [FlightModesStabilize Stabilize]
@@ -43,7 +41,6 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
   * [Telemetry Using wireless data for telemetry and in-flight commands]
     * [CortexAP3DRadio 3DR Radio ]
     * [AntennaTracking Automatic Ground Antenna Tracking]
-  * [Tracking Camera control (stabilization, tracking, etc)]
   * [Voltage Voltage and Current sensors]
   * [I2C Other I2C sensors]
   * ----
