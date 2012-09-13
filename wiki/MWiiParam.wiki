@@ -1,0 +1,27 @@
+== Multi Wii protocol parameters ==
+
+ * *Commands*
+   || "data get" messages || Implemented || "data set" messages || Implemented ||
+   || MSP_IDENT       || Y ||  MSP_SET_RAW_RC        || N ||
+   || MSP_STATUS      || Y ||  MSP_SET_RAW_GPS       || N ||
+   || MSP_RAW_IMU     || N ||  MSP_SET_PID           || Y ||
+   || MSP_SERVO       || N ||  MSP_SET_BOX           || N ||
+   || MSP_MOTOR       || N ||  MSP_SET_RC_TUNING     || N ||
+   || MSP_RC          || N ||  MSP_ACC_CALIBRATION   || N ||
+   || MSP_RAW_GPS     || N ||  MSP_MAG_CALIBRATION   || N ||
+   || MSP_COMP_GPS    || N ||  MSP_SET_MISC          || N ||
+   || MSP_ATTITUDE    || N ||  MSP_RESET_CONF        || N ||
+   || MSP_ALTITUDE    || N ||  MSP_WP_SET            || N ||
+   || MSP_BAT         || N ||     || N ||
+   || MSP_RC_TUNING   || N ||     || N ||
+   || MSP_PID         || Y ||     || N ||
+   || MSP_BOX         || N ||     || N ||
+   || MSP_MISC        || N ||     || N ||
+   || MSP_MOTOR_PIN   || N ||     || N ||
+   || MSP_BOXNAMES    || N ||     || N ||
+   || MSP_PIDNAMES    || N ||     || N ||
+   || MSP_WP          || N ||     || N ||
+   || MSP_HEADING     || N ||     || N ||
+   || MSP_DEBUGMSG    || N ||     || N ||
+   || MSP_DEBUG       || N ||     || N ||
+   

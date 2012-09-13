@@ -1,0 +1,24 @@
+== Cortex Auto Pilot Board Ver 1.0 ==
+
+ * *Inputs*
+  * PPM signal from RC
+
+ * *Outputs*
+  * 4 PWM signals for servos
+
+ * *I/O*
+  * UART for GPS
+  * UART for telemetry
+  * I2C bus expansion
+  * STLink for programming and debugging
+
+ * *Storage*
+  * SD card for waypoints storage and [Datalogging data logging]
+
+ * *Interface*
+  * Yellow LED for SD card activity 
+  * Green LED for power
+  * Red LED for modes 
+  * Blue LED for telemetry data
+  * User pushbutton
+  * Reset pushbutton (to be removed)
