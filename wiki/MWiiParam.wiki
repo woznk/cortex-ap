@@ -1,7 +1,7 @@
 == Multi Wii protocol parameters ==
 
  * *Command messages*
-|| "data get" commands || Implemented || 
+|| *"data get" commands* || *Implemented* || 
 || MSP_IDENT     || Y || 
 || MSP_STATUS    || Y || 
 || MSP_RAW_IMU   || N || 
@@ -24,8 +24,8 @@
 || MSP_HEADING   || N || 
 || MSP_DEBUGMSG  || N || 
 || MSP_DEBUG     || N || 
-   
-|| "data set" commands || Implemented ||
+---
+|| *"data set" commands* || *Implemented* ||
 || MSP_SET_RAW_RC        || N ||
 || MSP_SET_RAW_GPS       || N ||
 || MSP_SET_PID           || Y ||
