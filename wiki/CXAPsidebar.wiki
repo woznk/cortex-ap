@@ -18,15 +18,15 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
    * [CortexAPSensorCheck Checking the sensors]
 </wiki:comment>
  * *Flying*
-<wiki:comment>
+  <wiki:comment>
   * [StartingCortexAP Starting up and calibrating Cortex AP]
-</wiki:comment>
+  </wiki:comment>
   * [Tuning Tuning Cortex AP ]
-<wiki:comment>
+   <wiki:comment>
    * [ConfigFiles Configuration files for common airframes]
-</wiki:comment>
+   </wiki:comment>
    * [MWiiParam The Multi Wii protocol parameters]
-<wiki:comment>
+   <wiki:comment>
    * [GroundStation Using a Ground Station]
     * [MultiWiiConfig Multi Wii configuration software]
   * [Mission Mission planning and analysis]
@@ -43,12 +43,12 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
    * [FlightModesReturnToLaunch Return to Launch (RTL)]
    * [FlightModesLoiter Loiter]
   * [Datalogging Datalogging]
-</wiki:comment>
+ </wiki:comment>
  * *Simulation*
   * [Xplane Using the X-Plane PC flight simulator for a full hardware-in-the-loop UAV simulation]
  * *Optional additions*
   * [Telemetry Using wireless data for telemetry and in-flight commands]
-<wiki:comment>
+  <wiki:comment>
     * [CortexAP3DRadio 3DR Radio ]
     * [AntennaTracking Automatic Ground Antenna Tracking]
   * [Voltage Voltage and Current sensors]
@@ -59,7 +59,7 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
  * *Appendix*
   * [CortexAPParameters Parameters and their meaning]
   * [LED LED behavior]
-</wiki:comment>
+  </wiki:comment>
   * [Guide Guide for contributors to the Cortex AP codebase]
    * [CodingStyle Coding Conventions]
    * [Keil Building Cortex AP with Keil]
