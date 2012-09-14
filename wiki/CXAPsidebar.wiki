@@ -56,13 +56,11 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
   * ----
  * *Troubleshooting*
   * [Troubleshooting Troubleshooting Guide]
- </wiki:comment>
  * *Appendix*
-  <wiki:comment>
   * [CortexAPParameters Parameters and their meaning]
   * [LED LED behavior]
   </wiki:comment>
-  * [Guide for contributors to the Cortex AP codebase]
+ * *Guide for contributors to the Cortex AP codebase*
    * [CodingStyle Coding Conventions]
    * [Keil Building Cortex AP with Keil]
  * *[Glossary Glossary]*
