@@ -46,9 +46,9 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
  </wiki:comment>
  * *Simulation*
   * [Xplane Using the X-Plane PC flight simulator for a full hardware-in-the-loop UAV simulation]
+ <wiki:comment>
  * *Optional additions*
   * [Telemetry Using wireless data for telemetry and in-flight commands]
-  <wiki:comment>
     * [CortexAP3DRadio 3DR Radio ]
     * [AntennaTracking Automatic Ground Antenna Tracking]
   * [Voltage Voltage and Current sensors]
@@ -56,11 +56,13 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
   * ----
  * *Troubleshooting*
   * [Troubleshooting Troubleshooting Guide]
+ </wiki:comment>
  * *Appendix*
+  <wiki:comment>
   * [CortexAPParameters Parameters and their meaning]
   * [LED LED behavior]
   </wiki:comment>
-  * [Guide Guide for contributors to the Cortex AP codebase]
+  * [Guide for contributors to the Cortex AP codebase]
    * [CodingStyle Coding Conventions]
    * [Keil Building Cortex AP with Keil]
  * *[Glossary Glossary]*
