@@ -34,7 +34,7 @@
 
  * ApSim setting
 
-   start Apsim.exe (download from /Software/Apsim)
+   start Apsim.exe (download from [Apsim http://code.google.com/p/cortex-ap/downloads/detail?name=ApSim.exe&can=2&q=])
    
    in the *Simulator* group: 
    
