@@ -1,6 +1,6 @@
 =Using X Plane for HIL simulation=
 
-http://code.google.com/p/cortex-ap/source/browse/wiki/Images/XPlane.JPG
+http://code.google.com/p/cortex-ap/wiki/Images/XPlane.JPG
 
  * *X Plane setting* (source: www.skylabs.com)
 
