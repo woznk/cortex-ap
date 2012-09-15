@@ -45,7 +45,7 @@ _This is Cortex-AP wiki. Use the sidebar menu below to navigate._
   * [Datalogging Datalogging]
  </wiki:comment>
  * *Simulation*
-  * [Xplane Using the X-Plane PC flight simulator for a full hardware-in-the-loop UAV simulation]
+  * [Xplane Using the X-Plane PC flight simulator for HIL simulation]
  <wiki:comment>
  * *Optional additions*
   * [Telemetry Using wireless data for telemetry and in-flight commands]
