@@ -42,8 +42,8 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  Change telemetry task moved to main.c, removed Telemetry_Init(), exported 
-//         all other functions 
+//  Change function Telemetry_Get_Sensors() renamed Telemetry_Get_Raw_IMU()
+//         
 //
 //============================================================================*/
 
@@ -440,7 +440,7 @@ float Telemetry_Get_Gain(telEnum_Gain gain) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Get_Sensors(int16_t * piSensor) {
+void Telemetry_Get_Raw_IMU(int16_t * piSensor) {
     uint8_t j;
 
     for (j = 0; j < 6; j++) {
