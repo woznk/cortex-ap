@@ -10,7 +10,7 @@
 /// \file
 ///
 ///
-//  Change exported all functions
+//  Change function Telemetry_Get_Sensors() renamed Telemetry_Get_Raw_IMU()
 //
 //============================================================================
 
@@ -59,7 +59,7 @@ void Telemetry_Send_Message(uint16_t *data, uint8_t num);
 void Telemetry_Send_DCM( void );
 void Telemetry_Send_Controls( void );
 void Telemetry_Send_Waypoint( void );
-void Telemetry_Get_Sensors(int16_t * piSensors);
+void Telemetry_Get_Raw_IMU(int16_t * piSensors);
 float Telemetry_Get_Gain(telEnum_Gain gain);
 float Telemetry_Get_Speed(void);
 float Telemetry_Get_Altitude(void);
