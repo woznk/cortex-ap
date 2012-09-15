@@ -34,7 +34,7 @@
 
  * *ApSim setting*
 
-   start Apsim.exe (download from http://code.google.com/p/cortex-ap/downloads/detail?name=ApSim.exe&can=2&q=)
+   start [http://code.google.com/p/cortex-ap/downloads/detail?name=ApSim.exe&can=2&q= Apsim.exe]
    
    in the *Simulator* group: 
    
@@ -63,6 +63,8 @@
    the board shall turn on
 
  * *Starting all*
+
+   start python script attitude_socket.py
 
    make sure the aircraft in X Plane is leveled 
 
