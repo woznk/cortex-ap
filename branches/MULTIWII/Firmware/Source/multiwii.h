@@ -10,7 +10,8 @@
 /// \file
 ///
 ///
-//  Change changed order of PID gain enumeration to reflect order of multiwii
+//  Change function Telemetry_Get_Sensors() renamed Telemetry_Get_Raw_IMU()
+//         function MSP_Recaive() renamed MWI_Receive()
 //
 //============================================================================
 
@@ -46,8 +47,8 @@ typedef enum {
 
 /*---------------------------------- Interface -------------------------------*/
 
-void MSP_Receive(void);
-void Telemetry_Get_Sensors(int16_t * piSensors);
+void MWI_Receive(void);
+void Telemetry_Get_Raw_IMU(int16_t * piSensors);
 float Telemetry_Get_Gain(telEnum_Gain gain);
 void Telemetry_Send_Controls(void);
 float Telemetry_Get_Speed(void);
