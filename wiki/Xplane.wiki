@@ -1,6 +1,6 @@
 =Using X Plane for HIL simulation=
 
-http://code.google.com/p/cortex-ap/wiki/Images/XPlane.JPG
+https://cortex-ap.googlecode.com/svn/wiki/Images/XPlane.JPG
 
  * *X Plane setting* (source: www.skylabs.com)
 
@@ -34,7 +34,7 @@ http://code.google.com/p/cortex-ap/wiki/Images/XPlane.JPG
      
    in the box *port that we send to iPad on* select *49002*
 
-http://code.google.com/p/cortex-ap/source/browse/wiki/Images/apsim.JPG
+https://cortex-ap.googlecode.com/svn/wiki/Images/apsim.JPG
 
  * *ApSim setting*
 
