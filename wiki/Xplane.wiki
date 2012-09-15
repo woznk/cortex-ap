@@ -32,7 +32,7 @@
      
    in the box *port that we send to iPad on* select *49002*
 
- * ApSim setting
+ * *ApSim setting*
 
    start Apsim.exe (download from http://code.google.com/p/cortex-ap/downloads/detail?name=ApSim.exe&can=2&q=)
    
@@ -54,7 +54,7 @@
 
    select the baud rate for GPS data
 
- * Cortex AP board Setup 
+ * *Cortex AP board Setup*
 
    connect the board's GPS port to the PC with an FTDI cable
 
@@ -62,7 +62,7 @@
 
    the board shall turn on
 
- * Starting all
+ * *Starting all*
 
    make sure the aircraft in X Plane is leveled 
 
