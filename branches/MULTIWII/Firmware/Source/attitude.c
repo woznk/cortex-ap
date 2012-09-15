@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-// Change: removed minor defects detectd by static analysis
+// Change: size of ucSensor_Data[] reduced to 12 bytes, 
+//         function Telemetry_Get_Sensors() renamed Telemetry_Get_Raw_IMU()
 //
 //============================================================================*/
 
@@ -64,7 +65,7 @@
 /*---------------------------------- Constants -------------------------------*/
 
 /// sign of sensor data
-VAR_STATIC const int16_t Sensor_Sign[6] = {
+VAR_STATIC const int16_t iSensor_Sign[6] = {
     -1,     // acceleration X, must be positive forward
      1,     // acceleration Y, must be positive rightward
      1,     // acceleration Z, must be positive downward
@@ -88,8 +89,8 @@ VAR_STATIC xPID Pitch_Pid;              //!< pitch PID
 VAR_STATIC float fSetpoint;             //!< PID setpoint
 VAR_STATIC float fInput;                //!< PID input
 VAR_STATIC float fOutput;               //!< PID output
-VAR_STATIC uint8_t ucSensor_Data[16];   //!< raw sensor data
-VAR_STATIC int16_t iSensor_Offset[6] =  //!< sensor offsets
+VAR_STATIC uint8_t ucSensor_Data[12];   //!< raw IMU data
+VAR_STATIC int16_t iSensor_Offset[6] =  //!< IMU sensors offset
 {0, 0, 0, 0, 0, 0};
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -146,9 +147,9 @@ void Attitude_Task(void *pvParameters)
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
 #if (SIMULATOR == SIM_NONE)                         // normal mode
         GetAccelRaw(ucSensor_Data);                 // acceleration
-        GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
+        GetAngRateRaw((uint8_t *)&ucSensor_Data[6]); // rotation
 #else                                               // simulation mode
-        Telemetry_Get_Sensors((int16_t *)ucSensor_Data);// get simulator sensors
+        Telemetry_Get_Raw_IMU((int16_t *)ucSensor_Data);// get simulator sensors
 #endif
         pSensor = (int16_t *)ucSensor_Data;
         for (j = 0; j < 6; j++) {                   // accumulate
@@ -175,13 +176,13 @@ void Attitude_Task(void *pvParameters)
         GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
         BMP085_Handler();
 #else                                               // simulation mode
-        Telemetry_Get_Sensors((int16_t *)ucSensor_Data);// get simulator sensors
+        Telemetry_Get_Raw_IMU((int16_t *)ucSensor_Data);// get simulator sensors
 #endif
         /* Offset and sign correction */
         pSensor = (int16_t *)ucSensor_Data;
         for (j = 0; j < 6; j++) {
             *pSensor = *pSensor - iSensor_Offset[j];// strip offset
-            *pSensor = *pSensor * Sensor_Sign[j];   // correct sign
+            *pSensor = *pSensor * iSensor_Sign[j];  // correct sign
             if (j == 2) {                           // z acceleration
                *pSensor += (int16_t)GRAVITY;        // add gravity
             }
