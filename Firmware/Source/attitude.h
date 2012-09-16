@@ -5,10 +5,11 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief
-/// attitude control
+/// \brief attitude control header file
 ///
-//  CHANGES
+/// \file
+///
+//  Change
 //
 //============================================================================*/
 
