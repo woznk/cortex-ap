@@ -5,8 +5,8 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief
-///  PPM input driver
+/// \brief PPM input driver
+///
 /// \file
 ///                                                 content of
 ///  ucPulseIndex     aliases                      ulPulseBuffer[]
@@ -29,7 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  CHANGES result of merge of NAV branch:
+//  Change  result of merge of NAV branch:
 //          modes MODE_ROLL_TUNE and MODE_PITCH_TUNE renamed MODE_STAB and
 //          MODE_NAV respectively
 //
@@ -51,18 +51,18 @@
 #endif
 #define VAR_GLOBAL
 
-#define PPM_SYNC_MIN        4999        ///< Modify according to RC type
-#define PPM_SYNC_MAX        20001       ///< Modify according to RC type
-#define PPM_LENGTH_MIN      900
-#define PPM_LENGTH_MAX      2100
-#define PPM_LENGTH_NEUTRAL  1500
+#define PPM_SYNC_MIN        4999    ///< min length of sync pulse, modify according to RC type
+#define PPM_SYNC_MAX        20001   ///< max length of sync pulse, modify according to RC type
+#define PPM_LENGTH_MIN      900     ///< length of channel pulse for full scale low
+#define PPM_LENGTH_MAX      2100    ///< length of channel pulse for full scale high
+#define PPM_LENGTH_NEUTRAL  1500    ///< length of channel pulse for neutral position
 
-#define PERIOD              65535
-#define PRESCALER           23
+#define PERIOD              65535   ///< capture timer period
+#define PRESCALER           23      ///< capture timer prescaler
 
 /*----------------------------------- Macros ---------------------------------*/
 
-#define MISSING_PULSES (cOverflowCount >= 3)
+#define MISSING_PULSES (cOverflowCount >= 3)    ///< missing pulses condition
 
 /*-------------------------------- Enumerations ------------------------------*/
 
@@ -74,15 +74,15 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC int8_t cPulseCount;
-VAR_STATIC int8_t cSignalLevel;
-VAR_STATIC int8_t cOverflowCount;
-VAR_STATIC uint8_t ucPulseIndex;
-VAR_STATIC uint16_t ulCaptureTime;
-VAR_STATIC uint16_t ulLastCapture;
-VAR_STATIC uint16_t ulPulseLength;
-VAR_STATIC uint16_t ulTemp[RC_CHANNELS];
-VAR_STATIC uint16_t ulPulseBuffer[RC_CHANNELS];
+VAR_STATIC int8_t cPulseCount;                  ///< counter of sync pulses
+VAR_STATIC int8_t cSignalLevel;                 ///< signal level estimation
+VAR_STATIC int8_t cOverflowCount;               ///< counter of timer overflows
+VAR_STATIC uint8_t ucPulseIndex;                ///< channel (pulse) index
+VAR_STATIC uint16_t ulCaptureTime;              ///< captured timer value
+VAR_STATIC uint16_t ulLastCapture;              ///< last captured timer value
+VAR_STATIC uint16_t ulPulseLength;              ///< length of channel pulse
+VAR_STATIC uint16_t ulTemp[RC_CHANNELS];        ///< temporary for channel pulses
+VAR_STATIC uint16_t ulPulseBuffer[RC_CHANNELS]; ///< rc channel pulses
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -91,8 +91,8 @@ VAR_STATIC uint16_t ulPulseBuffer[RC_CHANNELS];
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION The PPM input capture interrupt handler.
-/// \RETURN      -
-/// \REMARKS
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 void
@@ -208,8 +208,8 @@ void PPM_Init(void) {
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION Get value of n-th radio channel
-/// \RETURN      -
-/// \REMARKS
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 uint16_t PPMGetChannel(uint8_t ucChannel)
@@ -224,8 +224,8 @@ uint16_t PPMGetChannel(uint8_t ucChannel)
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION Get mode from MODE_CHANNEL
-/// \RETURN      -
-/// \REMARKS
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 uint8_t PPMGetMode(void)
