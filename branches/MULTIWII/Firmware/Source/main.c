@@ -18,8 +18,8 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: removed delay from telemetry task when in multiwii mode: now it works
-//         replaced inclusion of telemetry.h with multiwii.h
+// Change: MSP_Receive() renamed MWI_Receive()
+//         
 //
 //============================================================================*/
 
@@ -126,7 +126,7 @@ void Telemetry_Task( void *pvParameters )
 
     while (TRUE) {
 #if defined TELEMETRY_MULTIWII
-        MSP_Receive();          				//
+        MWI_Receive();          				//
 #elif defined TELEMETRY_ARDUPILOT
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
 		Telemetry_Send_Controls();              // update simulator controls
