@@ -5,7 +5,7 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief Navigation task
+/// \brief navigation task
 ///
 /// \file
 /// - Initialization:
@@ -23,7 +23,20 @@
 ///   when < -180° or > 180°. Cross produt and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
-//  CHANGES Lint: added missing #inclusions
+/// \todo
+/// 1) Compute longitude and latitude differences as :
+/// \code
+///     Delta Lat = Lat2 - Lat1
+///     Delta Lon = (Lon2 - Lon1) * cos((Lat1 + Lat2)/2)
+/// \endcode
+///
+/// \todo
+/// 2) Compute distance from waypoint as :
+/// \code
+///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
+/// \endcode
+///
+// Change: added option for multiwii telemetry or ardupilot-like telemetry
 //
 //============================================================================*/
 
@@ -37,7 +50,9 @@
 #include "ppmdriver.h"
 #include "dcm.h"
 #include "math.h"
+/* uncomment telemetry type that applies */
 #include "telemetry.h"
+//#include "multiwii.h"
 #include "config.h"
 #include "ff.h"
 #include "pid.h"
@@ -54,14 +69,14 @@
 #endif
 #define   VAR_GLOBAL
 
-#define MAX_WAYPOINTS       8       // Maximum number of waypoints
-#define MIN_DISTANCE        100     // Minimum distance from waypoint [m]
+#define MAX_WAYPOINTS       8       //!< Maximum number of waypoints
+#define MIN_DISTANCE        100     //!< Minimum distance from waypoint [m]
 
-#define BUFFER_LENGTH       96      // Length of buffer for file and USART
-#define LINE_LENGTH         48      // Length of lines read from file
+#define BUFFER_LENGTH       96      //!< Length of buffer for file and USART
+#define LINE_LENGTH         48      //!< Length of lines read from file
 
-#define GPS_STATUS_FIX      1       // GPS status: satellite fix
-#define GPS_STATUS_FIRST    2       // GPS status: waiting for first fix
+#define GPS_STATUS_FIX      1       //!< GPS status: satellite fix
+#define GPS_STATUS_FIRST    2       //!< GPS status: waiting for first fix
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -69,15 +84,17 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
-typedef struct {    // waypoint structure
-    float Lon;      // longitude
-    float Lat;      // latitude
-    float Alt;      // altitude
+/// waypoint structure
+typedef struct {
+    float Lon;      //!< longitude
+    float Lat;      //!< latitude
+    float Alt;      //!< altitude
 } STRUCT_WPT;
 
-typedef enum {      // navigation mode
-    NAV_RTL,        // return to launch
-    NAV_WPT         // waypoint following
+/// navigation modes
+typedef enum {
+    NAV_RTL,        //!< return to launch
+    NAV_WPT         //!< waypoint following
 } ENUM_NAV_MODE;
 
 /*---------------------------------- Constants -------------------------------*/
@@ -116,41 +133,40 @@ const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 3
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC uint8_t ucGpsBuffer[BUFFER_LENGTH];         // data buffer
 //"$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n";
 //"$GPRMC,194618.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*3E\n";
-VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];         	// waypoints array
-VAR_STATIC const uint8_t szFileName[16] = "path.txt";	// file name
-VAR_STATIC uint8_t szLine[LINE_LENGTH];                 // input line
-VAR_STATIC FATFS stFat;                             // FAT
-VAR_STATIC FIL stFile;                              // file object
-VAR_STATIC UINT wFileBytes;                         // counter of read bytes
-VAR_STATIC float fBank;                             // bank angle setpoint [rad]
-VAR_STATIC float fThrottle;                         // throttle
-VAR_STATIC float fPitch;                            // pitch setpoint [rad]
-VAR_STATIC float fLat_Dest;                         // destination latitude
-VAR_STATIC float fLon_Dest;                         // destination longitude
-VAR_STATIC float fAlt_Dest;                         // destination altitude
-VAR_STATIC float fLat_Curr;                         // current latitude
-VAR_STATIC float fLon_Curr;                         // current longitude
-VAR_STATIC float fAlt_Curr;                         // current altitude
-VAR_STATIC float fBearing;                          // angle to destination [°]
-VAR_STATIC float fHeading;                          // aircraft navigation heading [°]
-VAR_STATIC uint16_t uiGps_Heading;                  // aircraft GPS heading [°]
-VAR_STATIC uint32_t ulTempCoord;                    // temporary for coordinate parser
-VAR_STATIC uint16_t uiSpeed;                        // speed [kt]
-VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
-VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
-VAR_STATIC uint16_t uiWptNumber;                    // total number of waypoints
-VAR_STATIC uint8_t ucGps_Status;                    // status of GPS
-VAR_STATIC uint8_t ucCommas;                        // counter of commas in NMEA sentence
-VAR_STATIC uint8_t ucWindex;                        // USART buffer write index
-VAR_STATIC uint8_t ucRindex;                        // USART buffer read index
-VAR_STATIC xPID Nav_Pid;                            // Navigation PID loop
-//VAR_STATIC xPID Speed_Pid;                          // Speed PID loop
-VAR_STATIC float fHeight_Margin = HEIGHT_MARGIN;
-VAR_STATIC float fThrottle_Min = ALT_HOLD_THROTTLE_MIN;
-VAR_STATIC float fThrottle_Max = ALT_HOLD_THROTTLE_MAX;
+VAR_STATIC uint8_t ucGpsBuffer[BUFFER_LENGTH];          //!< data buffer
+VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];         	//!< waypoints array
+VAR_STATIC const uint8_t szFileName[16] = "path.txt";   //!< file name
+VAR_STATIC uint8_t szLine[LINE_LENGTH];                 //!< input line
+VAR_STATIC FATFS stFat;                                 //!< FAT
+VAR_STATIC FIL stFile;                                  //!< file object
+VAR_STATIC UINT wFileBytes;                             //!< counter of read bytes
+VAR_STATIC float fBank;                                 //!< bank angle setpoint [rad]
+VAR_STATIC float fThrottle;                             //!< throttle
+VAR_STATIC float fPitch;                                //!< pitch setpoint [rad]
+VAR_STATIC float fLat_Dest;                             //!< destination latitude
+VAR_STATIC float fLon_Dest;                             //!< destination longitude
+VAR_STATIC float fAlt_Dest;                             //!< destination altitude
+VAR_STATIC float fLat_Curr;                             //!< current latitude
+VAR_STATIC float fLon_Curr;                             //!< current longitude
+VAR_STATIC float fAlt_Curr;                             //!< current altitude
+VAR_STATIC float fBearing;                              //!< angle to destination [°]
+VAR_STATIC float fHeading;                              //!< aircraft navigation heading [°]
+VAR_STATIC uint16_t uiGps_Heading;                      //!< aircraft GPS heading [°]
+VAR_STATIC uint32_t ulTempCoord;                        //!< temporary for coordinate parser
+VAR_STATIC uint16_t uiSpeed;                            //!< speed [kt]
+VAR_STATIC uint16_t uiDistance;                         //!< distance to destination [m]
+VAR_STATIC uint16_t uiWptIndex;                         //!< waypoint index
+VAR_STATIC uint16_t uiWptNumber;                        //!< total number of waypoints
+VAR_STATIC uint8_t ucGps_Status;                        //!< status of GPS
+VAR_STATIC uint8_t ucCommas;                            //!< counter of commas in NMEA sentence
+VAR_STATIC uint8_t ucWindex;                            //!< USART buffer write index
+VAR_STATIC uint8_t ucRindex;                            //!< USART buffer read index
+VAR_STATIC xPID Nav_Pid;                                //!< Navigation PID loop
+VAR_STATIC float fHeight_Margin = HEIGHT_MARGIN;        //!< altitude hold margin
+VAR_STATIC float fThrottle_Min = ALT_HOLD_THROTTLE_MIN; //!< altitude hold min throttle
+VAR_STATIC float fThrottle_Max = ALT_HOLD_THROTTLE_MAX; //!< altitude hold max throttle
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -299,7 +315,7 @@ static void Load_Path( void ) {
     /* Mount file system and open waypoint file */
     if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
         uiWptNumber = 0;                            // no waypoint available
-    } else if (FR_OK != f_open(&stFile, 
+    } else if (FR_OK != f_open(&stFile,
                                (const XCHAR *)szFileName,
                                 FA_READ)) {         // error opening file
         uiWptNumber = 0;                            // no waypoint available
