@@ -5,10 +5,11 @@
 // $Date:  $
 // $Author: $
 //
-/// \file
 /// \brief  Navigation task header file
 ///
-//  CHANGES added Nav_Pitch() function
+/// \file
+///
+//  Change  added Nav_Pitch() function
 //
 //============================================================================
 
@@ -32,7 +33,6 @@
 /*---------------------------------- Interface -------------------------------*/
 
 void Navigation_Task( void *pvParameters );
-void Navigation_Init( void );
 float Nav_Heading ( void );
 float Nav_Bearing ( void );
 float Nav_Bank ( void );
