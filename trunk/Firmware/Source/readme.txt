@@ -60,7 +60,7 @@
      Al di sotto di 100 m dal ivello del mare e in atmosfera standard l'errore
      è inferiore al centimetro.
 
-@par Telemetria
+@par Telemetria MAVLink
      
      link all'elenco dei comandi MAVLink implementati su ArduPilot Mega:
      http://code.google.com/p/ardupilot-mega/wiki/MAVLink
@@ -68,7 +68,7 @@
      link all'elenco dei parametri ArduPilot Mega modificabili tramite MAVLink:
      http://code.google.com/p/ardupilot-mega/wiki/MAVParam
 
-     link alle specifiche del protocollo:
+     link alle specifiche del protocollo MAVLink:
      http://qgroundcontrol.org/mavlink/start
      http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
      http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
@@ -98,32 +98,74 @@
      
      Possibili soluzioni:
 
-     - un'unica struttura dati di file, accesso singolo
-     - ridurre le dimensionio dell'heap non può essere ridotto, il sistema si pianta
-     - ridurre lo stack in startup_stm32f10x_md_vl.c
+     1 un'unica struttura dati di file, accesso singolo
+     2 ridurre le dimensioni dell'heap 
+     3 ridurre lo stack in startup_stm32f10x_md_vl.c
 
      Risultato:
 
-     - da provare
-     - l'heap non può essere ridotto, il sistema si pianta
-     - ridotto lo stack a 512 bytes, funziona
+     1 da provare
+     2 l'heap non può essere ridotto, il sistema si pianta
+     3 ridotto lo stack a 512 bytes, funziona
+
+@par Telemetria MultiWii
 
      03/08/2012
 
      link all'implementazione Arduino del protocollo MultiWii
      https://github.com/wertarbyte/multiwii-firmware/blob/master/Serial.ino
 
+     12/08/12
+     creato branch MULTIWII per integrazione protocollo MultiWii:
+
+     - implementati solo alcuni comandi
+     - eliminato il buffer per la memorizzazione del messaggio
+     - utilizzato un indice del buffer UART per l'inizio del messaggio
+     - creato un progetto per il test del protocollo con target STM32F103RB
+     - la struttura del file è inadatta al test di unità.
+
+     13/08/12
+     installato il programma MultiWiiGUI:
+
+     - dopo la connessione il programma invia per alcuni secondi le richieste:
+
+	MSP_IDENT      multitype + multiwii version + protocol version + capability variable
+	MSP_RC_TUNING  rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+	MSP_PID        16 PID
+	MSP_BOX        16 checkbox
+	MSP_MISC       powermeter trig + 8 free 
+
+     - poi il programma invia con frequenze diverse le richieste:
+
+	MSP_STATUS     cycletime & errors_count & sensor present & box activation
+	MSP_RAW_IMU    raw IMU data, 9 DOF
+	MSP_SERVO      8 servos
+	MSP_MOTOR      8 motors
+	MSP_RC         8 rc channels
+	MSP_RAW_GPS    fix, numsat, lat, lon, alt, speed
+	MSP_COMP_GPS   distance home, direction home
+	MSP_ATTITUDE   roll, pitch, heading
+	MSP_ALTITUDE   altitude
+	MSP_BAT        vbat, powermetersum
+	MSP_MISC       powermeter trig + 8 free
+	MSP_DEBUG      debug1, debug2, debug3, debug4
+
+     - alla pressione del pulsante "Write Settings" vengono aggiornati tutti i parametri,
+       inviando i seguenti comandi:
+
+	comando          lunghezza significato 
+	-------------------------------------------------
+	MSP_SET_PID           30   set PID
+	MSP_SET_BOX           28   set checkboxes
+	MSP_SET_RC_TUNING     7    set rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+	MSP_SET_MISC          2    set powermeter trig + 8 free 
+	MSP_EEPROM_WRITE      0    save configuration to eeprom
+	MSP_PID               0    request PID
+
+
 @par Navigation
      
-     Calcolare le differenze di longitudine e latitudine come: 
-
-         Delta Lat = Lat2 - Lat1
-         Delta Lon = (Lon2 - Lon1) * cos((Lat1 + Lat2)/2)
-
-     Calcolare la distanza dal punto come:
-
-         Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
-
+     vedi i todo in nav.c
 
 @par Modifiche hardware
      
