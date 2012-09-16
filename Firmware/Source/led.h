@@ -5,8 +5,11 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief  LED driver
-//  CHANGES GREEN LED changed into RED
+/// \brief LED driver header file
+///
+/// \file
+///
+//  Change GREEN LED changed into RED
 //
 //============================================================================
 
@@ -17,8 +20,8 @@
 #endif
 #define VAR_GLOBAL extern
 
-#define GREEN_PIN    GPIO_Pin_9
-#define BLUE_PIN     GPIO_Pin_8
+#define GREEN_PIN    GPIO_Pin_9     ///< I/O pin for green LED
+#define BLUE_PIN     GPIO_Pin_8     ///< I/O pin for blue LED
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -26,9 +29,10 @@
 
 /*------------------------------------ Types ---------------------------------*/
 
+/// LED type definition
 typedef enum {
   RED     = 0,
-  BLUE      = 1,
+  BLUE    = 1,
   LED_NUM
 } Led_TypeDef;
 
