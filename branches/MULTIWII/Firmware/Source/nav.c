@@ -36,7 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-//  Change added todos
+// Change: added option for multiwii telemetry or ardupilot-like telemetry
 //
 //============================================================================*/
 
@@ -50,7 +50,9 @@
 #include "ppmdriver.h"
 #include "dcm.h"
 #include "math.h"
+/* uncomment telemetry type that applies */
 #include "telemetry.h"
+//#include "multiwii.h"
 #include "config.h"
 #include "ff.h"
 #include "pid.h"

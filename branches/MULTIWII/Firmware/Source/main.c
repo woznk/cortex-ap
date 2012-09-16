@@ -18,8 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: MSP_Receive() renamed MWI_Receive()
-//         
+// Change: added option for multiwii telemetry or ardupilot-like telemetry
 //
 //============================================================================*/
 
@@ -39,8 +38,9 @@
 #include "diskio.h"
 
 #include "config.h"
-//#include "telemetry.h"
-#include "multiwii.h"
+/* uncomment telemetry type that applies */
+#include "telemetry.h"
+//#include "multiwii.h"
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
@@ -280,7 +280,7 @@ void GPIO_Configuration(void)
   GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
- 
+
 #ifdef  USE_FULL_ASSERT
 ///----------------------------------------------------------------------------
 ///

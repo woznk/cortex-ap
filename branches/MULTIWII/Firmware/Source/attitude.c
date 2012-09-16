@@ -9,8 +9,7 @@
 ///
 /// \file
 ///
-// Change: size of ucSensor_Data[] reduced to 12 bytes, 
-//         function Telemetry_Get_Sensors() renamed Telemetry_Get_Raw_IMU()
+// Change: added option for multiwii telemetry or ardupilot-like telemetry
 //
 //============================================================================*/
 
@@ -30,7 +29,9 @@
 
 #include "config.h"
 #include "dcm.h"
+/* uncomment telemetry type that applies */
 #include "telemetry.h"
+//#include "multiwii.h"
 #include "log.h"
 #include "led.h"
 #include "nav.h"
