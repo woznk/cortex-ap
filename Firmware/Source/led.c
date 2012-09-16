@@ -6,6 +6,9 @@
 // $Author: $
 //
 /// \brief LED driver
+///
+/// \file
+///
 // Change:
 //
 //============================================================================*/
@@ -32,7 +35,9 @@
 
 /*---------------------------------- Constants -------------------------------*/
 
-const uint16_t GPIO_PIN[LED_NUM] = {GREEN_PIN, BLUE_PIN};
+/// pins connected to LEDs
+const uint16_t GPIO_PIN[LED_NUM] =
+{GREEN_PIN, BLUE_PIN};
 
 /*---------------------------------- Globals ---------------------------------*/
 
@@ -42,7 +47,8 @@ const uint16_t GPIO_PIN[LED_NUM] = {GREEN_PIN, BLUE_PIN};
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief
+/// \brief   turn on specified led
+/// \param   Led = which led
 /// \return  -
 /// \remarks -
 ///
@@ -54,7 +60,8 @@ void LEDOn(Led_TypeDef Led)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief
+/// \brief   turn off specified led
+/// \param   Led = which led
 /// \return  -
 /// \remarks -
 ///
@@ -66,7 +73,8 @@ void LEDOff(Led_TypeDef Led)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief
+/// \brief   toglle status of specified led
+/// \param   Led = which led
 /// \return  -
 /// \remarks -
 ///
