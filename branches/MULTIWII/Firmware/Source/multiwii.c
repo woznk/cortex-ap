@@ -36,7 +36,7 @@
 /// \n         https://play.google.com/store/apps/details?id=com.naze32.configurator
 /// - for VT100 terminal type addition see
 /// \n         http://www.multiwii.com/forum/viewtopic.php?f=7&t=1096
-/// - transmission order and scale factors of values for MSP_SET_PID command :
+/// - transmission order and scale factors of values for MWI_SET_PID command :
 ///    -  1 roll P          10
 ///    -  2 roll I          1000
 ///    -  3 roll D          1
@@ -68,7 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change added hexadecimal values of MultiWii protocol codes
+//  Change MSP_ prefix replaced with MWI_, added MWI_SET_RAW_IMU command,
 //
 //============================================================================*/
 
@@ -99,45 +99,46 @@
 
 #define VERSION             0	//!< multiwii version
 #define MULTITYPE           0	//!< type of multicopter
-#define MSP_VERSION         0   //!< Multiwii Serial Protocol 0
+#define MWI_VERSION         0   //!< Multiwii Serial Protocol 0
 
 /* outgoing messages */
-#define MSP_IDENT           100 //!< 64 multitype + multiwii version + protocol version + capability variable
-#define MSP_STATUS          101 //!< 65 cycletime & errors_count & sensor present & box activation
-#define MSP_RAW_IMU         102 //!< 66 raw IMU data, 9 DOF
-#define MSP_SERVO           103 //!< 67 8 servos
-#define MSP_MOTOR           104 //!< 68 8 motors
-#define MSP_RC              105 //!< 69 8 rc channels
-#define MSP_RAW_GPS         106 //!< 6A fix, numsat, lat, lon, alt, speed
-#define MSP_COMP_GPS        107 //!< 6B distance home, direction home
-#define MSP_ATTITUDE        108 //!< 6C roll, pitch, heading
-#define MSP_ALTITUDE        109 //!< 6D 1 altitude
-#define MSP_BAT             110 //!< 6E vbat, powermetersum
-#define MSP_RC_TUNING       111 //!< 6F rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
-#define MSP_PID             112 //!< 70 up to 16 PID
-#define MSP_BOX             113 //!< 71 up to 16 checkbox
-#define MSP_MISC            114 //!< 72 powermeter trig + 8 free for future use
-#define MSP_MOTOR_PINS      115 //!< 73 which pins are in use for motors & servos, for GUI
-#define MSP_BOXNAMES        116 //!< 74 the aux switch names
-#define MSP_PIDNAMES        117 //!< 75 the PID names
-#define MSP_WP              118 //!< 76 get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
-#define MSP_HEADING         125 //!< 7D headings and MAG configuration
-#define MSP_DEBUGMSG        253 //!< FD debug string buffer
-#define MSP_DEBUG           254 //!< FE debug1, debug2, debug3, debug4
+#define MWI_IDENT           100 //!< 64 multitype + multiwii version + protocol version + capability variable
+#define MWI_STATUS          101 //!< 65 cycletime & errors_count & sensor present & box activation
+#define MWI_RAW_IMU         102 //!< 66 raw IMU data, 9 DOF
+#define MWI_SERVO           103 //!< 67 8 servos
+#define MWI_MOTOR           104 //!< 68 8 motors
+#define MWI_RC              105 //!< 69 8 rc channels
+#define MWI_RAW_GPS         106 //!< 6A fix, numsat, lat, lon, alt, speed
+#define MWI_COMP_GPS        107 //!< 6B distance home, direction home
+#define MWI_ATTITUDE        108 //!< 6C roll, pitch, heading
+#define MWI_ALTITUDE        109 //!< 6D 1 altitude
+#define MWI_BAT             110 //!< 6E vbat, powermetersum
+#define MWI_RC_TUNING       111 //!< 6F rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+#define MWI_PID             112 //!< 70 up to 16 PID
+#define MWI_BOX             113 //!< 71 up to 16 checkbox
+#define MWI_MISC            114 //!< 72 powermeter trig + 8 free for future use
+#define MWI_MOTOR_PINS      115 //!< 73 which pins are in use for motors & servos, for GUI
+#define MWI_BOXNAMES        116 //!< 74 the aux switch names
+#define MWI_PIDNAMES        117 //!< 75 the PID names
+#define MWI_WP              118 //!< 76 get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
+#define MWI_HEADING         125 //!< 7D headings and MAG configuration
+#define MWI_DEBUGMSG        253 //!< FD debug string buffer
+#define MWI_DEBUG           254 //!< FE debug1, debug2, debug3, debug4
 
 /* incoming messages */
-#define MSP_SET_RAW_RC      200 //!< C8 8 rc chan
-#define MSP_SET_RAW_GPS     201 //!< C9 fix, numsat, lat, lon, alt, speed
-#define MSP_SET_PID         202 //!< CA set up to 16 PID
-#define MSP_SET_BOX         203 //!< CB set up to 16 checkbox
-#define MSP_SET_RC_TUNING   204 //!< CC rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
-#define MSP_ACC_CALIBRATION 205 //!< CD calibrate accelerometers
-#define MSP_MAG_CALIBRATION 206 //!< CE calibrate magnetometers
-#define MSP_SET_MISC        207 //!< CF powermeter trig + 8 free for future use
-#define MSP_RESET_CONF      208 //!< D0 reset configuration
-#define MSP_WP_SET          209 //!< D1 sets a given WP (WP#, lat, lon, alt, flags)
+#define MWI_SET_RAW_RC      200 //!< C8 8 rc chan
+#define MWI_SET_RAW_GPS     201 //!< C9 fix, numsat, lat, lon, alt, speed
+#define MWI_SET_PID         202 //!< CA set up to 16 PID
+#define MWI_SET_BOX         203 //!< CB set up to 16 checkbox
+#define MWI_SET_RC_TUNING   204 //!< CC rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+#define MWI_ACC_CALIBRATION 205 //!< CD calibrate accelerometers
+#define MWI_MAG_CALIBRATION 206 //!< CE calibrate magnetometers
+#define MWI_SET_MISC        207 //!< CF powermeter trig + 8 free for future use
+#define MWI_RESET_CONF      208 //!< D0 reset configuration
+#define MWI_WP_SET          209 //!< D1 sets a given WP (WP#, lat, lon, alt, flags)
+#define MWI_SET_RAW_IMU     210 //!< D2 set raw IMU data, 9 DOF
 
-#define MSP_EEPROM_WRITE    250 //!< FA save configuration to eeprom
+#define MWI_EEPROM_WRITE    250 //!< FA save configuration to eeprom
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -151,7 +152,7 @@ typedef enum E_STATE {
     HEADER_ARROW,   //!< direction of message, > or < received
     HEADER_SIZE,    //!< size of payload
     HEADER_CMD,     //!< command identifier
-  } enum_status_t;
+  } mwiEnum_Status;
 
 /*----------------------------------- Types ----------------------------------*/
 
@@ -174,12 +175,13 @@ const uint8_t pidnames[] =
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC enum_status_t MSP_Status = IDLE;         //!< status of communication
-VAR_STATIC uint8_t MSP_Checksum;                    //!< message checksum
-VAR_STATIC uint8_t MSP_Command;                     //!< command identifier
-VAR_STATIC uint8_t MSP_Size;                        //!< payload size
-VAR_STATIC uint8_t MSP_Index;                       //!< payload index
-VAR_STATIC uint8_t MSP_Buffer[48];                  //!< payload buffer
+VAR_STATIC mwiEnum_Status MWI_Status = IDLE;        //!< status of communication
+VAR_STATIC uint8_t MWI_Checksum;                    //!< message checksum
+VAR_STATIC uint8_t MWI_Command;                     //!< command identifier
+VAR_STATIC uint8_t MWI_Size;                        //!< payload size
+VAR_STATIC uint8_t MWI_Index;                       //!< payload index
+VAR_STATIC uint8_t MWI_Buffer[48];                  //!< payload buffer
+VAR_STATIC int16_t iSensor[8];                      //!< simulator sensor data
 VAR_STATIC float fPIDGain[TEL_GAIN_NUMBER] = {
     PITCH_KP,                                       //!< default pitch kp
     PITCH_KI,                                       //!< default pitch ki
@@ -204,7 +206,7 @@ VAR_STATIC float fPIDGain[TEL_GAIN_NUMBER] = {
 ///
 ///----------------------------------------------------------------------------
 static uint8_t read8(void) {
-   return (MSP_Buffer[MSP_Index++] & 0xFF);
+   return (MWI_Buffer[MWI_Index++] & 0xFF);
 }
 
 ///----------------------------------------------------------------------------
@@ -243,9 +245,9 @@ static uint32_t read32(void) {
 /// \remarks
 ///
 ///----------------------------------------------------------------------------
-static void MSP_Append_8(uint8_t a) {
+static void MWI_Append_8(uint8_t a) {
   USART1_Putch(a);
-  MSP_Checksum ^= a;
+  MWI_Checksum ^= a;
 }
 
 ///----------------------------------------------------------------------------
@@ -256,9 +258,9 @@ static void MSP_Append_8(uint8_t a) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-static void MSP_Append_16(int16_t a) {
-  MSP_Append_8((a     ) & 0xFF);
-  MSP_Append_8((a >> 8) & 0xFF);
+static void MWI_Append_16(int16_t a) {
+  MWI_Append_8((a     ) & 0xFF);
+  MWI_Append_8((a >> 8) & 0xFF);
 }
 
 ///----------------------------------------------------------------------------
@@ -269,11 +271,11 @@ static void MSP_Append_16(int16_t a) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-static void MSP_Append_32(uint32_t a) {
-  MSP_Append_8((a      ) & 0xFF);
-  MSP_Append_8((a >>  8) & 0xFF);
-  MSP_Append_8((a >> 16) & 0xFF);
-  MSP_Append_8((a >> 24) & 0xFF);
+static void MWI_Append_32(uint32_t a) {
+  MWI_Append_8((a      ) & 0xFF);
+  MWI_Append_8((a >>  8) & 0xFF);
+  MWI_Append_8((a >> 16) & 0xFF);
+  MWI_Append_8((a >> 24) & 0xFF);
 }
 
 ///----------------------------------------------------------------------------
@@ -284,9 +286,9 @@ static void MSP_Append_32(uint32_t a) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-static void MSP_Append_Name(const uint8_t* s) {
+static void MWI_Append_Name(const uint8_t* s) {
   while (*s != 0) {
-  	MSP_Append_8(*s++);
+  	MWI_Append_8(*s++);
   }
 }
 
@@ -298,13 +300,13 @@ static void MSP_Append_Name(const uint8_t* s) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-static void __inline MSP_Init_Response(uint8_t length) {
-  MSP_Append_8('$');            // header
-  MSP_Append_8('M');            // multiwii protocol
-  MSP_Append_8('>');            // outgoing message
-  MSP_Checksum = 0;             // clear checksum
-  MSP_Append_8(length);         // message length
-  MSP_Append_8(MSP_Command);    // command
+static void __inline MWI_Init_Response(uint8_t length) {
+  MWI_Append_8('$');            // header
+  MWI_Append_8('M');            // multiwii protocol
+  MWI_Append_8('>');            // outgoing message
+  MWI_Checksum = 0;             // clear checksum
+  MWI_Append_8(length);         // message length
+  MWI_Append_8(MWI_Command);    // command
 }
 
 ///----------------------------------------------------------------------------
@@ -315,13 +317,13 @@ static void __inline MSP_Init_Response(uint8_t length) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-static void __inline MSP_Init_Error(uint8_t length) {
-  MSP_Append_8('$');            // header
-  MSP_Append_8('M');            // multiwii protocol
-  MSP_Append_8('!');            // error message
-  MSP_Checksum = 0;             // clear checksum
-  MSP_Append_8(length);         // message length
-  MSP_Append_8(MSP_Command);    // command
+static void __inline MWI_Init_Error(uint8_t length) {
+  MWI_Append_8('$');            // header
+  MWI_Append_8('M');            // multiwii protocol
+  MWI_Append_8('!');            // error message
+  MWI_Checksum = 0;             // clear checksum
+  MWI_Append_8(length);         // message length
+  MWI_Append_8(MWI_Command);    // command
 }
 
 ///----------------------------------------------------------------------------
@@ -331,12 +333,12 @@ static void __inline MSP_Init_Error(uint8_t length) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void MSP_Parse_Command( void ) {
+void MWI_Parse_Command( void ) {
   uint8_t i;
 
-  switch (MSP_Command) {
+  switch (MWI_Command) {
 
-    case MSP_SET_PID:                   // set PID values
+    case MWI_SET_PID:                   // set PID values
      i = TEL_ROLL_KP;                   // start with first gain
      fPIDGain[i++] = read8() / 10.0f;   // roll P
      fPIDGain[i++] = read8() / 1000.0f; // roll I
@@ -351,25 +353,25 @@ void MSP_Parse_Command( void ) {
      (void)read8();                     // skip pos rate D
      fPIDGain[i++] = read8() / 10.0f;   // nav P
      fPIDGain[i++] = read8() / 100.0f;  // nav I
-     MSP_Init_Response(0);              // initialize response
+     MWI_Init_Response(0);              // initialize response
      break;
 
-    case MSP_IDENT:                     // requested identification
-     MSP_Init_Response(7);              // initialize response
-     MSP_Append_8(VERSION);             // append multiwii version
-     MSP_Append_8(MULTITYPE);           // append type of multicopter
-     MSP_Append_8(MSP_VERSION);         // MultiWii Serial Protocol Version
-     MSP_Append_32(0);                  // append "capability"
+    case MWI_IDENT:                     // requested identification
+     MWI_Init_Response(7);              // initialize response
+     MWI_Append_8(VERSION);             // append multiwii version
+     MWI_Append_8(MULTITYPE);           // append type of multicopter
+     MWI_Append_8(MWI_VERSION);         // MultiWii Serial Protocol Version
+     MWI_Append_32(0);                  // append "capability"
      break;
 
-    case MSP_STATUS:                    // requested status
-     MSP_Init_Response(10);             //
-     MSP_Append_16(0);                  // cycleTime, time needed to complete a loop
-     MSP_Append_16(0);                  // i2c_errors_count, I2C errors
-     MSP_Append_16(ACC | BARO << 1 |    // available sensors
+    case MWI_STATUS:                    // requested status
+     MWI_Init_Response(10);             //
+     MWI_Append_16(0);                  // cycleTime, time needed to complete a loop
+     MWI_Append_16(0);                  // i2c_errors_count, I2C errors
+     MWI_Append_16(ACC | BARO << 1 |    // available sensors
                    MAG << 2 | GPS << 3 |
                    SONAR << 4 );
-     MSP_Append_32(0                    // flags and options
+     MWI_Append_32(0                    // flags and options
                                         // f.ACC_MODE      << BOXACC |
                                         // f.BARO_MODE     << BOXBARO |
                                         // f.MAG_MODE      << BOXMAG |
@@ -387,92 +389,106 @@ void MSP_Parse_Command( void ) {
 				  );
      break;
 
-    case MSP_ATTITUDE:                  // requested attitude
-     MSP_Init_Response(8);              // initialize response
+    case MWI_ATTITUDE:                  // requested attitude
+     MWI_Init_Response(8);              // initialize response
      for (i = 0; i < 2; i++)			// append presumably roll, pitch, yaw
-         MSP_Append_16(0);              // angle[i], roll pitch
-     MSP_Append_16(0);                  // heading, heading
-     MSP_Append_16(0);	                // headFreeModeHold, ?
+         MWI_Append_16(0);              // angle[i], roll pitch
+     MWI_Append_16(0);                  // heading, heading
+     MWI_Append_16(0);	                // headFreeModeHold, ?
      break;
 
-    case MSP_HEADING:                   // requested heading
-     MSP_Init_Response(7);              // initialize response
-     MSP_Append_8(0                     // f.MAG_MODE      << 0 | mag stabilization mode
+    case MWI_HEADING:                   // requested heading
+     MWI_Init_Response(7);              // initialize response
+     MWI_Append_8(0                     // f.MAG_MODE      << 0 | mag stabilization mode
                                         // f.HEADFREE_MODE << 1   headfree mode
 				  );
-     MSP_Append_16(0);                  // heading, heading
-     MSP_Append_16(0);                  // magHold, magnetic orientation to hold
-     MSP_Append_16(0);                  // headFreeModeHold, ?
+     MWI_Append_16(0);                  // heading, heading
+     MWI_Append_16(0);                  // magHold, magnetic orientation to hold
+     MWI_Append_16(0);                  // headFreeModeHold, ?
      break;
 
-    case MSP_ALTITUDE:                  // requested altitude
-     MSP_Init_Response(4);              // initialize response
-     MSP_Append_32(0);                  // EstAlt, estimated barometric altitude
+    case MWI_ALTITUDE:                  // requested altitude
+     MWI_Init_Response(4);              // initialize response
+     MWI_Append_32(0);                  // EstAlt, estimated barometric altitude
      break;
 
-    case MSP_PID:                                       // requested PID values
-     MSP_Init_Response(30);                             // initialize response
+    case MWI_PID:                                       // requested PID values
+     MWI_Init_Response(30);                             // initialize response
      i = TEL_ROLL_KP;                                   // start with first gain
-     MSP_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // roll P
-     MSP_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // roll I
-     MSP_Append_8(0);                                   // roll D: skip
-     MSP_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // pitch P
-     MSP_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // pitch I
-     MSP_Append_32(0);                                  // skip pitch D, yaw P, I, D
-     MSP_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // alt P
-     MSP_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // alt I
-     MSP_Append_32(0);                                  // skip alt D and pos P, I, D
-     MSP_Append_16(0);                                  // skip pos rate P, I
-     MSP_Append_8(0);                                   // skip pos rate D
-     MSP_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // nav P
-     MSP_Append_8((uint8_t)(fPIDGain[i++] * 100.0f));   // nav I
-     MSP_Append_32(0);                                  // skip nav D and level P, I, D
-     MSP_Append_32(0);                                  // skip mag P, I, D and velocity P
-     MSP_Append_16(0);                                  // skip velocity I, D
+     MWI_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // roll P
+     MWI_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // roll I
+     MWI_Append_8(0);                                   // roll D: skip
+     MWI_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // pitch P
+     MWI_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // pitch I
+     MWI_Append_32(0);                                  // skip pitch D, yaw P, I, D
+     MWI_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // alt P
+     MWI_Append_8((uint8_t)(fPIDGain[i++] * 1000.0f));  // alt I
+     MWI_Append_32(0);                                  // skip alt D and pos P, I, D
+     MWI_Append_16(0);                                  // skip pos rate P, I
+     MWI_Append_8(0);                                   // skip pos rate D
+     MWI_Append_8((uint8_t)(fPIDGain[i++] * 10.0f));    // nav P
+     MWI_Append_8((uint8_t)(fPIDGain[i++] * 100.0f));   // nav I
+     MWI_Append_32(0);                                  // skip nav D and level P, I, D
+     MWI_Append_32(0);                                  // skip mag P, I, D and velocity P
+     MWI_Append_16(0);                                  // skip velocity I, D
      break;
 
-    case MSP_PIDNAMES:                  // requested PID names
-     MSP_Init_Response(sizeof(pidnames)); // initialize response
-     MSP_Append_Name(pidnames);         // append PID names
+    case MWI_PIDNAMES:                  // requested PID names
+     MWI_Init_Response(sizeof(pidnames)); // initialize response
+     MWI_Append_Name(pidnames);         // append PID names
      break;
 
-#if defined(USE_MSP_WP)
-   case MSP_WP:                         // requested waypoint
+    case MWI_SET_RAW_IMU:
+     i = 0;                             // start with first sensor
+     iSensor[i++] = read16();           // accelerometer x
+     iSensor[i++] = read16();           // accelerometer y
+     iSensor[i++] = read16();           // accelerometer z
+     iSensor[i++] = read16();           // roll
+     iSensor[i++] = read16();           // pitch
+     iSensor[i++] = read16();           // yaw
+//     iSensor[i++] = read16();           // magnetometer x
+//     iSensor[i++] = read16();           // magnetometer y
+//     iSensor[i++] = read16();           // magnetometer z
+     MWI_Init_Response(0);              // initialize response
+     break;
+
+#if defined(USE_MWI_WP)
+   case MWI_WP:                         // requested waypoint
     i = read8();                        // get the number of required wp
-    MSP_Init_Response(12);              // initialize response
+    MWI_Init_Response(12);              // initialize response
     if (i == 0) {                       // home position (waypoint #0)
-      MSP_Append_8(0);                  // append waypoint number
-      MSP_Append_32(GPS_home[LAT]);     // append home latitude
-      MSP_Append_32(GPS_home[LON]);     // append home longitude
-      MSP_Append_16(0);                 // altitude will come here
-      MSP_Append_8(0);                  // nav flag will come here
+      MWI_Append_8(0);                  // append waypoint number
+      MWI_Append_32(GPS_home[LAT]);     // append home latitude
+      MWI_Append_32(GPS_home[LON]);     // append home longitude
+      MWI_Append_16(0);                 // altitude will come here
+      MWI_Append_8(0);                  // nav flag will come here
     } else if (i == 16) {               // hold position (waypoint #16)
-      MSP_Append_8(16);                 // append waypoint number
-      MSP_Append_32(GPS_hold[LAT]);     // append hold latitude
-      MSP_Append_32(GPS_hold[LON]);     // append hold longitude
-      MSP_Append_16(0);                 // altitude will come here
-      MSP_Append_8(0);                  // nav flag will come here
+      MWI_Append_8(16);                 // append waypoint number
+      MWI_Append_32(GPS_hold[LAT]);     // append hold latitude
+      MWI_Append_32(GPS_hold[LON]);     // append hold longitude
+      MWI_Append_16(0);                 // altitude will come here
+      MWI_Append_8(0);                  // nav flag will come here
     }
     break;
 #endif
 
-   case MSP_RESET_CONF:                 // reset configuration
-     MSP_Init_Response(0);              // initialize response
+   case MWI_RESET_CONF:                 // reset configuration
+     MWI_Init_Response(0);              // initialize response
      break;
 
-   case MSP_EEPROM_WRITE:               // write parameters to eeprom
-     MSP_Init_Response(0);              // initialize response
+   case MWI_EEPROM_WRITE:               // write parameters to eeprom
+     MWI_Init_Response(0);              // initialize response
      break;
 
-   case MSP_DEBUG:                      // debug message
-     MSP_Init_Response(0);              // initialize response
+   case MWI_DEBUG:                      // debug message
+     MWI_Init_Response(0);              // initialize response
      break;
 
    default :                            // indicate error "$M!"
-     MSP_Init_Error(0);                 // initialize error message
+     MWI_Init_Error(0);                 // initialize error message
      break;
   }
-  MSP_Append_8(MSP_Checksum);           // append message checksum
+  MWI_Append_8(MWI_Checksum);           // append message checksum
   USART1_Transmit();                    // transmit
 }
 
@@ -483,66 +499,66 @@ void MSP_Parse_Command( void ) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void MSP_Receive( void ) {
+void MWI_Receive( void ) {
   uint8_t c;
 
   while (USART1_Getch(&c)) {                // received another character
-    switch (MSP_Status) {
+    switch (MWI_Status) {
         case IDLE:                          // idle
             if (c == '$') {                 // message start
-                MSP_Status = HEADER_START;  //
+                MWI_Status = HEADER_START;  //
             } else {                        //
-                MSP_Status = IDLE;          //
+                MWI_Status = IDLE;          //
             }
             break;
 
         case HEADER_START:                  // message started
             if (c == 'M') {                 // Multiwii protocol
-                MSP_Status = HEADER_M;      //
+                MWI_Status = HEADER_M;      //
             } else {                        //
-                MSP_Status = IDLE;          //
+                MWI_Status = IDLE;          //
             }
             break;
 
         case HEADER_M:                      //
             if (c == '<') {                 // incoming message
-                MSP_Status = HEADER_ARROW;  //
+                MWI_Status = HEADER_ARROW;  //
             } else {                        //
-                MSP_Status = IDLE;          //
+                MWI_Status = IDLE;          //
             }
             break;
 
         case HEADER_ARROW:                  //
             if (c > PAYLOAD_SIZE) {         // payload size too big
-                MSP_Status = IDLE;          // ignore rest of message
+                MWI_Status = IDLE;          // ignore rest of message
             } else {                        // payload size fits
-                MSP_Size = c;               // save payload size
-                MSP_Index = 0;              // clear payload index
-                MSP_Checksum = 0;           // clear message checksum
-                MSP_Checksum ^= c;          // start computing checksum
-                MSP_Status = HEADER_SIZE;   //
+                MWI_Size = c;               // save payload size
+                MWI_Index = 0;              // clear payload index
+                MWI_Checksum = 0;           // clear message checksum
+                MWI_Checksum ^= c;          // start computing checksum
+                MWI_Status = HEADER_SIZE;   //
             }
             break;
 
         case HEADER_SIZE:                   //
-            MSP_Command = c;                // save command byte
-            MSP_Checksum ^= c;              // keep computing checksum
-            MSP_Status = HEADER_CMD;        //
+            MWI_Command = c;                // save command byte
+            MWI_Checksum ^= c;              // keep computing checksum
+            MWI_Status = HEADER_CMD;        //
             break;                          //
 
         case HEADER_CMD:                    //
-            if (MSP_Index < MSP_Size) {     // not all expected bytes have been received
-                MSP_Checksum ^= c;          // compute checksum
-                MSP_Buffer[MSP_Index++] = c;// store received byte
-            } else if (MSP_Checksum == c) { // calculated and transferred checksums match
-                MSP_Index = 0;              // clear payload index
-                MSP_Parse_Command();        // valid packet, evaluate it
-                MSP_Status = IDLE;          //
+            if (MWI_Index < MWI_Size) {     // not all expected bytes have been received
+                MWI_Checksum ^= c;          // compute checksum
+                MWI_Buffer[MWI_Index++] = c;// store received byte
+            } else if (MWI_Checksum == c) { // calculated and transferred checksums match
+                MWI_Index = 0;              // clear payload index
+                MWI_Parse_Command();        // valid packet, evaluate it
+                MWI_Status = IDLE;          //
             }
             break;
 
         default :
-            MSP_Status = IDLE;              //
+            MWI_Status = IDLE;              //
             break;
     }
   }
@@ -582,7 +598,7 @@ float Telemetry_Get_Gain(telEnum_Gain gain) {
     if (gain < TEL_GAIN_NUMBER) {
         return fPIDGain[gain];
     } else {
-        return 1.0f;
+        return 0.0f;
     }
 }
 
@@ -594,11 +610,9 @@ float Telemetry_Get_Gain(telEnum_Gain gain) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Get_Sensors(int16_t * piSensor) {
-/*
+void Telemetry_Get_Raw_IMU(int16_t * piSensor) {
     uint8_t j;
     for (j = 0; j < 6; j++) {
-        *piSensor++ = (int16_t)fSensor[j];
+        *piSensor++ = iSensor[j];
     }
-*/
 }
