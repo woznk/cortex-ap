@@ -7,8 +7,7 @@
 //
 /// \brief test program
 ///
-// Change: removed #inclusion of freertos files, main program cycles through
-//         test steps by calling USART1_Init function
+// Change: prefixes MSP_ replaced with MWI_
 //
 //============================================================================*/
 
@@ -67,27 +66,27 @@ int32_t main(void)
 {
   USART1_Init();
   while (Test_Running()) {
-     MSP_Receive();
+     MWI_Receive();
   }
   USART1_Init();
   while (Test_Running()) {
-     MSP_Receive();
+     MWI_Receive();
   }
   USART1_Init();
   while (Test_Running()) {
-     MSP_Receive();
+     MWI_Receive();
   }
   USART1_Init();
   while (Test_Running()) {
-     MSP_Receive();
+     MWI_Receive();
   }
   USART1_Init();
   while (Test_Running()) {
-     MSP_Receive();
+     MWI_Receive();
   }
   USART1_Init();
   while (Test_Running()) {
-     MSP_Receive();
+     MWI_Receive();
   }
 }
 
