@@ -8,7 +8,7 @@
 /// \brief telemetry interface
 ///
 /// \file
-/// Sistemi di riferimento:                                             \code
+/// Reference systems :                                             \code
 ///                                   __|__
 ///                                  /  |  \
 ///                                 |___|___|
@@ -42,8 +42,8 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  Change function Telemetry_Get_Sensors() renamed Telemetry_Get_Raw_IMU()
-//         
+//  Change corrected default value returned by Telemetry_Get_Gain()
+//
 //
 //============================================================================*/
 
@@ -428,7 +428,7 @@ float Telemetry_Get_Gain(telEnum_Gain gain) {
     if (gain < TEL_GAIN_NUMBER) {
         return fGain[gain];
     } else {
-        return 1.0f;
+        return 0.0f;
     }
 }
 
