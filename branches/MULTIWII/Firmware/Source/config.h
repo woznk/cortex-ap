@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change enabled multiwii telemetry
+// Change removed _WINDOWS option
 //
 //============================================================================*/
 
@@ -19,11 +19,7 @@
 #define ToDeg(x) (((x) * 180.0f) / PI)  //!< radian to degree conversion
 
 /// Frequency of attitude control loop
-#ifdef _WINDOWS
-#  define SAMPLES_PER_SECOND  10
-#else
-#  define SAMPLES_PER_SECOND  40
-#endif
+#define SAMPLES_PER_SECOND  40
 
 /// DCM matrix updating interval
 #define DELTA_T         (1.0f / SAMPLES_PER_SECOND)
@@ -118,5 +114,5 @@
 #define LOG_SERVO   0                   //!< enable log of servo positions
 
 /*! Telemetry type definition */
-#define TELEMETRY_MULTIWII
-//#define TELEMETRY_ARDUPILOT
+//#define TELEMETRY_MULTIWII
+#define TELEMETRY_ARDUPILOT
