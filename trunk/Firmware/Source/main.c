@@ -7,7 +7,18 @@
 //
 /// \brief main program
 ///
-// Change: removed minor defects detectd by static analysis
+/// \file
+///
+/// \todo
+/// 1) Move task definitions in the main.c file, export relevant functions
+/// from specific modules and call them from inside task, this should improve
+/// testability.
+///
+/// \todo
+/// 2) Use only one data structure for SD file read/write, add a semaphore
+/// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
+///
+// Change: added option for multiwii telemetry or ardupilot-like telemetry
 //
 //============================================================================*/
 
@@ -23,16 +34,19 @@
 #include "adxl345_driver.h"
 #include "servodriver.h"
 #include "ppmdriver.h"
+#include "usart1driver.h"
 #include "diskio.h"
 
 #include "config.h"
+/* uncomment telemetry type that applies */
 #include "telemetry.h"
+//#include "multiwii.h"
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
 #include "nav.h"
 
-/** @addtogroup cortex-ap
+/** @addtogroup cortex_ap
   * @{
   */
 
@@ -52,17 +66,18 @@
 #define VAR_GLOBAL
 
 /* Task priorities. */
-#define mainAHRS_PRIORITY       ( tskIDLE_PRIORITY + 4 )
-#define mainDISK_PRIORITY       ( tskIDLE_PRIORITY + 3 )
-#define mainATTITUDE_PRIORITY   ( tskIDLE_PRIORITY + 3 )
-#define mainLOG_PRIORITY        ( tskIDLE_PRIORITY + 2 )
-#define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )
-#define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )
+#define mainAHRS_PRIORITY       ( tskIDLE_PRIORITY + 4 )    ///< AHRS priority
+#define mainDISK_PRIORITY       ( tskIDLE_PRIORITY + 3 )    ///< SD file priority
+#define mainATTITUDE_PRIORITY   ( tskIDLE_PRIORITY + 3 )    ///< attitude priority
+#define mainLOG_PRIORITY        ( tskIDLE_PRIORITY + 2 )    ///< log priority
+#define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )    ///< telemetry priority
+#define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )    ///< navigation priority
 
-#define LOG_SENSORS       0
-#define LOG_DCM           0
-#define LOG_PPM           0
-#define LOG_SERVO         0
+/* Task frequencies. */
+#define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task
+
+/* Task delays. */
+#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -98,6 +113,35 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
 
 ///----------------------------------------------------------------------------
 ///
+/// \brief  telemetry task
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Telemetry_Task( void *pvParameters )
+{
+    uint8_t ucCycles = 0;
+    portTickType Last_Wake_Time;                //
+    Last_Wake_Time = xTaskGetTickCount();       //
+
+    while (TRUE) {
+#if defined TELEMETRY_MULTIWII
+        MWI_Receive();          				//
+#elif defined TELEMETRY_ARDUPILOT
+        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
+		Telemetry_Send_Controls();              // update simulator controls
+		Telemetry_Parse();                      // parse uplink data
+		if (++ucCycles >= (TELEMETRY_FREQUENCY / 4)) {// every .125 second
+			ucCycles = 0;                       // reset cycle counter
+			Telemetry_Send_Waypoint();          // send waypoint information
+			Telemetry_Send_DCM();
+		}
+#endif
+	}
+}
+
+///----------------------------------------------------------------------------
+///
 /// \brief   main
 /// \return  -
 /// \remarks -
@@ -114,6 +158,7 @@ int32_t main(void)
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
   RCC_Configuration();                              // System Clocks Configuration
   GPIO_Configuration();                             // GPIO Configuration
+  USART1_Init();              						// Initialize USART1 for telemetry
   Servo_Init();                                     // Initialize PWM timers as servo outputs
   PPM_Init();                                       // Initialize capture timers as RRC input
   I2C_MEMS_Init();                                  // I2C peripheral initialization
