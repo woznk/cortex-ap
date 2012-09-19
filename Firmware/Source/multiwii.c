@@ -68,7 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change MSP_ prefix replaced with MWI_, added MWI_SET_RAW_IMU command,
+//  Change implemented MWI_ATTITUDE command, tested with MultiWiiAllInOne
 //
 //============================================================================*/
 
@@ -79,6 +79,7 @@
 #include "config.h"
 #include "nav.h"
 #include "DCM.h"
+#include "attitude.h"
 #include "servodriver.h"
 #include "usart1driver.h"
 #include "multiwii.h"
@@ -335,6 +336,7 @@ static void __inline MWI_Init_Error(uint8_t length) {
 ///----------------------------------------------------------------------------
 void MWI_Parse_Command( void ) {
   uint8_t i;
+  int16_t iTemp;
 
   switch (MWI_Command) {
 
@@ -391,8 +393,10 @@ void MWI_Parse_Command( void ) {
 
     case MWI_ATTITUDE:                  // requested attitude
      MWI_Init_Response(8);              // initialize response
-     for (i = 0; i < 2; i++)			// append presumably roll, pitch, yaw
-         MWI_Append_16(0);              // angle[i], roll pitch
+     iTemp = (int16_t)Attitude_Roll();
+     MWI_Append_16(iTemp);       // roll
+     iTemp = (int16_t)Attitude_Pitch();
+     MWI_Append_16(iTemp);       // pitch
      MWI_Append_16(0);                  // heading, heading
      MWI_Append_16(0);	                // headFreeModeHold, ?
      break;

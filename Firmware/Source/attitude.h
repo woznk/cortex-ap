@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change
+//  Change added interface functions for computing pitch, roll yaw from DCM
 //
 //============================================================================*/
 
@@ -39,3 +39,6 @@
 /*--------------------------------- Prototypes -------------------------------*/
 
 void Attitude_Task(void *pvParameters);
+float Attitude_Pitch(void);
+float Attitude_Roll(void);
+float Attitude_Yaw(void);

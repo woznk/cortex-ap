@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change: added option for multiwii telemetry or ardupilot-like telemetry
+// Change: added interface functions for computing pitch, roll yaw from DCM
 //
 //============================================================================*/
 
@@ -92,7 +92,7 @@ VAR_STATIC float fInput;                //!< PID input
 VAR_STATIC float fOutput;               //!< PID output
 VAR_STATIC uint8_t ucSensor_Data[12];   //!< raw IMU data
 VAR_STATIC int16_t iSensor_Offset[6] =  //!< IMU sensors offset
-{0, 0, 0, 0, 0, 0};
+{ 0, 0, 0, 0, 0, 0 };
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -273,6 +273,49 @@ static __inline void Attitude_Control(void)
     Servo_Set(SERVO_AILERON, iAileron);                             // update servos
     Servo_Set(SERVO_ELEVATOR, iElevator);
     Servo_Set(SERVO_THROTTLE, iThrottle);
+}
+
+/* Euler angles from DCM */
+/*
+    fYaw = atan2f(DCM_Matrix[2][0],DCM_Matrix[0][0]);   // atan2(rmat31,rmat11)
+    fPitch = -asinf(DCM_Matrix[2][0]);                  // -asin(rmat31)
+    fRoll = atan2f(DCM_Matrix[2][1],DCM_Matrix[2][2]);  // atan2(rmat32,rmat33)
+*/
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Aircraft pitch.
+/// \return  aircraft pitch angle [deg]
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Attitude_Pitch(void)
+{
+    return (10.0f * ToDeg(-asinf(DCM_Matrix[2][0])));
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Aircraft roll.
+/// \return  aircraft roll angle [deg]
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Attitude_Roll(void)
+{
+    return (10.0f * ToDeg(atan2f(DCM_Matrix[2][1],DCM_Matrix[2][2])));
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Aircraft yaw.
+/// \return  aircraft yaw angle [deg]
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Attitude_Yaw(void)
+{
+    return (10.0f * ToDeg(atan2f(DCM_Matrix[2][0],DCM_Matrix[0][0])));
 }
 
 /**

@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change removed _WINDOWS option
+// Change disabled simulation option, enabled multiwii option
 //
 //============================================================================*/
 
@@ -95,7 +95,7 @@
 #define SIM_NONE    0                   //!< No simulator option
 #define XPLANE      1                   //!< Simulator X-Plane option
 #define FLIGHTGEAR  2                   //!< Simulator Flightgear option
-#define SIMULATOR   XPLANE              //!< simulator option
+#define SIMULATOR   SIM_NONE            //!< simulator option
 
 /* Sensor type definitions for multiwii protocol */
 #define ACC         1                   //!< Accelerometer available
@@ -114,5 +114,5 @@
 #define LOG_SERVO   0                   //!< enable log of servo positions
 
 /*! Telemetry type definition */
-//#define TELEMETRY_MULTIWII
-#define TELEMETRY_ARDUPILOT
+#define TELEMETRY_MULTIWII
+//#define TELEMETRY_ARDUPILOT
