@@ -68,7 +68,9 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change implemented MWI_ATTITUDE command, tested with MultiWiiAllInOne
+//  Change added transmission of aircraft heading to MWI_ATTITUDE command,
+//         implemented MWI_RAW_GPS and MWI_RC commands,
+//         tested with MultiWiiWinGUI
 //
 //============================================================================*/
 
@@ -80,6 +82,7 @@
 #include "nav.h"
 #include "DCM.h"
 #include "attitude.h"
+#include "ppmdriver.h"
 #include "servodriver.h"
 #include "usart1driver.h"
 #include "multiwii.h"
@@ -393,11 +396,12 @@ void MWI_Parse_Command( void ) {
 
     case MWI_ATTITUDE:                  // requested attitude
      MWI_Init_Response(8);              // initialize response
-     iTemp = (int16_t)Attitude_Roll();
-     MWI_Append_16(iTemp);       // roll
-     iTemp = (int16_t)Attitude_Pitch();
-     MWI_Append_16(iTemp);       // pitch
-     MWI_Append_16(0);                  // heading, heading
+     iTemp = (int16_t)(10.0f * Attitude_Roll());
+     MWI_Append_16(iTemp);              // roll
+     iTemp = (int16_t)(10.0f * Attitude_Pitch());
+     MWI_Append_16(iTemp);              // pitch
+     iTemp = (int16_t)Nav_Heading();
+     MWI_Append_16(iTemp);              // yaw
      MWI_Append_16(0);	                // headFreeModeHold, ?
      break;
 
@@ -475,6 +479,30 @@ void MWI_Parse_Command( void ) {
     }
     break;
 #endif
+
+#if (GPS == 1)
+   case MWI_RAW_GPS:                    // requested GPS data
+     MWI_Init_Response(14);             // initialize response
+     MWI_Append_8(0);                   // fix
+     MWI_Append_8(0);                   // numsat
+     MWI_Append_32(Gps_Latitude());     // latitude in 1/10 000 000 degres
+     MWI_Append_32(Gps_Longitude());    // longitude in 1/10 000 000 degres
+     MWI_Append_16(0);                  // gps altitude
+     MWI_Append_16(Gps_Speed());        // gps speed
+     break;
+
+   case MWI_COMP_GPS:                   // requested home information
+     MWI_Init_Response(5);              // initialize response
+     MWI_Append_16(0);                  // distance to home
+     MWI_Append_16(0);                  // direction to home
+     MWI_Append_8(1);                   // gps update
+     break;
+#endif
+   case MWI_RC:                         // requested RC commands
+     MWI_Init_Response(16);             // initialize response
+     for (i = 0; i < 8; i++)
+       MWI_Append_16(PPMGetChannel(i)); // PPM RC channels
+     break;
 
    case MWI_RESET_CONF:                 // reset configuration
      MWI_Init_Response(0);              // initialize response
