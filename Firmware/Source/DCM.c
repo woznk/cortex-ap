@@ -78,7 +78,7 @@
 ///
 /// \endcode
 ///
-// Change: added option for multiwii telemetry or ardupilot-like telemetry
+// Change: removed unused #inclusions
 //
 //=============================================================================+
 
@@ -86,9 +86,7 @@
 
 #include "math.h"
 #include "vmath.h"
-/* uncomment telemetry type that applies */
 #include "telemetry.h"
-//#include "multiwii.h"
 #include "config.h"
 #include "nav.h"
 #include "DCM.h"

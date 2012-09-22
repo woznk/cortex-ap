@@ -18,7 +18,8 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added option for multiwii telemetry or ardupilot-like telemetry
+// Change: reduced task priority levels to 2, changed task priorities,
+//         temporarily removed log task
 //
 //============================================================================*/
 
@@ -39,8 +40,8 @@
 
 #include "config.h"
 /* uncomment telemetry type that applies */
-#include "telemetry.h"
-//#include "multiwii.h"
+//#include "telemetry.h"
+#include "multiwii.h"
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
@@ -66,12 +67,11 @@
 #define VAR_GLOBAL
 
 /* Task priorities. */
-#define mainAHRS_PRIORITY       ( tskIDLE_PRIORITY + 4 )    ///< AHRS priority
-#define mainDISK_PRIORITY       ( tskIDLE_PRIORITY + 3 )    ///< SD file priority
-#define mainATTITUDE_PRIORITY   ( tskIDLE_PRIORITY + 3 )    ///< attitude priority
-#define mainLOG_PRIORITY        ( tskIDLE_PRIORITY + 2 )    ///< log priority
-#define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )    ///< telemetry priority
-#define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )    ///< navigation priority
+#define mainAHRS_PRIORITY   ( tskIDLE_PRIORITY + 3 )    ///< AHRS priority
+#define mainDISK_PRIORITY   ( tskIDLE_PRIORITY + 3 )    ///< SD file priority
+#define mainLOG_PRIORITY    ( tskIDLE_PRIORITY + 2 )    ///< log priority
+#define mainNAV_PRIORITY    ( tskIDLE_PRIORITY + 2 )    ///< navigation priority
+#define mainTEL_PRIORITY    ( tskIDLE_PRIORITY + 2 )    ///< telemetry priority
 
 /* Task frequencies. */
 #define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task
@@ -118,16 +118,13 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Task( void *pvParameters )
-{
+void Telemetry_Task( void *pvParameters ) {
+#if defined TELEMETRY_ARDUPILOT
     uint8_t ucCycles = 0;
     portTickType Last_Wake_Time;                //
     Last_Wake_Time = xTaskGetTickCount();       //
 
     while (TRUE) {
-#if defined TELEMETRY_MULTIWII
-        MWI_Receive();          				//
-#elif defined TELEMETRY_ARDUPILOT
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
 		Telemetry_Send_Controls();              // update simulator controls
 		Telemetry_Parse();                      // parse uplink data
@@ -136,8 +133,12 @@ void Telemetry_Task( void *pvParameters )
 			Telemetry_Send_Waypoint();          // send waypoint information
 			Telemetry_Send_DCM();
 		}
-#endif
+    }
+#elif defined TELEMETRY_MULTIWII
+    while (TRUE) {
+        MWI_Receive();          				//
 	}
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -147,13 +148,13 @@ void Telemetry_Task( void *pvParameters )
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-int32_t main(void)
-{
-  /*!< At this stage the microcontroller clock setting is already configured,
-       this is done through SystemInit() function which is called from startup
-       file (startup_stm32f10x_xx.s) before to branch to application main.
-       To reconfigure the default setting of SystemInit() function, refer to
-       system_stm32f10x.c file */
+int32_t main(void) {
+
+  /* At this stage the microcontroller clock setting is already configured,
+     this is done through SystemInit() function which is called from startup
+     file (startup_stm32f10x_xx.s) before to branch to application main.
+     To reconfigure the default setting of SystemInit() function, refer to
+     system_stm32f10x.c file */
 
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
   RCC_Configuration();                              // System Clocks Configuration
@@ -173,9 +174,9 @@ int32_t main(void)
 
   xTaskCreate(Attitude_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
-  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 128, NULL, mainNAVIGATION_PRIORITY, NULL);
-  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
-  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
+  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 128, NULL, mainNAV_PRIORITY, NULL);
+  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
+//  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
   vTaskStartScheduler();
 
