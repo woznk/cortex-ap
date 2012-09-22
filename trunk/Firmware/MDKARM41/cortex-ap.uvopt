@@ -533,8 +533,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>142</TopLine>
-      <CurrentLine>151</CurrentLine>
+      <TopLine>156</TopLine>
+      <CurrentLine>173</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -545,10 +545,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>44</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>542</TopLine>
-      <CurrentLine>569</CurrentLine>
+      <TopLine>172</TopLine>
+      <CurrentLine>207</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -645,8 +645,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>284</TopLine>
-      <CurrentLine>316</CurrentLine>
+      <TopLine>106</TopLine>
+      <CurrentLine>120</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\attitude.c</PathWithFileName>
       <FilenameWithoutPath>attitude.c</FilenameWithoutPath>
@@ -657,24 +657,24 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>42</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>135</TopLine>
-      <CurrentLine>149</CurrentLine>
+      <TopLine>128</TopLine>
+      <CurrentLine>137</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\usart1driver.c</PathWithFileName>
       <FilenameWithoutPath>usart1driver.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>1</GroupNumber>
-      <FileNumber>0</FileNumber>
+      <FileNumber>12</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
       <ColumnNumber>20</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>386</TopLine>
-      <CurrentLine>395</CurrentLine>
+      <TopLine>203</TopLine>
+      <CurrentLine>203</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\multiwii.c</PathWithFileName>
       <FilenameWithoutPath>multiwii.c</FilenameWithoutPath>
@@ -683,7 +683,7 @@
 
   <Group>
     <GroupName>Libraries</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <File>
@@ -788,7 +788,7 @@
 
   <Group>
     <GroupName>FreeRTOS</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <File>
@@ -839,10 +839,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>61</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>461</TopLine>
+      <CurrentLine>480</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</PathWithFileName>
       <FilenameWithoutPath>tasks.c</FilenameWithoutPath>
@@ -893,7 +893,7 @@
 
   <Group>
     <GroupName>System</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <File>
@@ -942,7 +942,7 @@
       <GroupNumber>4</GroupNumber>
       <FileNumber>30</FileNumber>
       <FileType>1</FileType>
-      <tvExp>0</tvExp>
+      <tvExp>1</tvExp>
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -988,8 +988,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>763</TopLine>
+      <CurrentLine>772</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_spi.c</FilenameWithoutPath>
@@ -1066,58 +1066,6 @@
     </File>
   </Group>
 
-  <AlienFiles>
-    <PathWithFilename>C:\Work\cxap\branches\MULTIWIIbis\Source\config.h</PathWithFilename>
-    <TopLine>79</TopLine>
-    <CurrentLine>96</CurrentLine>
-    <Constant>0</Constant>
-    <WindowPosition>
-      <length>0</length>
-      <flags>0</flags>
-      <showCmd>0</showCmd>
-      <MinPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MinPosition>
-      <MaxPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MaxPosition>
-      <NormalPosition>
-        <Top>0</Top>
-        <Left>0</Left>
-        <Right>0</Right>
-        <Bottom>0</Bottom>
-      </NormalPosition>
-    </WindowPosition>
-  </AlienFiles>
-
-  <AlienFiles>
-    <PathWithFilename>C:\Work\cxap\branches\MULTIWIIbis\Source\multiwii.h</PathWithFilename>
-    <TopLine>18</TopLine>
-    <CurrentLine>34</CurrentLine>
-    <Constant>0</Constant>
-    <WindowPosition>
-      <length>0</length>
-      <flags>0</flags>
-      <showCmd>0</showCmd>
-      <MinPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MinPosition>
-      <MaxPosition>
-        <xPos>0</xPos>
-        <yPos>0</yPos>
-      </MaxPosition>
-      <NormalPosition>
-        <Top>0</Top>
-        <Left>0</Left>
-        <Right>0</Right>
-        <Bottom>0</Bottom>
-      </NormalPosition>
-    </WindowPosition>
-  </AlienFiles>
-
   <MDIGroups>
     <Orientation>1</Orientation>
     <ActiveMDIGroup>0</ActiveMDIGroup>
@@ -1126,58 +1074,46 @@
       <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
-          <Name>..\Source\usart1driver.c</Name>
-          <ColumnNumber>42</ColumnNumber>
-          <TopLine>135</TopLine>
-          <CurrentLine>149</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\vmath.c</Name>
-          <ColumnNumber>36</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>25</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\attitude.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>284</TopLine>
-          <CurrentLine>316</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>988</TopLine>
-          <CurrentLine>1000</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\multiwii.h</Name>
-          <ColumnNumber>51</ColumnNumber>
-          <TopLine>18</TopLine>
-          <CurrentLine>34</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\config.h</Name>
-          <ColumnNumber>28</ColumnNumber>
-          <TopLine>79</TopLine>
-          <CurrentLine>96</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\main.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>142</TopLine>
-          <CurrentLine>151</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\multiwii.c</Name>
-          <ColumnNumber>20</ColumnNumber>
-          <TopLine>386</TopLine>
-          <CurrentLine>395</CurrentLine>
+          <Name>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</Name>
+          <ColumnNumber>61</ColumnNumber>
+          <TopLine>461</TopLine>
+          <CurrentLine>480</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
           <ColumnNumber>0</ColumnNumber>
           <TopLine>153</TopLine>
           <CurrentLine>153</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\attitude.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>106</TopLine>
+          <CurrentLine>120</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\nav.c</Name>
+          <ColumnNumber>44</ColumnNumber>
+          <TopLine>172</TopLine>
+          <CurrentLine>207</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\multiwii.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>203</TopLine>
+          <CurrentLine>203</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\main.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>156</TopLine>
+          <CurrentLine>173</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>763</TopLine>
+          <CurrentLine>772</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
