@@ -36,7 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: added option for multiwii telemetry or ardupilot-like telemetry
+// Change: added functions Gps_Latitude() and Gps_Longitude()
 //
 //============================================================================*/
 
@@ -50,9 +50,7 @@
 #include "ppmdriver.h"
 #include "dcm.h"
 #include "math.h"
-/* uncomment telemetry type that applies */
 #include "telemetry.h"
-//#include "multiwii.h"
 #include "config.h"
 #include "ff.h"
 #include "pid.h"
@@ -759,5 +757,29 @@ uint16_t Gps_Speed ( void ) {
 //----------------------------------------------------------------------------
 uint16_t Gps_Heading ( void ) {
   return uiGps_Heading;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get latitude [°]
+/// \param   -
+/// \returns latitude angle in 1 / 10000000 degrees
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+int32_t Gps_Latitude ( void ) {
+  return (int32_t)(fLat_Curr * 10000000.0f);
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get longitude [°]
+/// \param   -
+/// \returns longitude angle in 1 / 10000000 degrees
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+int32_t Gps_Longitude ( void ) {
+  return (int32_t)(fLon_Curr * 10000000.0f);
 }
 
