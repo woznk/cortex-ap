@@ -68,7 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change added transmission of barometric altitude
+//  Change added definitions of aircraft types for multiwii GUI
 //
 //============================================================================*/
 
@@ -101,8 +101,46 @@
 #define PAYLOAD_SIZE        32  //!< maximum size of payload
 
 #define VERSION             0	//!< multiwii version
-#define MULTITYPE           0	//!< type of multicopter
 #define MWI_VERSION         0   //!< Multiwii Serial Protocol 0
+
+//!< type of multicopter
+#if defined(TRI)
+  #define MULTITYPE 1
+#elif defined(QUADP)
+  #define MULTITYPE 2
+#elif defined(QUADX)
+  #define MULTITYPE 3
+#elif defined(BI)
+  #define MULTITYPE 4
+#elif defined(GIMBAL)
+  #define MULTITYPE 5
+#elif defined(Y6)
+  #define MULTITYPE 6
+#elif defined(HEX6)
+  #define MULTITYPE 7
+#elif defined(FLYING_WING)
+  #define MULTITYPE 8
+#elif defined(Y4)
+  #define MULTITYPE 9
+#elif defined(HEX6X)
+  #define MULTITYPE 10
+#elif defined(OCTOX8)
+  #define MULTITYPE 11
+#elif defined(OCTOFLATP)
+  #define MULTITYPE 12
+#elif defined(OCTOFLATX)
+  #define MULTITYPE 13
+#elif defined(AIRPLANE)|| defined(SINGLECOPTER)|| defined(DUALCOPTER)
+  #define MULTITYPE 14
+#elif defined (HELI_120_CCPM)
+  #define MULTITYPE 15
+#elif defined (HELI_90_DEG)
+  #define MULTITYPE 16
+#elif defined(VTAIL4)
+ #define MULTITYPE 17
+ #elif defined(HEX6H)
+ #define MULTITYPE 18
+#endif
 
 /* outgoing messages */
 #define MWI_IDENT           100 //!< 64 multitype + multiwii version + protocol version + capability variable
