@@ -68,9 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change added transmission of aircraft heading to MWI_ATTITUDE command,
-//         implemented MWI_RAW_GPS and MWI_RC commands,
-//         tested with MultiWiiWinGUI
+//  Change added transmission of barometric altitude
 //
 //============================================================================*/
 
@@ -85,6 +83,7 @@
 #include "ppmdriver.h"
 #include "servodriver.h"
 #include "usart1driver.h"
+#include "bmp085_driver.h"
 #include "multiwii.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -391,7 +390,7 @@ void MWI_Parse_Command( void ) {
                                         // rcOptions[BOXLEDMAX]   << BOXLEDMAX |
                                         // rcOptions[BOXLLIGHTS]  << BOXLLIGHTS |
                                         // rcOptions[BOXHEADADJ]  << BOXHEADADJ
-				  );
+                   );
      break;
 
     case MWI_ATTITUDE:                  // requested attitude
@@ -409,7 +408,7 @@ void MWI_Parse_Command( void ) {
      MWI_Init_Response(7);              // initialize response
      MWI_Append_8(0                     // f.MAG_MODE      << 0 | mag stabilization mode
                                         // f.HEADFREE_MODE << 1   headfree mode
-				  );
+                 );
      MWI_Append_16(0);                  // heading, heading
      MWI_Append_16(0);                  // magHold, magnetic orientation to hold
      MWI_Append_16(0);                  // headFreeModeHold, ?
@@ -417,7 +416,7 @@ void MWI_Parse_Command( void ) {
 
     case MWI_ALTITUDE:                  // requested altitude
      MWI_Init_Response(4);              // initialize response
-     MWI_Append_32(0);                  // EstAlt, estimated barometric altitude
+     MWI_Append_32(BMP085_Get_Altitude() * 100); // estimated barometric altitude
      break;
 
     case MWI_PID:                                       // requested PID values
