@@ -36,7 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: added functions Gps_Latitude() and Gps_Longitude()
+// Change: added temporary Latitude and Longitude (Issue 8)
 //
 //============================================================================*/
 
@@ -47,6 +47,7 @@
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
 #include "misc.h"
+#include "bmp085_driver.h"
 #include "ppmdriver.h"
 #include "dcm.h"
 #include "math.h"
@@ -149,6 +150,8 @@ VAR_STATIC float fAlt_Dest;                             //!< destination altitud
 VAR_STATIC float fLat_Curr;                             //!< current latitude
 VAR_STATIC float fLon_Curr;                             //!< current longitude
 VAR_STATIC float fAlt_Curr;                             //!< current altitude
+VAR_STATIC float fLon_Temp;                             //!< temporary longitude during parse
+VAR_STATIC float fLat_Temp;                             //!< temporary altitude during parse
 VAR_STATIC float fBearing;                              //!< angle to destination [°]
 VAR_STATIC float fHeading;                              //!< aircraft navigation heading [°]
 VAR_STATIC uint16_t uiGps_Heading;                      //!< aircraft GPS heading [°]
@@ -571,12 +574,12 @@ static bool Parse_GPS( void )
 
         if (( ucCommas == 3 ) ||
             ( ucCommas == 4 )) {            // get latitude data (3rd comma)
-          Parse_Coord (&fLat_Curr, c);
+          Parse_Coord (&fLat_Temp, c);
         }
 
         if (( ucCommas == 5 ) ||
             ( ucCommas == 6 )) {            // get longitude data (5th comma)
-          Parse_Coord (&fLon_Curr, c);
+          Parse_Coord (&fLon_Temp, c);
         }
 
         if ( ucCommas == 7 ) {              // get speed (7th comma)
@@ -601,6 +604,8 @@ static bool Parse_GPS( void )
             (ucGps_Status & GPS_STATUS_FIX)) {
           ucCommas = 10;
           uiGps_Heading /= 10;
+          fLat_Curr = fLat_Temp;
+          fLon_Curr = fLon_Temp;
           bResult = TRUE;
         }
     }
