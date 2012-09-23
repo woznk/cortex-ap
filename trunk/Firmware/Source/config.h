@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change disabled simulation option, enabled multiwii option
+// Change added definitions of aircraft types for multiwii GUI
 //
 //============================================================================*/
 
@@ -116,3 +116,26 @@
 /*! Telemetry type definition */
 #define TELEMETRY_MULTIWII
 //#define TELEMETRY_ARDUPILOT
+
+ /*! Type of aircraft */
+//#define GIMBAL
+//#define BI
+//#define TRI
+//#define QUADP
+//#define QUADX
+//#define Y4
+//#define Y6
+//#define HEX6
+//#define HEX6X
+//#define HEX6H // New Model
+//#define OCTOX8
+//#define OCTOFLATP
+//#define OCTOFLATX
+//#define FLYING_WING
+//#define VTAIL4
+#define AIRPLANE
+//#define SINGLECOPTER
+//#define DUALCOPTER
+//#define HELI_120_CCPM
+//#define HELI_90_DEG
+
