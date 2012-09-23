@@ -533,8 +533,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>156</TopLine>
-      <CurrentLine>173</CurrentLine>
+      <TopLine>138</TopLine>
+      <CurrentLine>151</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -545,10 +545,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>44</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>172</TopLine>
-      <CurrentLine>207</CurrentLine>
+      <TopLine>201</TopLine>
+      <CurrentLine>213</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -645,8 +645,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>106</TopLine>
-      <CurrentLine>120</CurrentLine>
+      <TopLine>175</TopLine>
+      <CurrentLine>194</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\attitude.c</PathWithFileName>
       <FilenameWithoutPath>attitude.c</FilenameWithoutPath>
@@ -659,8 +659,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>128</TopLine>
-      <CurrentLine>137</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\usart1driver.c</PathWithFileName>
       <FilenameWithoutPath>usart1driver.c</FilenameWithoutPath>
@@ -673,8 +673,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>203</TopLine>
-      <CurrentLine>203</CurrentLine>
+      <TopLine>163</TopLine>
+      <CurrentLine>190</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\multiwii.c</PathWithFileName>
       <FilenameWithoutPath>multiwii.c</FilenameWithoutPath>
@@ -683,7 +683,7 @@
 
   <Group>
     <GroupName>Libraries</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <File>
@@ -734,7 +734,7 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>40</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>0</TopLine>
       <CurrentLine>0</CurrentLine>
@@ -778,8 +778,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>142</TopLine>
+      <CurrentLine>160</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\BMP085_Driver\BMP085_driver.c</PathWithFileName>
       <FilenameWithoutPath>BMP085_driver.c</FilenameWithoutPath>
@@ -839,10 +839,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>61</ColumnNumber>
+      <ColumnNumber>30</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>461</TopLine>
-      <CurrentLine>480</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</PathWithFileName>
       <FilenameWithoutPath>tasks.c</FilenameWithoutPath>
@@ -988,8 +988,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>763</TopLine>
-      <CurrentLine>772</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_spi.c</FilenameWithoutPath>
@@ -1071,13 +1071,31 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>3</ActiveTab>
       <Documents>
         <Doc>
-          <Name>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</Name>
-          <ColumnNumber>61</ColumnNumber>
-          <TopLine>461</TopLine>
-          <CurrentLine>480</CurrentLine>
+          <Name>..\Libraries\BMP085_Driver\BMP085_driver.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>142</TopLine>
+          <CurrentLine>160</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\main.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>138</TopLine>
+          <CurrentLine>151</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\attitude.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>175</TopLine>
+          <CurrentLine>194</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\nav.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>132</TopLine>
+          <CurrentLine>155</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
@@ -1086,34 +1104,10 @@
           <CurrentLine>153</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\attitude.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>106</TopLine>
-          <CurrentLine>120</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\nav.c</Name>
-          <ColumnNumber>44</ColumnNumber>
-          <TopLine>172</TopLine>
-          <CurrentLine>207</CurrentLine>
-        </Doc>
-        <Doc>
           <Name>..\Source\multiwii.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>203</TopLine>
-          <CurrentLine>203</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\main.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>156</TopLine>
-          <CurrentLine>173</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>763</TopLine>
-          <CurrentLine>772</CurrentLine>
+          <TopLine>163</TopLine>
+          <CurrentLine>190</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
