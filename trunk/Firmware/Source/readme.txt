@@ -129,39 +129,59 @@
 
      - dopo la connessione il programma invia per alcuni secondi le richieste:
 
-	MSP_IDENT      multitype + multiwii version + protocol version + capability variable
-	MSP_RC_TUNING  rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
-	MSP_PID        16 PID
-	MSP_BOX        16 checkbox
-	MSP_MISC       powermeter trig + 8 free 
+    MSP_IDENT      multitype + multiwii version + protocol version + capability variable
+    MSP_RC_TUNING  rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+    MSP_PID        16 PID
+    MSP_BOX        16 checkbox
+    MSP_MISC       powermeter trig + 8 free 
 
      - poi il programma invia con frequenze diverse le richieste:
 
-	MSP_STATUS     cycletime & errors_count & sensor present & box activation
-	MSP_RAW_IMU    raw IMU data, 9 DOF
-	MSP_SERVO      8 servos
-	MSP_MOTOR      8 motors
-	MSP_RC         8 rc channels
-	MSP_RAW_GPS    fix, numsat, lat, lon, alt, speed
-	MSP_COMP_GPS   distance home, direction home
-	MSP_ATTITUDE   roll, pitch, heading
-	MSP_ALTITUDE   altitude
-	MSP_BAT        vbat, powermetersum
-	MSP_MISC       powermeter trig + 8 free
-	MSP_DEBUG      debug1, debug2, debug3, debug4
+    MSP_STATUS     cycletime & errors_count & sensor present & box activation
+    MSP_RAW_IMU    raw IMU data, 9 DOF
+    MSP_SERVO      8 servos
+    MSP_MOTOR      8 motors
+    MSP_RC         8 rc channels
+    MSP_RAW_GPS    fix, numsat, lat, lon, alt, speed
+    MSP_COMP_GPS   distance home, direction home
+    MSP_ATTITUDE   roll, pitch, heading
+    MSP_ALTITUDE   altitude
+    MSP_BAT        vbat, powermetersum
+    MSP_MISC       powermeter trig + 8 free
+    MSP_DEBUG      debug1, debug2, debug3, debug4
 
      - alla pressione del pulsante "Write Settings" vengono aggiornati tutti i parametri,
        inviando i seguenti comandi:
 
-	comando          lunghezza significato 
-	-------------------------------------------------
-	MSP_SET_PID           30   set PID
-	MSP_SET_BOX           28   set checkboxes
-	MSP_SET_RC_TUNING     7    set rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
-	MSP_SET_MISC          2    set powermeter trig + 8 free 
-	MSP_EEPROM_WRITE      0    save configuration to eeprom
-	MSP_PID               0    request PID
+    comando          lunghezza significato 
+    -------------------------------------------------
+    MSP_SET_PID           30   set PID
+    MSP_SET_BOX           28   set checkboxes
+    MSP_SET_RC_TUNING     7    set rc rate, rc expo, rollpitch rate, yaw rate, dyn throttle PID
+    MSP_SET_MISC          2    set powermeter trig + 8 free 
+    MSP_EEPROM_WRITE      0    save configuration to eeprom
+    MSP_PID               0    request PID
 
+@par Kalman
+
+    2x3 Kalman Algorithm from a paper by Randal Beard and adapted to gluonpilot.
+
+    The state x contains the roll and pitch angle
+    Update x with the standard earth-to-body transformations:
+        roll = roll + (p + q*sin(roll)*tan(pitch) + r*cos(roll)*tan(pitch)) * DT
+        pitch = pitch + (q*cos(roll)- r*sin(roll)) * DT 
+    Update the P-matrix of the extended kalman filter
+    Calculate u (speed along x-axis) and w (speed along z-axis) from the GPS and pressure sensor.
+    Calculate matrix h, which contains the estimated accelerometer readings:
+        acceleration(x) = q*w + sin(pitch)* G
+        acceleration(y) = (r*u - p*w) - cos(pitch)*sin(roll) * G
+        acceleration(z) = (p*w - q*u) - cos(pitch)*cos(roll) * G 
+    Calculate the Jacobian dh/dx to complete the extended kalman filter.
+    Update the pitch and roll angle (state x) with the error between "h" and 
+    the actual accelerometer readings with the innovation matrix. 
+
+    Pros: no gyro bias is calculated, perform surprisingly well. 
+    Cons: uses euler angles, which are not gimbal-lock free, requires more processing power.
 
 @par Navigation
      
