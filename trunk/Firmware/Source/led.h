@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change GREEN LED changed into RED
+//  Change added function LEDStatus to read status of leds
 //
 //============================================================================
 
@@ -19,9 +19,6 @@
 #undef VAR_GLOBAL
 #endif
 #define VAR_GLOBAL extern
-
-#define GREEN_PIN    GPIO_Pin_9     ///< I/O pin for green LED
-#define BLUE_PIN     GPIO_Pin_8     ///< I/O pin for blue LED
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -45,3 +42,4 @@ typedef enum {
 void LEDOn(Led_TypeDef Led);
 void LEDOff(Led_TypeDef Led);
 void LEDToggle(Led_TypeDef Led);
+bool LEDStatus(Led_TypeDef Led);
