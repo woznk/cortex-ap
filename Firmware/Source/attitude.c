@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change: corrected Euler angles computation from DCM 
+// Change: slowed blue LED blink of a factor 10
 //
 //============================================================================*/
 
@@ -164,7 +164,7 @@ void Attitude_Task(void *pvParameters)
 
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
 
-        if (++ucBlink_Blue == 10) {                 // blink led every 10 cycles
+        if (++ucBlink_Blue == 100) {                 // blink led every 100 cycles
            ucBlink_Blue = 0;
            LEDToggle(BLUE);
         }
