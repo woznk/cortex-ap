@@ -68,7 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change added definitions of aircraft types for multiwii GUI
+//  Change added activation of beeper synchronized with blue LED
 //
 //============================================================================*/
 
@@ -77,6 +77,7 @@
 #include "misc.h"
 
 #include "config.h"
+#include "led.h"
 #include "nav.h"
 #include "DCM.h"
 #include "attitude.h"
@@ -102,6 +103,8 @@
 
 #define VERSION             0	//!< multiwii version
 #define MWI_VERSION         0   //!< Multiwii Serial Protocol 0
+
+#define BEEPER_ON           0x400
 
 //!< type of multicopter
 #if defined(TRI)
@@ -212,6 +215,7 @@ const uint8_t pidnames[] =
   "MAG;"
   "VEL;"
 ;
+
 /*---------------------------------- Globals ---------------------------------*/
 
 /*----------------------------------- Locals ---------------------------------*/
@@ -413,6 +417,12 @@ void MWI_Parse_Command( void ) {
      MWI_Append_16(ACC | BARO << 1 |    // available sensors
                    MAG << 2 | GPS << 3 |
                    SONAR << 4 );
+     if (LEDStatus(BLUE)) {
+        MWI_Append_32(BEEPER_ON);       // beeper on
+     } else {
+        MWI_Append_32(0);               // beeper off
+     }
+/*
      MWI_Append_32(0                    // flags and options
                                         // f.ACC_MODE      << BOXACC |
                                         // f.BARO_MODE     << BOXBARO |
@@ -429,6 +439,7 @@ void MWI_Parse_Command( void ) {
                                         // rcOptions[BOXLLIGHTS]  << BOXLLIGHTS |
                                         // rcOptions[BOXHEADADJ]  << BOXHEADADJ
                    );
+*/
      break;
 
     case MWI_ATTITUDE:                  // requested attitude
@@ -535,6 +546,7 @@ void MWI_Parse_Command( void ) {
      MWI_Append_8(1);                   // gps update
      break;
 #endif
+
    case MWI_RC:                         // requested RC commands
      MWI_Init_Response(16);             // initialize response
      for (i = 0; i < 8; i++)
