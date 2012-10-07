@@ -392,11 +392,6 @@
               <FilePath>.\test_pid.c</FilePath>
             </File>
             <File>
-              <FileName>usart1driver.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\usart1driver.c</FilePath>
-            </File>
-            <File>
               <FileName>PID.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\Source\PID.c</FilePath>
