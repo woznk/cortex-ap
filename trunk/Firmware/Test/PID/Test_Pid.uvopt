@@ -142,53 +142,6 @@
           <Name>-O14 -S0 -C0 -N00("ARM Cortex-M3") -D00(1BA00477) -L00(4) -FO7 -FD20000000 -FC800 -FN1 -FF0STM32F10x_128 -FS08000000 -FL020000)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint>
-        <Bp>
-          <Number>0</Number>
-          <Type>0</Type>
-          <LineNumber>113</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134218438</Address>
-          <ByteObject>0</ByteObject>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename></Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\Test_Pid\test_pid.c\113</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>140</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134218664</Address>
-          <ByteObject>0</ByteObject>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename></Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\Test_Pid\test_pid.c\140</Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>170</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134218914</Address>
-          <ByteObject>0</ByteObject>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename></Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\Test_Pid\test_pid.c\170</Expression>
-        </Bp>
-      </Breakpoint>
       <DebugFlag>
         <trace>0</trace>
         <periodic>1</periodic>
@@ -245,8 +198,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>133</TopLine>
-      <CurrentLine>140</CurrentLine>
+      <TopLine>155</TopLine>
+      <CurrentLine>170</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\test_pid.c</PathWithFileName>
       <FilenameWithoutPath>test_pid.c</FilenameWithoutPath>
@@ -257,24 +210,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>54</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
-      <bDave2>0</bDave2>
-      <PathWithFileName>.\usart1driver.c</PathWithFileName>
-      <FilenameWithoutPath>usart1driver.c</FilenameWithoutPath>
-    </File>
-    <File>
-      <GroupNumber>1</GroupNumber>
-      <FileNumber>0</FileNumber>
-      <FileType>1</FileType>
-      <tvExp>0</tvExp>
-      <Focus>0</Focus>
-      <ColumnNumber>38</ColumnNumber>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>58</TopLine>
-      <CurrentLine>58</CurrentLine>
+      <TopLine>73</TopLine>
+      <CurrentLine>85</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\..\Source\PID.c</PathWithFileName>
       <FilenameWithoutPath>PID.c</FilenameWithoutPath>
@@ -480,19 +419,13 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>3</ActiveTab>
       <Documents>
         <Doc>
-          <Name>.\test_pid.c</Name>
+          <Name>..\..\Source\startup_stm32f10x_md_vl.s</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>133</TopLine>
-          <CurrentLine>140</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\..\Source\PID.c</Name>
-          <ColumnNumber>38</ColumnNumber>
-          <TopLine>58</TopLine>
-          <CurrentLine>58</CurrentLine>
+          <TopLine>153</TopLine>
+          <CurrentLine>153</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\..\Source\pid.h</Name>
@@ -501,10 +434,16 @@
           <CurrentLine>16</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\..\Source\startup_stm32f10x_md_vl.s</Name>
+          <Name>..\..\Source\PID.c</Name>
+          <ColumnNumber>54</ColumnNumber>
+          <TopLine>73</TopLine>
+          <CurrentLine>85</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>.\test_pid.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>153</TopLine>
-          <CurrentLine>153</CurrentLine>
+          <TopLine>155</TopLine>
+          <CurrentLine>170</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
