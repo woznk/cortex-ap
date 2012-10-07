@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change  removed minor defects detectd by static analysis
+//  Change corrected error in antiwindup
 //
 //============================================================================*/
 
@@ -80,8 +80,9 @@ float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)
 
     // Compute integral term
     // Avoid windup
-    if ((pxPid->fIntegral < pxPid->fMax) &&
-        (pxPid->fIntegral > pxPid->fMin)) {
+    if (((pxPid->fIntegral < pxPid->fMax) && (fError > 0))
+	      ||
+	   ((pxPid->fIntegral > pxPid->fMin) && (fError < 0))) {
         pxPid->fIntegral += (fError * DELTA_T);
     }
 
