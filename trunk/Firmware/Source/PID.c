@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change corrected error in antiwindup
+//  Change simplified anti wind up, removed output saturation
 //
 //============================================================================*/
 
@@ -79,11 +79,14 @@ float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)
     fError = fSetpoint - fInput;
 
     // Compute integral term
+    pxPid->fIntegral += (fError * DELTA_T);
+
     // Avoid windup
-    if (((pxPid->fIntegral < pxPid->fMax) && (fError > 0))
-	      ||
-	   ((pxPid->fIntegral > pxPid->fMin) && (fError < 0))) {
-        pxPid->fIntegral += (fError * DELTA_T);
+    if (pxPid->fIntegral > pxPid->fMax) {
+       pxPid->fIntegral = pxPid->fMax;
+    }
+    if (pxPid->fIntegral < pxPid->fMin) {
+       pxPid->fIntegral = pxPid->fMin;
     }
 
     // Compute differential term
@@ -94,14 +97,6 @@ float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)
     fOutput = pxPid->fKp * fError +
               pxPid->fKi * pxPid->fIntegral -
               pxPid->fKd * fDelta;
-
-    // Saturate output
-    if (fOutput > pxPid->fMax) {
-       fOutput = pxPid->fMax;
-    } else if (fOutput < pxPid->fMin) {
-       fOutput = pxPid->fMin;
-    } else {
-    }
 
     // Multiply by output gain
     fOutput = pxPid->fGain * fOutput;
