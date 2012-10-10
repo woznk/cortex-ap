@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change added definitions of aircraft types for multiwii GUI
+// Change added #definition of USE_MWI_WP
 //
 //============================================================================*/
 
@@ -106,6 +106,9 @@
 #define GPS_BAUD    4800                //!< GPS Baud rate
 #define GPS         1                   //!< GPS available
 #define SONAR       0                   //!< Sonar not available
+
+/* Multiwii waypoint support */
+#define USE_MWI_WP	1
 
 /* Log definitions */
 #define LOG_SENSORS 0                   //!< enable log of sensor data
