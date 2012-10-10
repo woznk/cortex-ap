@@ -36,7 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: added temporary Latitude and Longitude (Issue 8)
+// Change: added functions Nav_Get_Wpt() and Nav_Set_Wpt()
 //
 //============================================================================*/
 
@@ -82,13 +82,6 @@
 /*-------------------------------- Enumerations ------------------------------*/
 
 /*----------------------------------- Types ----------------------------------*/
-
-/// waypoint structure
-typedef struct {
-    float Lon;      //!< longitude
-    float Lat;      //!< latitude
-    float Alt;      //!< altitude
-} STRUCT_WPT;
 
 /// navigation modes
 typedef enum {
@@ -158,8 +151,8 @@ VAR_STATIC uint16_t uiGps_Heading;                      //!< aircraft GPS headin
 VAR_STATIC uint32_t ulTempCoord;                        //!< temporary for coordinate parser
 VAR_STATIC uint16_t uiSpeed;                            //!< speed [kt]
 VAR_STATIC uint16_t uiDistance;                         //!< distance to destination [m]
-VAR_STATIC uint16_t uiWptIndex;                         //!< waypoint index
-VAR_STATIC uint16_t uiWptNumber;                        //!< total number of waypoints
+VAR_STATIC uint8_t uiWptNumber;                         //!< total number of waypoints
+VAR_STATIC uint8_t uiWptIndex;                          //!< waypoint index
 VAR_STATIC uint8_t ucGps_Status;                        //!< status of GPS
 VAR_STATIC uint8_t ucCommas;                            //!< counter of commas in NMEA sentence
 VAR_STATIC uint8_t ucWindex;                            //!< USART buffer write index
@@ -643,10 +636,48 @@ void USART2_IRQHandler( void )
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Nav_Wpt_Index ( void ) {
+uint8_t Nav_Wpt_Index ( void ) {
   return uiWptIndex;
 }
 
+//----------------------------------------------------------------------------
+//
+/// \brief   Get waypoint altitude [m]
+/// \param   -
+/// \returns altitude
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Nav_Wpt_Altitude ( void ) {
+  return (uint16_t)Waypoint[uiWptIndex].Alt;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get waypoint data
+/// \param   index = waypoint number
+/// \returns waypoint data structure
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+STRUCT_WPT Nav_Get_Wpt ( uint8_t index ) {
+  if (index > uiWptNumber) {
+     index = 0;
+  }
+  return Waypoint[index];
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Set waypoint data
+/// \param   index = waypoint number
+/// \param   wpt = waypoint data structure
+/// \returns -
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+void Nav_Set_Wpt ( uint8_t index, STRUCT_WPT wpt ) {
+}
 
 //----------------------------------------------------------------------------
 //
@@ -690,18 +721,6 @@ float Nav_Heading ( void ) {
 //----------------------------------------------------------------------------
 uint16_t Nav_Distance ( void ) {
   return uiDistance;
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Get waypoint altitude [m]
-/// \param   -
-/// \returns altitude
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-uint16_t Nav_Wpt_Altitude ( void ) {
-  return (uint16_t)Waypoint[uiWptIndex].Alt;
 }
 
 //----------------------------------------------------------------------------
