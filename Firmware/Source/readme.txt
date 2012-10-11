@@ -187,6 +187,23 @@
      
      vedi i todo in nav.c
 
+@par PID
+     
+     08/10/12
+     
+     Creato progetto di test dei loop PID.
+     Trovato e corretto un problema con la saturazione del termine integrale.
+     Dal test su Xplane risultano i seguenti valori:
+	     Pitch Kp = 0
+	     Pitch Ki = 0
+	     Roll Kp = 1
+	     Roll Ki = 0
+	     Dir Kp = 0.75
+	     Dir Ki = 0.1
+     Anche senza il PID di controllo beccheggio l'aereo è stabile e riesce a controllare 
+     la quota solo variando i giri del motore. 
+     Tutti i waypoint sono raggiunti correttamente, sia come coordinate che come quota.
+
 @par Modifiche hardware
      
      Aggiungere batteria tampone per RTC
