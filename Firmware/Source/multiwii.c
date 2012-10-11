@@ -68,7 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change added activation of beeper synchronized with blue LED
+//  Change implemented MWI_WP (waypoint request) command 
 //
 //============================================================================*/
 
@@ -381,6 +381,8 @@ static void __inline MWI_Init_Error(uint8_t length) {
 void MWI_Parse_Command( void ) {
   uint8_t i;
   int16_t iTemp;
+  int32_t lTemp;
+  STRUCT_WPT wpt;
 
   switch (MWI_Command) {
 
@@ -511,20 +513,16 @@ void MWI_Parse_Command( void ) {
 #if defined(USE_MWI_WP)
    case MWI_WP:                         // requested waypoint
     i = read8();                        // get the number of required wp
+    wpt = Nav_Get_Wpt(i);
     MWI_Init_Response(12);              // initialize response
-    if (i == 0) {                       // home position (waypoint #0)
-      MWI_Append_8(0);                  // append waypoint number
-      MWI_Append_32(GPS_home[LAT]);     // append home latitude
-      MWI_Append_32(GPS_home[LON]);     // append home longitude
-      MWI_Append_16(0);                 // altitude will come here
-      MWI_Append_8(0);                  // nav flag will come here
-    } else if (i == 16) {               // hold position (waypoint #16)
-      MWI_Append_8(16);                 // append waypoint number
-      MWI_Append_32(GPS_hold[LAT]);     // append hold latitude
-      MWI_Append_32(GPS_hold[LON]);     // append hold longitude
-      MWI_Append_16(0);                 // altitude will come here
-      MWI_Append_8(0);                  // nav flag will come here
-    }
+    MWI_Append_8(i);                    // append waypoint number
+    lTemp = (int32_t)(wpt.Lat * 10000000.0f);
+    MWI_Append_32(lTemp);               // append latitude
+    lTemp = (int32_t)(wpt.Lon * 10000000.0f);
+    MWI_Append_32(lTemp);               // append longitude
+    iTemp = (int16_t)wpt.Alt;
+    MWI_Append_16(iTemp);               // append altitude
+    MWI_Append_8(0);                    // nav flag will come here
     break;
 #endif
 
