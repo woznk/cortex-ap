@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change added functions Gps_Latitude() and Gps_Longitude()
+//  Change added functions Nav_Get_Wpt() and Nav_Set_Wpt()
 //
 //============================================================================
 
@@ -26,6 +26,13 @@
 
 /*------------------------------------ Types ---------------------------------*/
 
+/// waypoint structure
+typedef struct {
+    float Lon;      //!< longitude
+    float Lat;      //!< latitude
+    float Alt;      //!< altitude
+} STRUCT_WPT;
+
 /*---------------------------------- Constants -------------------------------*/
 
 /*----------------------------------- Globals --------------------------------*/
@@ -39,10 +46,12 @@ float Nav_Bank ( void );
 float Nav_Pitch ( void ) ;
 float Nav_Throttle ( void );
 uint16_t Nav_Distance ( void );
-uint16_t Nav_Wpt_Index ( void );
-uint16_t Nav_Wpt_Altitude ( void );
 uint16_t Gps_Speed ( void );
 uint16_t Gps_Heading ( void );
 int32_t Gps_Latitude ( void );
 int32_t Gps_Longitude ( void );
+uint8_t Nav_Wpt_Index ( void );
+uint16_t Nav_Wpt_Altitude ( void );
+STRUCT_WPT Nav_Get_Wpt ( uint8_t index );
+void Nav_Set_Wpt ( uint8_t index, STRUCT_WPT wpt );
 
