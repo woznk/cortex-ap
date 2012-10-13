@@ -9,9 +9,7 @@
 ///
 /// \file
 ///
-//  Change  result of merge of NAV branch:
-//          added array iServoPosition[] and function Servo_Get() to store
-//          and return servo positions
+//  Change  simplified initialization code
 //
 //============================================================================*/
 
@@ -91,7 +89,6 @@ void Servo_Init(void) {
   TIM_TimeBaseStructure.TIM_Prescaler = PRESCALER;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-
   TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
 
   /* PWM1 Mode configuration: Channel1 */
@@ -101,31 +98,21 @@ void Servo_Init(void) {
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 
   TIM_OC1Init(TIM3, &TIM_OCInitStructure);
-
   TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
 
   /* PWM1 Mode configuration: Channel2 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = SERVO_NEUTRAL;
 
   TIM_OC2Init(TIM3, &TIM_OCInitStructure);
-
   TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
 
   /* PWM1 Mode configuration: Channel3 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = SERVO_NEUTRAL;
 
   TIM_OC3Init(TIM3, &TIM_OCInitStructure);
-
   TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
 
   /* PWM1 Mode configuration: Channel4 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = SERVO_NEUTRAL;
 
   TIM_OC4Init(TIM3, &TIM_OCInitStructure);
-
   TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
 
   TIM_ARRPreloadConfig(TIM3, ENABLE);
