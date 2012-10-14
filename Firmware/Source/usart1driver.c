@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Change: changed baudrate to 38400
+/// Change: corrected endianness of USART1_Putw
 //
 //============================================================================*/
 
@@ -173,10 +173,10 @@ void USART1_Putw(uint16_t w) {
 
     uint8_t ucTemp;
 
-    ucTemp = (uint8_t)((w >> 8) & 0x00FF);  // get MSB
-    USART1_Putch(ucTemp);                   // store MSB
     ucTemp = (uint8_t)(w & 0x00FF);         // get LSB
     USART1_Putch(ucTemp);                   // store LSB
+    ucTemp = (uint8_t)((w >> 8) & 0x00FF);  // get MSB
+    USART1_Putch(ucTemp);                   // store MSB
 }
 
 //----------------------------------------------------------------------------
