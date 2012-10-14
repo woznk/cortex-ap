@@ -36,7 +36,9 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: added functions Nav_Get_Wpt() and Nav_Set_Wpt()
+// Change: corrected parsing of waypoint data from SD card,
+//         added functions Nav_Altitude(), 
+//         removed commented code
 //
 //============================================================================*/
 
@@ -91,42 +93,10 @@ typedef enum {
 
 /*---------------------------------- Constants -------------------------------*/
 
-/*
-const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 1
-    { 11.568685f, 45.590291f, 0.0f },
-    { 11.567511f, 45.567338f, 0.0f },
-    { 11.529570f, 45.566736f, 0.0f },
-    { 11.529501f, 45.591318f, 0.0f }
-};
-
-const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 2
-    { 11.539628f, 45.580001f, 31.0f },
-    { 11.541140f, 45.567272f, 31.0f },
-    { 11.529628f, 45.579835f, 31.0f },
-    { 11.529958f, 45.566831f, 31.0f }
-};
-
-const STRUCT_WPT DefaultWaypoint[] = {   // HERON
-    { 11.433509f, 45.540183f, 130.0f },
-    { 11.432652f, 45.543691f, 130.0f },
-    { 11.427580f, 45.543351f, 130.0f },
-    { 11.431036f, 45.538116f, 130.0f }
-};
-*/
-/*
-const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 3
-    { 11.528960f, 45.570528f, 150.0f },
-    { 11.529764f, 45.566249f, 150.0f },
-    { 11.534911f, 45.566383f, 150.0f },
-    { 11.535398f, 45.570759f, 150.0f }
-};
-*/
 /*---------------------------------- Globals ---------------------------------*/
 
 /*----------------------------------- Locals ---------------------------------*/
 
-//"$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n";
-//"$GPRMC,194618.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*3E\n";
 VAR_STATIC uint8_t ucGpsBuffer[BUFFER_LENGTH];          //!< data buffer
 VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];         	//!< waypoints array
 VAR_STATIC const uint8_t szFileName[16] = "path.txt";   //!< file name
@@ -325,9 +295,9 @@ static void Load_Path( void ) {
         while ((wFileBytes != 0) && (!bError)) {    // buffer not empty and no error
             wFileBytes--;                           // decrease overall counter
             c = *ucGpsBufferPointer++;              // read another char
-            if ( c == 13 ) {                        // found carriage return
+            if ( c == 10 ) {                        // found new line
                 cCounter = 0;                       // reached end of line
-            } else if ( c == 10 ) {                 // found new line
+            } else if ( c == 13 ) {                 // found carriage return
                 cCounter--;                         // decrease counter
             } else {                                // alphanumeric character
                 *pszLinePointer++ = c;              // copy character
@@ -757,6 +727,18 @@ float Nav_Throttle ( void ) {
 //----------------------------------------------------------------------------
 float Nav_Pitch ( void ) {
   return fPitch;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get altitude [m]
+/// \param   -
+/// \returns throttle
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+float Nav_Altitude ( void ) {
+  return fAlt_Curr;
 }
 
 //----------------------------------------------------------------------------
