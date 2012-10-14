@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: corrected initialization of IO pins for servo 3 and 4
+// Change: reduced frequency of telemetry position, waypoints and DCM update
 //
 //============================================================================*/
 
@@ -125,13 +125,22 @@ void Telemetry_Task( void *pvParameters ) {
 
     while (TRUE) {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
-		Telemetry_Send_Controls();              // update simulator controls
+        Telemetry_Send_Controls();              // update simulator controls
 		Telemetry_Parse();                      // parse uplink data
-		if (++ucCycles >= (TELEMETRY_FREQUENCY / 4)) {// every .125 second
-			ucCycles = 0;                       // reset cycle counter
-			Telemetry_Send_Waypoint();          // send waypoint information
-			Telemetry_Send_DCM();
-		}
+        switch (++ucCycles) {
+            case 10:
+                Telemetry_Send_Waypoint();      // send waypoint information
+                break;
+
+            case 20:
+                Telemetry_Send_Position();      // send current position
+                break;
+
+            case 30:
+                ucCycles = 0;                   // reset cycle counter
+                Telemetry_Send_DCM();           // send attitude
+                break;
+        }
     }
 #elif defined TELEMETRY_MULTIWII
     while (TRUE) {
