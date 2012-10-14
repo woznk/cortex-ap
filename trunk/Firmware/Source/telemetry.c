@@ -42,7 +42,7 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  Change corrected default value returned by Telemetry_Get_Gain()
+//  Change: added function Telemetry_Send_Position()
 //
 //
 //============================================================================*/
@@ -322,12 +322,12 @@ void Telemetry_Send_Controls(void)
 ///
 ///               0     TEL_WAYPOINT
 ///               1     waypoint index
-///               2     bearing LSB
-///               3     bearing MSB
-///               4     altitude LSB
-///               5     altitude MSB
-///               6     distance LSB
-///               7     distance MSB
+///               2     bearing
+///               3         "
+///               4     altitude
+///               5         "
+///               6     distance
+///               7         "
 ///
 //----------------------------------------------------------------------------
 void Telemetry_Send_Waypoint(void)
@@ -337,9 +337,42 @@ void Telemetry_Send_Waypoint(void)
     USART1_Putw((uint16_t)Nav_Bearing());       // bearing to waypoint
     USART1_Putw((uint16_t)Nav_Wpt_Altitude());  // waypoint altitude
     USART1_Putw(Nav_Distance());                // distance to waypoint
-    USART1_Putw((uint16_t)Nav_Heading());       // heading
 
     USART1_Transmit();                          // send data
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Downlink GPS position
+/// \returns -
+/// \remarks buffer content:
+///
+///             index   content
+///
+///               0     TEL_GPS_POSITION
+///               1     latitude
+///               2         "
+///               3         "
+///               4         "
+///               5     longitude
+///               6         "
+///               7         "
+///               8         "
+///               9     altitude
+///              10         "
+///              10     heading
+///              10         "
+///
+//----------------------------------------------------------------------------
+void Telemetry_Send_Position(void)
+{
+    USART1_Putch(TEL_GPS_POSITION);                     // telemetry wait code
+    USART1_Putf((float)Gps_Latitude() / 10000000.0f);   // current latitude
+    USART1_Putf((float)Gps_Longitude() / 10000000.0f);  // current longitude
+    USART1_Putf(Nav_Altitude());                        // current altitude
+    USART1_Putf(Nav_Heading());                         // heading
+
+    USART1_Transmit();                                  // send data
 }
 
 ///----------------------------------------------------------------------------
