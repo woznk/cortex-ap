@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change added functions Nav_Get_Wpt() and Nav_Set_Wpt()
+//  Change added function Nav_Altitude()
 //
 //============================================================================
 
@@ -40,6 +40,7 @@ typedef struct {
 /*---------------------------------- Interface -------------------------------*/
 
 void Navigation_Task( void *pvParameters );
+float Nav_Altitude ( void );
 float Nav_Heading ( void );
 float Nav_Bearing ( void );
 float Nav_Bank ( void );
