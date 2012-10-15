@@ -88,7 +88,7 @@
 ///    +-------+-------+-------+
 ///                                                                     \endcode
 ///
-//  CHANGES corretto segno accelerazione Z. aumentato tempo di assestamento
+//  Change  corretto segno accelerazione Z. aumentato tempo di assestamento
 //
 //============================================================================*/
 
@@ -127,13 +127,11 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
-unsigned int uiADCsample;               // Sample counter
-unsigned long ulSeq1DataBuffer[8];      // Sample buffer
-unsigned long ulFiltDataBuffer[8];      // Filtered data buffer
+unsigned int uiADCsample;               //!< Sample counter
+unsigned long ulSeq1DataBuffer[8];      //!< Sample buffer
+unsigned long ulFiltDataBuffer[8];      //!< Filtered data buffer
 
-//
-// Used to change the polarity of the sensors
-//
+/// Used to change the polarity of the sensors
 long SensorSign[] = {
   -1, // accel X        ( 1 LM1968, -1 LM9B90)
   -1, // accel Y        (-1 LM1968, -1 LM9B90)
@@ -143,9 +141,7 @@ long SensorSign[] = {
    1, // gyro Z / yaw   ( 1 LM1968,  1 LM9B90)
 };
 
-//
-// Sensor offsets
-//
+/// Sensor offsets
 long SensorOffset[6];
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -153,8 +149,8 @@ long SensorOffset[6];
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION ADC initialization
-/// \RETURN      -
-/// \REMARKS
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 void
@@ -270,8 +266,8 @@ ADCInit(void)
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION The ADC sample sequence 1 interrupt handler.
-/// \RETURN      -
-/// \REMARKS
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 void
@@ -327,8 +323,8 @@ ADCS0IntHandler(void)
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION Wait ADC input settling and get sensor's offset
-/// \RETURN      -
-/// \REMARKS     We must consider gravity sensed by Z accelerometer by adding
+/// \return      -
+/// \remarks     We must consider gravity sensed by Z accelerometer by adding
 ///              or subtracting GRAVITY to its offset.
 ///
 ///----------------------------------------------------------------------------
@@ -362,8 +358,8 @@ ADCSettled(void)
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION Interface to ADC sample counter.
-/// \RETURN      Number of samples modulo 256
-/// \REMARKS
+/// \return      Number of samples modulo 256
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 unsigned char
@@ -375,8 +371,8 @@ ADCSamples(void)
 ///----------------------------------------------------------------------------
 ///
 ///  DESCRIPTION Interface to sensor data.
-/// \RETURN      offset- and sign-corrected value of n-th sensor
-/// \REMARKS
+/// \return      offset- and sign-corrected value of n-th sensor
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 float

@@ -5,7 +5,7 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief Navigation task
+/// \brief navigation task
 ///
 /// \file
 /// - Initialization:
@@ -23,7 +23,22 @@
 ///   when < -180° or > 180°. Cross produt and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
-//  CHANGES Lint: added missing #inclusions
+/// \todo
+/// 1) Compute longitude and latitude differences as :
+/// \code
+///     Delta Lat = Lat2 - Lat1
+///     Delta Lon = (Lon2 - Lon1) * cos((Lat1 + Lat2)/2)
+/// \endcode
+///
+/// \todo
+/// 2) Compute distance from waypoint as :
+/// \code
+///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
+/// \endcode
+///
+// Change: corrected parsing of waypoint data from SD card,
+//         added functions Nav_Altitude(), 
+//         removed commented code
 //
 //============================================================================*/
 
@@ -34,6 +49,7 @@
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
 #include "misc.h"
+#include "bmp085_driver.h"
 #include "ppmdriver.h"
 #include "dcm.h"
 #include "math.h"
@@ -54,14 +70,14 @@
 #endif
 #define   VAR_GLOBAL
 
-#define MAX_WAYPOINTS       8       // Maximum number of waypoints
-#define MIN_DISTANCE        100     // Minimum distance from waypoint [m]
+#define MAX_WAYPOINTS       8       //!< Maximum number of waypoints
+#define MIN_DISTANCE        100     //!< Minimum distance from waypoint [m]
 
-#define BUFFER_LENGTH       96      // Length of buffer for file and USART
-#define LINE_LENGTH         48      // Length of lines read from file
+#define BUFFER_LENGTH       96      //!< Length of buffer for file and USART
+#define LINE_LENGTH         48      //!< Length of lines read from file
 
-#define GPS_STATUS_FIX      1       // GPS status: satellite fix
-#define GPS_STATUS_FIRST    2       // GPS status: waiting for first fix
+#define GPS_STATUS_FIX      1       //!< GPS status: satellite fix
+#define GPS_STATUS_FIRST    2       //!< GPS status: waiting for first fix
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -69,88 +85,52 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
-typedef struct {    // waypoint structure
-    float Lon;      // longitude
-    float Lat;      // latitude
-    float Alt;      // altitude
-} STRUCT_WPT;
-
-typedef enum {      // navigation mode
-    NAV_RTL,        // return to launch
-    NAV_WPT         // waypoint following
+/// navigation modes
+typedef enum {
+    NAV_RTL,        //!< return to launch
+    NAV_WPT         //!< waypoint following
 } ENUM_NAV_MODE;
 
 /*---------------------------------- Constants -------------------------------*/
 
-/*
-const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 1
-    { 11.568685f, 45.590291f, 0.0f },
-    { 11.567511f, 45.567338f, 0.0f },
-    { 11.529570f, 45.566736f, 0.0f },
-    { 11.529501f, 45.591318f, 0.0f }
-};
-
-const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 2
-    { 11.539628f, 45.580001f, 31.0f },
-    { 11.541140f, 45.567272f, 31.0f },
-    { 11.529628f, 45.579835f, 31.0f },
-    { 11.529958f, 45.566831f, 31.0f }
-};
-
-const STRUCT_WPT DefaultWaypoint[] = {   // HERON
-    { 11.433509f, 45.540183f, 130.0f },
-    { 11.432652f, 45.543691f, 130.0f },
-    { 11.427580f, 45.543351f, 130.0f },
-    { 11.431036f, 45.538116f, 130.0f }
-};
-*/
-/*
-const STRUCT_WPT DefaultWaypoint[] = {   // LIPT 3
-    { 11.528960f, 45.570528f, 150.0f },
-    { 11.529764f, 45.566249f, 150.0f },
-    { 11.534911f, 45.566383f, 150.0f },
-    { 11.535398f, 45.570759f, 150.0f }
-};
-*/
 /*---------------------------------- Globals ---------------------------------*/
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC uint8_t ucGpsBuffer[BUFFER_LENGTH];         // data buffer
-//"$GPRMC,194617.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*31\n";
-//"$GPRMC,194618.04,A,4534.6714,N,01128.8559,E,000.0,287.0,091008,001.9,E,A*3E\n";
-VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];         	// waypoints array
-VAR_STATIC const uint8_t szFileName[16] = "path.txt";	// file name
-VAR_STATIC uint8_t szLine[LINE_LENGTH];                 // input line
-VAR_STATIC FATFS stFat;                             // FAT
-VAR_STATIC FIL stFile;                              // file object
-VAR_STATIC UINT wFileBytes;                         // counter of read bytes
-VAR_STATIC float fBank;                             // bank angle setpoint [rad]
-VAR_STATIC float fThrottle;                         // throttle
-VAR_STATIC float fPitch;                            // pitch setpoint [rad]
-VAR_STATIC float fLat_Dest;                         // destination latitude
-VAR_STATIC float fLon_Dest;                         // destination longitude
-VAR_STATIC float fAlt_Dest;                         // destination altitude
-VAR_STATIC float fLat_Curr;                         // current latitude
-VAR_STATIC float fLon_Curr;                         // current longitude
-VAR_STATIC float fAlt_Curr;                         // current altitude
-VAR_STATIC float fBearing;                          // angle to destination [°]
-VAR_STATIC float fHeading;                          // aircraft navigation heading [°]
-VAR_STATIC uint16_t uiGps_Heading;                  // aircraft GPS heading [°]
-VAR_STATIC uint32_t ulTempCoord;                    // temporary for coordinate parser
-VAR_STATIC uint16_t uiSpeed;                        // speed [kt]
-VAR_STATIC uint16_t uiDistance;                     // distance to destination [m]
-VAR_STATIC uint16_t uiWptIndex;                     // waypoint index
-VAR_STATIC uint16_t uiWptNumber;                    // total number of waypoints
-VAR_STATIC uint8_t ucGps_Status;                    // status of GPS
-VAR_STATIC uint8_t ucCommas;                        // counter of commas in NMEA sentence
-VAR_STATIC uint8_t ucWindex;                        // USART buffer write index
-VAR_STATIC uint8_t ucRindex;                        // USART buffer read index
-VAR_STATIC xPID Nav_Pid;                            // Navigation PID loop
-//VAR_STATIC xPID Speed_Pid;                          // Speed PID loop
-VAR_STATIC float fHeight_Margin = HEIGHT_MARGIN;
-VAR_STATIC float fThrottle_Min = ALT_HOLD_THROTTLE_MIN;
-VAR_STATIC float fThrottle_Max = ALT_HOLD_THROTTLE_MAX;
+VAR_STATIC uint8_t ucGpsBuffer[BUFFER_LENGTH];          //!< data buffer
+VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];         	//!< waypoints array
+VAR_STATIC const uint8_t szFileName[16] = "path.txt";   //!< file name
+VAR_STATIC uint8_t szLine[LINE_LENGTH];                 //!< input line
+VAR_STATIC FATFS stFat;                                 //!< FAT
+VAR_STATIC FIL stFile;                                  //!< file object
+VAR_STATIC UINT wFileBytes;                             //!< counter of read bytes
+VAR_STATIC float fBank;                                 //!< bank angle setpoint [rad]
+VAR_STATIC float fThrottle;                             //!< throttle
+VAR_STATIC float fPitch;                                //!< pitch setpoint [rad]
+VAR_STATIC float fLat_Dest;                             //!< destination latitude
+VAR_STATIC float fLon_Dest;                             //!< destination longitude
+VAR_STATIC float fAlt_Dest;                             //!< destination altitude
+VAR_STATIC float fLat_Curr;                             //!< current latitude
+VAR_STATIC float fLon_Curr;                             //!< current longitude
+VAR_STATIC float fAlt_Curr;                             //!< current altitude
+VAR_STATIC float fLon_Temp;                             //!< temporary longitude during parse
+VAR_STATIC float fLat_Temp;                             //!< temporary altitude during parse
+VAR_STATIC float fBearing;                              //!< angle to destination [°]
+VAR_STATIC float fHeading;                              //!< aircraft navigation heading [°]
+VAR_STATIC uint16_t uiGps_Heading;                      //!< aircraft GPS heading [°]
+VAR_STATIC uint32_t ulTempCoord;                        //!< temporary for coordinate parser
+VAR_STATIC uint16_t uiSpeed;                            //!< speed [kt]
+VAR_STATIC uint16_t uiDistance;                         //!< distance to destination [m]
+VAR_STATIC uint8_t uiWptNumber;                         //!< total number of waypoints
+VAR_STATIC uint8_t uiWptIndex;                          //!< waypoint index
+VAR_STATIC uint8_t ucGps_Status;                        //!< status of GPS
+VAR_STATIC uint8_t ucCommas;                            //!< counter of commas in NMEA sentence
+VAR_STATIC uint8_t ucWindex;                            //!< USART buffer write index
+VAR_STATIC uint8_t ucRindex;                            //!< USART buffer read index
+VAR_STATIC xPID Nav_Pid;                                //!< Navigation PID loop
+VAR_STATIC float fHeight_Margin = HEIGHT_MARGIN;        //!< altitude hold margin
+VAR_STATIC float fThrottle_Min = ALT_HOLD_THROTTLE_MIN; //!< altitude hold min throttle
+VAR_STATIC float fThrottle_Max = ALT_HOLD_THROTTLE_MAX; //!< altitude hold max throttle
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -299,7 +279,7 @@ static void Load_Path( void ) {
     /* Mount file system and open waypoint file */
     if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
         uiWptNumber = 0;                            // no waypoint available
-    } else if (FR_OK != f_open(&stFile, 
+    } else if (FR_OK != f_open(&stFile,
                                (const XCHAR *)szFileName,
                                 FA_READ)) {         // error opening file
         uiWptNumber = 0;                            // no waypoint available
@@ -315,9 +295,9 @@ static void Load_Path( void ) {
         while ((wFileBytes != 0) && (!bError)) {    // buffer not empty and no error
             wFileBytes--;                           // decrease overall counter
             c = *ucGpsBufferPointer++;              // read another char
-            if ( c == 13 ) {                        // found carriage return
+            if ( c == 10 ) {                        // found new line
                 cCounter = 0;                       // reached end of line
-            } else if ( c == 10 ) {                 // found new line
+            } else if ( c == 13 ) {                 // found carriage return
                 cCounter--;                         // decrease counter
             } else {                                // alphanumeric character
                 *pszLinePointer++ = c;              // copy character
@@ -557,12 +537,12 @@ static bool Parse_GPS( void )
 
         if (( ucCommas == 3 ) ||
             ( ucCommas == 4 )) {            // get latitude data (3rd comma)
-          Parse_Coord (&fLat_Curr, c);
+          Parse_Coord (&fLat_Temp, c);
         }
 
         if (( ucCommas == 5 ) ||
             ( ucCommas == 6 )) {            // get longitude data (5th comma)
-          Parse_Coord (&fLon_Curr, c);
+          Parse_Coord (&fLon_Temp, c);
         }
 
         if ( ucCommas == 7 ) {              // get speed (7th comma)
@@ -587,6 +567,8 @@ static bool Parse_GPS( void )
             (ucGps_Status & GPS_STATUS_FIX)) {
           ucCommas = 10;
           uiGps_Heading /= 10;
+          fLat_Curr = fLat_Temp;
+          fLon_Curr = fLon_Temp;
           bResult = TRUE;
         }
     }
@@ -624,10 +606,48 @@ void USART2_IRQHandler( void )
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Nav_Wpt_Index ( void ) {
+uint8_t Nav_Wpt_Index ( void ) {
   return uiWptIndex;
 }
 
+//----------------------------------------------------------------------------
+//
+/// \brief   Get waypoint altitude [m]
+/// \param   -
+/// \returns altitude
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Nav_Wpt_Altitude ( void ) {
+  return (uint16_t)Waypoint[uiWptIndex].Alt;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get waypoint data
+/// \param   index = waypoint number
+/// \returns waypoint data structure
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+STRUCT_WPT Nav_Get_Wpt ( uint8_t index ) {
+  if (index > uiWptNumber) {
+     index = 0;
+  }
+  return Waypoint[index];
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Set waypoint data
+/// \param   index = waypoint number
+/// \param   wpt = waypoint data structure
+/// \returns -
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+void Nav_Set_Wpt ( uint8_t index, STRUCT_WPT wpt ) {
+}
 
 //----------------------------------------------------------------------------
 //
@@ -675,18 +695,6 @@ uint16_t Nav_Distance ( void ) {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Get waypoint altitude [m]
-/// \param   -
-/// \returns altitude
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-uint16_t Nav_Wpt_Altitude ( void ) {
-  return (uint16_t)Waypoint[uiWptIndex].Alt;
-}
-
-//----------------------------------------------------------------------------
-//
 /// \brief   Get bank angle [rad]
 /// \param   -
 /// \returns bank angle
@@ -723,6 +731,18 @@ float Nav_Pitch ( void ) {
 
 //----------------------------------------------------------------------------
 //
+/// \brief   Get altitude [m]
+/// \param   -
+/// \returns throttle
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+float Nav_Altitude ( void ) {
+  return fAlt_Curr;
+}
+
+//----------------------------------------------------------------------------
+//
 /// \brief   Get ground speed detected by GPS [kt]
 /// \param   -
 /// \returns GS in knots
@@ -743,5 +763,29 @@ uint16_t Gps_Speed ( void ) {
 //----------------------------------------------------------------------------
 uint16_t Gps_Heading ( void ) {
   return uiGps_Heading;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get latitude [°]
+/// \param   -
+/// \returns latitude angle in 1 / 10000000 degrees
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+int32_t Gps_Latitude ( void ) {
+  return (int32_t)(fLat_Curr * 10000000.0f);
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get longitude [°]
+/// \param   -
+/// \returns longitude angle in 1 / 10000000 degrees
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+int32_t Gps_Longitude ( void ) {
+  return (int32_t)(fLon_Curr * 10000000.0f);
 }
 

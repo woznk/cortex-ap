@@ -8,14 +8,8 @@
 /// \brief ADC driver header file
 ///
 /// \file
-/// NB: la frequenza di aggiornamento della matrice DCM può essere di 50 Hz
-/// quando i calcoli sono fatti dal Cortex, non può essere maggiore di 15 Hz
-/// se i calcoli sono fatti dal PC. Eventualmente misurare il tempo tra due
-/// chiamate successive di DCMupdate().
 ///
-/// \todo Spostare SAMPLES_PER_SECOND e DELTA_T in un file Config.h o simile
-///
-/// CHANGES Spostate #definizioni nel file config.h
+//  Change Spostate #definizioni nel file config.h
 //
 //============================================================================
 
