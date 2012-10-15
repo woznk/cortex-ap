@@ -7,7 +7,18 @@
 //
 /// \brief main program
 ///
-// Change: removed minor defects detectd by static analysis
+/// \file
+///
+/// \todo
+/// 1) Move task definitions in the main.c file, export relevant functions
+/// from specific modules and call them from inside task, this should improve
+/// testability.
+///
+/// \todo
+/// 2) Use only one data structure for SD file read/write, add a semaphore
+/// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
+///
+// Change: reduced frequency of telemetry position, waypoints and DCM update
 //
 //============================================================================*/
 
@@ -23,16 +34,19 @@
 #include "adxl345_driver.h"
 #include "servodriver.h"
 #include "ppmdriver.h"
+#include "usart1driver.h"
 #include "diskio.h"
 
 #include "config.h"
-#include "telemetry.h"
+/* uncomment telemetry type that applies */
+//#include "telemetry.h"
+#include "multiwii.h"
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
 #include "nav.h"
 
-/** @addtogroup cortex-ap
+/** @addtogroup cortex_ap
   * @{
   */
 
@@ -52,17 +66,17 @@
 #define VAR_GLOBAL
 
 /* Task priorities. */
-#define mainAHRS_PRIORITY       ( tskIDLE_PRIORITY + 4 )
-#define mainDISK_PRIORITY       ( tskIDLE_PRIORITY + 3 )
-#define mainATTITUDE_PRIORITY   ( tskIDLE_PRIORITY + 3 )
-#define mainLOG_PRIORITY        ( tskIDLE_PRIORITY + 2 )
-#define mainTELEMETRY_PRIORITY  ( tskIDLE_PRIORITY + 2 )
-#define mainNAVIGATION_PRIORITY ( tskIDLE_PRIORITY + 1 )
+#define mainAHRS_PRIORITY   ( tskIDLE_PRIORITY + 3 )    ///< AHRS priority
+#define mainDISK_PRIORITY   ( tskIDLE_PRIORITY + 3 )    ///< SD file priority
+#define mainLOG_PRIORITY    ( tskIDLE_PRIORITY + 2 )    ///< log priority
+#define mainNAV_PRIORITY    ( tskIDLE_PRIORITY + 2 )    ///< navigation priority
+#define mainTEL_PRIORITY    ( tskIDLE_PRIORITY + 2 )    ///< telemetry priority
 
-#define LOG_SENSORS       0
-#define LOG_DCM           0
-#define LOG_PPM           0
-#define LOG_SERVO         0
+/* Task frequencies. */
+#define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task
+
+/* Task delays. */
+#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -98,22 +112,62 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
 
 ///----------------------------------------------------------------------------
 ///
+/// \brief  telemetry task
+/// \return  -
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+void Telemetry_Task( void *pvParameters ) {
+#if defined TELEMETRY_ARDUPILOT
+    uint8_t ucCycles = 0;
+    portTickType Last_Wake_Time;                //
+    Last_Wake_Time = xTaskGetTickCount();       //
+
+    while (TRUE) {
+        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
+        Telemetry_Send_Controls();              // update simulator controls
+		Telemetry_Parse();                      // parse uplink data
+        switch (++ucCycles) {
+            case 10:
+                Telemetry_Send_Waypoint();      // send waypoint information
+                break;
+
+            case 20:
+                Telemetry_Send_Position();      // send current position
+                break;
+
+            case 30:
+                ucCycles = 0;                   // reset cycle counter
+                Telemetry_Send_DCM();           // send attitude
+                break;
+        }
+    }
+#elif defined TELEMETRY_MULTIWII
+    while (TRUE) {
+        MWI_Receive();          				//
+	}
+#endif
+}
+
+///----------------------------------------------------------------------------
+///
 /// \brief   main
 /// \return  -
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-int32_t main(void)
-{
-  /*!< At this stage the microcontroller clock setting is already configured,
-       this is done through SystemInit() function which is called from startup
-       file (startup_stm32f10x_xx.s) before to branch to application main.
-       To reconfigure the default setting of SystemInit() function, refer to
-       system_stm32f10x.c file */
+int32_t main(void) {
+
+  /* At this stage the microcontroller clock setting is already configured,
+     this is done through SystemInit() function which is called from startup
+     file (startup_stm32f10x_xx.s) before to branch to application main.
+     To reconfigure the default setting of SystemInit() function, refer to
+     system_stm32f10x.c file */
 
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
   RCC_Configuration();                              // System Clocks Configuration
   GPIO_Configuration();                             // GPIO Configuration
+  USART1_Init();              						// Initialize USART1 for telemetry
   Servo_Init();                                     // Initialize PWM timers as servo outputs
   PPM_Init();                                       // Initialize capture timers as RRC input
   I2C_MEMS_Init();                                  // I2C peripheral initialization
@@ -128,9 +182,9 @@ int32_t main(void)
 
   xTaskCreate(Attitude_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
   xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
-  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 128, NULL, mainNAVIGATION_PRIORITY, NULL);
-  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTELEMETRY_PRIORITY, NULL);
-  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
+  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 128, NULL, mainNAV_PRIORITY, NULL);
+  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
+//  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
   vTaskStartScheduler();
 
@@ -197,26 +251,26 @@ void GPIO_Configuration(void)
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   // USART 1 TX pin as alternate function push pull (9)
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   // USART 1 RX pin as input floating (10)
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   // USART 2 TX pin as alternate function push pull (2)
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   // USART 2 RX pin as input floating (3)
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
 
@@ -224,13 +278,15 @@ void GPIO_Configuration(void)
 
   // TIM3 Channel 3, 4 as alternate function push-pull */
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 
   /* GPIOC Configuration */
 
   // LED pins as push pull outputs
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
 }

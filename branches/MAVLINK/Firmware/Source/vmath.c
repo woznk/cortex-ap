@@ -7,7 +7,9 @@
 //
 /// \brief Vector algebra functions
 ///
-//  CHANGES Lint: inclusion of freertos.h replaced with stm32f10x.h
+/// \file
+///
+//  Change  Lint: inclusion of freertos.h replaced with stm32f10x.h
 //
 //============================================================================*/
 
@@ -40,9 +42,9 @@
 
 ///----------------------------------------------------------------------------
 ///
-///  DESCRIPTION Computes the dot product of two vectors
-/// \RETURN      -
-/// \REMARKS
+/// \brief Computes the dot product of two vectors
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 float
@@ -60,9 +62,9 @@ VectorDotProduct(float fVectorA[3], float fVectorB[3])
 
 ///----------------------------------------------------------------------------
 ///
-///  DESCRIPTION Computes the cross product of two vectors
-/// \RETURN      -
-/// \REMARKS
+/// \brief Computes the cross product of two vectors
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 void
@@ -75,9 +77,9 @@ VectorCrossProduct(float fCrossP[3], float fVectorA[3], float fVectorB[3])
 
 ///----------------------------------------------------------------------------
 ///
-///  DESCRIPTION Multiply the vector by a scalar.
-/// \RETURN      -
-/// \REMARKS
+/// \brief Multiply the vector by a scalar.
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 void
@@ -93,9 +95,9 @@ VectorScale(float fScaledV[3], float fVector[3], float fScale)
 
 ///----------------------------------------------------------------------------
 ///
-///  DESCRIPTION Add two vectors.
-/// \RETURN      -
-/// \REMARKS
+/// \brief Add two vectors.
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 void
@@ -111,9 +113,9 @@ VectorAdd(float fSumV[3], float fVectorA[3], float fVectorB[3])
 
 ///----------------------------------------------------------------------------
 ///
-///  DESCRIPTION Multiply two 3x3 matrices.
-/// \RETURN      -
-/// \REMARKS
+/// \brief Multiply two 3x3 matrices.
+/// \return      -
+/// \remarks
 ///
 ///----------------------------------------------------------------------------
 void

@@ -5,10 +5,12 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief Simulation interface
+/// \brief telemetry interface header file
+///
 /// \file
 ///
-//  CHANGES added Telemetry_Get_Altitude() function
+///
+//  Change function Telemetry_Get_Sensors() renamed Telemetry_Get_Raw_IMU()
 //
 //============================================================================
 
@@ -25,20 +27,22 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
+/// telemetry message structure
 typedef struct {
-    uint8_t ucLength;
-    uint16_t *pcData;
+    uint8_t ucLength;   //!< length of message
+    uint16_t *pcData;   //!< pointer to message content
 } telStruct_Message;
 
+/// PID gains
 typedef enum {
-    TEL_PITCH_KP = 0,
-    TEL_PITCH_KI,
-    TEL_ROLL_KP,
-    TEL_ROLL_KI,
-    TEL_NAV_KP,
-    TEL_NAV_KI,
-    TEL_ALT_KP,
-    TEL_ALT_KI,
+    TEL_PITCH_KP = 0,   ///<
+    TEL_PITCH_KI,       ///<
+    TEL_ROLL_KP,        ///<
+    TEL_ROLL_KI,        ///<
+    TEL_NAV_KP,         ///<
+    TEL_NAV_KI,         ///<
+    TEL_ALT_KP,         ///<
+    TEL_ALT_KI,         ///<
     TEL_GAIN_NUMBER
 } telEnum_Gain;
 
@@ -50,10 +54,14 @@ typedef enum {
 
 /*---------------------------------- Interface -------------------------------*/
 
-void Telemetry_Task( void *pvParameters );
-void Telemetry_Get_Sensors(int16_t * piSensors);
+void Telemetry_Parse( void );
+void Telemetry_Send_Message(uint16_t *data, uint8_t num);
+void Telemetry_Send_DCM( void );
+void Telemetry_Send_Controls( void );
+void Telemetry_Send_Waypoint( void );
+void Telemetry_Send_Position( void );
+void Telemetry_Get_Raw_IMU(int16_t * piSensors);
 float Telemetry_Get_Gain(telEnum_Gain gain);
-void Telemetry_Send_Controls(void);
 float Telemetry_Get_Speed(void);
 float Telemetry_Get_Altitude(void);
 

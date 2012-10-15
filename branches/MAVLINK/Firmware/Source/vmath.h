@@ -5,10 +5,11 @@
 // $Date:  $
 // $Author: $
 //
+/// \brief Vector algebra header file
+///
 /// \file
-/// Vector algebra header file
-//
-//  CHANGES
+///
+//  Change
 //
 //
 //

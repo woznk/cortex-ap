@@ -5,16 +5,27 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief LED driver
+/// \brief test program
 ///
-/// \file
-///
-// Change: added function LEDStatus to read status of leds
+// Change: prefixes MSP_ replaced with MWI_
 //
 //============================================================================*/
 
+#include <stdint.h>
+
 #include "stm32f10x.h"
-#include "led.h"
+
+#include "config.h"
+#include "usart1driver.h"
+#include "multiwii.h"
+
+/** @addtogroup test
+  * @{
+  */
+
+/** @addtogroup telemetry
+  * @{
+  */
 
 /*--------------------------------- Definitions ------------------------------*/
 
@@ -27,9 +38,6 @@
 #endif
 #define VAR_GLOBAL
 
-#define RED_PIN     GPIO_Pin_9     ///< I/O pin for red LED
-#define BLUE_PIN    GPIO_Pin_8     ///< I/O pin for blue LED
-
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
@@ -38,65 +46,79 @@
 
 /*---------------------------------- Constants -------------------------------*/
 
-/// pins connected to LEDs
-const uint32_t GPIO_PIN[LED_NUM] =
-{ RED_PIN, BLUE_PIN };
-
 /*---------------------------------- Globals ---------------------------------*/
 
 /*----------------------------------- Locals ---------------------------------*/
 
 /*--------------------------------- Prototypes -------------------------------*/
 
+/*--------------------------------- Functions --------------------------------*/
+
+
 ///----------------------------------------------------------------------------
 ///
-/// \brief   turn on specified led
-/// \param   Led = which led
+/// \brief   main
 /// \return  -
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void LEDOn(Led_TypeDef Led)
+int32_t main(void)
 {
-  GPIOC->BSRR = GPIO_PIN[Led];
+  USART1_Init();
+  while (Test_Running()) {
+     MWI_Receive();
+  }
+  USART1_Init();
+  while (Test_Running()) {
+     MWI_Receive();
+  }
+  USART1_Init();
+  while (Test_Running()) {
+     MWI_Receive();
+  }
+  USART1_Init();
+  while (Test_Running()) {
+     MWI_Receive();
+  }
+  USART1_Init();
+  while (Test_Running()) {
+     MWI_Receive();
+  }
+  USART1_Init();
+  while (Test_Running()) {
+     MWI_Receive();
+  }
 }
 
+#ifdef  USE_FULL_ASSERT
 ///----------------------------------------------------------------------------
 ///
-/// \brief   turn off specified led
-/// \param   Led = which led
+/// \brief   Reports the name of the source file and the source line number
+///          where the assert_param error has occurred.
+/// \param   file: pointer to the source file name
+/// \param   line: assert_param error line source number
 /// \return  -
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void LEDOff(Led_TypeDef Led)
+void assert_failed(uint8_t* file, uint32_t line)
 {
-  GPIOC->BRR = GPIO_PIN[Led];
-}
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
-///----------------------------------------------------------------------------
-///
-/// \brief   toggle status of specified led
-/// \param   Led = which led
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void LEDToggle(Led_TypeDef Led)
-{
-  GPIOC->ODR ^= GPIO_PIN[Led];
+  /* Infinite loop */
+  while (1)
+  {
+  }
 }
+#endif
 
-///----------------------------------------------------------------------------
-///
-/// \brief   status of specified led
-/// \param   Led = which led
-/// \return  TRUE if led on, FALSE if led off
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-bool LEDStatus(Led_TypeDef Led)
-{
-  return (bool)((GPIOC->ODR & GPIO_PIN[Led]) != 0);
-}
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
 /*****END OF FILE****/

@@ -6,9 +6,10 @@
 // $Author: $
 //
 /// \brief PID controls
+///
 /// \file
 ///
-//  CHANGES removed minor defects detectd by static analysis
+//  Change simplified anti wind up, removed output saturation
 //
 //============================================================================*/
 
@@ -48,7 +49,7 @@
 ///----------------------------------------------------------------------------
 ///
 /// \brief   PID initialization
-/// \param
+/// \param   pxPid = pointer to PID structure
 /// \return  -
 /// \remarks
 ///
@@ -63,10 +64,11 @@ void PID_Init(xPID * pxPid)
 ///----------------------------------------------------------------------------
 ///
 /// \brief   PID computing
-/// \param
-/// \param
-/// \return  -
-/// \remarks
+/// \param   pxPid = pointer to PID structure
+/// \param   fSetpoint = PID setpoint
+/// \param   fInput = PID input
+/// \return  PID output
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)
@@ -77,10 +79,14 @@ float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)
     fError = fSetpoint - fInput;
 
     // Compute integral term
+    pxPid->fIntegral += (fError * DELTA_T);
+
     // Avoid windup
-    if ((pxPid->fIntegral < pxPid->fMax) &&
-        (pxPid->fIntegral > pxPid->fMin)) {
-        pxPid->fIntegral += (fError * DELTA_T);
+    if (pxPid->fIntegral > pxPid->fMax) {
+       pxPid->fIntegral = pxPid->fMax;
+    }
+    if (pxPid->fIntegral < pxPid->fMin) {
+       pxPid->fIntegral = pxPid->fMin;
     }
 
     // Compute differential term
@@ -91,14 +97,6 @@ float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)
     fOutput = pxPid->fKp * fError +
               pxPid->fKi * pxPid->fIntegral -
               pxPid->fKd * fDelta;
-
-    // Saturate output
-    if (fOutput > pxPid->fMax) {
-       fOutput = pxPid->fMax;
-    } else if (fOutput < pxPid->fMin) {
-       fOutput = pxPid->fMin;
-    } else {
-    }
 
     // Multiply by output gain
     fOutput = pxPid->fGain * fOutput;

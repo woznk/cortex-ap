@@ -5,12 +5,11 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief
-///  PID controls
+/// \brief PID controls header file
+///
 /// \file
 ///
-///
-//  CHANGES removed minor defects detectd by static analysis
+//  Change  removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -32,7 +31,8 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
-typedef struct {       ///< PID data structure
+/// PID data structure
+typedef struct {
     float fGain;       ///< controller output gain
     float fMin;        ///< min windup guard
     float fMax;        ///< max windup guard

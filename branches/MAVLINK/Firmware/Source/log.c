@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  CHANGES removed minor defects detectd by static analysis
+//  Change  removed minor defects detectd by static analysis
 //
 //============================================================================*/
 
@@ -36,8 +36,8 @@
 #endif
 #define   VAR_GLOBAL
 
-#define FILE_BUFFER_LENGTH 128
-#define MAX_SAMPLES        20000 // Max number of samples that can be written
+#define FILE_BUFFER_LENGTH 128      //!< Length of file buffer
+#define MAX_SAMPLES        20000    //!< Max number of samples that can be written
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -49,18 +49,17 @@
 
 /*---------------------------------- Globals ---------------------------------*/
 
-VAR_GLOBAL xQueueHandle xLog_Queue;
+VAR_GLOBAL xQueueHandle xLog_Queue; //!< Queue for log messages
 
 /*----------------------------------- Locals ---------------------------------*/
 
 
-VAR_STATIC uint8_t szFileName[16] = "log0.txt";     // File name
-VAR_STATIC FATFS stFat;                             // FAT
-VAR_STATIC FIL stFile;                              // File object
-VAR_STATIC uint8_t szString[48];                    //
-VAR_STATIC bool bFileOk = FALSE;                    // File status
-VAR_STATIC uint16_t uiSamples;
-
+VAR_STATIC uint8_t szFileName[16] = "log0.txt"; //!< file name
+VAR_STATIC FATFS stFat;                         //!< FAT
+VAR_STATIC FIL stFile;                          //!< file object
+VAR_STATIC uint8_t szString[48];                //!< generic string
+VAR_STATIC bool bFileOk = FALSE;                //!< file status
+VAR_STATIC uint16_t uiSamples;                  //!< sample counter
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -70,7 +69,7 @@ static void Log_Write(uint16_t *data, uint8_t num);
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief
+/// \brief   log task
 /// \return  -
 /// \remarks -
 ///
@@ -117,9 +116,13 @@ void Log_Task( void *pvParameters ) {
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief
-/// \remarks
-///
+/// \brief   write some 16 bit variables to SD card
+/// \param   data = pointer to variable
+/// \param   num = number of variables to be written
+/// \return  -
+/// \remarks increases counter of samples at each function call.
+///          closes log file if there is no file space, or if sample counter
+///          exceeded maximum or if RC was temporarily shut off.
 ///
 ///----------------------------------------------------------------------------
 static void Log_Write(uint16_t *data, uint8_t num)
