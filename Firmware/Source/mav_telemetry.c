@@ -6,14 +6,91 @@
 // $Author: $
 //
 /// \brief
+/// Tentative Mavlink protocol implementation
 ///
 /// \file
-///                                                                     \endcode
-/// \todo add mavlink protocol, see:
-///  http://www.qgroundcontrol.org/mavlink/start
-///  http://www.qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
+/// -------------------- Mavlink command structure --------------------
+/// \code
+/// Byte # Address Data type Function
+///   0    0x00    byte      Command ID
+///   1    0x01    byte      Options
+///   2    0x02    byte      Parameter 1
+///   3    0x03    long      Parameter 2
+///   4    0x04    ..
+///   5    0x05    ..
+///   6    0x06    ..
+///   7    0x07    long      Parameter 3
+///   8    0x08    ..
+///   9    0x09    ..
+///   10   0x0A    ..
+///   11   0x0B    long      Parameter 4
+///   12   0x0C    ..
+///   13   0x0D    ..
+///   14   0x0E    ..
+///   15   0x0F    ?         CRC ?
+///   16   0x10    ?         CRC ?
+/// \endcode
+/// APM 2.0 has adopted a subset of the MAVLink protocol command set.
+/// -------------------- NAVigation Commands --------------------
+/// Highest priority, all have a lat and lon component.
+/// For commands of higher ID than the NAV commands, unexecuted commands are
+/// dropped when ready for the next NAV command so plan/queue commands accordingly!
+/// For example, if you had a string of CMD_MAV_CONDITION commands following a 0x10
+/// command that had not finished when the waypoint was reached, the unexecuted
+/// CMD_MAV_CONDITION and CMD_MAV_DO commands would be skipped and the next NAV
+/// command would be loaded.
+/// \code
+/// Cmd ID   Name                        Parameter 1    Altitude Lat Lon Notes
+/// hex/dec
+/// 0x10/16 MAV_CMD_NAV_WAYPOINT         -              altitude lat lon
+/// 0x11/17 MAV_CMD_NAV_LOITER_UNLIM     (indefinitely) altitude lat lon
+/// 0x12/18 MAV_CMD_NAV_LOITER_TURNS     turns          altitude lat lon
+/// 0x13/19 MAV_CMD_NAV_LOITER_TIME      time (sec*10)  altitude lat lon
+/// 0x14/20 MAV_CMD_NAV_RETURN_TO_LAUNCH -              altitude lat lon
+/// 0x15/21 MAV_CMD_NAV_LAND             -              altitude lat lon
+/// 0x16/22 MAV_CMD_NAV_TAKEOFF          takeoff pitch  altitude -   -   takeoff pitch specifies the minimum
+///                                                                      pitch for the case with airspeed
+///                                                                      sensor and the target pitch for the
+///                                                                      case without.
+/// 0x17/23 MAV_CMD_NAV_TARGET            -             altitude lat lon
+/// \endcode
+/// -------------------- May Commands --------------------
+/// These commands are optional to finish and have a end criteria, eg
+/// "reached waypoint" or "reached altitude".
+/// \code
+/// Cmd ID   Name                         Parameter 1 Parameter 2 Parameter 3 Parameter 4 Notes
+/// 0x70/112 MAV_CMD_CONDITION_DELAY      -           -           time(sec)   -
+/// 0x71/113 MAV_CMD_CONDITION_CHANGE_ALT rate(cm/s)  alt(finish) -           -           rate must be > 10 cm/sec
+///                                                                                       due to integer math
+/// 0x72/114 MAV_CMD_CONDITION_DISTANCE   -           -           distance(m) -
+/// \endcode
+/// -------------------- Now Commands --------------------
+/// These commands are executed once until no more new now commands are available
+/// \code
+/// Cmd ID   Name                     Parameter 1     Parameter 2  Parameter 3     Parameter 4 Notes
+/// 0xB1/177 MAV_CMD_DO_JUMP          index           -            repeat count    -           The repeat count must be greater than 1 for the command to execute.
+///                                                                                            Use a repeat count of 1 if you intend a single use.
+/// 0xB2/178 MAV_CMD_DO_CHANGE_SPEED  Speed type      Speed (m/s)  Throttle (%)    -           Speed type: 0 = Airspeed, 1 = Ground Speed
+///                                                                                            Speed: -1 indicates no change
+///                                                                                            Throttle: -1 indicates no change
+/// 0xB3/179 MAV_CMD_DO_SET_HOME      Use current     altitude     lat             lon         Use current : 1 = use current location, 0 = use specified location
+/// 0xB4/180 MAV_CMD_DO_SET_PARAMETER Param num       Param value                              CURRENTLY NOT IMPLEMENTED IN APM
+/// 0xB5/181 MAV_CMD_DO_SET_RELAY     Relay num       On/off(1/0)  -               -
+/// 0xB6/182 MAV_CMD_DO_REPEAT_RELAY  Relay num       Cycle count  Cycle time(sec) -           Max cycle time = 60 sec, A repeat relay or repeat servo command
+///                                                                                            will cancel any current repeating event
+/// 0xB7/183 MAV_CMD_DO_SET_SERVO     Servo num (5-8) On/off(1/0)  -               -
+/// 0xB6/184 MAV_CMD_DO_REPEAT_SERVO  Servo num (5-8) Cycle count  Cycle time(sec) -           Max cycle time = 60 sec, A repeat relay or repeat servo command
+///                                                                                            will cancel any current repeating event
+/// \endcode
+/// List of ArduPilot Mega parameters modifiable by MAVLink:
+///     http://code.google.com/p/ardupilot-mega/wiki/MAVParam
 ///
-//  CHANGES added links to mavlink informations
+/// MAVLink protocol specifications:
+///     http://qgroundcontrol.org/mavlink/start
+///     http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
+///     http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
+///
+//  CHANGES disabled references to global_data structure
 //
 //============================================================================*/
 
@@ -254,6 +331,7 @@ static void handle_mavlink_message(mavlink_channel_t chan,
 
         case MAVLINK_MSG_ID_PARAM_SET:
             mavlink_msg_param_set_decode(msg, &set);
+/*
             if (((uint8_t) set.target_system == (uint8_t) global_data.param[PARAM_SYSTEM_ID]) &&    // Check if this message is for this system
                 ((uint8_t) set.target_component == (uint8_t) global_data.param[PARAM_COMPONENT_ID]))
             {
@@ -273,23 +351,26 @@ static void handle_mavlink_message(mavlink_channel_t chan,
                             break;
                         }
                     }
-
+*/
                     if (match)                                              // Check if matched
                     {
+/*
                         if ((global_data.param[i] != set.param_value) &&    // Write and emit changes if there is a difference
                             !isnan(set.param_value) &&                      // AND if new value is NOT "not-a-number"
                             !isinf(set.param_value) &&                      // AND is NOT infinity
                             (set.param_type == MAVLINK_TYPE_FLOAT))
                         {
                             global_data.param[i] = set.param_value;
+*/
                             mavlink_msg_param_value_send(MAVLINK_COMM_0,    // Report back new value
-                                                        (int8_t*) global_data.param_name[i],
-                                                        global_data.param[i], MAVLINK_TYPE_FLOAT,
-                                                        ONBOARD_PARAM_COUNT, m_parameter_i);
-                        }
+                                                        0, //(int8_t*) global_data.param_name[i],
+                                                        0, //global_data.param[i], MAVLINK_TYPE_FLOAT,
+                                                        ONBOARD_PARAM_COUNT,
+														m_parameter_i);
+//                        }
                     }
-                }
-            }
+//                }
+//            }
             break;
         default:
             break;
@@ -314,8 +395,8 @@ static void communication_queued_send(void)
     if (m_parameter_i < ONBOARD_PARAM_COUNT)     //send parameters one by one
     {
         mavlink_msg_param_value_send(MAVLINK_COMM_0,
-                                    (int8_t*) global_data.param_name[m_parameter_i],
-                                    global_data.param[m_parameter_i],
+                                    0, //(int8_t*) global_data.param_name[m_parameter_i],
+                                    0, //global_data.param[m_parameter_i],
                                     MAVLINK_TYPE_FLOAT,
                                     ONBOARD_PARAM_COUNT,
                                     m_parameter_i);
