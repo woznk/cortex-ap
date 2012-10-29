@@ -90,7 +90,7 @@
 ///     http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
 ///     http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
 ///
-//  CHANGES disabled references to global_data structure
+//  CHANGES removed telemetry task and telemetry init
 //
 //============================================================================*/
 
@@ -199,90 +199,6 @@ static __inline void global_data_reset_param_defaults( void )
     strcpy(global_data.param_name[PARAM_SYSTEM_ID], "SYS_ID");
 }
 */
-
-///----------------------------------------------------------------------------
-///
-/// \brief  telemetry task
-/// \return  -
-/// \remarks waits for a message to be added to telemetry queue and sends it
-///          to the UART
-///
-///----------------------------------------------------------------------------
-void Telemetry_Task( void *pvParameters )
-{
-    portTickType Last_Wake_Time;
-
-    Last_Wake_Time = xTaskGetTickCount();       //
-    Telemetry_Init();                           // telemetry initialization
-//    global_data_reset_param_defaults();         // Load default parameters as fallback
-
-    mavlink_system.sysid = 20;                  // ID 20 for this airplane
-//    mavlink_system.compid = MAV_COMP_ID_IMU;    // The component sending the message is the IMU
-    mavlink_system.type = MAV_TYPE_FIXED_WING;  // This system is an airplane / fixed wing
-    system_type = MAV_TYPE_FIXED_WING;          // Define the system type, in this case an airplane
-    system_state = MAV_STATE_STANDBY;           // System ready for flight
-//    system_mode = MAV_MODE_PREFLIGHT;           // Booting up
-    autopilot_type = MAV_AUTOPILOT_GENERIC;
-    custom_mode = 0;                            // Custom mode, can be defined by user/adopter
-
-    while (TRUE)
-    {
-        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);  // Use any wait function you want, better not use sleep
-        mavlink_msg_heartbeat_pack( mavlink_system.sysid,   // Pack the message
-                                    mavlink_system.compid,
-                                    &msg,
-                                    system_type,
-                                    autopilot_type,
-                                    system_mode,
-                                    custom_mode,
-                                    system_state);
-        len = mavlink_msg_to_send_buffer(buf, &msg);        // Copy the message to the send buffer
-        Telemetry_Downlink(buf, len);                       // Send the message
-        communication_receive();                            // Process parameter request, if occured
-        communication_queued_send();                        // Send parameters at 10 Hz, if previously requested
-    }
-}
-
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Initialize telemetry
-/// \return  -
-/// \remarks configures USART1.
-///          See http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
-///          for direct register initialization of USART 1
-///
-//----------------------------------------------------------------------------
-static void Telemetry_Init( void )
-{
-    USART_InitTypeDef USART_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
-    /* Initialize USART1 structure */
-    USART_InitStructure.USART_BaudRate = 115200;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-
-    USART_Init(USART1, &USART_InitStructure);       // configure USART1
-
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);  // enable USART1 interrupt
-    //USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-
-    /* Configure NVIC for USART1 interrupt */
-    NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init( &NVIC_InitStructure );
-
-    USART_Cmd(USART1, ENABLE);                      // enable the USART1
-
-    ucWindex = 0;                                   // clear write index
-    ucRindex = 0;                                   // clear read index
-}
 
 
 //----------------------------------------------------------------------------
