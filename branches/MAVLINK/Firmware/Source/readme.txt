@@ -108,6 +108,58 @@
      2 l'heap non può essere ridotto, il sistema si pianta
      3 ridotto lo stack a 512 bytes, funziona
 
+     29/10/2012
+
+     Log dei messaggi inviati da AqGCS
+
+     operazione    messaggio
+     ----------------------------------------------------------------------
+     connessione   FE 09 07 FF 00 00 00 00 00 00 06 00 00 00 03 06 F5 
+     PID           FE 02 08 FF 00 15 00 00 AD 95
+     uscita PID    FE 06 09 FF 00 42 00 00 00 00 00 00 52 ED 
+     all param     FE 02 0A FF 00 15 00 00 16 A2 
+     uscita all p  FE 06 0B FF 00 42 00 00 00 00 00 00 70 46
+     HUD           FE 06 0C FF 00 42 14 00 00 00 0A 01 8B 56 
+                   FE 06 0D FF 00 42 01 00 00 00 02 01 B2 80 
+     uscita HUD    FE 06 03 FF 00 42 00 00 00 00 00 00 DA FA 
+     GPS           FE 06 04 FF 00 42 01 00 00 00 02 01 89 69 
+     uscita GPS    FE 06 05 FF 00 42 00 00 00 00 00 00 AD 0F 
+     mission plan  -
+     save mission  FE 04 06 FF 00 2C 04 00 00 BE BF 4E  
+     uscita plan   FE 06 07 FF 00 42 00 00 00 00 00 00 8F A4
+     transmitter   -
+     uscita tx     FE 06 08 FF 00 42 00 00 00 00 00 00 C3 B8
+     sconnessione  FE 06 06 FF 00 42 00 00 00 00 00 00 1E F1 
+
+     Log dei messaggi inviati da aq-gcs2
+
+     operazione    messaggio
+     ----------------------------------------------------------------------
+     connessione   -
+     PID           FE 02 00 FF 00 15 00 00 41 4B
+     read from ROM FE 21 01 FF 00 4C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F5 00 00 00 01 8D 8E 
+     save to ROM   FE 21 02 FF 00 4C 00 00 80 3F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F5 00 00 00 01 A2 1D 
+     uscita PID    -
+     mission plan  - 
+     save mission  FE 02 03 FF 00 2D 00 BE 43 ED 
+     retrieve miss FE 02 00 FF 00 2B 00 00 A3 07 
+     uscita miss   -   
+     commands      -
+     uscita cmds   -
+     HUD           -
+     uscita HUD    -
+     transmitter   -
+     uscita tx     -
+     sconnessione  -
+
+     Note:
+
+     1) tutti i messaggi iniziano con FE ed hanno FF 00 al 4° e 5° byte
+     2) gli ultimi due byte sono probabilmente il CRC
+     3) il secondo byte indica la lunghezza dati (ultimi n bytes prima del CRC)
+     4) nel caso dell'HUD vengono inviati due messaggi 
+     5) tutti i messaggi inviati in uscita dai menu sono uguali, tranne il CRC
+
 @par Telemetria MultiWii
 
      03/08/2012
