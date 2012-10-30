@@ -154,11 +154,44 @@
 
      Note:
 
-     1) tutti i messaggi iniziano con FE ed hanno FF 00 al 4° e 5° byte
-     2) gli ultimi due byte sono probabilmente il CRC
-     3) il secondo byte indica la lunghezza dati (ultimi n bytes prima del CRC)
-     4) nel caso dell'HUD vengono inviati due messaggi 
-     5) tutti i messaggi inviati in uscita dai menu sono uguali, tranne il CRC
+     1) il primo byte è sempre FE 
+     2) il secondo byte è la lunghezza dati (ultimi n bytes prima del CRC)
+     3) il terzo byte è un numero progressivo di messaggio
+     4) il quarto byte è sempre FF 
+     5) il quinto byte è sempre 00 
+     6) il sesto byte è l'dentificativo del messagio
+     7) gli ultimi due byte sono il CRC
+     8) il pulsante HUD invia due messaggi 
+     9) all'uscita dai menu iene inviato lo stesso messaggio, tranne per il CRC
+
+     In base all'elenco https://pixhawk.ethz.ch/mavlink/, sono riconoscibili questi identificativi:
+
+     Operation Ident   Name               Field name       Type     Description
+     ---------------------------------------------------------------------------------------------------------------------------
+     Connect   0x00/0  HEARTBEAT          type             uint8_t  Type of the MAV (quadrotor, helicopter, etc., up to 15 types, defined in MAV_TYPE ENUM)
+                                          autopilot        uint8_t  Autopilot type / class. defined in MAV_AUTOPILOT ENUM
+                                          base_mode        uint8_t  System mode bitfield, see MAV_MODE_FLAGS ENUM in mavlink/include/mavlink_types.h
+                                          custom_mode      uint32_t A bitfield for use for autopilot-specific flags.
+                                          system_status    uint8_t  System status flag, see MAV_STATE ENUM
+                                          mavlink_version  uint8_t_mavlink_version  MAVLink version, not writable by user, gets added by protocol because of magic data type: uint8_t_mavlink_version
+
+                                          The heartbeat message shows that a system is present and responding. 
+					  The type of the MAV and Autopilot hardware allow the receiving system to treat further messages from this system appropriate
+					  (e.g. by laying out the user interface based on the autopilot).
+
+     PID       0x15/21 PARAM_REQUEST_LIST target_system    uint8_t  System ID     Request all parameters of this component. 
+                                          target_component uint8_t  Component ID  After his request, all parameters are emitted.
+     Exit      0x42/66 REQUEST_DATA_STREAMtarget_system    uint8_t  The target requested to send the message stream.
+                                          target_component uint8_t  The target requested to send the message stream.
+                                          req_stream_id    uint8_t  The ID of the requested data stream
+                                          req_message_rate uint16_t The requested interval between two messages of this type
+                                          start_stop       uint8_t  1 to start sending, 0 to stop sending.
+     Save miss. 0x2C/44 MISSION_COUNT     target_system    uint8_t  System ID
+                                          target_component uint8_t  Component ID
+                                          count            uint16_t Number of mission items in the sequence
+
+                                          This message is emitted as response to MISSION_REQUEST_LIST by the MAV and to initiate a write transaction. 
+					  The GCS can then request the individual mission item based on the knowledge of the total number of MISSIONs.
 
 @par Telemetria MultiWii
 
