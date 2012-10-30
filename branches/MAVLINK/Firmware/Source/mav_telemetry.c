@@ -90,11 +90,15 @@
 ///     http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
 ///     http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
 ///
-//  CHANGES removed telemetry task and telemetry init
 //
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
+
+#include "stm32f10x.h"
+#include "stm32f10x_usart.h"
+#include "usart1driver.h"
+#include "math.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -102,10 +106,6 @@
 
 #include "misc.h"
 #include "mavlink.h"
-
-#include "stm32f10x.h"
-#include "stm32f10x_usart.h"
-#include "math.h"
 #include "telemetry.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -176,8 +176,6 @@ VAR_STATIC uint8_t ucRindex;                        // uplink read index
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-static void Telemetry_Init( void );
-static void Telemetry_Downlink (uint8_t * buf, uint16_t len);
 static void communication_queued_send(void);
 static void communication_receive(void);
 
@@ -200,27 +198,47 @@ static __inline void global_data_reset_param_defaults( void )
 }
 */
 
-
-//----------------------------------------------------------------------------
-//
-/// \brief   telemetry USART interrupt handler
-/// \param   -
-/// \returns -
-/// \remarks -
+///----------------------------------------------------------------------------
 ///
-//----------------------------------------------------------------------------
-void USART1_IRQHandler( void ) {
-//  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-//  portCHAR cChar;
+/// \brief  telemetry task
+/// \return  -
+/// \remarks waits for a message to be added to telemetry queue and sends it
+///          to the UART
+///
+///----------------------------------------------------------------------------
+void Telemetry_Task( void *pvParameters )
+{
+    portTickType Last_Wake_Time;
 
-    if (USART_GetITStatus(USART1, USART_IT_RXNE) == SET) {
-//        xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
-        ucRxBuffer[ucWindex++] = USART_ReceiveData( USART1 );
-        if (ucWindex >= RX_BUFFER_LENGTH) {
-            ucWindex = 0;
-        }
+    Last_Wake_Time = xTaskGetTickCount();       //
+    USART1_Init();
+//    global_data_reset_param_defaults();         // Load default parameters as fallback
+
+    mavlink_system.sysid = 20;                  // ID 20 for this airplane
+//    mavlink_system.compid = MAV_COMP_ID_IMU;    // The component sending the message is the IMU
+    mavlink_system.type = MAV_TYPE_FIXED_WING;  // This system is an airplane / fixed wing
+    system_type = MAV_TYPE_FIXED_WING;          // Define the system type, in this case an airplane
+    system_state = MAV_STATE_STANDBY;           // System ready for flight
+//    system_mode = MAV_MODE_PREFLIGHT;           // Booting up
+    autopilot_type = MAV_AUTOPILOT_GENERIC;
+    custom_mode = 0;                            // Custom mode, can be defined by user/adopter
+
+    while (TRUE)
+    {
+        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);  // Use any wait function you want, better not use sleep
+        mavlink_msg_heartbeat_pack( mavlink_system.sysid,   // Pack the message
+                                    mavlink_system.compid,
+                                    &msg,
+                                    system_type,
+                                    autopilot_type,
+                                    system_mode,
+                                    custom_mode,
+                                    system_state);
+        len = mavlink_msg_to_send_buffer(buf, &msg);        // Copy the message to the send buffer
+        USART1_Transmit();                                  // Send the message
+        communication_receive();                            // Process parameter request, if occured
+        communication_queued_send();                        // Send parameters at 10 Hz, if previously requested
     }
-//    portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 }
 
 
@@ -366,29 +384,6 @@ static void communication_receive(void)
 	packet_drops += status.packet_rx_drop_count;    // Update global packet drops counter
 }
 
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Send the message with the standard UART send function
-/// \param   -
-/// \returns -
-/// \remarks
-///
-///
-//----------------------------------------------------------------------------
-static void Telemetry_Downlink (uint8_t * buf, uint16_t len)
-{
-    uint16_t j;
-
-    for (j = 0; j < len; j++)
-    {
-        while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET)
-        {
-        }
-        USART_SendData(USART1, buf[j]);
-    }
-}
-
 //----------------------------------------------------------------------------
 //
 /// \brief
@@ -399,6 +394,7 @@ static void Telemetry_Downlink (uint8_t * buf, uint16_t len)
 //----------------------------------------------------------------------------
 void Telemetry_Get_Sensors(int16_t * piSensors)
 {}
+
 //----------------------------------------------------------------------------
 //
 /// \brief
@@ -409,6 +405,7 @@ void Telemetry_Get_Sensors(int16_t * piSensors)
 //----------------------------------------------------------------------------
 float Telemetry_Get_Gain(telEnum_Gain gain)
 {}
+
 //----------------------------------------------------------------------------
 //
 /// \brief
@@ -419,6 +416,7 @@ float Telemetry_Get_Gain(telEnum_Gain gain)
 //----------------------------------------------------------------------------
 void Telemetry_Send_Controls(void)
 {}
+
 //----------------------------------------------------------------------------
 //
 /// \brief
@@ -429,6 +427,7 @@ void Telemetry_Send_Controls(void)
 //----------------------------------------------------------------------------
 float Telemetry_Get_Speed(void)
 {}
+
 //----------------------------------------------------------------------------
 //
 /// \brief
