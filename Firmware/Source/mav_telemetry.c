@@ -89,7 +89,7 @@
 ///     http://qgroundcontrol.org/mavlink/start
 ///     http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
 ///     http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
-///
+///     https://pixhawk.ethz.ch/mavlink/
 //
 //============================================================================*/
 
