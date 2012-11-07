@@ -24,20 +24,24 @@
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
 /// \todo
-/// 1) Compute longitude and latitude differences as :
+/// 1) Send configuration command to enable $GPGGA sentence only :
+/// 25 25 f1 04 01 00 00 01 00 00 00 00 f5 0d 0a
+///
+/// \todo
+/// 2) Compute longitude and latitude differences as :
 /// \code
 ///     Delta Lat = Lat2 - Lat1
 ///     Delta Lon = (Lon2 - Lon1) * cos((Lat1 + Lat2)/2)
 /// \endcode
 ///
 /// \todo
-/// 2) Compute distance from waypoint as :
+/// 3) Compute distance from waypoint as :
 /// \code
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
 // Change: corrected parsing of waypoint data from SD card,
-//         added functions Nav_Altitude(), 
+//         added functions Nav_Altitude(),
 //         removed commented code
 //
 //============================================================================*/
