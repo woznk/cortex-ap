@@ -9,9 +9,22 @@
 /// Tentative Mavlink protocol implementation
 ///
 /// \file
-/// -------------------- Mavlink command structure --------------------
+/// -------------------- Mavlink message structure --------------------
 /// \code
-/// Byte # Address Data type Function
+///  Byte        Name        Content              Value
+/// ------------------------------------------------------
+///   1          MAVLINK_STX Start Transmission   0xFE
+///   2          len         Length               0 - 255
+///   3          seq         Sequence             0 - 255
+///   4          SYSID       System identifier    0 - 255
+///   5          COMPID      Component identifier 0 - 255
+///   6          MSGID       Message identifier   0 - 255
+///   7          Payload     Payload
+///   7 + len    CRC 1
+///   8 + len    CRC 2
+/// \endcode
+/// -------------------- Mavlink payload structure --------------------
+/// \code
 ///   0    0x00    byte      Command ID
 ///   1    0x01    byte      Options
 ///   2    0x02    byte      Parameter 1
@@ -27,70 +40,211 @@
 ///   12   0x0C    ..
 ///   13   0x0D    ..
 ///   14   0x0E    ..
-///   15   0x0F    ?         CRC ?
-///   16   0x10    ?         CRC ?
 /// \endcode
+/// ------------- Mavlink identifiers and message lengths -------------
+/// \code
+/// Message identifier (MSGID)           Value  Length
+/// ---------------------------------------------------
+/// MAVLINK_MSG_ID_HEARTBEAT                0      9
+/// MAVLINK_MSG_ID_SYS_STATUS               1     31
+/// MAVLINK_MSG_ID_GPS_RAW_INT             24     30
+/// MAVLINK_MSG_ID_VFR_HUD                 74     20
+/// MAVLINK_MSG_ID_ATTITUDE                30     28
+/// MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT   62     26
+/// MAVLINK_MSG_ID_MISSION_CURRENT         42      2
+/// MAVLINK_MSG_ID_RC_CHANNELS_RAW         35     22
+/// MAVLINK_MSG_ID_WIND                   168     12
+/// \endcode
+///
+/// --------------------- Mavlink message contents --------------------
+/// \code
+/// Identifier (MSGID)                   Content           Offset  Type
+/// -----------------------------------------------------------------------
+/// MAVLINK_MSG_ID_HEARTBEAT             Heartbeat type       4   uint8_t
+///                                      OSD mode             0   uint32_t
+///                                      Base mode            6   uint8_t
+///
+/// MAVLINK_MSG_ID_SYS_STATUS            Battery voltage     14   uint16_t
+///                                      Battery current     16   int16_t
+///                                      Battery remaining   30   int8_t
+///
+/// MAVLINK_MSG_ID_GPS_RAW_INT           GPS latitude         8   int32_t
+///                                      GPS longitude       12   int32_t
+///                                      GPS fix             28   unit8_t
+///                                      Visible satellites  29   uint8_t
+///
+/// MAVLINK_MSG_ID_VFR_HUD               Airspeed             0   float
+///                                      Ground speed         4   float
+///                                      Heading             16   int16_t
+///                                      Throttle            18   uint16_t
+///                                      Altitude             8   float
+///                                      Climb rate          12   float
+///
+/// MAVLINK_MSG_ID_ATTITUDE              Pitch                8   float
+///                                      Roll                12   float
+///                                      Yaw                 16   float
+///
+/// MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT Nav roll             0   float
+///                                      Nav pitch            4   float
+///                                      Nav bearing         20   int16_t
+///                                      Target bearing      22   int16_t
+///                                      Waypoint distance   24   uint16_t
+///                                      Altitude error       8   float
+///                                      Airspeed error      12   float
+///                                      Crosstrack error    16   float
+///
+/// MAVLINK_MSG_ID_MISSION_CURRENT       Waypoint number      0   uint16_t
+///
+/// MAVLINK_MSG_ID_RC_CHANNELS_RAW       Channel 1            4   uint16_t
+///                                      Channel 2            6   uint16_t
+///                                      Channel 5           12   uint16_t
+///                                      Channel 6           14   uint16_t
+///                                      Channel 7           16   uint16_t
+///                                      Channel 8           18   uint16_t
+///                                      RSSI                21   uint8_t
+///
+/// MAVLINK_MSG_ID_WIND                  Wind direction       0   float
+///                                      Wind speed           4   float
+///                                      Wind speed Z         8   float
+///
+/// \endcode
+///
+/// ------------------------- Mavlink commands ------------------------
+///
 /// APM 2.0 has adopted a subset of the MAVLink protocol command set.
-/// -------------------- NAVigation Commands --------------------
-/// Highest priority, all have a lat and lon component.
+///
+/// ----------------------- Mavlink NAV commands ----------------------
+///
+/// Navigation commands have highest priority, all have a lat and lon component.
 /// For commands of higher ID than the NAV commands, unexecuted commands are
 /// dropped when ready for the next NAV command so plan/queue commands accordingly!
-/// For example, if you had a string of CMD_MAV_CONDITION commands following a 0x10
-/// command that had not finished when the waypoint was reached, the unexecuted
-/// CMD_MAV_CONDITION and CMD_MAV_DO commands would be skipped and the next NAV
-/// command would be loaded.
-/// \code
-/// Cmd ID   Name                        Parameter 1    Altitude Lat Lon Notes
-/// hex/dec
-/// 0x10/16 MAV_CMD_NAV_WAYPOINT         -              altitude lat lon
-/// 0x11/17 MAV_CMD_NAV_LOITER_UNLIM     (indefinitely) altitude lat lon
-/// 0x12/18 MAV_CMD_NAV_LOITER_TURNS     turns          altitude lat lon
-/// 0x13/19 MAV_CMD_NAV_LOITER_TIME      time (sec*10)  altitude lat lon
-/// 0x14/20 MAV_CMD_NAV_RETURN_TO_LAUNCH -              altitude lat lon
-/// 0x15/21 MAV_CMD_NAV_LAND             -              altitude lat lon
-/// 0x16/22 MAV_CMD_NAV_TAKEOFF          takeoff pitch  altitude -   -   takeoff pitch specifies the minimum
-///                                                                      pitch for the case with airspeed
-///                                                                      sensor and the target pitch for the
-///                                                                      case without.
-/// 0x17/23 MAV_CMD_NAV_TARGET            -             altitude lat lon
-/// \endcode
-/// -------------------- May Commands --------------------
-/// These commands are optional to finish and have a end criteria, eg
-/// "reached waypoint" or "reached altitude".
-/// \code
-/// Cmd ID   Name                         Parameter 1 Parameter 2 Parameter 3 Parameter 4 Notes
-/// 0x70/112 MAV_CMD_CONDITION_DELAY      -           -           time(sec)   -
-/// 0x71/113 MAV_CMD_CONDITION_CHANGE_ALT rate(cm/s)  alt(finish) -           -           rate must be > 10 cm/sec
-///                                                                                       due to integer math
-/// 0x72/114 MAV_CMD_CONDITION_DISTANCE   -           -           distance(m) -
-/// \endcode
-/// -------------------- Now Commands --------------------
-/// These commands are executed once until no more new now commands are available
-/// \code
-/// Cmd ID   Name                     Parameter 1     Parameter 2  Parameter 3     Parameter 4 Notes
-/// 0xB1/177 MAV_CMD_DO_JUMP          index           -            repeat count    -           The repeat count must be greater than 1 for the command to execute.
-///                                                                                            Use a repeat count of 1 if you intend a single use.
-/// 0xB2/178 MAV_CMD_DO_CHANGE_SPEED  Speed type      Speed (m/s)  Throttle (%)    -           Speed type: 0 = Airspeed, 1 = Ground Speed
-///                                                                                            Speed: -1 indicates no change
-///                                                                                            Throttle: -1 indicates no change
-/// 0xB3/179 MAV_CMD_DO_SET_HOME      Use current     altitude     lat             lon         Use current : 1 = use current location, 0 = use specified location
-/// 0xB4/180 MAV_CMD_DO_SET_PARAMETER Param num       Param value                              CURRENTLY NOT IMPLEMENTED IN APM
-/// 0xB5/181 MAV_CMD_DO_SET_RELAY     Relay num       On/off(1/0)  -               -
-/// 0xB6/182 MAV_CMD_DO_REPEAT_RELAY  Relay num       Cycle count  Cycle time(sec) -           Max cycle time = 60 sec, A repeat relay or repeat servo command
-///                                                                                            will cancel any current repeating event
-/// 0xB7/183 MAV_CMD_DO_SET_SERVO     Servo num (5-8) On/off(1/0)  -               -
-/// 0xB6/184 MAV_CMD_DO_REPEAT_SERVO  Servo num (5-8) Cycle count  Cycle time(sec) -           Max cycle time = 60 sec, A repeat relay or repeat servo command
-///                                                                                            will cancel any current repeating event
-/// \endcode
-/// List of ArduPilot Mega parameters modifiable by MAVLink:
-///     http://code.google.com/p/ardupilot-mega/wiki/MAVParam
+/// For example, if you had a string of CMD_MAV_CONDITION commands following a
+/// 0x10 command that had not finished when the waypoint was reached, the
+/// unexecuted CMD_MAV_CONDITION and CMD_MAV_DO commands would be skipped
+/// and the next NAV command would be loaded.
 ///
-/// MAVLink protocol specifications:
-///     http://qgroundcontrol.org/mavlink/start
-///     http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
-///     http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
-///     https://pixhawk.ethz.ch/mavlink/
-//
+/// \code
+/// Command name                 ID  Parameters
+/// --------------------------------------------------------------
+/// MAV_CMD_NAV_WAYPOINT         16  -
+///                                  altitude
+///                                  lat
+///                                  lon
+/// MAV_CMD_NAV_LOITER_UNLIM     17  (indefinitely)
+///                                  altitude
+///                                  lat
+///                                  lon
+/// MAV_CMD_NAV_LOITER_TURNS     18  turns
+///                                  altitude
+///                                  lat
+///                                  lon
+/// MAV_CMD_NAV_LOITER_TIME      19  time (sec*10)
+///                                  altitude
+///                                  lat
+///                                  lon
+/// MAV_CMD_NAV_RETURN_TO_LAUNCH 20  -
+///                                  altitude
+///                                  lat
+///                                  lon
+/// MAV_CMD_NAV_LAND             21 -
+///                                  altitude
+///                                  lat
+///                                  lon
+/// MAV_CMD_NAV_TAKEOFF          22  takeoff pitch
+///                                  altitude
+///                                  -
+///                                  -
+/// Takeoff pitch specifies the minimum pitch for the case with
+/// airspeed sensor and the target pitch for the case without.
+/// MAV_CMD_NAV_TARGET           23  -
+///                                  altitude
+///                                  lat
+///                                  lon
+/// \endcode
+///
+/// ---------------------- Mavlink MAY commands -----------------------
+///
+/// These commands are optional to finish and have a end criteria,
+/// eg "reached waypoint" or "reached altitude".
+///
+/// \code
+/// Name                         ID  Parameters
+/// --------------------------------------------------
+/// MAV_CMD_CONDITION_DELAY      112 -
+///                                  -
+///                                  time(sec)
+///                                  -
+/// MAV_CMD_CONDITION_CHANGE_ALT 113
+///                                  rate(cm/s) (rate must be > 10 cm/sec due to integer math)
+///                                  alt(finish)
+///                                  -
+///                                  -
+/// MAV_CMD_CONDITION_DISTANCE   114 -
+///                                  -
+///                                  distance(m)
+///                                  -
+/// \endcode
+///
+/// -------------------- Mavlink NOW Commands --------------------
+///
+/// These commands are executed once until no more new now commands
+/// are available.
+///
+/// \code
+/// Name                     ID  Parameters
+/// ---------------------------------------------------------------------------
+/// MAV_CMD_DO_JUMP          177 index
+///                              -
+///                              repeat count (1 = sinlge use, > 1 multiple use)
+///                              -
+/// MAV_CMD_DO_CHANGE_SPEED  178 Speed type (0 = Airspeed, 1 = Ground Speed)
+///                              Speed (m/s) (-1 indicates no change)
+///                              Throttle (%) (-1 indicates no change)
+///                              -
+/// MAV_CMD_DO_SET_HOME      179 Use current (1 = use current location, 0 = use specified location)
+///                              altitude
+///                              lat
+///                              lon
+/// MAV_CMD_DO_SET_PARAMETER 180 Param num
+///                              Param value
+///                              CURRENTLY NOT IMPLEMENTED IN APM
+/// MAV_CMD_DO_SET_RELAY     181 Relay num
+///                              On / off (1 / 0)
+///                              -
+///                              -
+/// MAV_CMD_DO_REPEAT_RELAY  182 Relay num
+///                              Cycle count
+///                              Cycle time(sec)
+///                              -
+///                              Max cycle time = 60 sec.
+///                              A repeat relay or repeat servo command
+///                              will cancel any current repeating event
+/// MAV_CMD_DO_SET_SERVO     183 Servo num (5-8)
+///                              On / off (1 / 0)
+///                              -
+///                              -
+/// MAV_CMD_DO_REPEAT_SERVO  184 Servo num (5-8)
+///                              Cycle count
+///                              Cycle time(sec)
+///                              -
+///                              Max cycle time = 60 sec.
+///                              A repeat relay or repeat servo command
+///                              will cancel any current repeating event
+/// \endcode
+///
+/// ------------------------------ Links ------------------------------
+///
+/// ArduPilot Mega parameters modifiable by MAVLink
+/// http://code.google.com/p/ardupilot-mega/wiki/MAVParam
+///
+/// MAVLink protocol specifications
+/// http://qgroundcontrol.org/mavlink/start
+/// http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
+/// http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
+/// https://pixhawk.ethz.ch/mavlink/
+///
+/// Changes: updated protocol description
+///
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
