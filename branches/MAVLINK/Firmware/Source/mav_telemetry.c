@@ -47,26 +47,41 @@
 /// ---------------------------------------------------
 /// MAVLINK_MSG_ID_HEARTBEAT                0      9
 /// MAVLINK_MSG_ID_SYS_STATUS               1     31
+/// MAVLINK_MSG_PARAM_REQUEST_LIST         21      2
 /// MAVLINK_MSG_ID_GPS_RAW_INT             24     30
 /// MAVLINK_MSG_ID_VFR_HUD                 74     20
 /// MAVLINK_MSG_ID_ATTITUDE                30     28
 /// MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT   62     26
 /// MAVLINK_MSG_ID_MISSION_CURRENT         42      2
 /// MAVLINK_MSG_ID_RC_CHANNELS_RAW         35     22
+/// MISSION_COUNT                          44      4
+/// MAVLINK_MSG_REQUEST_DATA_STREAM        66      6
 /// MAVLINK_MSG_ID_WIND                   168     12
 /// \endcode
 ///
 /// --------------------- Mavlink message contents --------------------
 /// \code
-/// Identifier (MSGID)                   Content           Offset  Type
+/// Identifier (MSGID)                   Content           Offset  Type    Note
 /// -----------------------------------------------------------------------
-/// MAVLINK_MSG_ID_HEARTBEAT             Heartbeat type       4   uint8_t
-///                                      OSD mode             0   uint32_t
-///                                      Base mode            6   uint8_t
+/// MAVLINK_MSG_ID_HEARTBEAT             Heartbeat type       4   uint8_t  Type of the MAV (quadrotor, helicopter, etc., up to 15 types, defined in MAV_TYPE ENUM)
+///                                      OSD mode             0   uint32_t Bitfield for use for autopilot-specific flags.
+///                                      Base mode            6   uint8_t  System mode bitfield, see MAV_MODE_FLAGS ENUM in mavlink/include/mavlink_types.h
+///                                      autopilot            ?   uint8_t  Autopilot type / class. defined in MAV_AUTOPILOT ENUM
+///                                      system_status        ?   uint8_t  System status flag, see MAV_STATE ENUM
+///                                      mavlink_version      ?   uint8_t_mavlink_version  MAVLink version, not writable by user, gets added by protocol because of magic data type
+/// The heartbeat message shows that a system is present and responding.
+///	The type of the MAV and Autopilot hardware allow the receiving system
+/// to treat further messages from this system appropriate (e.g. by laying
+/// out the user interface based on the autopilot).
 ///
 /// MAVLINK_MSG_ID_SYS_STATUS            Battery voltage     14   uint16_t
 ///                                      Battery current     16   int16_t
 ///                                      Battery remaining   30   int8_t
+///
+/// MAVLINK_MSG_ID_PARAM_REQUEST_LIST    Target System        ?   uint8_t
+///                                      System ID            ?            Request all parameters of this component.
+///                                      Target Component     ?   uint8_t  Component ID
+/// After his request, all parameters are emitted.
 ///
 /// MAVLINK_MSG_ID_GPS_RAW_INT           GPS latitude         8   int32_t
 ///                                      GPS longitude       12   int32_t
@@ -102,6 +117,18 @@
 ///                                      Channel 7           16   uint16_t
 ///                                      Channel 8           18   uint16_t
 ///                                      RSSI                21   uint8_t
+///
+/// MAVLINK_MSG_ID_MISSION_COUNT         target_system        ?   uint8_t  System ID
+///                                      target_component     ?   uint8_t  Component ID
+///                                      count                ?   uint16_t Number of mission items in the sequence
+/// This message is emitted as response to MISSION_REQUEST_LIST by the MAV and to initiate a write transaction.
+/// The GCS can then request the individual mission item based on the knowledge of the total number of MISSIONs.
+///
+/// MAVLINK_MSG_ID_REQUEST_DATA_STREAM   target_system        ?   uint8_t  The target requested to send the message stream.
+///                                      target_component     ?   uint8_t  The target requested to send the message stream.
+///                                      req_stream_id        ?   uint8_t  The ID of the requested data stream
+///                                      req_message_rate     ?   uint16_t The requested interval between two messages of this type
+///                                      start_stop           ?   uint8_t  1 to start sending, 0 to stop sending.
 ///
 /// MAVLINK_MSG_ID_WIND                  Wind direction       0   float
 ///                                      Wind speed           4   float
@@ -237,13 +264,133 @@
 /// ArduPilot Mega parameters modifiable by MAVLink
 /// http://code.google.com/p/ardupilot-mega/wiki/MAVParam
 ///
+/// ArduPilot Mega MAVLink commands
+/// http://code.google.com/p/ardupilot-mega/wiki/MAVLink
+///
 /// MAVLink protocol specifications
 /// http://qgroundcontrol.org/mavlink/start
 /// http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
 /// http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
+///
+/// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: updated protocol description
+///--------------------- AqGCS messages taxonomy ------------------------
+///
+/// CONNECT      PID          PID EXIT     ALL PARAM    ALL PARAM EXIT
+/// ----------------------------------------------------------------------
+/// FE STX       FE STX       FE STX       FE STX       FE STX
+/// 09 Length    02 Length    06 Length    02 Length    06 Length
+/// 07 Sequence  08 Sequence  09 Sequence  0A Sequence  0B Sequence
+/// FF SYSID     FF SYSID     FF SYSID     FF SYSID     FF SYSID
+/// 00 COMPID    00 COMPID    00 COMPID    00 COMPID    00 COMPID
+/// 00 MSGID     15 MSGID     42 MSGID     15 MSGID     42 MSGID
+/// 00 Payload   00 Payload   00 Payload   00 Payload   00 Payload
+/// 00 Payload   00 Payload   00 Payload   00 Payload   00 Payload
+/// 00 Payload   AD CRC 1     00 Payload   16 CRC 1     00 Payload
+/// 00 Payload   95 CRC 2     00 Payload   A2 CRC 2     00 Payload
+/// 06 Payload                00 Payload                00 Payload
+/// 00 Payload                00 Payload                00 Payload
+/// 00 Payload                52 CRC 1                  70 CRC 1
+/// 00 Payload                ED CRC 2                  46 CRC 2
+/// 03 Payload
+/// 06 CRC 1
+/// F5 CRC 2
+///
+/// HUD             HUD EXIT     GPS          GPS EXIT     SAVE MISSION
+/// ----------------------------------------------------------------------
+/// FE FE STX       FE STX       FE STX       FE STX       FE STX
+/// 06 06 Length    06 Length    06 Length    06 Length    04 Length
+/// 0C 0D Sequence  03 Sequence  04 Sequence  05 Sequence  06 Sequence
+/// FF FF SYSID     FF SYSID     FF SYSID     FF SYSID     FF SYSID
+/// 00 00 COMPID    00 COMPID    00 COMPID    00 COMPID    00 COMPID
+/// 42 42 MSGID     42 MSGID     42 MSGID     42 MSGID     2C MSGID
+/// 14 01 Payload   00 Payload   01 Payload   00 Payload   04 Payload
+/// 00 00 Payload   00 Payload   00 Payload   00 Payload   00 Payload
+/// 00 00 Payload   00 Payload   00 Payload   00 Payload   00 Payload
+/// 00 00 Payload   00 Payload   00 Payload   00 Payload   BE Payload
+/// 0A 02 Payload   00 Payload   02 Payload   00 Payload   BF CRC 1
+/// 01 01 Payload   00 Payload   01 Payload   00 Payload   4E CRC 2
+/// 8B B2 CRC 1     DA CRC 1     89 CRC 1     AD CRC 1
+/// 56 80 CRC 2     FA CRC 2     69 CRC 2     0F CRC 2
+///
+/// MISSION EXIT TX EXIT      DISCONNECT
+/// -----------------------------------------
+/// FE STX       FE STX       FE STX
+/// 06 Length    06 Length    06 Length
+/// 07 Sequence  08 Sequence  06 Sequence
+/// FF SYSID     FF SYSID     FF SYSID
+/// 00 COMPID    00 COMPID    00 COMPID
+/// 42 MSGID     42 MSGID     42 MSGID
+/// 00 Payload   00 Payload   00 Payload
+/// 00 Payload   00 Payload   00 Payload
+/// 00 Payload   00 Payload   00 Payload
+/// 00 Payload   00 Payload   00 Payload
+/// 00 Payload   00 Payload   00 Payload
+/// 00 Payload   00 Payload   00 Payload
+/// 8F CRC 1     C3 CRC 1     1E CRC 1
+/// A4 CRC 2     B8 CRC 2     F1 CRC 2
+///
+///--------------------- aq-gcs2 messages taxonomy ------------------------
+///
+/// PID          SAVE MISSION RETRIEVE MISS
+/// FE STX       FE STX       FE STX
+/// 02 Length    02 Length    02 Length
+/// 00 Sequence  03 Sequence  00 Sequence
+/// FF SYSID     FF SYSID     FF SYSID
+/// 00 COMPID    00 COMPID    00 COMPID
+/// 15 MSGID     2D MSGID     2B MSGID
+/// 00 Payload   00 Payload   00 Payload
+/// 00 Payload   BE Payload   00 Payload
+/// 41 CRC 1     43 CRC 1     A3 CRC 1
+/// 4B CRC 2     ED CRC 2     07 CRC 2
+///
+/// READ FROM ROM SAVE TO ROM
+/// FE STX        FE STX
+/// 21 Length     21 Length
+/// 01 Sequence   02 Sequence
+/// FF SYSID      FF SYSID
+/// 00 COMPID     00 COMPID
+/// 4C MSGID      4C MSGID
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    80 Payload
+/// 00 Payload    3F Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// F5 Payload    F5 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 00 Payload    00 Payload
+/// 01 Payload    01 Payload
+/// 8D CRC 1      A2 CRC 1
+/// 8E CRC 2      1D CRC 2
+///
+/// Changes: added functions: checksum (working), receive (not working), 
+//           send (working), heartbeat (working).
+//           updated protocol description
 ///
 //============================================================================*/
 
@@ -261,6 +408,7 @@
 #include "misc.h"
 #include "mavlink.h"
 #include "telemetry.h"
+#include "mav_telemetry.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
@@ -285,18 +433,15 @@
 #define PARAM_SYSTEM_ID     1
 #define PARAM_COMPONENT_ID  2
 
+//#define X25_INIT_CRC        0xFFFF
+//#define MAVLINK_STX         0xFE
+
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
 
 /*----------------------------------- Types ----------------------------------*/
-/*
-struct global_struct
-{
-    float param[ONBOARD_PARAM_COUNT];
-    char param_name[ONBOARD_PARAM_COUNT][MAVLINK_MSG_PARAM_SET_FIELD_PARAM_ID_LEN];
-};
-*/
+
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
@@ -306,12 +451,14 @@ struct global_struct
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC uint8_t system_type;
-VAR_STATIC uint8_t system_mode;
-VAR_STATIC uint8_t system_state;
-VAR_STATIC uint8_t autopilot_type;
+VAR_STATIC uint8_t System_Mode = MAV_MODE_PREFLIGHT;        // Booting up
+VAR_STATIC uint8_t System_State = MAV_STATE_STANDBY;        // System ready for flight
+VAR_STATIC uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;
+VAR_STATIC uint8_t System_Type = MAV_TYPE_FIXED_WING;       // Define system type, airplane
+VAR_STATIC uint8_t System_ID = 20;
+VAR_STATIC uint8_t Component_ID = MAV_COMP_ID_IMU;
 
-VAR_STATIC uint16_t len;
+VAR_STATIC uint8_t Current_Tx_Seq = 0;
 VAR_STATIC uint16_t packet_drops = 0;
 //VAR_STATIC uint16_t mode = MAV_MODE_UNINIT;         // Defined in mavlink_types.h, which is included by mavlink.h
 VAR_STATIC uint16_t m_parameter_i = 0;
@@ -328,74 +475,255 @@ VAR_STATIC uint8_t ucRxBuffer[RX_BUFFER_LENGTH];    // uplink data buffer
 VAR_STATIC uint8_t ucWindex;                        // uplink write index
 VAR_STATIC uint8_t ucRindex;                        // uplink read index
 
+VAR_STATIC uint16_t Crc;
+
 /*--------------------------------- Prototypes -------------------------------*/
 
-static void communication_queued_send(void);
-static void communication_receive(void);
+//static void communication_queued_send(void);
+//static void communication_receive(void);
 
 /*---------------------------------- Functions -------------------------------*/
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   reset all parameters to default
+/// \brief   Initialize CRC
 /// \return  -
-/// \warning DO NOT USE THIS IN FLIGHT!
 /// \remarks -
 ///
-///
 ///----------------------------------------------------------------------------
-/*
-static __inline void global_data_reset_param_defaults( void )
+static __inline void Checksum_Init(void)
 {
-    global_data.param[PARAM_SYSTEM_ID] = 42;
-    strcpy(global_data.param_name[PARAM_SYSTEM_ID], "SYS_ID");
+   Crc = X25_INIT_CRC;
 }
-*/
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief  telemetry task
+/// \brief   Accumulate one byte of data into the CRC
 /// \return  -
-/// \remarks waits for a message to be added to telemetry queue and sends it
-///          to the UART
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Task( void *pvParameters )
+static __inline void Checksum_Accumulate(uint8_t data)
 {
-    portTickType Last_Wake_Time;
+    uint8_t tmp;
 
-    Last_Wake_Time = xTaskGetTickCount();       //
-    USART1_Init();
-//    global_data_reset_param_defaults();         // Load default parameters as fallback
-
-    mavlink_system.sysid = 20;                  // ID 20 for this airplane
-//    mavlink_system.compid = MAV_COMP_ID_IMU;    // The component sending the message is the IMU
-    mavlink_system.type = MAV_TYPE_FIXED_WING;  // This system is an airplane / fixed wing
-    system_type = MAV_TYPE_FIXED_WING;          // Define the system type, in this case an airplane
-    system_state = MAV_STATE_STANDBY;           // System ready for flight
-//    system_mode = MAV_MODE_PREFLIGHT;           // Booting up
-    autopilot_type = MAV_AUTOPILOT_GENERIC;
-    custom_mode = 0;                            // Custom mode, can be defined by user/adopter
-
-    while (TRUE)
-    {
-        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);  // Use any wait function you want, better not use sleep
-        mavlink_msg_heartbeat_pack( mavlink_system.sysid,   // Pack the message
-                                    mavlink_system.compid,
-                                    &msg,
-                                    system_type,
-                                    autopilot_type,
-                                    system_mode,
-                                    custom_mode,
-                                    system_state);
-        len = mavlink_msg_to_send_buffer(buf, &msg);        // Copy the message to the send buffer
-        USART1_Transmit();                                  // Send the message
-        communication_receive();                            // Process parameter request, if occured
-        communication_queued_send();                        // Send parameters at 10 Hz, if previously requested
-    }
+    tmp = data ^ (uint8_t)(Crc & 0xFF);
+    tmp ^= (tmp << 4);
+    Crc = (Crc >> 8) ^ (tmp << 8) ^ (tmp << 3) ^ (tmp >> 4);
 }
 
 
+//----------------------------------------------------------------------------
+//
+/// \brief   Receive communication packets and handle them
+/// \param   -
+/// \returns -
+/// \remarks This function decodes packets on the protocol level and also
+///          handles their value by calling the appropriate functions.
+///
+//----------------------------------------------------------------------------
+void Mavlink_Receive(void) {
+    uint8_t c;
+    static mavlink_parse_state_t parse_state = MAVLINK_PARSE_STATE_UNINIT;
+    static uint8_t len;
+    static uint8_t magic;
+    static uint8_t buffer_overrun;
+    static uint8_t parse_error;
+    static uint8_t msg_received;
+    static uint8_t packet_idx;
+    static uint8_t seq;
+    static uint8_t sysid;
+    static uint8_t compid;
+    static uint8_t msgid;
+    static uint8_t current_rx_seq;
+    static uint8_t packet_rx_success_count;
+    static uint8_t packet_rx_drop_count;
+
+	msg_received = 0;
+
+    while (USART1_Getch (&c)) {               // received another character
+	switch (parse_state) {
+        case MAVLINK_PARSE_STATE_UNINIT:
+        case MAVLINK_PARSE_STATE_IDLE:
+            if (c == MAVLINK_STX) {
+                parse_state = MAVLINK_PARSE_STATE_GOT_STX;
+                len = 0;
+                magic = c;
+                Checksum_Init();
+            }
+            break;
+
+        case MAVLINK_PARSE_STATE_GOT_STX:
+            if (msg_received || (c > MAVLINK_MAX_PAYLOAD_LEN)) {
+                buffer_overrun++;
+                parse_error++;
+                msg_received = 0;
+                parse_state = MAVLINK_PARSE_STATE_IDLE;
+            } else {
+                len = c; // NOT counting STX, LENGTH, SEQ, SYSID, COMPID, MSGID, CRC1 and CRC2
+                packet_idx = 0;
+                Checksum_Accumulate(c);
+                parse_state = MAVLINK_PARSE_STATE_GOT_LENGTH;
+            }
+            break;
+
+        case MAVLINK_PARSE_STATE_GOT_LENGTH:
+            seq = c;
+            Checksum_Accumulate(c);
+            parse_state = MAVLINK_PARSE_STATE_GOT_SEQ;
+            break;
+
+        case MAVLINK_PARSE_STATE_GOT_SEQ:
+            sysid = c;
+            Checksum_Accumulate(c);
+            parse_state = MAVLINK_PARSE_STATE_GOT_SYSID;
+            break;
+
+        case MAVLINK_PARSE_STATE_GOT_SYSID:
+            compid = c;
+            Checksum_Accumulate(c);
+            parse_state = MAVLINK_PARSE_STATE_GOT_COMPID;
+            break;
+
+        case MAVLINK_PARSE_STATE_GOT_COMPID:
+            msgid = c;
+            Checksum_Accumulate(c);
+            if (len == 0) {
+                parse_state = MAVLINK_PARSE_STATE_GOT_PAYLOAD;
+            } else {
+                parse_state = MAVLINK_PARSE_STATE_GOT_MSGID;
+            }
+            break;
+
+        case MAVLINK_PARSE_STATE_GOT_MSGID:
+    //		_MAV_PAYLOAD_NON_CONST(rxmsg)[packet_idx++] = (char)c;
+	        packet_idx++;
+            Checksum_Accumulate(c);
+            if (packet_idx == len) {
+                parse_state = MAVLINK_PARSE_STATE_GOT_PAYLOAD;
+            }
+            break;
+
+        case MAVLINK_PARSE_STATE_GOT_PAYLOAD:
+//    #if MAVLINK_CRC_EXTRA
+//            Checksum_Accumulate( MAVLINK_MESSAGE_CRC(msgid));
+//    #endif
+            if (c != (Crc & 0xFF)) { // Check first checksum byte
+                parse_error++;
+                msg_received = 0;
+                parse_state = MAVLINK_PARSE_STATE_IDLE;
+                if (c == MAVLINK_STX) {
+                    parse_state = MAVLINK_PARSE_STATE_GOT_STX;
+                    len = 0;
+                    Checksum_Init();
+                }
+            } else {
+                parse_state = MAVLINK_PARSE_STATE_GOT_CRC1;
+    //			_MAV_PAYLOAD_NON_CONST(rxmsg)[packet_idx] = (char)c;
+            }
+            break;
+
+        case MAVLINK_PARSE_STATE_GOT_CRC1:
+            if (c != (Crc >> 8)) {	// Check second checksum byte
+                parse_error++;
+                msg_received = 0;
+                parse_state = MAVLINK_PARSE_STATE_IDLE;
+                if (c == MAVLINK_STX) {
+                    parse_state = MAVLINK_PARSE_STATE_GOT_STX;
+                    len = 0;
+                    Checksum_Init();
+                }
+            } else {		// Successfully got message
+                msg_received = 1;
+                parse_state = MAVLINK_PARSE_STATE_IDLE;
+    //			_MAV_PAYLOAD_NON_CONST(rxmsg)[packet_idx+1] = (char)c;
+    //			memcpy(r_message, rxmsg, sizeof(mavlink_message_t));
+            }
+            break;
+        }
+
+	// If a message has been sucessfully decoded, check index
+	if (msg_received == 1)	{
+		current_rx_seq = seq;
+		// Initial condition: If no packet has been received so far, drop count is undefined
+		if (packet_rx_success_count == 0) packet_rx_drop_count = 0;
+		// Count this packet as received
+		packet_rx_success_count++;
+	}
+
+	current_rx_seq = current_rx_seq + 1;
+	packet_rx_drop_count = parse_error;
+	parse_error = 0;
+	}
+}
+
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send communication packets
+/// \param   -
+/// \returns -
+/// \remarks
+///   0          MAVLINK_STX Start Transmission   0xFE
+///   1          len         Length               0 - 255
+///   2          seq         Sequence             0 - 255
+///   3          SYSID       System identifier    0 - 255
+///   4          COMPID      Component identifier 0 - 255
+///   5          MSGID       Message identifier   0 - 255
+///
+//----------------------------------------------------------------------------
+static void Mavlink_Send( uint8_t crc_extra ) {
+	uint16_t j;
+    uint8_t length = buf[1];
+
+    Checksum_Init();
+    buf[0] = MAVLINK_STX;
+	buf[2] = Current_Tx_Seq++;          // One sequence number per component
+	buf[3] = System_ID;
+	buf[4] = Component_ID;
+
+    for (j = 1; j < length + 6; j++) {
+        Checksum_Accumulate(buf[j]);
+    }
+	Checksum_Accumulate(crc_extra);
+
+    buf[j++] = (uint8_t)(Crc & 0xFF);
+	buf[j] = (uint8_t)(Crc >> 8);
+    for (j = 0; j < length + 8; j++) {
+        USART1_Putch(buf[j]);
+    }
+    USART1_Transmit();
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send heartbeat packet
+/// \param   -
+/// \returns -
+/// \remarks MAVLINK_MSG_ID_HEARTBEAT
+/// Field         Offset  Type    Meaning
+/// Heartbeat type   4   uint8_t  Type of the MAV (quadrotor, helicopter, etc., up to 15 types, defined in MAV_TYPE ENUM)
+/// OSD mode         0   uint32_t Bitfield for use for autopilot-specific flags.
+/// Base mode        6   uint8_t  System mode bitfield, see MAV_MODE_FLAGS ENUM in mavlink/include/mavlink_types.h
+/// autopilot        ?   uint8_t  Autopilot type / class. defined in MAV_AUTOPILOT ENUM
+/// system_status    ?   uint8_t  System status flag, see MAV_STATE ENUM
+/// mavlink_version  ?   uint8_t_mavlink_version  MAVLink version, not writable by user, gets added by protocol because of magic data type
+///
+//----------------------------------------------------------------------------
+void Mavlink_Heartbeat( void ) {
+	uint16_t j;
+
+    for (j = 0; j < MAVLINK_MAX_PACKET_LEN; j++) {
+        buf[j] = 0;
+    }
+
+	buf[1] = 9;                         // Payload length
+	buf[5] = MAVLINK_MSG_ID_HEARTBEAT;  // Heartbeat message ID
+	buf[10] = MAV_TYPE_FIXED_WING;      // Type of the MAV, defined in MAV_TYPE ENUM
+    Mavlink_Send(50);
+}
+
+/*
 //----------------------------------------------------------------------------
 //
 /// \brief
@@ -419,7 +747,6 @@ static void handle_mavlink_message(mavlink_channel_t chan,
 
         case MAVLINK_MSG_ID_PARAM_SET:
             mavlink_msg_param_set_decode(msg, &set);
-/*
             if (((uint8_t) set.target_system == (uint8_t) global_data.param[PARAM_SYSTEM_ID]) &&    // Check if this message is for this system
                 ((uint8_t) set.target_component == (uint8_t) global_data.param[PARAM_COMPONENT_ID]))
             {
@@ -439,26 +766,23 @@ static void handle_mavlink_message(mavlink_channel_t chan,
                             break;
                         }
                     }
-*/
                     if (match)                                              // Check if matched
                     {
-/*
                         if ((global_data.param[i] != set.param_value) &&    // Write and emit changes if there is a difference
                             !isnan(set.param_value) &&                      // AND if new value is NOT "not-a-number"
                             !isinf(set.param_value) &&                      // AND is NOT infinity
                             (set.param_type == MAVLINK_TYPE_FLOAT))
                         {
                             global_data.param[i] = set.param_value;
-*/
                             mavlink_msg_param_value_send(MAVLINK_COMM_0,    // Report back new value
-                                                        0, //(int8_t*) global_data.param_name[i],
-                                                        0, //global_data.param[i], MAVLINK_TYPE_FLOAT,
+                                                        (int8_t*) global_data.param_name[i],
+                                                        global_data.param[i], MAVLINK_TYPE_FLOAT,
                                                         ONBOARD_PARAM_COUNT,
 														m_parameter_i);
-//                        }
+                        }
                     }
-//                }
-//            }
+                }
+            }
             break;
         default:
             break;
@@ -477,14 +801,13 @@ static void handle_mavlink_message(mavlink_channel_t chan,
 ///          Call this function with xx Hertz to increase/decrease the bandwidth.
 ///
 //----------------------------------------------------------------------------
-
 static void communication_queued_send(void)
 {
     if (m_parameter_i < ONBOARD_PARAM_COUNT)     //send parameters one by one
     {
         mavlink_msg_param_value_send(MAVLINK_COMM_0,
-                                    0, //(int8_t*) global_data.param_name[m_parameter_i],
-                                    0, //global_data.param[m_parameter_i],
+                                    (int8_t*) global_data.param_name[m_parameter_i],
+                                    global_data.param[m_parameter_i],
                                     MAVLINK_TYPE_FLOAT,
                                     ONBOARD_PARAM_COUNT,
                                     m_parameter_i);
@@ -502,24 +825,14 @@ static void communication_queued_send(void)
 ///          handles their value by calling the appropriate functions.
 ///
 //----------------------------------------------------------------------------
-
 static void communication_receive(void)
 {
     uint8_t c;
 
-    while (ucRindex != ucWindex)                // received another character
-    {
-        c = ucRxBuffer[ucRindex++];             // read character
-        if (ucRindex >= RX_BUFFER_LENGTH)       // update read index
-        {
-            ucRindex = 0;
-        }
-		if (mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status))
-        {
-			switch (msg.msgid)			        // Handle message
-			{
-                case MAVLINK_MSG_ID_HEARTBEAT:
-			    {
+    while (USART1_Getch (&c)) {               // received another character
+		if (mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
+			switch (msg.msgid) {              // Handle message
+                case MAVLINK_MSG_ID_HEARTBEAT: {
                     // E.g. read GCS heartbeat and go into comm lost mode if timer times out
                     // Handle message the same way like in for UART0
                     // you can also consider to write a handle function like
@@ -537,7 +850,7 @@ static void communication_receive(void)
 
 	packet_drops += status.packet_rx_drop_count;    // Update global packet drops counter
 }
-
+*/
 //----------------------------------------------------------------------------
 //
 /// \brief
