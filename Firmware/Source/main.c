@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: integrated mavlink telemetry task
+// Change: modified mavlink telemetry task
 //
 //============================================================================*/
 
@@ -40,7 +40,8 @@
 #include "config.h"
 /* uncomment telemetry type that applies */
 //#include "telemetry.h"
-#include "multiwii.h"
+#include "mav_telemetry.h"
+//#include "multiwii.h"
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
@@ -73,7 +74,7 @@
 #define mainTEL_PRIORITY    ( tskIDLE_PRIORITY + 2 )    ///< telemetry priority
 
 /* Task frequencies. */
-#define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task
+#define TELEMETRY_FREQUENCY 50  //!< frequency of telemetry task (50 Hz)
 
 /* Task delays. */
 #define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY) //!< delay for telemetry task
@@ -121,32 +122,21 @@ void Telemetry_Task( void *pvParameters ) {
 
 #if defined TELEMETRY_MAVLINK
 
-    portTickType Last_Wake_Time;
+    uint8_t ucCycles = 0;
+
+    portTickType Last_Wake_Time;                //
     Last_Wake_Time = xTaskGetTickCount();       //
 //    global_data_reset_param_defaults();         // Load default parameters as fallback
-    mavlink_system.sysid = 20;                  // ID 20 for this airplane
-//    mavlink_system.compid = MAV_COMP_ID_IMU;    // The component sending the message is the IMU
-    mavlink_system.type = MAV_TYPE_FIXED_WING;  // This system is an airplane / fixed wing
-    system_type = MAV_TYPE_FIXED_WING;          // Define the system type, in this case an airplane
-    system_state = MAV_STATE_STANDBY;           // System ready for flight
-//    system_mode = MAV_MODE_PREFLIGHT;           // Booting up
-    autopilot_type = MAV_AUTOPILOT_GENERIC;
-    custom_mode = 0;                            // Custom mode, can be defined by user/adopter
 
-    while (TRUE) {
+    while (TRUE)
+    {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);  // Use any wait function you want, better not use sleep
-        mavlink_msg_heartbeat_pack( mavlink_system.sysid,   // Pack the message
-                                    mavlink_system.compid,
-                                    &msg,
-                                    system_type,
-                                    autopilot_type,
-                                    system_mode,
-                                    custom_mode,
-                                    system_state);
-        len = mavlink_msg_to_send_buffer(buf, &msg);        // Copy the message to the send buffer
-        Telemetry_Downlink(buf, len);                       // Send the message
-        communication_receive();                            // Process parameter request, if occured
-        communication_queued_send();                        // Send parameters at 10 Hz, if previously requested
+        if (++ucCycles > 50) {
+            Mavlink_Heartbeat();
+            ucCycles = 0;
+        }
+//        communication_receive();                            // Process parameter request, if occured
+//        communication_queued_send();                        // Send parameters at 10 Hz, if previously requested
     }
 
 #elif defined TELEMETRY_ARDUPILOT
