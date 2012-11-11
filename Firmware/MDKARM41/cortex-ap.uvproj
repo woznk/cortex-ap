@@ -442,9 +442,9 @@
               <FilePath>..\Source\usart1driver.c</FilePath>
             </File>
             <File>
-              <FileName>multiwii.c</FileName>
+              <FileName>mav_telemetry.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Source\multiwii.c</FilePath>
+              <FilePath>..\Source\mav_telemetry.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1031,9 +1031,9 @@
               <FilePath>..\Source\usart1driver.c</FilePath>
             </File>
             <File>
-              <FileName>multiwii.c</FileName>
+              <FileName>mav_telemetry.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Source\multiwii.c</FilePath>
+              <FilePath>..\Source\mav_telemetry.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1620,9 +1620,9 @@
               <FilePath>..\Source\usart1driver.c</FilePath>
             </File>
             <File>
-              <FileName>multiwii.c</FileName>
+              <FileName>mav_telemetry.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Source\multiwii.c</FilePath>
+              <FilePath>..\Source\mav_telemetry.c</FilePath>
             </File>
           </Files>
         </Group>
