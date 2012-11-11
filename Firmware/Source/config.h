@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change added #definition of USE_MWI_WP
+// Change added #definition of TELEMETRY_MAVLINK
 //
 //============================================================================*/
 
@@ -117,7 +117,8 @@
 #define LOG_SERVO   0                   //!< enable log of servo positions
 
 /*! Telemetry type definition */
-#define TELEMETRY_MULTIWII
+//#define TELEMETRY_MULTIWII
+#define TELEMETRY_MAVLINK
 //#define TELEMETRY_ARDUPILOT
 
  /*! Type of aircraft */
