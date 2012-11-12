@@ -401,6 +401,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\Source\mav_telemetry.c</FilePath>
             </File>
+            <File>
+              <FileName>nav_stub.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\nav_stub.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
