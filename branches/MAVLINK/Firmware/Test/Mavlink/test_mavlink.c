@@ -7,7 +7,7 @@
 //
 /// \brief test program
 ///
-// Change: prefixes MSP_ replaced with MWI_
+// Change: added test of Mavlink_Hud function
 //
 //============================================================================*/
 
@@ -67,6 +67,10 @@ int32_t main(void)
   USART1_Init();
   while (Test_Running()) {
      Mavlink_Heartbeat();
+  }
+  USART1_Init();
+  while (Test_Running()) {
+     Mavlink_Hud();
   }
 }
 
