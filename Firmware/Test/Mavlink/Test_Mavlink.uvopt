@@ -148,7 +148,7 @@
           <Type>0</Type>
           <LineNumber>604</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134218948</Address>
+          <Address>134218670</Address>
           <ByteObject>0</ByteObject>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
@@ -158,7 +158,29 @@
           <ExecCommand></ExecCommand>
           <Expression>\\Test_Mavlink\../../Source/mav_telemetry.c\604</Expression>
         </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>786</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134219356</Address>
+          <ByteObject>0</ByteObject>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename></Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\Test_Mavlink\../../Source/mav_telemetry.c\786</Expression>
+        </Bp>
       </Breakpoint>
+      <WatchWindow1>
+        <Ww>
+          <count>0</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>buf</ItemText>
+        </Ww>
+      </WatchWindow1>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
@@ -208,17 +230,17 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>43</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>55</TopLine>
-      <CurrentLine>70</CurrentLine>
+      <TopLine>57</TopLine>
+      <CurrentLine>75</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\test_mavlink.c</PathWithFileName>
       <FilenameWithoutPath>test_mavlink.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>1</GroupNumber>
-      <FileNumber>3</FileNumber>
+      <FileNumber>2</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -232,17 +254,31 @@
     </File>
     <File>
       <GroupNumber>1</GroupNumber>
+      <FileNumber>3</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>785</TopLine>
+      <CurrentLine>794</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\..\Source\mav_telemetry.c</PathWithFileName>
+      <FilenameWithoutPath>mav_telemetry.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>1</GroupNumber>
       <FileNumber>0</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>93</ColumnNumber>
+      <ColumnNumber>40</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>665</TopLine>
-      <CurrentLine>678</CurrentLine>
+      <TopLine>223</TopLine>
+      <CurrentLine>240</CurrentLine>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\Source\mav_telemetry.c</PathWithFileName>
-      <FilenameWithoutPath>mav_telemetry.c</FilenameWithoutPath>
+      <PathWithFileName>.\nav_stub.c</PathWithFileName>
+      <FilenameWithoutPath>nav_stub.c</FilenameWithoutPath>
     </File>
   </Group>
 
@@ -273,7 +309,7 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>135</TopLine>
+      <TopLine>153</TopLine>
       <CurrentLine>153</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\..\Source\startup_stm32f10x_md_vl.s</PathWithFileName>
@@ -422,16 +458,22 @@
       <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
+          <Name>..\..\Source\startup_stm32f10x_md_vl.s</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>153</TopLine>
+          <CurrentLine>153</CurrentLine>
+        </Doc>
+        <Doc>
           <Name>..\..\Source\mav_telemetry.c</Name>
-          <ColumnNumber>93</ColumnNumber>
-          <TopLine>665</TopLine>
-          <CurrentLine>678</CurrentLine>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>785</TopLine>
+          <CurrentLine>794</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\test_mavlink.c</Name>
-          <ColumnNumber>43</ColumnNumber>
-          <TopLine>55</TopLine>
-          <CurrentLine>70</CurrentLine>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>57</TopLine>
+          <CurrentLine>75</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\usart1driver.c</Name>
@@ -440,10 +482,10 @@
           <CurrentLine>181</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\..\Source\startup_stm32f10x_md_vl.s</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>135</TopLine>
-          <CurrentLine>153</CurrentLine>
+          <Name>.\nav_stub.c</Name>
+          <ColumnNumber>40</ColumnNumber>
+          <TopLine>223</TopLine>
+          <CurrentLine>240</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
