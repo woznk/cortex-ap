@@ -388,9 +388,7 @@
 /// 8D CRC 1      A2 CRC 1
 /// 8E CRC 2      1D CRC 2
 ///
-/// Changes: added functions: checksum (working), receive (not working), 
-//           send (working), heartbeat (working).
-//           updated protocol description
+/// Changes: added functions Mavlink_Hud, added array of extra crc's
 ///
 //============================================================================*/
 
@@ -406,6 +404,7 @@
 #include "queue.h"
 
 #include "misc.h"
+#include "nav.h"
 #include "mavlink.h"
 #include "telemetry.h"
 #include "mav_telemetry.h"
@@ -443,6 +442,43 @@
 /*----------------------------------- Types ----------------------------------*/
 
 /*---------------------------------- Constants -------------------------------*/
+
+VAR_STATIC const Mavlink_Crc[] = MAVLINK_MESSAGE_CRCS ;
+/*
+#define MAVLINK_MESSAGE_CRCS {
+50, 124, 137, 0, 237, 217, 104, 119,
+0, 0, 0, 89, 0, 0, 0, 0,
+0, 0, 0, 0, 214, 159, 220, 168,
+24, 23, 170, 144, 67, 115, 39, 246,
+185, 104, 237, 244, 222, 212, 9, 254,
+230, 28, 28, 132, 221, 232, 11, 153,
+41, 39, 214, 223, 141, 33, 15, 3,
+100, 24, 239, 238, 30, 240, 183, 130,
+130, 0, 148, 21, 0, 52, 124, 0,
+0, 0, 20, 0, 152, 143, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 231, 183, 63, 54, 0, 0, 0,
+0, 0, 0, 0, 175, 102, 158, 208,
+56, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0,
+0, 204, 49, 170, 44, 83, 46, 0}
+*/
 
 /*---------------------------------- Globals ---------------------------------*/
 
@@ -605,9 +641,7 @@ void Mavlink_Receive(void) {
             break;
 
         case MAVLINK_PARSE_STATE_GOT_PAYLOAD:
-//    #if MAVLINK_CRC_EXTRA
-//            Checksum_Accumulate( MAVLINK_MESSAGE_CRC(msgid));
-//    #endif
+            Checksum_Accumulate(Mavlink_Crc[msgid]);
             if (c != (Crc & 0xFF)) { // Check first checksum byte
                 parse_error++;
                 msg_received = 0;
@@ -702,8 +736,8 @@ static void Mavlink_Send( uint8_t crc_extra ) {
 /// \returns -
 /// \remarks MAVLINK_MSG_ID_HEARTBEAT
 /// Field         Offset  Type    Meaning
-/// Heartbeat type   4   uint8_t  Type of the MAV (quadrotor, helicopter, etc., up to 15 types, defined in MAV_TYPE ENUM)
 /// OSD mode         0   uint32_t Bitfield for use for autopilot-specific flags.
+/// Heartbeat type   4   uint8_t  Type of the MAV (quadrotor, helicopter, etc., up to 15 types, defined in MAV_TYPE ENUM)
 /// Base mode        6   uint8_t  System mode bitfield, see MAV_MODE_FLAGS ENUM in mavlink/include/mavlink_types.h
 /// autopilot        ?   uint8_t  Autopilot type / class. defined in MAV_AUTOPILOT ENUM
 /// system_status    ?   uint8_t  System status flag, see MAV_STATE ENUM
@@ -720,8 +754,43 @@ void Mavlink_Heartbeat( void ) {
 	buf[1] = 9;                         // Payload length
 	buf[5] = MAVLINK_MSG_ID_HEARTBEAT;  // Heartbeat message ID
 	buf[10] = MAV_TYPE_FIXED_WING;      // Type of the MAV, defined in MAV_TYPE ENUM
-    Mavlink_Send(50);
+    Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_HEARTBEAT]);
 }
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send VFR HUD data
+/// \param   -
+/// \returns -
+/// \remarks Name = MAVLINK_MSG_ID_VFR_HUD, ID = 74, Length = 20
+/// Field        Offset Type    Meaning
+/// Airspeed       0    float
+/// Ground speed   4    float
+/// Altitude       8    float
+/// Climb rate    12    float
+/// Heading       16    int16_t
+/// Throttle      18    uint16_t
+///
+//----------------------------------------------------------------------------
+void Mavlink_Hud( void ) {
+	uint16_t j;
+
+    for (j = 0; j < MAVLINK_MAX_PACKET_LEN; j++) {
+        buf[j] = 0;
+    }
+
+	buf[1] = 20;                                 // Payload length
+	buf[5] = MAVLINK_MSG_ID_VFR_HUD;             // VFR HUD message ID
+    *((float *)(&buf[6])) = 0.0f;                // Airspeed
+    *((float *)(&buf[10])) = (float)Gps_Speed(); // GPS speed
+    *((float *)(&buf[14])) = Nav_Altitude();     // Altitude
+    *((float *)(&buf[18])) = 0.0f;               // Climb rate
+    *((int16_t *)(&buf[22])) = Gps_Heading();    // Heading
+    *((uint16_t *)(&buf[24])) = Nav_Throttle();  // Throttle
+
+    Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_VFR_HUD]);
+}
+
 
 /*
 //----------------------------------------------------------------------------
