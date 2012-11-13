@@ -75,6 +75,26 @@ VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    //!< downlink data buffer
 //----------------------------------------------------------------------------
 void USART1_Init( void ) {
 
+	switch (test_step) {
+		case 0:
+    	memcpy(ucRxBuffer, PID_MENU, sizeof(PID_MENU));
+        ucRxWindex = sizeof(PID_MENU);
+		test_step++;
+		break;
+
+		case 1:
+    	memcpy(ucRxBuffer, HUD_MENU, sizeof(HUD_MENU));
+        ucRxWindex = sizeof(HUD_MENU);
+		test_step++;
+		break;
+
+		case 2:
+    	memcpy(ucRxBuffer, GPS_MENU, sizeof(GPS_MENU));
+        ucRxWindex = sizeof(GPS_MENU);
+		test_step++;
+		break;
+    }
+
     ucRxRindex = 0;         // clear uplink read index
     ucTxWindex = 0;         // clear downlink write index
     ucTxRindex = 0;         // clear downlink read index
