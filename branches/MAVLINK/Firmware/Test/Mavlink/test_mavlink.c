@@ -66,11 +66,15 @@ int32_t main(void)
 {
   USART1_Init();
   while (Test_Running()) {
-     Mavlink_Heartbeat();
+     Mavlink_Receive();
   }
   USART1_Init();
   while (Test_Running()) {
-     Mavlink_Hud();
+     Mavlink_Receive();
+  }
+  USART1_Init();
+  while (Test_Running()) {
+     Mavlink_Receive();
   }
 }
 

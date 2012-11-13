@@ -406,6 +406,11 @@
               <FileType>1</FileType>
               <FilePath>.\nav_stub.c</FilePath>
             </File>
+            <File>
+              <FileName>attitude_stub.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\attitude_stub.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
