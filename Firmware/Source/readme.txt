@@ -188,6 +188,10 @@
     Pros: no gyro bias is calculated, perform surprisingly well. 
     Cons: uses euler angles, which are not gimbal-lock free, requires more processing power.
 
+    13/11/12
+
+    http://www.jhuapl.edu/ott/Technologies/Copyright/SuasCode.asp
+
 @par Navigation
      
      vedi i todo in nav.c
