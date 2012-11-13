@@ -90,23 +90,27 @@
 ///
 /// MAVLINK_MSG_ID_VFR_HUD               Airspeed             0   float
 ///                                      Ground speed         4   float
-///                                      Heading             16   int16_t
-///                                      Throttle            18   uint16_t
 ///                                      Altitude             8   float
 ///                                      Climb rate          12   float
+///                                      Heading             16   int16_t
+///                                      Throttle            18   uint16_t
 ///
-/// MAVLINK_MSG_ID_ATTITUDE              Pitch                8   float
-///                                      Roll                12   float
-///                                      Yaw                 16   float
+/// MAVLINK_MSG_ID_ATTITUDE              time_boot_ms         ?   uint32_t Timestamp (milliseconds since system boot)
+///                                      Pitch                8   float    Pitch angle [rad]
+///                                      Roll                12   float    Roll angle [rad]
+///                                      Yaw                 16   float    Yaw angle [rad]
+///                                      Pitch speed          ?   float    Pitch angular speed [rad/s]
+///                                      Roll speed           ?   float    Roll angular speed [rad/s]
+///                                      Yaw speed            ?   float    Yaw angular speed [rad/s]
 ///
 /// MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT Nav roll             0   float
 ///                                      Nav pitch            4   float
-///                                      Nav bearing         20   int16_t
-///                                      Target bearing      22   int16_t
-///                                      Waypoint distance   24   uint16_t
 ///                                      Altitude error       8   float
 ///                                      Airspeed error      12   float
 ///                                      Crosstrack error    16   float
+///                                      Nav bearing         20   int16_t
+///                                      Target bearing      22   int16_t
+///                                      Waypoint distance   24   uint16_t
 ///
 /// MAVLINK_MSG_ID_MISSION_CURRENT       Waypoint number      0   uint16_t
 ///
@@ -259,22 +263,6 @@
 ///                              will cancel any current repeating event
 /// \endcode
 ///
-/// ------------------------------ Links ------------------------------
-///
-/// ArduPilot Mega parameters modifiable by MAVLink
-/// http://code.google.com/p/ardupilot-mega/wiki/MAVParam
-///
-/// ArduPilot Mega MAVLink commands
-/// http://code.google.com/p/ardupilot-mega/wiki/MAVLink
-///
-/// MAVLink protocol specifications
-/// http://qgroundcontrol.org/mavlink/start
-/// http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
-/// http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
-///
-/// List of commands
-/// https://pixhawk.ethz.ch/mavlink/
-///
 ///--------------------- AqGCS messages taxonomy ------------------------
 ///
 /// CONNECT      PID          PID EXIT     ALL PARAM    ALL PARAM EXIT
@@ -333,29 +321,17 @@
 ///
 ///--------------------- aq-gcs2 messages taxonomy ------------------------
 ///
-/// PID          SAVE MISSION RETRIEVE MISS
-/// FE STX       FE STX       FE STX
-/// 02 Length    02 Length    02 Length
-/// 00 Sequence  03 Sequence  00 Sequence
-/// FF SYSID     FF SYSID     FF SYSID
-/// 00 COMPID    00 COMPID    00 COMPID
-/// 15 MSGID     2D MSGID     2B MSGID
-/// 00 Payload   00 Payload   00 Payload
-/// 00 Payload   BE Payload   00 Payload
-/// 41 CRC 1     43 CRC 1     A3 CRC 1
-/// 4B CRC 2     ED CRC 2     07 CRC 2
-///
-/// READ FROM ROM SAVE TO ROM
-/// FE STX        FE STX
-/// 21 Length     21 Length
-/// 01 Sequence   02 Sequence
-/// FF SYSID      FF SYSID
-/// 00 COMPID     00 COMPID
-/// 4C MSGID      4C MSGID
-/// 00 Payload    00 Payload
-/// 00 Payload    00 Payload
-/// 00 Payload    80 Payload
-/// 00 Payload    3F Payload
+/// READ FROM ROM SAVE TO ROM  PID          SAVE MISSION RETRIEVE MISSION
+/// FE STX        FE STX       FE STX       FE STX       FE STX
+/// 21 Length     21 Length    02 Length    02 Length    02 Length
+/// 01 Sequence   02 Sequence  00 Sequence  03 Sequence  00 Sequence
+/// FF SYSID      FF SYSID     FF SYSID     FF SYSID     FF SYSID
+/// 00 COMPID     00 COMPID    00 COMPID    00 COMPID    00 COMPID
+/// 4C MSGID      4C MSGID     15 MSGID     2D MSGID     2B MSGID
+/// 00 Payload    00 Payload   00 Payload   00 Payload   00 Payload
+/// 00 Payload    00 Payload   00 Payload   BE Payload   00 Payload
+/// 00 Payload    80 Payload   41 CRC 1     43 CRC 1     A3 CRC 1
+/// 00 Payload    3F Payload   4B CRC 2     ED CRC 2     07 CRC 2
 /// 00 Payload    00 Payload
 /// 00 Payload    00 Payload
 /// 00 Payload    00 Payload
@@ -388,7 +364,23 @@
 /// 8D CRC 1      A2 CRC 1
 /// 8E CRC 2      1D CRC 2
 ///
-/// Changes: added functions Mavlink_Hud, added array of extra crc's
+/// ------------------------------ Links ------------------------------
+///
+/// ArduPilot Mega parameters modifiable by MAVLink
+/// http://code.google.com/p/ardupilot-mega/wiki/MAVParam
+///
+/// ArduPilot Mega MAVLink commands
+/// http://code.google.com/p/ardupilot-mega/wiki/MAVLink
+///
+/// MAVLink protocol specifications
+/// http://qgroundcontrol.org/mavlink/start
+/// http://qgroundcontrol.org/dev/mavlink_arduino_integration_tutorial
+/// http://qgroundcontrol.org/dev/mavlink_onboard_integration_tutorial
+///
+/// List of commands
+/// https://pixhawk.ethz.ch/mavlink/
+///
+/// Changes: added functions Mavlink_Attitude, corrected function Mavlink_Receive
 ///
 //============================================================================*/
 
@@ -405,6 +397,7 @@
 
 #include "misc.h"
 #include "nav.h"
+#include "attitude.h"
 #include "mavlink.h"
 #include "telemetry.h"
 #include "mav_telemetry.h"
@@ -677,7 +670,8 @@ void Mavlink_Receive(void) {
         }
 
 	// If a message has been sucessfully decoded, check index
-	if (msg_received == 1)	{
+	if (msg_received == 1) {
+        Mavlink_Heartbeat();
 		current_rx_seq = seq;
 		// Initial condition: If no packet has been received so far, drop count is undefined
 		if (packet_rx_success_count == 0) packet_rx_drop_count = 0;
@@ -781,16 +775,44 @@ void Mavlink_Hud( void ) {
 
 	buf[1] = 20;                                 // Payload length
 	buf[5] = MAVLINK_MSG_ID_VFR_HUD;             // VFR HUD message ID
-    *((float *)(&buf[6])) = 0.0f;                // Airspeed
+//    *((float *)(&buf[6])) = 0.0f;                // Airspeed
     *((float *)(&buf[10])) = (float)Gps_Speed(); // GPS speed
     *((float *)(&buf[14])) = Nav_Altitude();     // Altitude
-    *((float *)(&buf[18])) = 0.0f;               // Climb rate
+//    *((float *)(&buf[18])) = 0.0f;               // Climb rate
     *((int16_t *)(&buf[22])) = Gps_Heading();    // Heading
     *((uint16_t *)(&buf[24])) = Nav_Throttle();  // Throttle
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_VFR_HUD]);
 }
 
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send attitude data
+/// \param   -
+/// \returns -
+/// \remarks Name = MAVLINK_MSG_ID_ATTITUDE, ID = 30, Length = 28
+/// Field      Offset Type    Meaning
+/// Pitch         8   float
+/// Roll         12   float
+/// Yaw          16   float
+///
+//----------------------------------------------------------------------------
+void Mavlink_Attitude( void ) {
+	uint16_t j;
+
+    for (j = 0; j < MAVLINK_MAX_PACKET_LEN; j++) {
+        buf[j] = 0;
+    }
+
+	buf[1] = 28;                                // Payload length
+	buf[5] = MAVLINK_MSG_ID_ATTITUDE;           // Attitude message ID
+    *((float *)(&buf[8])) = Attitude_Pitch();   //
+    *((float *)(&buf[12])) = Attitude_Roll();   //
+    *((float *)(&buf[16])) = Attitude_Yaw();    //
+
+    Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_ATTITUDE]);
+}
 
 /*
 //----------------------------------------------------------------------------
