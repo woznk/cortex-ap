@@ -131,8 +131,12 @@ void Telemetry_Task( void *pvParameters ) {
     while (TRUE)
     {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);  // Use any wait function you want, better not use sleep
-        if (++ucCycles > 50) {
-            Mavlink_Heartbeat();
+        ucCycles++;
+        if ((ucCycles % 5) == 0) {
+        Mavlink_Attitude();
+        }
+        if (ucCycles == 49) {
+            Mavlink_Gps();
             ucCycles = 0;
         }
 //        communication_receive();                            // Process parameter request, if occured
