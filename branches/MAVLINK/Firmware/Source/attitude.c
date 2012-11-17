@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change: slowed blue LED blink of a factor 10
+// Change: added Attitude_Yaw() (empty function)
 //
 //============================================================================*/
 
@@ -295,6 +295,18 @@ float Attitude_Pitch(void)
 float Attitude_Roll(void)
 {
     return (ToDeg(asinf(DCM_Matrix[2][1])));
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Aircraft roll.
+/// \return  aircraft roll angle [deg]
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Attitude_Yaw(void)
+{
+    return 140.0f;
 }
 
 /**
