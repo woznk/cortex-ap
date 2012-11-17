@@ -13,44 +13,26 @@
 /// \code
 ///  Byte        Name        Content              Value
 /// ------------------------------------------------------
-///   1          MAVLINK_STX Start Transmission   0xFE
-///   2          len         Length               0 - 255
-///   3          seq         Sequence             0 - 255
-///   4          SYSID       System identifier    0 - 255
-///   5          COMPID      Component identifier 0 - 255
-///   6          MSGID       Message identifier   0 - 255
-///   7          Payload     Payload
+///   0          MAVLINK_STX Start Transmission   0xFE
+///   1          len         Length               0 - 255
+///   2          seq         Sequence             0 - 255
+///   3          SYSID       System identifier    0 - 255
+///   4          COMPID      Component identifier 0 - 255
+///   5          MSGID       Message identifier   0 - 255
+///   6          Payload     Payload
 ///   7 + len    CRC 1
 ///   8 + len    CRC 2
 /// \endcode
-/// -------------------- Mavlink payload structure --------------------
-/// \code
-///   0    0x00    byte      Command ID
-///   1    0x01    byte      Options
-///   2    0x02    byte      Parameter 1
-///   3    0x03    long      Parameter 2
-///   4    0x04    ..
-///   5    0x05    ..
-///   6    0x06    ..
-///   7    0x07    long      Parameter 3
-///   8    0x08    ..
-///   9    0x09    ..
-///   10   0x0A    ..
-///   11   0x0B    long      Parameter 4
-///   12   0x0C    ..
-///   13   0x0D    ..
-///   14   0x0E    ..
-/// \endcode
 /// ------------- Mavlink identifiers and message lengths -------------
 /// \code
-/// Message identifier (MSGID)           Value  Length
-/// ---------------------------------------------------
-/// MAVLINK_MSG_ID_HEARTBEAT                0      9
+/// Message identifier (MSGID)           Value  Length Implemented
+/// ---------------------------------------------------------------
+/// MAVLINK_MSG_ID_HEARTBEAT                0      9        Y
 /// MAVLINK_MSG_ID_SYS_STATUS               1     31
 /// MAVLINK_MSG_PARAM_REQUEST_LIST         21      2
 /// MAVLINK_MSG_ID_GPS_RAW_INT             24     30
-/// MAVLINK_MSG_ID_VFR_HUD                 74     20
-/// MAVLINK_MSG_ID_ATTITUDE                30     28
+/// MAVLINK_MSG_ID_VFR_HUD                 74     20        Y
+/// MAVLINK_MSG_ID_ATTITUDE                30     28        Y
 /// MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT   62     26
 /// MAVLINK_MSG_ID_MISSION_CURRENT         42      2
 /// MAVLINK_MSG_ID_RC_CHANNELS_RAW         35     22
@@ -83,10 +65,16 @@
 ///                                      Target Component     ?   uint8_t  Component ID
 /// After his request, all parameters are emitted.
 ///
-/// MAVLINK_MSG_ID_GPS_RAW_INT           GPS latitude         8   int32_t
-///                                      GPS longitude       12   int32_t
-///                                      GPS fix             28   unit8_t
-///                                      Visible satellites  29   uint8_t
+/// MAVLINK_MSG_ID_GPS_RAW_INT           time_usec            0   uint64_t
+///                                      lat                  8   int32_t
+///                                      lon                 12   int32_t
+///                                      alt                 16   int32_t
+///                                      eph                 20   uint16_t
+///                                      epv                 22   uint16_t
+///                                      vel                 24   uint16_t
+///                                      cog                 26   uint16_t
+///                                      fix_type            28   uint8_t
+///                                      satellites_visible  29   uint8_t
 ///
 /// MAVLINK_MSG_ID_VFR_HUD               Airspeed             0   float
 ///                                      Ground speed         4   float
@@ -95,13 +83,13 @@
 ///                                      Heading             16   int16_t
 ///                                      Throttle            18   uint16_t
 ///
-/// MAVLINK_MSG_ID_ATTITUDE              time_boot_ms         ?   uint32_t Timestamp (milliseconds since system boot)
+/// MAVLINK_MSG_ID_ATTITUDE              Timestamp            0   uint32_t Time since system boot [ms]
+///                                      Roll                 4   float    Roll angle [rad]
 ///                                      Pitch                8   float    Pitch angle [rad]
-///                                      Roll                12   float    Roll angle [rad]
-///                                      Yaw                 16   float    Yaw angle [rad]
-///                                      Pitch speed          ?   float    Pitch angular speed [rad/s]
-///                                      Roll speed           ?   float    Roll angular speed [rad/s]
-///                                      Yaw speed            ?   float    Yaw angular speed [rad/s]
+///                                      Yaw                 12   float    Yaw angle [rad]
+///                                      Roll speed          16   float    Roll angular speed [rad/s]
+///                                      Pitch speed         20   float    Pitch angular speed [rad/s]
+///                                      Yaw speed           24   float    Yaw angular speed [rad/s]
 ///
 /// MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT Nav roll             0   float
 ///                                      Nav pitch            4   float
@@ -380,7 +368,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: added functions Mavlink_Attitude, corrected function Mavlink_Receive
+/// Changes: added Mavlink_Gps function, corrected Mavlink_Attitude
 ///
 //============================================================================*/
 
@@ -395,6 +383,7 @@
 #include "task.h"
 #include "queue.h"
 
+#include "config.h"
 #include "misc.h"
 #include "nav.h"
 #include "attitude.h"
@@ -729,13 +718,13 @@ static void Mavlink_Send( uint8_t crc_extra ) {
 /// \param   -
 /// \returns -
 /// \remarks MAVLINK_MSG_ID_HEARTBEAT
-/// Field         Offset  Type    Meaning
-/// OSD mode         0   uint32_t Bitfield for use for autopilot-specific flags.
-/// Heartbeat type   4   uint8_t  Type of the MAV (quadrotor, helicopter, etc., up to 15 types, defined in MAV_TYPE ENUM)
-/// Base mode        6   uint8_t  System mode bitfield, see MAV_MODE_FLAGS ENUM in mavlink/include/mavlink_types.h
-/// autopilot        ?   uint8_t  Autopilot type / class. defined in MAV_AUTOPILOT ENUM
-/// system_status    ?   uint8_t  System status flag, see MAV_STATE ENUM
-/// mavlink_version  ?   uint8_t_mavlink_version  MAVLink version, not writable by user, gets added by protocol because of magic data type
+///     Field         Offset  Type    Meaning
+///     OSD mode         0   uint32_t Bitfield for use for autopilot-specific flags.
+///     Heartbeat type   4   uint8_t  Type of the MAV (quadrotor, helicopter, etc., up to 15 types, defined in MAV_TYPE ENUM)
+///     Base mode        6   uint8_t  System mode bitfield, see MAV_MODE_FLAGS ENUM in mavlink/include/mavlink_types.h
+///     autopilot        ?   uint8_t  Autopilot type / class. defined in MAV_AUTOPILOT ENUM
+///     system_status    ?   uint8_t  System status flag, see MAV_STATE ENUM
+///     mavlink_version  ?   uint8_t_mavlink_version  MAVLink version, not writable by user, gets added by protocol because of magic data type
 ///
 //----------------------------------------------------------------------------
 void Mavlink_Heartbeat( void ) {
@@ -757,13 +746,13 @@ void Mavlink_Heartbeat( void ) {
 /// \param   -
 /// \returns -
 /// \remarks Name = MAVLINK_MSG_ID_VFR_HUD, ID = 74, Length = 20
-/// Field        Offset Type    Meaning
-/// Airspeed       0    float
-/// Ground speed   4    float
-/// Altitude       8    float
-/// Climb rate    12    float
-/// Heading       16    int16_t
-/// Throttle      18    uint16_t
+///     Field        Offset Type    Meaning
+///     Airspeed       0    float
+///     Ground speed   4    float
+///     Altitude       8    float
+///     Climb rate    12    float
+///     Heading       16    int16_t
+///     Throttle      18    uint16_t
 ///
 //----------------------------------------------------------------------------
 void Mavlink_Hud( void ) {
@@ -792,10 +781,14 @@ void Mavlink_Hud( void ) {
 /// \param   -
 /// \returns -
 /// \remarks Name = MAVLINK_MSG_ID_ATTITUDE, ID = 30, Length = 28
-/// Field      Offset Type    Meaning
-/// Pitch         8   float
-/// Roll         12   float
-/// Yaw          16   float
+///     Field        Offset Type     Meaning
+///     time_boot_ms  0     uint32_t
+///     roll          4     float
+///     pitch         8     float
+///     yaw          12     float
+///     rollspeed    16     float
+///     pitchspeed   20     float
+///     yawspeed     24     float
 ///
 //----------------------------------------------------------------------------
 void Mavlink_Attitude( void ) {
@@ -805,13 +798,55 @@ void Mavlink_Attitude( void ) {
         buf[j] = 0;
     }
 
-	buf[1] = 28;                                // Payload length
-	buf[5] = MAVLINK_MSG_ID_ATTITUDE;           // Attitude message ID
-    *((float *)(&buf[8])) = Attitude_Pitch();   //
-    *((float *)(&buf[12])) = Attitude_Roll();   //
-    *((float *)(&buf[16])) = Attitude_Yaw();    //
+	buf[1] = 28;                                        // Payload length
+	buf[5] = MAVLINK_MSG_ID_ATTITUDE;                   // Attitude message ID
+//    *((uint32_t *)(&buf[6])) = time;                    // time from boot [ms]
+    *((float *)(&buf[10])) = ToRad(Attitude_Roll());    //
+    *((float *)(&buf[14])) = ToRad(Attitude_Pitch());   //
+    *((float *)(&buf[18])) = ToRad(Attitude_Yaw());     //
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_ATTITUDE]);
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send GPS data
+/// \param   -
+/// \returns -
+/// \remarks Name = MAVLINK_MSG_ID_GPS_RAW_INT, ID = 24, Length = 30
+///     Field             Offset Type     Meaning
+///     time_usec            0   uint64_t
+///     lat                  8   int32_t
+///     lon                 12   int32_t
+///     alt                 16   int32_t
+///     eph                 20   uint16_t
+///     epv                 22   uint16_t
+///     vel                 24   uint16_t
+///     cog                 26   uint16_t
+///     fix_type            28   uint8_t
+///     satellites_visible  29   uint8_t
+///
+//----------------------------------------------------------------------------
+void Mavlink_Gps( void ) {
+    uint16_t j;
+
+    for (j = 0; j < MAVLINK_MAX_PACKET_LEN; j++) {
+        buf[j] = 0;
+    }
+
+    buf[1] = 30;                                // Payload length
+    buf[5] = MAVLINK_MSG_ID_GPS_RAW_INT;        // GPS message ID
+//    *((uint64_t *)(&buf[6])) = time;          // time from boot [us]
+    *((int32_t *)(&buf[14])) = Gps_Latitude();  //
+    *((int32_t *)(&buf[18])) = Gps_Longitude(); //
+    *((uint16_t *)(&buf[26])) = 65535;          //
+    *((uint16_t *)(&buf[28])) = 65535;          //
+    *((uint16_t *)(&buf[30])) = Gps_Speed();    //
+    *((uint16_t *)(&buf[32])) = 65535;          //
+    buf[34] = 3;                                // fix type
+    buf[35] = 255;                              // satellites
+
+    Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_GPS_RAW_INT]);
 }
 
 /*
