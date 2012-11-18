@@ -368,7 +368,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: added Mavlink_Gps function, corrected Mavlink_Attitude
+/// Changes: added altitude and heading to Mavlink_Gps function
 ///
 //============================================================================*/
 
@@ -762,14 +762,14 @@ void Mavlink_Hud( void ) {
         buf[j] = 0;
     }
 
-	buf[1] = 20;                                 // Payload length
-	buf[5] = MAVLINK_MSG_ID_VFR_HUD;             // VFR HUD message ID
-//    *((float *)(&buf[6])) = 0.0f;                // Airspeed
-    *((float *)(&buf[10])) = (float)Gps_Speed(); // GPS speed
-    *((float *)(&buf[14])) = Nav_Altitude();     // Altitude
-//    *((float *)(&buf[18])) = 0.0f;               // Climb rate
-    *((int16_t *)(&buf[22])) = Gps_Heading();    // Heading
-    *((uint16_t *)(&buf[24])) = Nav_Throttle();  // Throttle
+	buf[1] = 20;                                        // Payload length
+	buf[5] = MAVLINK_MSG_ID_VFR_HUD;                    // VFR HUD message ID
+//    *((float *)(&buf[6])) = 0.0f;                     // Airspeed
+    *((float *)(&buf[10])) = (float)Gps_Speed();        // GPS speed
+    *((float *)(&buf[14])) = Nav_Altitude();            // Altitude
+//    *((float *)(&buf[18])) = 0.0f;                    // Climb rate
+    *((int16_t *)(&buf[22])) = (int16_t)Nav_Heading();  // Heading
+    *((uint16_t *)(&buf[24])) = Nav_Throttle();         // Throttle
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_VFR_HUD]);
 }
@@ -834,17 +834,17 @@ void Mavlink_Gps( void ) {
         buf[j] = 0;
     }
 
-    buf[1] = 30;                                // Payload length
-    buf[5] = MAVLINK_MSG_ID_GPS_RAW_INT;        // GPS message ID
-//    *((uint64_t *)(&buf[6])) = time;          // time from boot [us]
-    *((int32_t *)(&buf[14])) = Gps_Latitude();  //
-    *((int32_t *)(&buf[18])) = Gps_Longitude(); //
-    *((uint16_t *)(&buf[26])) = 65535;          //
-    *((uint16_t *)(&buf[28])) = 65535;          //
-    *((uint16_t *)(&buf[30])) = Gps_Speed();    //
-    *((uint16_t *)(&buf[32])) = 65535;          //
-    buf[34] = 3;                                // fix type
-    buf[35] = 255;                              // satellites
+    buf[1] = 30;                                            // Payload length
+    buf[5] = MAVLINK_MSG_ID_GPS_RAW_INT;                    // GPS message ID
+//    *((uint64_t *)(&buf[6])) = time;                      // time from boot [us]
+    *((int32_t *)(&buf[14])) = Gps_Latitude();              // latitude
+    *((int32_t *)(&buf[18])) = Gps_Longitude();             // longitude
+    *((uint16_t *)(&buf[26])) = (uint16_t)Nav_Altitude();   // altitude
+    *((uint16_t *)(&buf[28])) = 65535;                      //
+    *((uint16_t *)(&buf[30])) = Gps_Speed();                //
+    *((uint16_t *)(&buf[32])) = Gps_Heading();              // course over ground
+    buf[34] = 3;                                            // fix type
+    buf[35] = 255;                                          // satellites
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_GPS_RAW_INT]);
 }
