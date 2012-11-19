@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change added interface functions for computing pitch, roll yaw from DCM
+//  Change duplicated interface functions for both deg and rad units
 //
 //============================================================================*/
 
@@ -39,6 +39,11 @@
 /*--------------------------------- Prototypes -------------------------------*/
 
 void Attitude_Task(void *pvParameters);
-float Attitude_Pitch(void);
-float Attitude_Roll(void);
-float Attitude_Yaw(void);
+
+float Attitude_Pitch_Deg(void);
+float Attitude_Roll_Deg(void);
+float Attitude_Yaw_Deg(void);
+
+float Attitude_Pitch_Rad(void);
+float Attitude_Roll_Rad(void);
+float Attitude_Yaw_Rad(void);
