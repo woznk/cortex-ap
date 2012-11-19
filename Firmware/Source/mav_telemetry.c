@@ -30,7 +30,7 @@
 /// MAVLINK_MSG_ID_HEARTBEAT                0      9        Y
 /// MAVLINK_MSG_ID_SYS_STATUS               1     31
 /// MAVLINK_MSG_PARAM_REQUEST_LIST         21      2
-/// MAVLINK_MSG_ID_GPS_RAW_INT             24     30
+/// MAVLINK_MSG_ID_GPS_RAW_INT             24     30        Y
 /// MAVLINK_MSG_ID_VFR_HUD                 74     20        Y
 /// MAVLINK_MSG_ID_ATTITUDE                30     28        Y
 /// MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT   62     26
@@ -368,7 +368,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: added altitude and heading to Mavlink_Gps function
+/// Changes: renamed interface functions with attitude module
 ///
 //============================================================================*/
 
@@ -798,12 +798,12 @@ void Mavlink_Attitude( void ) {
         buf[j] = 0;
     }
 
-	buf[1] = 28;                                        // Payload length
-	buf[5] = MAVLINK_MSG_ID_ATTITUDE;                   // Attitude message ID
-//    *((uint32_t *)(&buf[6])) = time;                    // time from boot [ms]
-    *((float *)(&buf[10])) = ToRad(Attitude_Roll());    //
-    *((float *)(&buf[14])) = ToRad(Attitude_Pitch());   //
-    *((float *)(&buf[18])) = ToRad(Attitude_Yaw());     //
+	buf[1] = 28;                                    // Payload length
+	buf[5] = MAVLINK_MSG_ID_ATTITUDE;               // Attitude message ID
+//    *((uint32_t *)(&buf[6])) = time;              // time from boot [ms]
+    *((float *)(&buf[10])) = Attitude_Roll_Rad();   //
+    *((float *)(&buf[14])) = Attitude_Pitch_Rad();  //
+    *((float *)(&buf[18])) = Attitude_Yaw_Rad();    //
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_ATTITUDE]);
 }
