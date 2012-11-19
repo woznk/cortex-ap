@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-// Change: added Attitude_Yaw() (empty function)
+// Change: duplicated interface functions for both deg and rad units
+//         added computation to Attitude_Yaw() function.
 //
 //============================================================================*/
 
@@ -280,7 +281,7 @@ static __inline void Attitude_Control(void)
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-float Attitude_Pitch(void)
+float Attitude_Pitch_Deg(void)
 {
     return (ToDeg(asinf(DCM_Matrix[2][0])));
 }
@@ -292,7 +293,7 @@ float Attitude_Pitch(void)
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-float Attitude_Roll(void)
+float Attitude_Roll_Deg(void)
 {
     return (ToDeg(asinf(DCM_Matrix[2][1])));
 }
@@ -304,10 +305,47 @@ float Attitude_Roll(void)
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-float Attitude_Yaw(void)
+float Attitude_Yaw_Deg(void)
 {
-    return 140.0f;
+    return (ToDeg(atan2f(DCM_Matrix[1][0], DCM_Matrix[0][0])));
 }
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Aircraft pitch.
+/// \return  aircraft pitch angle [rad]
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Attitude_Pitch_Rad(void)
+{
+    return (asinf(DCM_Matrix[2][0]));
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Aircraft roll.
+/// \return  aircraft roll angle [rad]
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Attitude_Roll_Rad(void)
+{
+    return (asinf(DCM_Matrix[2][1]));
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief   Aircraft yaw.
+/// \return  aircraft roll angle [rad]
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+float Attitude_Yaw_Rad(void)
+{
+    return atan2f(DCM_Matrix[1][0], DCM_Matrix[0][0]);
+}
+
 
 /**
   * @}
