@@ -9,7 +9,7 @@
 /// Tentative Mavlink protocol implementation
 ///
 ///
-/// Changes
+/// Changes added Mavlink_Receive() Mavlink_Attitude(), Mavlink_Queued_Send()
 ///
 //============================================================================*/
 
@@ -32,4 +32,6 @@
 
 /*---------------------------------- Interface -------------------------------*/
 
-void Mavlink_Heartbeat(void);
+void Mavlink_Receive(void);
+void Mavlink_Attitude(void);
+void Mavlink_Queued_Send(void);
