@@ -9,7 +9,7 @@
 /// Tentative Mavlink protocol implementation
 ///
 ///
-/// Changes added Mavlink_Receive() Mavlink_Attitude(), Mavlink_Queued_Send()
+/// Changes modified Mavlink_Queued_Send()
 ///
 //============================================================================*/
 
@@ -34,4 +34,4 @@
 
 void Mavlink_Receive(void);
 void Mavlink_Attitude(void);
-void Mavlink_Queued_Send(void);
+void Mavlink_Queued_Send(uint8_t cycles);
