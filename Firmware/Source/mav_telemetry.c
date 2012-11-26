@@ -334,7 +334,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: added specifications of HIL_STATE message and empty function 
+/// Changes: modified Mavlink_Queued_Send()
 ///
 //============================================================================*/
 
@@ -378,8 +378,8 @@
 #define ONBOARD_PARAM_COUNT         TEL_GAIN_NUMBER
 #define ONBOARD_PARAM_NAME_LENGTH   8
 
-#define PARAM_SYSTEM_ID     1
-#define PARAM_COMPONENT_ID  2
+#define PARAM_SYSTEM_ID     20
+#define PARAM_COMPONENT_ID  200
 
 //#define X25_INIT_CRC        0xFFFF
 //#define MAVLINK_STX         0xFE
@@ -406,7 +406,7 @@ enum MAV_STATE
 
 /*---------------------------------- Constants -------------------------------*/
 
-VAR_STATIC const Mavlink_Crc[] = MAVLINK_MESSAGE_CRCS ;
+VAR_STATIC const uint8_t Mavlink_Crc[] = MAVLINK_MESSAGE_CRCS ;
 /*
 #define MAVLINK_MESSAGE_CRCS {
 50, 124, 137, 0, 237, 217, 104, 119,
@@ -973,12 +973,16 @@ void Mavlink_Receive(void)
 ///          Call this function with xx Hertz to increase/decrease the bandwidth.
 ///
 //----------------------------------------------------------------------------
-void Mavlink_Queued_Send(void)
+void Mavlink_Queued_Send(uint8_t cycles)
 {
-    if (m_parameter_i < ONBOARD_PARAM_COUNT) {  //send parameters one by one
-        Mavlink_Param_Value(m_parameter_i++);
-    } else {
+    if (m_parameter_i < ONBOARD_PARAM_COUNT) {  // must send parameters
+        if ((cycles % 10) == 0) {               // send parameters @ 5 Hz
+            Mavlink_Param_Value(m_parameter_i++);
+        }
+    } else if ((cycles % 50) == 0) {            // send heartbeat @ 1 Hz
         Mavlink_Heartbeat();
+    } else if ((cycles % 5) == 0) {             // send attitude @ 10 Hz
+        Mavlink_Attitude();
     }
 }
 
