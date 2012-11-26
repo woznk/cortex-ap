@@ -47,6 +47,7 @@
 /// REQUEST_DATA_STREAM     66      6
 /// VFR_HUD                 74     20   Verified
 /// COMMAND_LONG            76     21?
+/// HIL_STATE               90     56
 /// WIND                   168     12
 /// \endcode
 ///
@@ -114,8 +115,10 @@
 /// MISSION_COUNT         target_system        ?   uint8_t  System ID
 ///                       target_component     ?   uint8_t  Component ID
 ///                       count                ?   uint16_t Number of mission items in the sequence
-/// This message is emitted as response to MISSION_REQUEST_LIST by the MAV and to initiate a write transaction.
-/// The GCS can then request the individual mission item based on the knowledge of the total number of MISSIONs.
+///                                                 This message is emitted as response to MISSION_REQUEST_LIST
+///                                                 by the MAV and to initiate a write transaction.
+///                                                 The GCS can then request the individual mission item
+///                                                 based on the knowledge of the total number of MISSIONs.
 ///
 /// REQUEST_DATA_STREAM   target_system        ?   uint8_t  The target requested to send the message stream.
 ///                       target_component     ?   uint8_t  The target requested to send the message stream.
@@ -138,7 +141,25 @@
 ///                       param5               ?   float    Parameter 5, as defined by MAV_CMD enum.
 ///                       param6               ?   float    Parameter 6, as defined by MAV_CMD enum.
 ///                       param7               ?   float    Parameter 7, as defined by MAV_CMD enum.
-/// Send a command with up to four parameters to the MAV
+///                                                         Send a command with up to four parameters to the MAV
+///
+/// HIL_STATE             time_usec            0   uint64_t Timestamp [microseconds]
+///                       roll                 8   float    Roll angle [rad]
+///                       pitch               12   float    Pitch angle [rad]
+///                       yaw                 16   float    Yaw angle [rad]
+///                       rollspeed           20   float    Roll angular speed [rad/s]
+///                       pitchspeed          24   float    Pitch angular speed [rad/s]
+///                       yawspeed            28   float    Yaw angular speed [rad/s]
+///                       lat                 32   int32_t  Latitude [deg * 1E7]
+///                       lon                 36   int32_t  Longitude [deg * 1E7]
+///                       alt                 40   int32_t  Altitude [mm]
+///                       vx                  44   int16_t  Ground X Speed (Latitude) [m/s * 100]
+///                       vy                  46   int16_t  Ground Y Speed (Longitude) [m/s * 100]
+///                       vz                  48   int16_t  Ground Z Speed (Altitude) [m/s * 100]
+///                       xacc                50   int16_t  X acceleration [mg]
+///                       yacc                52   int16_t  Y acceleration [mg]
+///                       zacc                54   int16_t  Z acceleration [mg]
+///
 /// \endcode
 ///
 /// ------------------------- Mavlink commands ------------------------
@@ -313,9 +334,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: function Mavlink_Receive() renamed Mavlink_Parse(), 
-///          added Mavlink_Receive()Mavlink_Param_Send(), Mavlink_Queued_Send(), 
-///          implemented PARAM REQUEST LIST
+/// Changes: added specifications of HIL_STATE message and empty function 
 ///
 //============================================================================*/
 
@@ -368,6 +387,20 @@
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
+/*
+enum MAV_STATE
+{
+    MAV_STATE_UNINIT = 0,
+    MAV_STATE_BOOT,
+    MAV_STATE_CALIBRATING,
+    MAV_STATE_STANDBY,
+    MAV_STATE_ACTIVE,
+    MAV_STATE_CRITICAL,
+    MAV_STATE_EMERGENCY,
+    MAV_STATE_HILSIM,
+    MAV_STATE_POWEROFF
+};
+*/
 
 /*----------------------------------- Types ----------------------------------*/
 
@@ -714,6 +747,47 @@ void Mavlink_Param_Value( uint16_t param_index ) {
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_PARAM_VALUE]);
 }
 
+//----------------------------------------------------------------------------
+//
+/// \brief   Get HIL status
+/// \param   -
+/// \returns -
+/// \remarks
+/// Name = MAVLINK_MSG_ID_HIL_STATE
+///
+/// Field       Offset Type     Meaning
+/// -------------------------------------
+/// time_usec      0   uint64_t
+/// roll           8   float
+/// pitch         12   float
+/// yaw           16   float
+/// rollspeed     20   float
+/// pitchspeed    24   float
+/// yawspeed      28   float
+/// lat           32   int32_t
+/// lon           36   int32_t
+/// alt           40   int32_t
+/// vx            44   int16_t
+/// vy            46   int16_t
+/// vz            48   int16_t
+/// xacc          50   int16_t
+/// yacc          52   int16_t
+/// zacc          54   int16_t
+///
+//----------------------------------------------------------------------------
+void Mavlink_HIL_State( void ) {
+/*
+    rollspeed  = *((float *)(&buf[26]));    //
+    pitchspeed = *((float *)(&buf[30]));    //
+    yawspeed   = *((float *)(&buf[34]));    //
+    lat = *((int32_t *)(&buf[38]));         //
+    lon = *((int32_t *)(&buf[42]));         //
+    alt = *((int32_t *)(&buf[46]));         //
+    xacc = *((int16_t *)(&buf[56]));        //
+    yacc = *((int16_t *)(&buf[58]));        //
+    zacc = *((int16_t *)(&buf[60]));        //
+*/
+}
 
 //----------------------------------------------------------------------------
 //
@@ -877,6 +951,9 @@ void Mavlink_Receive(void)
             case MAVLINK_MSG_ID_PARAM_SET:          //
                 break;
             case MAVLINK_MSG_ID_PARAM_VALUE:        //
+                break;
+            case MAVLINK_MSG_ID_HIL_STATE:
+                Mavlink_HIL_State();
                 break;
             default:				                // Do nothing
                 break;
