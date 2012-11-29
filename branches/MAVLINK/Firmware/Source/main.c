@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: simplified mavlink task
+// Change: cycle counter of telemetry task reset at 200 instead of 50
 //
 //============================================================================*/
 
@@ -132,7 +132,7 @@ void Telemetry_Task( void *pvParameters ) {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);  // Use any wait function, better not use sleep
         Mavlink_Receive();                      // Process parameter request, if occured
         Mavlink_Queued_Send(ucCycles);          // Send parameters at 10 Hz, if previously requested
-        if (++ucCycles > 50) {
+        if (++ucCycles > 200) {
             ucCycles = 0;
         }
     }
