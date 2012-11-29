@@ -34,7 +34,7 @@
 /// HEARTBEAT                0      9   Verified
 /// SYS_STATUS               1     31
 /// PARAM_REQUEST_LIST      21      2   Implemented
-/// PARAM_VALUE             22     25   Implemented
+/// PARAM_VALUE             22     25   Verified
 /// PARAM_SET               23     23
 /// GPS_RAW_INT             24     30   Verified
 /// ATTITUDE                30     28   Verified
@@ -318,6 +318,13 @@
 /// Save mission    mission clear all    2D  2
 /// Retrieve miss.  mission request list 2B  2
 ///
+///--------------------- APM messages taxonomy ------------------------
+///
+/// Menu            Message              ID Len
+/// --------------------------------------------
+/// Refresh param   param request list   15  2
+/// (arduplane PIDs)
+///
 /// ------------------------------ Links ------------------------------
 ///
 /// ArduPilot Mega parameters modifiable by MAVLink
@@ -334,7 +341,10 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: modified Mavlink_Queued_Send()
+/// Changes: Parameter names changed according APM planner convention and
+///          implemented as an array of strings
+///          Temporarily forced transmission of parameters every 4 sec due
+///          to APM problem (STX = 0x00 instead of 0xFE)
 ///
 //============================================================================*/
 
@@ -376,7 +386,7 @@
 #define TEL_DCM_LENGTH      (1 + (9 * 4))
 
 #define ONBOARD_PARAM_COUNT         TEL_GAIN_NUMBER
-#define ONBOARD_PARAM_NAME_LENGTH   8
+#define ONBOARD_PARAM_NAME_LENGTH   16
 
 #define PARAM_SYSTEM_ID     20
 #define PARAM_COMPONENT_ID  200
@@ -444,16 +454,20 @@ VAR_STATIC const uint8_t Mavlink_Crc[] = MAVLINK_MESSAGE_CRCS ;
 */
 
 /// Names of parameters
-VAR_STATIC const uint8_t Parameter_Name[] =
-    "ROLL KP\0\0\0\0\0\0\0\0\0"     ///<
-    "ROLL KI\0\0\0\0\0\0\0\0\0"     ///<
-    "PITCH KP\0\0\0\0\0\0\0\0"      ///<
-    "PITCH KI\0\0\0\0\0\0\0\0"      ///<
-    "ALT KP\0\0\0\0\0\0\0\0\0\0"    ///<
-    "ALT KI\0\0\0\0\0\0\0\0\0\0"    ///<
-    "NAV KP\0\0\0\0\0\0\0\0\0\0"    ///<
-    "NAV KI\0\0\0\0\0\0\0\0\0\0"    ///<
-;
+VAR_STATIC const uint8_t Parameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME_LENGTH] = {
+    "RLL2SRV_P\0",     // Roll Kp
+    "RLL2SRV_I\0",     // Roll Ki
+//  "RLL2SRV_D\0",     // Roll Kd
+    "PTCH2SRV_P\0",    // Pitch Kp
+    "PTCH2SRV_I\0",    // Pitch Ki
+//  "PTCH2SRV_D\0",    // Pitch Kd
+    "ENRGY2THR_P\0",   // Altitude Kp (via throttle)
+    "ENRGY2THR_I\0",   // Altitude Ki (via throttle)
+//  "ENRGY2THR_D\0",   // Altitude Kd (via throttle)
+    "HDNG2RLL_P\0",    // Navigation Kp (via roll)
+    "HDNG2RLL_I\0"     // Navigation Ki (via roll)
+//  "HDNG2RLL_D\0"     // Navigation Kd (via roll)
+};
 
 VAR_STATIC const uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;
 VAR_STATIC const uint8_t System_Type = MAV_TYPE_FIXED_WING;       // Define system type, airplane
@@ -740,7 +754,7 @@ void Mavlink_Param_Value( uint16_t param_index ) {
     *((uint16_t *)(&buf[10])) = ONBOARD_PARAM_COUNT;// Total number of parameters
     *((uint16_t *)(&buf[12])) = param_index;        // Parameter index
     for (j = 0; j < 16; j++) {
-        buf[j + 14] = Parameter_Name[j + param_index * 16]; // Parameter name
+        buf[j + 14] = Parameter_Name[param_index][j]; // Parameter name
     }
     buf[30] = MAVLINK_TYPE_FLOAT;                   // Parameter type
 
@@ -979,6 +993,8 @@ void Mavlink_Queued_Send(uint8_t cycles)
         if ((cycles % 10) == 0) {               // send parameters @ 5 Hz
             Mavlink_Param_Value(m_parameter_i++);
         }
+    } else if ((cycles % 200) == 0) {           //
+        m_parameter_i = 0;
     } else if ((cycles % 50) == 0) {            // send heartbeat @ 1 Hz
         Mavlink_Heartbeat();
     } else if ((cycles % 5) == 0) {             // send attitude @ 10 Hz
