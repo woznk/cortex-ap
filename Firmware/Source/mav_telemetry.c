@@ -162,129 +162,6 @@
 ///
 /// \endcode
 ///
-/// ------------------------- Mavlink commands ------------------------
-///
-/// APM 2.0 has adopted a subset of the MAVLink protocol command set.
-///
-/// ----------------------- Mavlink NAV commands ----------------------
-///
-/// Navigation commands have highest priority, all have a lat and lon component.
-/// For commands of higher ID than the NAV commands, unexecuted commands are
-/// dropped when ready for the next NAV command so plan/queue commands accordingly!
-/// For example, if you had a string of CMD_MAV_CONDITION commands following a
-/// 0x10 command that had not finished when the waypoint was reached, the
-/// unexecuted CMD_MAV_CONDITION and CMD_MAV_DO commands would be skipped
-/// and the next NAV command would be loaded.
-///
-/// \code
-/// Command name                 ID  Parameters
-/// --------------------------------------------------------------
-/// MAV_CMD_NAV_WAYPOINT         16  -
-///                                  altitude
-///                                  lat
-///                                  lon
-/// MAV_CMD_NAV_LOITER_UNLIM     17  (indefinitely)
-///                                  altitude
-///                                  lat
-///                                  lon
-/// MAV_CMD_NAV_LOITER_TURNS     18  turns
-///                                  altitude
-///                                  lat
-///                                  lon
-/// MAV_CMD_NAV_LOITER_TIME      19  time (sec*10)
-///                                  altitude
-///                                  lat
-///                                  lon
-/// MAV_CMD_NAV_RETURN_TO_LAUNCH 20  -
-///                                  altitude
-///                                  lat
-///                                  lon
-/// MAV_CMD_NAV_LAND             21 -
-///                                  altitude
-///                                  lat
-///                                  lon
-/// MAV_CMD_NAV_TAKEOFF          22  takeoff pitch
-///                                  altitude
-///                                  -
-///                                  -
-/// Takeoff pitch specifies the minimum pitch for the case with
-/// airspeed sensor and the target pitch for the case without.
-/// MAV_CMD_NAV_TARGET           23  -
-///                                  altitude
-///                                  lat
-///                                  lon
-/// \endcode
-///
-/// ---------------------- Mavlink MAY commands -----------------------
-///
-/// These commands are optional to finish and have a end criteria,
-/// eg "reached waypoint" or "reached altitude".
-///
-/// \code
-/// Name                         ID  Parameters
-/// --------------------------------------------------
-/// MAV_CMD_CONDITION_DELAY      112 -
-///                                  -
-///                                  time(sec)
-///                                  -
-/// MAV_CMD_CONDITION_CHANGE_ALT 113
-///                                  rate(cm/s) (rate must be > 10 cm/sec due to integer math)
-///                                  alt(finish)
-///                                  -
-///                                  -
-/// MAV_CMD_CONDITION_DISTANCE   114 -
-///                                  -
-///                                  distance(m)
-///                                  -
-/// \endcode
-///
-/// -------------------- Mavlink NOW Commands --------------------
-///
-/// These commands are executed once until no more new now commands
-/// are available.
-///
-/// \code
-/// Name                     ID  Parameters
-/// ---------------------------------------------------------------------------
-/// MAV_CMD_DO_JUMP          177 index
-///                              -
-///                              repeat count (1 = sinlge use, > 1 multiple use)
-///                              -
-/// MAV_CMD_DO_CHANGE_SPEED  178 Speed type (0 = Airspeed, 1 = Ground Speed)
-///                              Speed (m/s) (-1 indicates no change)
-///                              Throttle (%) (-1 indicates no change)
-///                              -
-/// MAV_CMD_DO_SET_HOME      179 Use current (1 = use current location, 0 = use specified location)
-///                              altitude
-///                              lat
-///                              lon
-/// MAV_CMD_DO_SET_PARAMETER 180 Param num
-///                              Param value
-///                              CURRENTLY NOT IMPLEMENTED IN APM
-/// MAV_CMD_DO_SET_RELAY     181 Relay num
-///                              On / off (1 / 0)
-///                              -
-///                              -
-/// MAV_CMD_DO_REPEAT_RELAY  182 Relay num
-///                              Cycle count
-///                              Cycle time(sec)
-///                              -
-///                              Max cycle time = 60 sec.
-///                              A repeat relay or repeat servo command
-///                              will cancel any current repeating event
-/// MAV_CMD_DO_SET_SERVO     183 Servo num (5-8)
-///                              On / off (1 / 0)
-///                              -
-///                              -
-/// MAV_CMD_DO_REPEAT_SERVO  184 Servo num (5-8)
-///                              Cycle count
-///                              Cycle time(sec)
-///                              -
-///                              Max cycle time = 60 sec.
-///                              A repeat relay or repeat servo command
-///                              will cancel any current repeating event
-/// \endcode
-///
 ///--------------------- AqGCS messages taxonomy ------------------------
 ///
 /// All menues result in the transmission of one or more Mavlink messages.
@@ -341,10 +218,8 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: Parameter names changed according APM planner convention and
-///          implemented as an array of strings
-///          Temporarily forced transmission of parameters every 4 sec due
-///          to APM problem (STX = 0x00 instead of 0xFE)
+/// Changes: added empty function Mavlink_Param_Set()
+///          PID parameters renamed according Copter GCS standard
 ///
 //============================================================================*/
 
@@ -381,9 +256,6 @@
 
 #define TELEMETRY_FREQUENCY 10
 #define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY)
-#define RX_BUFFER_LENGTH    48
-#define TX_BUFFER_LENGTH    48
-#define TEL_DCM_LENGTH      (1 + (9 * 4))
 
 #define ONBOARD_PARAM_COUNT         TEL_GAIN_NUMBER
 #define ONBOARD_PARAM_NAME_LENGTH   16
@@ -394,29 +266,6 @@
 //#define X25_INIT_CRC        0xFFFF
 //#define MAVLINK_STX         0xFE
 
-/*----------------------------------- Macros ---------------------------------*/
-
-/*-------------------------------- Enumerations ------------------------------*/
-/*
-enum MAV_STATE
-{
-    MAV_STATE_UNINIT = 0,
-    MAV_STATE_BOOT,
-    MAV_STATE_CALIBRATING,
-    MAV_STATE_STANDBY,
-    MAV_STATE_ACTIVE,
-    MAV_STATE_CRITICAL,
-    MAV_STATE_EMERGENCY,
-    MAV_STATE_HILSIM,
-    MAV_STATE_POWEROFF
-};
-*/
-
-/*----------------------------------- Types ----------------------------------*/
-
-/*---------------------------------- Constants -------------------------------*/
-
-VAR_STATIC const uint8_t Mavlink_Crc[] = MAVLINK_MESSAGE_CRCS ;
 /*
 #define MAVLINK_MESSAGE_CRCS {
 50, 124, 137, 0, 237, 217, 104, 119,
@@ -453,8 +302,33 @@ VAR_STATIC const uint8_t Mavlink_Crc[] = MAVLINK_MESSAGE_CRCS ;
 0, 204, 49, 170, 44, 83, 46, 0}
 */
 
+/*----------------------------------- Macros ---------------------------------*/
+
+/*-------------------------------- Enumerations ------------------------------*/
+/*
+enum MAV_STATE
+{
+    MAV_STATE_UNINIT = 0,
+    MAV_STATE_BOOT,
+    MAV_STATE_CALIBRATING,
+    MAV_STATE_STANDBY,
+    MAV_STATE_ACTIVE,
+    MAV_STATE_CRITICAL,
+    MAV_STATE_EMERGENCY,
+    MAV_STATE_HILSIM,
+    MAV_STATE_POWEROFF
+};
+*/
+
+/*----------------------------------- Types ----------------------------------*/
+
+/*---------------------------------- Constants -------------------------------*/
+
+VAR_STATIC const uint8_t Mavlink_Crc[] = MAVLINK_MESSAGE_CRCS ;
+
 /// Names of parameters
 VAR_STATIC const uint8_t Parameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME_LENGTH] = {
+/*
     "RLL2SRV_P\0",     // Roll Kp
     "RLL2SRV_I\0",     // Roll Ki
 //  "RLL2SRV_D\0",     // Roll Kd
@@ -467,6 +341,34 @@ VAR_STATIC const uint8_t Parameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME_
     "HDNG2RLL_P\0",    // Navigation Kp (via roll)
     "HDNG2RLL_I\0"     // Navigation Ki (via roll)
 //  "HDNG2RLL_D\0"     // Navigation Kd (via roll)
+
+    "CTRL_ROL_ANG_P\0", // Roll Kp
+    "CTRL_ROL_ANG_I\0", // Roll Ki
+//  "CTRL_ROL_ANG_D\0", // Roll Kd
+    "CTRL_PCH_ANG_P\0", // Pitch Kp
+    "CTRL_PCH_ANG_I\0", // Pitch Ki
+//  "CTRL_PCH_ANG_D\0", // Pitch Kd
+    "NAV_ALT_POS_P\0",  // Altitude Kp (via throttle)
+    "NAV_ALT_POS_I\0",  // Altitude Ki (via throttle)
+ //  NAV_ALT_POS_D"\0", // Altitude Kd (via throttle)
+    "NAV_ROL_ANG_P\0",  // Navigation Kp (via roll)
+    "NAV_ROL_ANG_I\0"   // Navigation Ki (via roll)
+//  "NAV_ROL_ANG_D\0"   // Navigation Kd (via roll)
+*/
+    // Copter GCS standard: GROUP_SUBGROUP_P / _I / _D / _IMAX
+    "ROL_ANG_P\0", // Roll Kp
+    "ROL_ANG_I\0", // Roll Ki
+//  "ROL_ANG_D\0", // Roll Kd
+    "PCH_ANG_P\0", // Pitch Kp
+    "PCH_ANG_I\0", // Pitch Ki
+//  "PCH_ANG_D\0", // Pitch Kd
+    "ALT_POS_P\0",  // Altitude Kp (via throttle)
+    "ALT_POS_I\0",  // Altitude Ki (via throttle)
+ //  ALT_POS_D"\0", // Altitude Kd (via throttle)
+    "ROL_ANG_P\0",  // Navigation Kp (via roll)
+    "ROL_ANG_I\0"   // Navigation Ki (via roll)
+//  "ROL_ANG_D\0"   // Navigation Kd (via roll)
+
 };
 
 VAR_STATIC const uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;
@@ -514,9 +416,6 @@ VAR_STATIC float fPIDGain[TEL_GAIN_NUMBER] = {
 };                                                  //!< gains for PID loops
 
 /*--------------------------------- Prototypes -------------------------------*/
-
-//static void communication_queued_send(void);
-//static void communication_receive(void);
 
 /*---------------------------------- Functions -------------------------------*/
 
@@ -730,7 +629,7 @@ void Mavlink_Gps( void ) {
 //----------------------------------------------------------------------------
 //
 /// \brief   Send parameter value
-/// \param   -
+/// \param   param_index = index of parameter to be sent
 /// \returns -
 /// \remarks
 /// Name = MAVLINK_MSG_ID_PARAM_VALUE, ID = 22, Length = 25
@@ -759,6 +658,27 @@ void Mavlink_Param_Value( uint16_t param_index ) {
     buf[30] = MAVLINK_TYPE_FLOAT;                   // Parameter type
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_PARAM_VALUE]);
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Set parameter
+/// \param   -
+/// \returns -
+/// \remarks
+/// Name = MAVLINK_MSG_ID_PARAM_SET, ID = , Length =
+///
+/// Field       Offset Type    Meaning
+/// -------------------------------------
+///
+///
+///
+///
+///
+///
+//----------------------------------------------------------------------------
+void Mavlink_Param_Set( uint16_t param_index ) {
+
 }
 
 //----------------------------------------------------------------------------
@@ -963,6 +883,7 @@ void Mavlink_Receive(void)
                 m_parameter_i = 0;
                 break;
             case MAVLINK_MSG_ID_PARAM_SET:          //
+                Mavlink_Param_Set(0);
                 break;
             case MAVLINK_MSG_ID_PARAM_VALUE:        //
                 break;
@@ -989,16 +910,16 @@ void Mavlink_Receive(void)
 //----------------------------------------------------------------------------
 void Mavlink_Queued_Send(uint8_t cycles)
 {
-    if (m_parameter_i < ONBOARD_PARAM_COUNT) {  // must send parameters
-        if ((cycles % 10) == 0) {               // send parameters @ 5 Hz
-            Mavlink_Param_Value(m_parameter_i++);
+    if (m_parameter_i < ONBOARD_PARAM_COUNT) {      // must send parameters
+        if ((cycles % 10) == 0) {                   // @ 5 Hz
+            Mavlink_Param_Value(m_parameter_i++);   // send parameters
         }
-    } else if ((cycles % 200) == 0) {           //
+    } else if ((cycles % 200) == 0) {               // @ 0.25 Hz
         m_parameter_i = 0;
-    } else if ((cycles % 50) == 0) {            // send heartbeat @ 1 Hz
-        Mavlink_Heartbeat();
-    } else if ((cycles % 5) == 0) {             // send attitude @ 10 Hz
-        Mavlink_Attitude();
+    } else if ((cycles % 50) == 0) {                // @ 1 Hz
+        Mavlink_Heartbeat();                        // send heartbeat
+    } else if ((cycles % 5) == 0) {                 // @ 10 Hz
+        Mavlink_Attitude();                         // send attitude
     }
 }
 
