@@ -195,6 +195,14 @@
 /// Save mission    mission clear all    2D  2
 /// Retrieve miss.  mission request list 2B  2
 ///
+///--------------------- Copter GCS messages taxonomy ------------------------
+///
+///
+/// Menu            Message              ID Len
+/// --------------------------------------------
+/// Setup           param request list   15  2
+/// PID save        param set            17  23
+///
 ///--------------------- APM messages taxonomy ------------------------
 ///
 /// Menu            Message              ID Len
@@ -218,8 +226,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: added empty function Mavlink_Param_Set()
-///          PID parameters renamed according Copter GCS standard
+/// Changes: added initial Copter GCS messages taxonomy 
 ///
 //============================================================================*/
 
