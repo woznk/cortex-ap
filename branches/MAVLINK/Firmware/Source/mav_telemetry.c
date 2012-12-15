@@ -77,6 +77,8 @@
 ///
 /// ATTITUDE              see code
 ///
+/// REQUEST_DATA_STREAM   see code
+///
 /// NAV_CONTROLLER_OUTPUT Nav roll             0   float
 ///                       Nav pitch            4   float
 ///                       Altitude error       8   float
@@ -109,12 +111,6 @@
 ///                                                 by the MAV and to initiate a write transaction.
 ///                                                 The GCS can then request the individual mission item
 ///                                                 based on the knowledge of the total number of MISSIONs.
-///
-/// REQUEST_DATA_STREAM   req_message_rate     0   uint16_t The requested interval between two messages of this type
-///                       target_system        2   uint8_t  The target requested to send the message stream.
-///                       target_component     3   uint8_t  The target requested to send the message stream.
-///                       req_stream_id        4   uint8_t  The ID of the requested data stream
-///                       start_stop           5   uint8_t  1 to start sending, 0 to stop sending.
 ///
 /// WIND                  Wind direction       0   float
 ///                       Wind speed           4   float
@@ -233,12 +229,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: completed Copter GCS messages taxonomy
-///          reduced buffer size for transmitted message 
-///          added buffer for received message payload
-///          fPIDGains[] array renamed fParam_Value[]
-///          implemented Mavlink_Param_Set() function
-///          modified Mavlink_Param_Value(): now requires number of parameters
+/// Changes: implemented REQUEST_DATA_STREAM command
 ///
 //============================================================================*/
 
@@ -273,8 +264,7 @@
 #endif
 #define   VAR_GLOBAL
 
-#define TELEMETRY_FREQUENCY 10
-#define TELEMETRY_DELAY     (configTICK_RATE_HZ / TELEMETRY_FREQUENCY)
+#define MAX_STREAM_RATE     50
 
 #define ONBOARD_PARAM_COUNT         TEL_GAIN_NUMBER
 #define ONBOARD_PARAM_NAME_LENGTH   16
@@ -329,8 +319,7 @@
 
 /*-------------------------------- Enumerations ------------------------------*/
 /*
-enum MAV_STATE
-{
+enum MAV_STATE {
     MAV_STATE_UNINIT = 0,
     MAV_STATE_BOOT,
     MAV_STATE_CALIBRATING,
@@ -341,7 +330,36 @@ enum MAV_STATE
     MAV_STATE_HILSIM,
     MAV_STATE_POWEROFF
 };
+
+/// @brief Data stream IDs. A data stream is not a fixed set of messages, but rather a
+/// recommendation to the autopilot software. Individual autopilots may or may not obey
+/// the recommended messages.
+enum MAV_DATA_STREAM {
+	MAV_DATA_STREAM_ALL=0,              // Enable all data streams |
+	MAV_DATA_STREAM_RAW_SENSORS=1,      // Enable IMU_RAW, GPS_RAW, GPS_STATUS packets. |
+	MAV_DATA_STREAM_EXTENDED_STATUS=2,  // Enable GPS_STATUS, CONTROL_STATUS, AUX_STATUS |
+	MAV_DATA_STREAM_RC_CHANNELS=3,      // Enable RC_CHANNELS_SCALED, RC_CHANNELS_RAW, SERVO_OUTPUT_RAW |
+	MAV_DATA_STREAM_RAW_CONTROLLER=4,   // Enable ATTITUDE_CONTROLLER_OUTPUT, POSITION_CONTROLLER_OUTPUT, NAV_CONTROLLER_OUTPUT. |
+	MAV_DATA_STREAM_POSITION=6,         // Enable LOCAL_POSITION, GLOBAL_POSITION/GLOBAL_POSITION_INT messages. |
+	MAV_DATA_STREAM_EXTRA1=10,          // Dependent on the autopilot |
+	MAV_DATA_STREAM_EXTRA2=11,          // Dependent on the autopilot |
+	MAV_DATA_STREAM_EXTRA3=12,          // Dependent on the autopilot |
+	MAV_DATA_STREAM_ENUM_END=13,        //  |
+};
 */
+
+enum streams {
+    STREAM_RAW_SENSORS,
+    STREAM_EXTENDED_STATUS,
+    STREAM_RC_CHANNELS,
+    STREAM_RAW_CONTROLLER,
+    STREAM_POSITION,
+    STREAM_EXTRA1,
+    STREAM_EXTRA2,
+    STREAM_EXTRA3,
+    STREAM_PARAMS,
+    NUM_STREAMS
+};
 
 /*----------------------------------- Types ----------------------------------*/
 
@@ -425,6 +443,22 @@ VAR_STATIC uint16_t Crc;
 VAR_STATIC uint8_t Rx_Msg[PAYLOAD_LEN];                 // buffer for incoming messages
 VAR_STATIC uint8_t Tx_Msg[PACKET_LEN];                  // buffer for outgoing messages
 
+VAR_STATIC uint8_t ucStream_Tick[NUM_STREAMS] = {       // tick counters for data streams
+    MAX_STREAM_RATE,
+    MAX_STREAM_RATE,
+    MAX_STREAM_RATE,
+    MAX_STREAM_RATE,
+    MAX_STREAM_RATE,
+    MAX_STREAM_RATE,
+    MAX_STREAM_RATE,
+    MAX_STREAM_RATE,
+    MAX_STREAM_RATE
+};
+
+VAR_STATIC uint8_t ucStream_Rate[NUM_STREAMS] = {       // frequency of data streams
+    0,0,0,0,0,0,0,0,0
+};
+
 VAR_STATIC float fParam_Value[ONBOARD_PARAM_COUNT] = {
     ROLL_KP,    //!< default roll kp
     ROLL_KI,    //!< default roll ki
@@ -437,6 +471,22 @@ VAR_STATIC float fParam_Value[ONBOARD_PARAM_COUNT] = {
 };              //!< gains for PID loops
 
 /*--------------------------------- Prototypes -------------------------------*/
+
+static __inline void Checksum_Init( void );
+static __inline void Checksum_Accumulate( uint8_t data );
+static void Mavlink_Send( uint8_t crc_extra );
+void Mavlink_Heartbeat( void );
+void Mavlink_Hud( void );
+void Mavlink_Attitude( void );
+void Mavlink_Gps( void );
+void Mavlink_Param_Value( uint16_t param_index, uint16_t param_count );
+void Mavlink_Param_Set( void );
+void Mavlink_HIL_State( void );
+static bool Mavlink_Parse( void );
+void Mavlink_Receive( void );
+void Mavlink_Queued_Send( uint8_t cycles );
+void Mavlink_Stream_Send( void );
+bool Mavlink_Stream_Trigger( enum streams stream );
 
 /*---------------------------------- Functions -------------------------------*/
 
@@ -778,6 +828,85 @@ void Mavlink_HIL_State( void ) {
 
 //----------------------------------------------------------------------------
 //
+/// \brief   Decode request data stream message
+/// \param   -
+/// \returns -
+/// \remarks
+/// Name = REQUEST_DATA_STREAM, ID = 66, Length = 6
+///
+/// Field         Offset Type   Meaning
+/// ----------------------------------------------------------------------
+/// req_message_rate 0 uint16_t interval between two messages of this type
+/// target_system    2 uint8_t  target requested to send the stream
+/// target_component 3 uint8_t  component requested to send the stream
+/// req_stream_id    4 uint8_t  ID of the requested data stream
+/// start_stop       5 uint8_t  1 to start sending, 0 to stop sending
+///
+//----------------------------------------------------------------------------
+__inline void Mavlink_Data_Stream( void ) {
+
+    uint8_t freq;
+
+    if (Rx_Msg[5] == 0) {           // stop
+        freq = 0;                   // force frequency = 0
+    } else if (Rx_Msg[5] == 1) {    // start
+        freq = Rx_Msg[0];
+    } else {                        // wrong start / stop field
+        return;
+    }
+
+    switch(Rx_Msg[4]) {             // stream ID
+
+        case MAV_DATA_STREAM_ALL:
+            ucStream_Rate[STREAM_RAW_SENSORS] = freq;
+            ucStream_Rate[STREAM_EXTENDED_STATUS] = freq;
+            ucStream_Rate[STREAM_RC_CHANNELS] = freq;
+            ucStream_Rate[STREAM_RAW_CONTROLLER] = freq;
+            ucStream_Rate[STREAM_POSITION] = freq;
+            ucStream_Rate[STREAM_EXTRA1] = freq;
+            ucStream_Rate[STREAM_EXTRA2] = freq;
+            ucStream_Rate[STREAM_EXTRA3] = freq;
+            break;
+
+        case MAV_DATA_STREAM_RAW_SENSORS:
+            ucStream_Rate[STREAM_RAW_SENSORS] = freq;
+            break;
+
+        case MAV_DATA_STREAM_EXTENDED_STATUS:
+            ucStream_Rate[STREAM_EXTENDED_STATUS] = freq;
+            break;
+
+        case MAV_DATA_STREAM_RC_CHANNELS:
+            ucStream_Rate[STREAM_RC_CHANNELS] = freq;
+            break;
+
+        case MAV_DATA_STREAM_RAW_CONTROLLER:
+            ucStream_Rate[STREAM_RAW_CONTROLLER] = freq;
+            break;
+
+        case MAV_DATA_STREAM_POSITION:
+            ucStream_Rate[STREAM_POSITION] = freq;
+            break;
+
+        case MAV_DATA_STREAM_EXTRA1:
+            ucStream_Rate[STREAM_EXTRA1] = freq;
+            break;
+
+        case MAV_DATA_STREAM_EXTRA2:
+            ucStream_Rate[STREAM_EXTRA2] = freq;
+            break;
+
+        case MAV_DATA_STREAM_EXTRA3:
+            ucStream_Rate[STREAM_EXTRA3] = freq;
+            break;
+
+        default:
+            break;
+    }
+}
+
+//----------------------------------------------------------------------------
+//
 /// \brief   Parse communication packets
 /// \param   -
 /// \returns -
@@ -917,10 +1046,19 @@ static bool Mavlink_Parse(void) {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Handles packets
+/// \brief   Receive mavlink packets
 /// \param   -
 /// \returns -
 /// \remarks Handles packet value by calling the appropriate functions.
+///          See Ardupilot function handleMessage at following link:
+/// http://code.google.com/p/ardupilot-mega/source/browse/ArduPlane/GCS_Mavlink.pde
+/// \todo    Implement MAVLINK_MSG_ID_REQUEST_DATA_STREAM command:
+///             - each stream must have an associated frequency and tick counter
+///             - when received, check if it's a START or STOP request
+///             - if it's a START, read the required frequency
+///             - if it's a STOP, prepare the frequency = 0
+///             - detect stream ID (MAV_DATA_STREAM_ALL, MAV_DATA_STREAM_RAW_SENSORS, ...)
+///             - update corresponding frequency
 ///
 //----------------------------------------------------------------------------
 void Mavlink_Receive(void)
@@ -928,6 +1066,9 @@ void Mavlink_Receive(void)
     if (Mavlink_Parse()) {                          // Received a correct packet
         switch (msgid) {                            // Handle message
             case MAVLINK_MSG_ID_HEARTBEAT:          // E.g. read GCS heartbeat and go into comm lost mode if timer times out
+                break;
+            case MAVLINK_MSG_ID_REQUEST_DATA_STREAM:
+                Mavlink_Data_Stream();
                 break;
             case MAVLINK_MSG_ID_COMMAND_LONG:	    //
                 break;
@@ -957,7 +1098,9 @@ void Mavlink_Receive(void)
 /// \remarks This function sends messages at a lower rate to not exceed the
 ///          wireless bandwidth. It sends one message each time it is called
 ///          until the buffer is empty.
-///          Call this function with xx Hertz to increase/decrease the bandwidth.
+///          Call this function with xx Hertz to increase/decrease bandwidth.
+///          See Ardupilot function queued_param_send at link:
+/// http://code.google.com/p/ardupilot-mega/source/browse/ArduPlane/GCS_Mavlink.pde
 ///
 //----------------------------------------------------------------------------
 void Mavlink_Queued_Send(uint8_t cycles)
@@ -973,6 +1116,121 @@ void Mavlink_Queued_Send(uint8_t cycles)
     } else if ((cycles % 5) == 0) {                 // @ 10 Hz
 //        Mavlink_Attitude();                         // send attitude
     }
+}
+
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send data stream
+/// \param   -
+/// \returns -
+/// \remarks call function @ 50 Hz
+///
+//----------------------------------------------------------------------------
+void Mavlink_Stream_Send(void)
+{
+/*
+    if (_queued_parameter != NULL) {
+        if (streamRateParams.get() <= 0) {
+            streamRateParams.set(50);
+        }
+        if (stream_trigger(STREAM_PARAMS)) {
+            send_message(MSG_NEXT_PARAM);
+        }
+    }
+*/
+#if SIMULATOR != SIM_NONE
+    if (Mavlink_Stream_Trigger(STREAM_RAW_CONTROLLER)) {
+        // MSG_SERVO_OUT
+    }
+    if (Mavlink_Stream_Trigger(STREAM_RC_CHANNELS)) {
+        // MSG_RADIO_OUT
+    }
+#else
+    if (Mavlink_Stream_Trigger(STREAM_RAW_SENSORS)) {
+        // MSG_RAW_IMU1
+        // MSG_RAW_IMU2
+        // MSG_RAW_IMU3
+    }
+
+    if (Mavlink_Stream_Trigger(STREAM_EXTENDED_STATUS)) {
+        // MSG_EXTENDED_STATUS1
+        // MSG_EXTENDED_STATUS2
+        // MSG_CURRENT_WAYPOINT
+        // MSG_GPS_RAW TODO - remove this message after location message is working
+        // MSG_NAV_CONTROLLER_OUTPUT
+        // MSG_FENCE_STATUS
+    }
+
+    if (Mavlink_Stream_Trigger(STREAM_POSITION)) {
+        Mavlink_Gps();
+    }
+
+    if (Mavlink_Stream_Trigger(STREAM_RAW_CONTROLLER)) {
+        // MSG_SERVO_OUT
+    }
+
+    if (Mavlink_Stream_Trigger(STREAM_RC_CHANNELS)) {
+        // MSG_RADIO_OUT
+        // MSG_RADIO_IN
+    }
+
+    if (Mavlink_Stream_Trigger(STREAM_EXTRA1)) {
+        Mavlink_Attitude();
+        // MSG_SIMSTATE
+    }
+
+    if (Mavlink_Stream_Trigger(STREAM_EXTRA2)) {
+        Mavlink_Hud();
+    }
+
+    if (Mavlink_Stream_Trigger(STREAM_EXTRA3)) {
+        // MSG_AHRS
+        // MSG_HWSTATUS
+        // MSG_WIND
+    }
+#endif
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Updates stream tick and tells if it must be transmitted
+/// \param   stream = ID of strem to be checked
+/// \returns TRUE if stream must be transmitted
+/// \remarks Working principle:
+///     - if there's a "queued parameter" or we're receiving waypoints,
+///       transmission frequency is divided by 4
+///     - queued parameters are those requested with PARAM_REQUEST_LIST
+///     - slowdown factor is always < 100 and depends on tx buffer space:
+///         buffer space < 20  slowdown +3
+///         buffer space < 50  slowdown +1
+///         buffer space > 95  slowdown -2
+///         buffer space > 90  slowdown -1
+///
+//----------------------------------------------------------------------------
+bool Mavlink_Stream_Trigger(enum streams stream)
+{
+    uint8_t rate = ucStream_Rate[stream];
+
+    // send at a much lower rate while handling waypoints and parameter sends
+    if (FALSE /* waypoint_receiving || _queued_parameter != NULL */) {
+        rate >>= 2;
+    }
+
+    if (rate <= 0) {
+        return FALSE;
+    }
+
+    if (ucStream_Tick[stream] == 0) {   // we're triggering now,
+        if (rate > MAX_STREAM_RATE) {   // setup the next trigger point
+            rate = MAX_STREAM_RATE;
+        }
+        ucStream_Tick[stream] = (MAX_STREAM_RATE / rate) /* + stream_slowdown*/;
+        return TRUE;
+    }
+
+    ucStream_Tick[stream]--;            // count down at 50Hz
+    return FALSE;
 }
 
 
