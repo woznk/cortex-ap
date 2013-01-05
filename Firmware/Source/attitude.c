@@ -9,8 +9,7 @@
 ///
 /// \file
 ///
-// Change: duplicated interface functions for both deg and rad units
-//         added computation to Attitude_Yaw() function.
+// Change: corrected sign of value returned by Attitude_Pitch_Deg() / ..._Rad()
 //
 //============================================================================*/
 
@@ -283,7 +282,7 @@ static __inline void Attitude_Control(void)
 ///----------------------------------------------------------------------------
 float Attitude_Pitch_Deg(void)
 {
-    return (ToDeg(asinf(DCM_Matrix[2][0])));
+    return (ToDeg(-asinf(DCM_Matrix[2][0])));
 }
 
 ///----------------------------------------------------------------------------
@@ -319,7 +318,7 @@ float Attitude_Yaw_Deg(void)
 ///----------------------------------------------------------------------------
 float Attitude_Pitch_Rad(void)
 {
-    return (asinf(DCM_Matrix[2][0]));
+    return (-asinf(DCM_Matrix[2][0]));
 }
 
 ///----------------------------------------------------------------------------
