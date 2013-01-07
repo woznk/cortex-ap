@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Change: corrected endianness of USART1_Putw
+/// Change: baud rate changed to 57600 to enable communication with OSD
 //
 //============================================================================*/
 
@@ -75,7 +75,7 @@ void USART1_Init( void ) {
     NVIC_InitTypeDef NVIC_InitStructure;
 
     // Initialize USART1 structure
-    USART_InitStructure.USART_BaudRate = 38400;
+    USART_InitStructure.USART_BaudRate = 57600;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;
