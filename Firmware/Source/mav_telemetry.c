@@ -184,26 +184,27 @@
 ///--------------------- Copter GCS messages taxonomy ------------------------
 ///
 /// Menu            Message              ID Len  Payload
-/// ------------------------------------------------------
+/// -----------------------------------------------------------------------
+///                                             rate sys comp stream cmd   note
 /// Setup           param request list   15  2
 /// PID save        param set            17  23
-/// Setup exit      request data stream  66  6   rate=0, sys=20, comp=0, stream=0, stop
-/// HUD             request data stream  66  6   rate=14, sys=20, comp=0, stream=10, start
-///                 request data stream  66  6   rate=1, sys=20, comp=0, stream=2, start
+/// Setup exit      request data stream  66  6   0   20   0     0    stop   all
+/// HUD             request data stream  66  6   14  20   0     10   start  extra 1
+///                 request data stream  66  6   1   20   0     2    start  ext status
 /// HUD exit        application terminates
-/// Status          request data stream  66  6   rate=1, sys=20, comp=0, stream=2, start
-/// Status exit     request data stream  66  6   rate=0, sys=20, comp=0, stream=0, stop
-/// GPS position    request data stream  66  6   rate=1, sys=20, comp=0, stream=2, start
-/// GPS exit        request data stream  66  6   rate=0, sys=20, comp=0, stream=0, stop
-/// Mode            param request list   15  2   sys=20, comp=0
-///                 request data stream  66  6   rate=5, sys=20, comp=0, stream=3, start
-/// Mode exit       request data stream  66  6   rate=0, sys=20, comp=0, stream=0, stop
-/// Readouts        request data stream  66  6   rate=14, sys=20, comp=0, stream=1, start
+/// Status          request data stream  66  6   1   20   0     2    start  ext status
+/// Status exit     request data stream  66  6   0   20   0     0    stop   all
+/// GPS position    request data stream  66  6   1   20   0     2    start  ext status
+/// GPS exit        request data stream  66  6   0   20   0     0    stop   all
+/// Mode            param request list   15  2       20   0
+///                 request data stream  66  6   5   20   0     3    start  RC channels
+/// Mode exit       request data stream  66  6   0   20   0     0    stop   all
+/// Readouts        request data stream  66  6   14  20   0     1    start  sensors
 /// Readouts exit   application terminates
-/// Mission         request data stream  66  6   rate=1, sys=20, comp=0, stream=2, start
-/// Mission exit    request data stream  66  6   rate=0, sys=20, comp=0, stream=0, stop
-/// Mav params      param request list   15  2   sys=20, comp=0
-/// Mav params exit request data stream  66  6   rate=0, sys=20, comp=0, stream=0, stop
+/// Mission         request data stream  66  6   1   20   0     2    start  ext status
+/// Mission exit    request data stream  66  6   0   20   0     0    stop   all
+/// Mav params      param request list   15  2       20   0
+/// Mav params exit request data stream  66  6   0   20   0     0    stop   all
 ///
 ///
 ///--------------------- APM messages taxonomy ------------------------
@@ -212,6 +213,19 @@
 /// --------------------------------------------
 /// Refresh param   param request list   15  2
 /// (arduplane PIDs)
+///
+///--------------------- ArduCAM OSD messages taxonomy ------------------------
+///
+/// Message              ID Len         Payload
+/// ----------------------------------------------------------
+/// request data stream  42  6
+///                             rate  sys  comp stream   cmd    note
+///          "                    2    14   C8     1    start   sensors
+///          "                    2    14   C8     2    start   ext status
+///          "                    5    14   C8     3    start   RC channels
+///          "                    2    14   C8     6    start   position
+///          "                    5    14   C8    10    start   extra 1 (attiude)
+///          "                    2    14   C8    11    start   extra 2 (VFR HUD)
 ///
 /// ------------------------------ Links ------------------------------
 ///
@@ -229,7 +243,9 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: implemented REQUEST_DATA_STREAM command
+/// Changes: changed frequencies of Mavlink data streams,
+///          changed source of aircraft heading from IMU to GPS,
+///          updated comments
 ///
 //============================================================================*/
 
@@ -397,12 +413,12 @@ VAR_STATIC const uint8_t sParameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME
 //  "NAV_ROL_ANG_D\0"   // Navigation Kd (via roll)
 */
     // Copter GCS standard: GROUP_SUBGROUP_P / _I / _D / _IMAX
-    "ROL_ANG_P\0", // Roll Kp
-    "ROL_ANG_I\0", // Roll Ki
-//  "ROL_ANG_D\0", // Roll Kd
-    "PCH_ANG_P\0", // Pitch Kp
-    "PCH_ANG_I\0", // Pitch Ki
-//  "PCH_ANG_D\0", // Pitch Kd
+    "ROL_ANG_P\0",  // Roll Kp
+    "ROL_ANG_I\0",  // Roll Ki
+//  "ROL_ANG_D\0",  // Roll Kd
+    "PCH_ANG_P\0",  // Pitch Kp
+    "PCH_ANG_I\0",  // Pitch Ki
+//  "PCH_ANG_D\0",  // Pitch Kd
     "ALT_POS_P\0",  // Altitude Kp (via throttle)
     "ALT_POS_I\0",  // Altitude Ki (via throttle)
  //  ALT_POS_D"\0", // Altitude Kd (via throttle)
@@ -456,7 +472,15 @@ VAR_STATIC uint8_t ucStream_Tick[NUM_STREAMS] = {       // tick counters for dat
 };
 
 VAR_STATIC uint8_t ucStream_Rate[NUM_STREAMS] = {       // frequency of data streams
-    0,0,0,0,0,0,0,0,0
+    0,  // raw sensors
+    0,  // extended status
+    0,  // rc channels
+    0,  // raw controller
+    1,  // position
+    5,  // extra 1
+    2,  // extra 2
+    0,  // extra 3
+    0   // parameterss
 };
 
 VAR_STATIC float fParam_Value[ONBOARD_PARAM_COUNT] = {
@@ -619,7 +643,7 @@ void Mavlink_Hud( void ) {
     *((float *)(&Tx_Msg[10])) = (float)Gps_Speed();        // GPS speed
     *((float *)(&Tx_Msg[14])) = Nav_Altitude();            // Altitude
     *((float *)(&Tx_Msg[18])) = 0.0f;                      // Climb rate
-    *((int16_t *)(&Tx_Msg[22])) = (int16_t)Nav_Heading();  // Heading
+    *((uint16_t *)(&Tx_Msg[22])) = Gps_Heading();          // Heading
     *((uint16_t *)(&Tx_Msg[24])) = Nav_Throttle();         // Throttle
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_VFR_HUD]);
@@ -843,7 +867,7 @@ void Mavlink_HIL_State( void ) {
 /// start_stop       5 uint8_t  1 to start sending, 0 to stop sending
 ///
 //----------------------------------------------------------------------------
-__inline void Mavlink_Data_Stream( void ) {
+ void Mavlink_Data_Stream( void ) {
 
     uint8_t freq;
 
@@ -1052,13 +1076,6 @@ static bool Mavlink_Parse(void) {
 /// \remarks Handles packet value by calling the appropriate functions.
 ///          See Ardupilot function handleMessage at following link:
 /// http://code.google.com/p/ardupilot-mega/source/browse/ArduPlane/GCS_Mavlink.pde
-/// \todo    Implement MAVLINK_MSG_ID_REQUEST_DATA_STREAM command:
-///             - each stream must have an associated frequency and tick counter
-///             - when received, check if it's a START or STOP request
-///             - if it's a START, read the required frequency
-///             - if it's a STOP, prepare the frequency = 0
-///             - detect stream ID (MAV_DATA_STREAM_ALL, MAV_DATA_STREAM_RAW_SENSORS, ...)
-///             - update corresponding frequency
 ///
 //----------------------------------------------------------------------------
 void Mavlink_Receive(void)
@@ -1110,11 +1127,9 @@ void Mavlink_Queued_Send(uint8_t cycles)
             Mavlink_Param_Value(m_parameter_i++, ONBOARD_PARAM_COUNT);  // send parameters
         }
     } else if ((cycles % 200) == 0) {               // @ 0.25 Hz
-                                                    //
     } else if ((cycles % 50) == 0) {                // @ 1 Hz
         Mavlink_Heartbeat();                        // send heartbeat
     } else if ((cycles % 5) == 0) {                 // @ 10 Hz
-//        Mavlink_Attitude();                         // send attitude
     }
 }
 
