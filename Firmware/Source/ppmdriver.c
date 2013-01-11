@@ -29,9 +29,8 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change  result of merge of NAV branch:
-//          modes MODE_ROLL_TUNE and MODE_PITCH_TUNE renamed MODE_STAB and
-//          MODE_NAV respectively
+//  Change  added clearing of capture interrupt flag,
+//          corrected initial clearing of timer flags
 //
 //============================================================================*/
 
@@ -109,6 +108,7 @@ TIM2_IRQHandler(void)
 
   if (TIM_GetITStatus(TIM2, TIM_IT_CC2)) {              // Capture interrupt
      ulCaptureTime = TIM_GetCapture2 (TIM2);            // read captured time
+     TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
      if (cOverflowCount < 2) {                          // at most one overflow
         ulPulseLength = ulCaptureTime - ulLastCapture;  // compute time difference
      } else {                                           // more than one overflow
@@ -185,7 +185,7 @@ void PPM_Init(void) {
   TIM_ICInit(TIM2, &TIM_ICInitStructure);
 
   /* Capture and update interrupts initialization */
-  TIM_ClearFlag(TIM2, TIM_FLAG_CC2 | TIM_IT_Update);
+  TIM_ClearFlag(TIM2, TIM_FLAG_CC2 | TIM_FLAG_Update);
   TIM_ITConfig(TIM2, TIM_IT_CC2 | TIM_IT_Update, ENABLE);
 
   /* Enable the TIM2 global interrupt */

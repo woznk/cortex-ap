@@ -108,6 +108,11 @@
      2 l'heap non può essere ridotto, il sistema si pianta
      3 ridotto lo stack a 512 bytes, funziona
 
+     29/10/2012
+
+     Log dei messaggi inviati da AqGCS
+     Log dei messaggi inviati da aq-gcs2
+
 @par Telemetria MultiWii
 
      03/08/2012
@@ -182,6 +187,10 @@
 
     Pros: no gyro bias is calculated, perform surprisingly well. 
     Cons: uses euler angles, which are not gimbal-lock free, requires more processing power.
+
+    13/11/12
+
+    http://www.jhuapl.edu/ott/Technologies/Copyright/SuasCode.asp
 
 @par Navigation
      

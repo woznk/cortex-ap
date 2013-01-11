@@ -24,21 +24,24 @@
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
 /// \todo
-/// 1) Compute longitude and latitude differences as :
+/// 1) Send configuration command to enable $GPGGA sentence only :
+/// 25 25 f1 04 01 00 00 01 00 00 00 00 f5 0d 0a
+///
+/// \todo
+/// 2) Compute longitude and latitude differences as :
 /// \code
 ///     Delta Lat = Lat2 - Lat1
 ///     Delta Lon = (Lon2 - Lon1) * cos((Lat1 + Lat2)/2)
 /// \endcode
 ///
 /// \todo
-/// 2) Compute distance from waypoint as :
+/// 3) Compute distance from waypoint as :
 /// \code
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: corrected parsing of waypoint data from SD card,
-//         added functions Nav_Altitude(), 
-//         removed commented code
+// Change: pitch angle computation moved to attitude.c module,
+//         modified values of ucGps_Status for compatibility with mavlink
 //
 //============================================================================*/
 
@@ -76,8 +79,8 @@
 #define BUFFER_LENGTH       96      //!< Length of buffer for file and USART
 #define LINE_LENGTH         48      //!< Length of lines read from file
 
-#define GPS_STATUS_FIX      1       //!< GPS status: satellite fix
-#define GPS_STATUS_FIRST    2       //!< GPS status: waiting for first fix
+#define GPS_STATUS_FIX      3       //!< GPS status: satellite fix
+#define GPS_STATUS_NOFIX    0       //!< GPS status: waiting for first fix
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -173,7 +176,7 @@ void Navigation_Task( void *pvParameters ) {
 
     /* Wait first GPS fix */
     while ((Parse_GPS() == FALSE) &&                // NMEA sentence not completed
-          ((ucGps_Status & GPS_STATUS_FIX) == 0)) { // no satellite fix
+           (ucGps_Status != GPS_STATUS_FIX)) {      // no satellite fix
         ;                                           // keep parsing NMEA sentences
     }
 
@@ -210,7 +213,7 @@ void Navigation_Task( void *pvParameters ) {
             fDx = fLat_Dest - fLat_Curr;
 
             /* Compute heading */
-            fHeading = atan2f(DCM_Matrix[1][0], DCM_Matrix[0][0]) / PI;
+            fHeading = Attitude_Yaw_Rad() / PI;
 
             /* Compute bearing to waypoint */
             fBearing = atan2f(fDy, fDx) / PI;
@@ -330,7 +333,7 @@ static void GPS_Init( void ) {
     USART_InitTypeDef USART_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    ucGps_Status = GPS_STATUS_FIRST;                // init GPS status
+    ucGps_Status = GPS_STATUS_NOFIX;                // init GPS status
     ucWindex = 0;                                   // clear write index
     ucRindex = 0;                                   // clear read index
     ulTempCoord = 0UL;                              // clear temporary coordinate
@@ -529,9 +532,9 @@ static bool Parse_GPS( void )
 
         if ( ucCommas == 2 ) {              // get fix info
            if (c == 'A') {
-             ucGps_Status |= GPS_STATUS_FIX;
+             ucGps_Status = GPS_STATUS_FIX;
            } else if (c == 'V') {
-             ucGps_Status &= ~GPS_STATUS_FIX;
+             ucGps_Status = GPS_STATUS_NOFIX;
            }
         }
 
@@ -564,7 +567,7 @@ static bool Parse_GPS( void )
         }
 
         if ((ucCommas == 9) &&              // end of NMEA sentence
-            (ucGps_Status & GPS_STATUS_FIX)) {
+            (ucGps_Status == GPS_STATUS_FIX)) {
           ucCommas = 10;
           uiGps_Heading /= 10;
           fLat_Curr = fLat_Temp;
@@ -739,6 +742,18 @@ float Nav_Pitch ( void ) {
 //----------------------------------------------------------------------------
 float Nav_Altitude ( void ) {
   return fAlt_Curr;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get gps status
+/// \param   -
+/// \returns 0 = no fix, 3 = 3d fix
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint8_t Gps_Fix ( void ) {
+  return ucGps_Status;
 }
 
 //----------------------------------------------------------------------------
