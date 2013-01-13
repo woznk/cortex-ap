@@ -346,7 +346,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER STM32F10X_MD_VL</Define>
               <Undefine></Undefine>
-              <IncludePath>.\;..\Utilities;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Libraries\fat_sd;..\Libraries\I2C_MEMS_Driver;..\Libraries\L3G4200_Driver;..\Libraries\ADXL345_Driver;..\Libraries\BMP085_Driver;..\Libraries\FreeRTOSV7.1.0\Source\include;..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3;..\Source;..\Libraries\Mavlink\matrixpilot</IncludePath>
+              <IncludePath>.\;..\Utilities;..\Libraries\CMSIS\CM3\CoreSupport;..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\Libraries\fat_sd;..\Libraries\I2C_CPALV1.1.0;..\Libraries\I2C_MEMS_Driver;..\Libraries\L3G4200_Driver;..\Libraries\ADXL345_Driver;..\Libraries\BMP085_Driver;..\Libraries\FreeRTOSV7.1.0\Source\include;..\Libraries\FreeRTOSV7.1.0\Source\portable\RVDS\ARM_CM3;..\Libraries\Mavlink\matrixpilot;..\Source</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -486,6 +486,26 @@
               <FileType>1</FileType>
               <FilePath>..\Libraries\BMP085_Driver\BMP085_driver.c</FilePath>
             </File>
+            <File>
+              <FileName>cpal_usercallback.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_usercallback.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_hal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_hal.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_i2c_hal_stm32f10x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_i2c_hal_stm32f10x.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -590,6 +610,11 @@
               <FileName>startup_stm32f10x_md_vl.s</FileName>
               <FileType>2</FileType>
               <FilePath>..\Source\startup_stm32f10x_md_vl.s</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_dma.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1075,6 +1100,26 @@
               <FileType>1</FileType>
               <FilePath>..\Libraries\BMP085_Driver\BMP085_driver.c</FilePath>
             </File>
+            <File>
+              <FileName>cpal_usercallback.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_usercallback.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_hal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_hal.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_i2c_hal_stm32f10x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_i2c_hal_stm32f10x.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1179,6 +1224,11 @@
               <FileName>startup_stm32f10x_md_vl.s</FileName>
               <FileType>2</FileType>
               <FilePath>..\Source\startup_stm32f10x_md_vl.s</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_dma.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1664,6 +1714,26 @@
               <FileType>1</FileType>
               <FilePath>..\Libraries\BMP085_Driver\BMP085_driver.c</FilePath>
             </File>
+            <File>
+              <FileName>cpal_usercallback.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_usercallback.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_hal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_hal.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>cpal_i2c_hal_stm32f10x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\I2C_CPALV1.1.0\cpal_i2c_hal_stm32f10x.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1768,6 +1838,11 @@
               <FileName>startup_stm32f10x_md_vl.s</FileName>
               <FileType>2</FileType>
               <FilePath>..\Source\startup_stm32f10x_md_vl.s</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_dma.c</FilePath>
             </File>
           </Files>
         </Group>
