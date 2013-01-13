@@ -5,6 +5,7 @@
   * @version V1.1.0
   * @date    17-June-2011
   * @brief   This file provides all the CPAL UserCallback functions .
+  * enabled Timeout Callback.
   ******************************************************************************
   * @attention
   *
@@ -44,11 +45,10 @@
   * @param  pDevInitStruct .
   * @retval None.
   */
-/*uint32_t CPAL_TIMEOUT_UserCallback(CPAL_InitTypeDef* pDevInitStruct)
+uint32_t CPAL_TIMEOUT_UserCallback(CPAL_InitTypeDef* pDevInitStruct)
 {
-
   return CPAL_PASS;
-}*/
+}
 
 
 /*=========== Transfer UserCallback ===========*/
