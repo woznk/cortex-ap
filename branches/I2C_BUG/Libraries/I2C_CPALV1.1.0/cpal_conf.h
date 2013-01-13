@@ -5,6 +5,7 @@
   * @version V1.1.0
   * @date    17-June-2011
   * @brief   Library configuration file.
+  * changes  enabled Timeout Callback.
   ******************************************************************************
   * @attention
   *
@@ -447,7 +448,7 @@
                                                                      When a timeout occurs CPAL_TIMEOUT_UserCallback
                                                                      is called to handle this error */
 
-#define CPAL_TIMEOUT_UserCallback        (void)                  /*<! Comment this line and implement the callback body in your
+/*#define CPAL_TIMEOUT_UserCallback        (void) */                 /*<! Comment this line and implement the callback body in your
                                                                       application in order to use the Timeout Callback.
                                                                       It is strongly advised to implement this callback, since it
                                                                       is the only way to manage timeout errors. */
