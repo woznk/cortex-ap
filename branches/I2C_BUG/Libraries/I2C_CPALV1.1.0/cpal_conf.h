@@ -5,7 +5,7 @@
   * @version V1.1.0
   * @date    17-June-2011
   * @brief   Library configuration file.
-  * changes  enabled Timeout Callback.
+  * changes  changed CPAL_NVIC_PRIOGROUP to 4, according FreeRTOS settings
   ******************************************************************************
   * @attention
   *
@@ -487,13 +487,13 @@
 /* #define CPAL_NVIC_PRIOGROUP      NVIC_PriorityGroup_1 */ /*!< 1 bits for preemption priority
                                                                        3 bits for subpriority */
 
-#define CPAL_NVIC_PRIOGROUP      NVIC_PriorityGroup_2  /*!< 2 bits for preemption priority
+/* #define CPAL_NVIC_PRIOGROUP      NVIC_PriorityGroup_2 */  /*!< 2 bits for preemption priority
                                                                        2 bits for subpriority */
 
-/* #define CPAL_NVIC_PRIOGROUP       NVIC_PriorityGroup_3 */ /*!< 3 bits for preemption priority
+/* #define CPAL_NVIC_PRIOGROUP      NVIC_PriorityGroup_3 */  /*!< 3 bits for preemption priority
                                                                        1 bits for subpriority */
 
-/* #define CPAL_NVIC_PRIOGROUP       NVIC_PriorityGroup_4 */ /*!< 4 bits for preemption priority */
+ #define CPAL_NVIC_PRIOGROUP       NVIC_PriorityGroup_4 /*!< 4 bits for preemption priority */
 
 /*-----------Interrupt Priority Offset-------------*/
 
