@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief I2C driver for MEMS sensors
-/// Changes: corrected programming model to "interrupt"
+/// Changes: removed references to external links
 //
 //============================================================================*/
 
@@ -48,10 +48,7 @@ CPAL_TransferTypeDef TransferTx;
 /// \param   slave, address of slave device
 /// \param   reg, register address
 /// \param   *data, pointer to destination data
-/// \remarks see
-///          https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/DispForm.aspx?ID=13303&Source=/public/STe2ecommunities/Tags.aspx?tags=i2c
-///          http://read.pudn.com/downloads124/sourcecode/embed/527821/7.1%20-%20I2C/Application/I2C.c__.htm
-///          http://corvusm3.googlecode.com/svn-history/r251/CorvusM3_FC/CorvusM3_Firmware/trunk/i2c.c
+/// \remarks -
 ///
 ///----------------------------------------------------------------------------
 uint8_t I2C_MEMS_Read_Reg(uint8_t slave, uint8_t reg, uint8_t* data)
