@@ -6,7 +6,7 @@
 // $Author: $
 //
 /// \brief I2C driver for MEMS sensors
-/// Changes: modified for CPAL library
+/// Changes: corrected programming model to "interrupt"
 //
 //============================================================================*/
 
@@ -132,7 +132,10 @@ uint8_t I2C_MEMS_Write_Reg(uint8_t slave, uint8_t reg, uint8_t data)
 void I2C_MEMS_Init( void )
 {
   CPAL_I2C_StructInit(&I2C1_DevStructure);          // Initialize CPAL structure for I2C 1
+
+  I2C1_DevStructure.CPAL_ProgModel = CPAL_PROGMODEL_INTERRUPT;
   I2C1_DevStructure.pCPAL_TransferRx = &TransferRx;
   I2C1_DevStructure.pCPAL_TransferTx = &TransferTx;
+
   CPAL_I2C_Init(&I2C1_DevStructure);                // Initialize CPAL I2C
 }
