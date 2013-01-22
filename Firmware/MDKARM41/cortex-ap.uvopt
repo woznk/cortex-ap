@@ -147,6 +147,13 @@
           <Name>-O14 -S0 -C0 -N00("ARM Cortex-M3") -D00(1BA00477) -L00(4) -FO7 -FD20000000 -FC800 -FN1 -FF0STM32F10x_128 -FS08000000 -FL020000)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
+      <WatchWindow1>
+        <Ww>
+          <count>0</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>I2C1_DevStructure</ItemText>
+        </Ww>
+      </WatchWindow1>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
@@ -533,8 +540,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>176</TopLine>
-      <CurrentLine>185</CurrentLine>
+      <TopLine>184</TopLine>
+      <CurrentLine>184</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -547,8 +554,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>132</TopLine>
-      <CurrentLine>155</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -589,8 +596,8 @@
       <Focus>0</Focus>
       <ColumnNumber>36</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1</TopLine>
-      <CurrentLine>25</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\vmath.c</PathWithFileName>
       <FilenameWithoutPath>vmath.c</FilenameWithoutPath>
@@ -645,8 +652,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>175</TopLine>
-      <CurrentLine>194</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\attitude.c</PathWithFileName>
       <FilenameWithoutPath>attitude.c</FilenameWithoutPath>
@@ -673,8 +680,8 @@
       <Focus>0</Focus>
       <ColumnNumber>34</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>511</TopLine>
-      <CurrentLine>511</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\mav_telemetry.c</PathWithFileName>
       <FilenameWithoutPath>mav_telemetry.c</FilenameWithoutPath>
@@ -683,7 +690,7 @@
 
   <Group>
     <GroupName>Libraries</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <File>
@@ -706,10 +713,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>51</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>43</TopLine>
+      <CurrentLine>43</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</PathWithFileName>
       <FilenameWithoutPath>i2c_mems_driver.c</FilenameWithoutPath>
@@ -778,11 +785,67 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>142</TopLine>
-      <CurrentLine>160</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\BMP085_Driver\BMP085_driver.c</PathWithFileName>
       <FilenameWithoutPath>BMP085_driver.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>2</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>167</TopLine>
+      <CurrentLine>179</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\I2C_CPALV1.1.0\cpal_usercallback.c</PathWithFileName>
+      <FilenameWithoutPath>cpal_usercallback.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>2</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>1</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>12</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\I2C_CPALV1.1.0\cpal_hal.c</PathWithFileName>
+      <FilenameWithoutPath>cpal_hal.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>2</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>25</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>1287</TopLine>
+      <CurrentLine>1311</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\I2C_CPALV1.1.0\cpal_i2c.c</PathWithFileName>
+      <FilenameWithoutPath>cpal_i2c.c</FilenameWithoutPath>
+    </File>
+    <File>
+      <GroupNumber>2</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\I2C_CPALV1.1.0\cpal_i2c_hal_stm32f10x.c</PathWithFileName>
+      <FilenameWithoutPath>cpal_i2c_hal_stm32f10x.c</FilenameWithoutPath>
     </File>
   </Group>
 
@@ -841,8 +904,8 @@
       <Focus>0</Focus>
       <ColumnNumber>30</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>461</TopLine>
-      <CurrentLine>480</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\FreeRTOSV7.1.0\Source\tasks.c</PathWithFileName>
       <FilenameWithoutPath>tasks.c</FilenameWithoutPath>
@@ -893,7 +956,7 @@
 
   <Group>
     <GroupName>System</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <File>
@@ -942,7 +1005,7 @@
       <GroupNumber>4</GroupNumber>
       <FileNumber>30</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -972,7 +1035,7 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>32</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>0</TopLine>
       <CurrentLine>0</CurrentLine>
@@ -988,8 +1051,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>763</TopLine>
-      <CurrentLine>772</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_spi.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_spi.c</FilenameWithoutPath>
@@ -1016,8 +1079,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>988</TopLine>
-      <CurrentLine>1000</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_i2c.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_i2c.c</FilenameWithoutPath>
@@ -1058,18 +1121,32 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>153</TopLine>
-      <CurrentLine>153</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\startup_stm32f10x_md_vl.s</PathWithFileName>
       <FilenameWithoutPath>startup_stm32f10x_md_vl.s</FilenameWithoutPath>
     </File>
+    <File>
+      <GroupNumber>4</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_dma.c</PathWithFileName>
+      <FilenameWithoutPath>stm32f10x_dma.c</FilenameWithoutPath>
+    </File>
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cxap\branches\MAVLINK\Firmware\Libraries\Mavlink\common\mavlink_msg_heartbeat.h</PathWithFilename>
-    <TopLine>191</TopLine>
-    <CurrentLine>191</CurrentLine>
+    <PathWithFilename>C:\Work\cxap\branches\I2C_BUG\Libraries\I2C_CPALV1.1.0\cpal.h</PathWithFilename>
+    <TopLine>1</TopLine>
+    <CurrentLine>1</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -1093,9 +1170,9 @@
   </AlienFiles>
 
   <AlienFiles>
-    <PathWithFilename>C:\Work\cxap\branches\MAVLINK\Firmware\Source\config.h</PathWithFilename>
-    <TopLine>88</TopLine>
-    <CurrentLine>121</CurrentLine>
+    <PathWithFilename>C:\Work\cxap\branches\I2C_BUG\Libraries\I2C_CPALV1.1.0\cpal_conf.h</PathWithFilename>
+    <TopLine>419</TopLine>
+    <CurrentLine>446</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -1123,37 +1200,43 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>5</ActiveTab>
       <Documents>
         <Doc>
           <Name>..\Source\main.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>176</TopLine>
-          <CurrentLine>185</CurrentLine>
+          <TopLine>184</TopLine>
+          <CurrentLine>184</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
+          <Name>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</Name>
+          <ColumnNumber>51</ColumnNumber>
+          <TopLine>43</TopLine>
+          <CurrentLine>43</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\I2C_CPALV1.1.0\cpal.h</Name>
+          <ColumnNumber>52</ColumnNumber>
+          <TopLine>1</TopLine>
+          <CurrentLine>1</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\I2C_CPALV1.1.0\cpal_conf.h</Name>
+          <ColumnNumber>41</ColumnNumber>
+          <TopLine>419</TopLine>
+          <CurrentLine>446</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\I2C_CPALV1.1.0\cpal_usercallback.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>153</TopLine>
-          <CurrentLine>153</CurrentLine>
+          <TopLine>167</TopLine>
+          <CurrentLine>179</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Libraries\Mavlink\matrixpilot\../common/./mavlink_msg_heartbeat.h</Name>
-          <ColumnNumber>34</ColumnNumber>
-          <TopLine>191</TopLine>
-          <CurrentLine>191</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\mav_telemetry.c</Name>
-          <ColumnNumber>34</ColumnNumber>
-          <TopLine>511</TopLine>
-          <CurrentLine>511</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\config.h</Name>
+          <Name>..\Libraries\I2C_CPALV1.1.0\cpal_i2c.c</Name>
           <ColumnNumber>25</ColumnNumber>
-          <TopLine>88</TopLine>
-          <CurrentLine>121</CurrentLine>
+          <TopLine>1287</TopLine>
+          <CurrentLine>1311</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
