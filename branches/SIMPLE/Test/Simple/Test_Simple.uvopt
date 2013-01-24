@@ -142,23 +142,6 @@
           <Name>-O14 -S0 -C0 -N00("ARM Cortex-M3") -D00(1BA00477) -L00(4) -FO7 -FD20000000 -FC800 -FN1 -FF0STM32F10x_128 -FS08000000 -FL020000)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint>
-        <Bp>
-          <Number>0</Number>
-          <Type>0</Type>
-          <LineNumber>222</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134218370</Address>
-          <ByteObject>0</ByteObject>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename></Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\Test_Simple\test_simple.c\222</Expression>
-        </Bp>
-      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
@@ -169,6 +152,11 @@
           <count>1</count>
           <WinNumber>1</WinNumber>
           <ItemText>GPIOA_CRH</ItemText>
+        </Ww>
+        <Ww>
+          <count>2</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>currentmode</ItemText>
         </Ww>
       </WatchWindow1>
       <MemoryWindow1>
@@ -220,10 +208,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>12</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>206</TopLine>
-      <CurrentLine>224</CurrentLine>
+      <TopLine>176</TopLine>
+      <CurrentLine>191</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\test_simple.c</PathWithFileName>
       <FilenameWithoutPath>test_simple.c</FilenameWithoutPath>
@@ -311,10 +299,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>24</ColumnNumber>
+      <ColumnNumber>42</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>172</TopLine>
-      <CurrentLine>187</CurrentLine>
+      <TopLine>202</TopLine>
+      <CurrentLine>211</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_gpio.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_gpio.c</FilenameWithoutPath>
@@ -431,13 +419,25 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>2</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\test_simple.c</Name>
-          <ColumnNumber>12</ColumnNumber>
-          <TopLine>206</TopLine>
-          <CurrentLine>224</CurrentLine>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>176</TopLine>
+          <CurrentLine>191</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\..\Source\startup_stm32f10x_md_vl.s</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>153</TopLine>
+          <CurrentLine>153</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_gpio.c</Name>
+          <ColumnNumber>42</ColumnNumber>
+          <TopLine>202</TopLine>
+          <CurrentLine>211</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>

@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added call to Mavlink_Stream_Send() in telemetry task
+// Change: added #definitions for GPIOA configuration
 //
 //============================================================================*/
 /*
@@ -179,6 +179,32 @@ void RCC_Configuration(void)
 ///----------------------------------------------------------------------------
 void GPIO_Configuration(void)
 {
+
+#define GPIOA_CRL_MASK  0x00FF000F
+#define GPIOA_CRL_BITS  0xAA004A80
+                     //   ||  |||
+                     //   ||  ||+- Pin  1: TIM2 CH 2 input pull down
+                     //   ||  |+-- Pin  2: USART 2 TX alternate push pull 2 MHz
+                     //   ||  +--- Pin  3: USART 2 RX input floating
+                     //   |+------ Pin  6: TIM3 CH 1 alternate push pull 2 MHz
+                     //   +------- Pin  7: TIM3 CH 2 alternate push pull 2 MHz
+
+#define GPIOA_CRH_MASK  0xFFFFF00F
+#define GPIOA_CRH_BITS  0x000004A0
+                    //         ||
+                    //         |+- Pin  9: USART 1 TX alternate push pull 2 MHz
+                    //         +-- Pin 10: USART 1 RX input floating
+
+  tempreg = GPIOA->CRL;
+  tempreg &= GPIOA_CRL_MASK;
+  tempreg |= GPIOA_CRL_BITS;
+  GPIOA->CRL = tempreg;
+
+  tempreg = GPIOA->CRH;
+  tempreg &= GPIOA_CRH_MASK;
+  tempreg |= GPIOA_CRH_BITS;
+  GPIOA->CRH = tempreg;
+
   GPIO_InitTypeDef GPIO_InitStructure;
   uint32_t tempreg;
 
@@ -219,15 +245,6 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  tempreg = GPIOA->CRL;
-  GPIOA->CRL = 0x1010 << 1  |    // Pin  1: TIM2 CH 2 input pull down 2 MHz
-              0x1010 << 2  |    // Pin  2: USART 2 TX alternate push pull 2 MHz
-              0x0100 << 3  |    // Pin  3: USART 2 RX input floating 2 MHz
-              0x1010 << 6  |    // Pin  6: TIM3 CH 1 alternate push pull 2 MHz
-              0x1010 << 7  ;    // Pin  7: TIM3 CH 2 alternate push pull 2 MHz
-  GPIOA->CRH = 0x1010 << 1  |    // Pin  9: USART 1 TX alternate push pull 2 MHz
-              0x0100 << 2;      // Pin 10: USART 1 RX input floating 2 MHz
 
   /* GPIOB Configuration */
 
