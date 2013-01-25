@@ -146,19 +146,31 @@
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>GPIOA_CRL</ItemText>
+          <ItemText>GPIOC_CRH</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>GPIOA_CRH</ItemText>
+          <ItemText>GPIOC_CRL</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>currentmode</ItemText>
+          <ItemText>GPIOB_CRH</ItemText>
+        </Ww>
+        <Ww>
+          <count>3</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>GPIOB_CRL</ItemText>
         </Ww>
       </WatchWindow1>
+      <WatchWindow2>
+        <Ww>
+          <count>0</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>GPIOB_CRL</ItemText>
+        </Ww>
+      </WatchWindow2>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
@@ -210,8 +222,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>176</TopLine>
-      <CurrentLine>191</CurrentLine>
+      <TopLine>271</TopLine>
+      <CurrentLine>293</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\test_simple.c</PathWithFileName>
       <FilenameWithoutPath>test_simple.c</FilenameWithoutPath>
@@ -419,13 +431,13 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>2</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\test_simple.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>176</TopLine>
-          <CurrentLine>191</CurrentLine>
+          <TopLine>271</TopLine>
+          <CurrentLine>293</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\..\Source\startup_stm32f10x_md_vl.s</Name>

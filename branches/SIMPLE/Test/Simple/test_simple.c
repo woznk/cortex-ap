@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added #definitions for GPIOA configuration
+// Change: added #definitions and initialization for GPIOB and GPIOC
 //
 //============================================================================*/
 /*
@@ -179,32 +179,6 @@ void RCC_Configuration(void)
 ///----------------------------------------------------------------------------
 void GPIO_Configuration(void)
 {
-
-#define GPIOA_CRL_MASK  0x00FF000F
-#define GPIOA_CRL_BITS  0xAA004A80
-                     //   ||  |||
-                     //   ||  ||+- Pin  1: TIM2 CH 2 input pull down
-                     //   ||  |+-- Pin  2: USART 2 TX alternate push pull 2 MHz
-                     //   ||  +--- Pin  3: USART 2 RX input floating
-                     //   |+------ Pin  6: TIM3 CH 1 alternate push pull 2 MHz
-                     //   +------- Pin  7: TIM3 CH 2 alternate push pull 2 MHz
-
-#define GPIOA_CRH_MASK  0xFFFFF00F
-#define GPIOA_CRH_BITS  0x000004A0
-                    //         ||
-                    //         |+- Pin  9: USART 1 TX alternate push pull 2 MHz
-                    //         +-- Pin 10: USART 1 RX input floating
-
-  tempreg = GPIOA->CRL;
-  tempreg &= GPIOA_CRL_MASK;
-  tempreg |= GPIOA_CRL_BITS;
-  GPIOA->CRL = tempreg;
-
-  tempreg = GPIOA->CRH;
-  tempreg &= GPIOA_CRH_MASK;
-  tempreg |= GPIOA_CRH_BITS;
-  GPIOA->CRH = tempreg;
-
   GPIO_InitTypeDef GPIO_InitStructure;
   uint32_t tempreg;
 
@@ -251,7 +225,7 @@ void GPIO_Configuration(void)
   // TIM3 Channel 3, 4 as alternate function push-pull */
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
 
   /* GPIOC Configuration */
@@ -259,8 +233,61 @@ void GPIO_Configuration(void)
   // LED pins as push pull outputs
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+#define GPIOA_CRL_MASK  0x00FF000F
+#define GPIOA_CRL_BITS  0xAA004A80
+                     //   ||  |||
+                     //   ||  ||+- Pin  1: TIM2 CH 2 input
+                     //   ||  |+-- Pin  2: USART 2 TX alternate push pull 2 MHz
+                     //   ||  +--- Pin  3: USART 2 RX input floating
+                     //   |+------ Pin  6: TIM3 CH 1 alternate push pull 2 MHz
+                     //   +------- Pin  7: TIM3 CH 2 alternate push pull 2 MHz
+
+#define GPIOA_CRH_MASK  0xFFFFF00F
+#define GPIOA_CRH_BITS  0x000004A0
+                    //         ||
+                    //         |+- Pin  9: USART 1 TX alternate push pull 2 MHz
+                    //         +-- Pin 10: USART 1 RX input floating
+
+#define GPIOA_BSRR_BITS  0x00020000
+                     //       |
+                     //       +--- Pin  1: TIM2 CH 2 pull down
+
+#define GPIOB_CRL_MASK  0xFFFFFF00
+#define GPIOB_CRL_BITS  0x000000AA
+                     //         ||
+                     //         |+- Pin  0: TIM3 CH 3 alternate push pull 2 MHz
+                     //         +-- Pin  1: TIM3 CH 4 alternate push pull 2 MHz
+
+#define GPIOC_CRH_MASK  0xFFFFFF00
+#define GPIOC_CRH_BITS  0x00000022
+                     //         ||
+                     //         |+- Pin  8: LED output push pull 2 MHz
+                     //         +-- Pin  9: LED output push pull 2 MHz
+
+  tempreg = GPIOA->CRL;             // Port A pins 0 - 7
+  tempreg &= GPIOA_CRL_MASK;
+  tempreg |= GPIOA_CRL_BITS;
+  GPIOA->CRL = tempreg;
+
+  GPIOA->BSRR = GPIOA_BSRR_BITS;    // TIM2 CH 2 pull down
+
+  tempreg = GPIOA->CRH;             // Port A pins 8 - 15
+  tempreg &= GPIOA_CRH_MASK;
+  tempreg |= GPIOA_CRH_BITS;
+  GPIOA->CRH = tempreg;
+
+  tempreg = GPIOB->CRL;             // Port B pins 0 - 1
+  tempreg &= GPIOB_CRL_MASK;
+  tempreg |= GPIOB_CRL_BITS;
+  GPIOB->CRL = tempreg;
+
+  tempreg = GPIOC->CRH;             // Port C pins 8 - 15
+  tempreg &= GPIOC_CRH_MASK;
+  tempreg |= GPIOC_CRH_BITS;
+  GPIOC->CRH = tempreg;
 }
 
 
