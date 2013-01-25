@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added #definitions and initialization for GPIOB and GPIOC
+// Change: removed original code for GPIO initialization
 //
 //============================================================================*/
 /*
@@ -179,63 +179,7 @@ void RCC_Configuration(void)
 ///----------------------------------------------------------------------------
 void GPIO_Configuration(void)
 {
-  GPIO_InitTypeDef GPIO_InitStructure;
   uint32_t tempreg;
-
-  /* GPIOA Configuration */
-
-  // TIM2 Channel 2 as input pull down (1)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  // USART 2 TX pin as alternate function push pull (2)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  // USART 2 RX pin as input floating (3)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  // TIM3 Channel 1, 2 as alternate function push-pull (6, 7)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  // USART 1 TX pin as alternate function push pull (9)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  // USART 1 RX pin as input floating (10)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  /* GPIOB Configuration */
-
-  // TIM3 Channel 3, 4 as alternate function push-pull */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-  /* GPIOC Configuration */
-
-  // LED pins as push pull outputs
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
-
 #define GPIOA_CRL_MASK  0x00FF000F
 #define GPIOA_CRL_BITS  0xAA004A80
                      //   ||  |||
