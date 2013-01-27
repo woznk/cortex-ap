@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: removed original code for GPIO initialization
+// Change: replaced GPIO and RCC configuration functions with HW_Init()
 //
 //============================================================================*/
 /*
@@ -81,8 +81,7 @@
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-void RCC_Configuration(void);
-void GPIO_Configuration(void);
+void HW_Init(void);
 
 /*--------------------------------- Functions --------------------------------*/
 
@@ -102,84 +101,31 @@ int32_t main(void) {
      To reconfigure the default setting of SystemInit() function, refer to
      system_stm32f10x.c file */
 
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
-/* equivalente:
-  SCB->AIRCR = AIRCR_VECTKEY_MASK | NVIC_PriorityGroup_4;
-*/
-  RCC_Configuration();                              // System Clocks Configuration
-  GPIO_Configuration();                             // GPIO Configuration
+  SCB->AIRCR = 0x05FA0300; // 4 bits for pre-emption priority, 0 bits for subpriority
+              // |  ||  |
+              // |  |+--+- NVIC_PriorityGroup_4
+              // |  |
+              // +--+----- AIRCR_VECTKEY_MASK
+
+  HW_Init();              // Initialize hardware
+  USART1_Init();          // Initialize USART1 for telemetry
 
   while (1) {
-  	LEDOn(BLUE);
-	LEDOff(BLUE);
-	LEDToggle(BLUE);
+      LEDOn(BLUE);
+      LEDOff(BLUE);
+      LEDToggle(BLUE);
   }
 }
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   Configure the different system clocks.
+/// \brief   Configure the hardware
 /// \return  -
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void RCC_Configuration(void)
+void HW_Init(void)
 {
-  uint32_t tmpreg;
-/*
-  RCC_HCLKConfig(RCC_SYSCLK_Div1);    // HCLK = SYSCLK
-  RCC_PCLK1Config(RCC_HCLK_Div2);     // PCLK1 = HCLK/2
-  RCC_PCLK2Config(RCC_HCLK_Div1);     // PCLK2 = HCLK
-*/
-/* equivalente: */
-  tmpreg = RCC->CFGR;
-  tmpreg &= 0xFFFFFF0F;         // Clear HPRE[3:0] bits
-  tmpreg |= 0x00000000;         // Set HPRE[3:0] bits according to RCC_SYSCLK_Div1
-  tmpreg &= 0xFFFFF8FF;         // Clear PPRE1[2:0] bits
-  tmpreg |= 0x00000400;         // Set PPRE1[2:0] bits according to RCC_HCLK_Div2
-  tmpreg &= 0xFFFFC7FF;         // Clear PPRE2[2:0] bits
-  tmpreg |= 0x00000000 << 3;    // Set PPRE2[2:0] bits according to RCC_HCLK_Div1
-  RCC->CFGR = tmpreg;           // Store the new value
-/*
-  // TIM2, TIM3 USART2 clock enable
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 |  // Used for PPM signal capture
-                         RCC_APB1Periph_TIM3 |  // Used for servo signal PWM
-                         RCC_APB1Periph_USART2, // Used for GPS communication
-                         ENABLE);
-*/
-/* equivalente: */
-  tmpreg = 0x00000001 |  // Timer 2 used for PPM signal capture
-           0x00000002 |  // Timer 3 used for servo signal PWM
-           0x00020000;   // Usart 2 used for GPS communication
-  RCC->APB1ENR |= tmpreg;
-/*
-  // GPIOA, GPIOB, GPIOC, USART1 clock enable
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | // TIM2, TIM3, USART1, USART2
-                         RCC_APB2Periph_GPIOB | // TIM3
-                         RCC_APB2Periph_GPIOC | // LED
-                         RCC_APB2Periph_AFIO  | //
-                         RCC_APB2Periph_USART1, // Used for telemetry
-                         ENABLE);
-*/
-/* equivalente */
-  tmpreg = 0x00000004 | // GPIOA used by TIM2, TIM3, USART1, USART2
-           0x00000008 | // GPIOB used for TIM3
-           0x00000010 | // GPIOC used for LEDs
-           0x00000001 | // AFIO used for ...
-           0x00004000;  // USART 1 used for telemetry
-  RCC->APB2ENR |= tmpreg;
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief   Configure pins.
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void GPIO_Configuration(void)
-{
-  uint32_t tempreg;
 #define GPIOA_CRL_MASK  0x00FF000F
 #define GPIOA_CRL_BITS  0xAA004A80
                      //   ||  |||
@@ -211,27 +157,52 @@ void GPIO_Configuration(void)
                      //         |+- Pin  8: LED output push pull 2 MHz
                      //         +-- Pin  9: LED output push pull 2 MHz
 
-  tempreg = GPIOA->CRL;             // Port A pins 0 - 7
-  tempreg &= GPIOA_CRL_MASK;
-  tempreg |= GPIOA_CRL_BITS;
-  GPIOA->CRL = tempreg;
+  uint32_t tmpreg;
+
+  tmpreg = RCC->CFGR;
+  tmpreg &= 0xFFFFC00F; // Clear PPRE2[2:0] PPRE1[2:0] HPRE[3:0] bits
+  tmpreg |= 0x00000400; // Set HPRE[3:0] (HCLK=SYSCLK), PPRE2[2:0] (PCLK1=HCLK), PPRE1[2:0] (PLCK2=HCLK/2)
+  RCC->CFGR = tmpreg;   // Store the new value
+
+  tmpreg = RCC->APB1ENR;
+  tmpreg |= 0x00020003;
+            //   |   |
+            //   |   +- Timer 2 used for PPM signal capture (BIT 1)
+            //   |   +- Timer 3 used for servo signal PWM (BIT 2)
+            //   +----- Usart 2 used for GPS communication (BIT 17)
+  RCC->APB1ENR = tmpreg;
+
+  tmpreg = RCC->APB2ENR;
+  tmpreg |= 0x0000401D;
+            //    | ||
+            //    | |+- AFIO used for ... (BIT 0)
+            //    | |+- GPIOA used by TIM2, TIM3, USART1, USART2 (BIT 2)
+            //    | |+- GPIOB used for TIM3 (BIT 3)
+            //    | +-- GPIOC used for LEDs (BIT 4)
+            //    +---- USART 1 used for telemetry (BIT 14)
+  RCC->APB2ENR = tmpreg;
+
+  tmpreg = GPIOA->CRL;             // Port A pins 0 - 7
+  tmpreg &= GPIOA_CRL_MASK;
+  tmpreg |= GPIOA_CRL_BITS;
+  GPIOA->CRL = tmpreg;
 
   GPIOA->BSRR = GPIOA_BSRR_BITS;    // TIM2 CH 2 pull down
 
-  tempreg = GPIOA->CRH;             // Port A pins 8 - 15
-  tempreg &= GPIOA_CRH_MASK;
-  tempreg |= GPIOA_CRH_BITS;
-  GPIOA->CRH = tempreg;
+  tmpreg = GPIOA->CRH;             // Port A pins 8 - 15
+  tmpreg &= GPIOA_CRH_MASK;
+  tmpreg |= GPIOA_CRH_BITS;
+  GPIOA->CRH = tmpreg;
 
-  tempreg = GPIOB->CRL;             // Port B pins 0 - 1
-  tempreg &= GPIOB_CRL_MASK;
-  tempreg |= GPIOB_CRL_BITS;
-  GPIOB->CRL = tempreg;
+  tmpreg = GPIOB->CRL;             // Port B pins 0 - 1
+  tmpreg &= GPIOB_CRL_MASK;
+  tmpreg |= GPIOB_CRL_BITS;
+  GPIOB->CRL = tmpreg;
 
-  tempreg = GPIOC->CRH;             // Port C pins 8 - 15
-  tempreg &= GPIOC_CRH_MASK;
-  tempreg |= GPIOC_CRH_BITS;
-  GPIOC->CRH = tempreg;
+  tmpreg = GPIOC->CRH;             // Port C pins 8 - 15
+  tmpreg &= GPIOC_CRH_MASK;
+  tmpreg |= GPIOC_CRH_BITS;
+  GPIOC->CRH = tmpreg;
 }
 
 
