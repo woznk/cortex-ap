@@ -146,22 +146,22 @@
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>GPIOC_CRH</ItemText>
+          <ItemText>USART1_BRR</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>GPIOC_CRL</ItemText>
+          <ItemText>USART1_CR1</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>GPIOB_CRH</ItemText>
+          <ItemText>USART1_CR2</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>GPIOB_CRL</ItemText>
+          <ItemText>USART1_CR3</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -222,8 +222,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>271</TopLine>
-      <CurrentLine>293</CurrentLine>
+      <TopLine>104</TopLine>
+      <CurrentLine>113</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\test_simple.c</PathWithFileName>
       <FilenameWithoutPath>test_simple.c</FilenameWithoutPath>
@@ -242,6 +242,20 @@
       <PathWithFileName>..\..\Source\led.c</PathWithFileName>
       <FilenameWithoutPath>led.c</FilenameWithoutPath>
     </File>
+    <File>
+      <GroupNumber>1</GroupNumber>
+      <FileNumber>0</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <Focus>0</Focus>
+      <ColumnNumber>0</ColumnNumber>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <TopLine>194</TopLine>
+      <CurrentLine>214</CurrentLine>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\..\Source\usart1driver.c</PathWithFileName>
+      <FilenameWithoutPath>usart1driver.c</FilenameWithoutPath>
+    </File>
   </Group>
 
   <Group>
@@ -257,8 +271,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>101</TopLine>
-      <CurrentLine>102</CurrentLine>
+      <TopLine>118</TopLine>
+      <CurrentLine>143</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\misc.c</PathWithFileName>
       <FilenameWithoutPath>misc.c</FilenameWithoutPath>
@@ -285,39 +299,39 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>214</TopLine>
+      <CurrentLine>232</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x\system_stm32f10x.c</PathWithFileName>
       <FilenameWithoutPath>system_stm32f10x.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>2</GroupNumber>
-      <FileNumber>6</FileNumber>
+      <FileNumber>0</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>17</ColumnNumber>
+      <ColumnNumber>51</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1133</TopLine>
-      <CurrentLine>1144</CurrentLine>
+      <TopLine>588</TopLine>
+      <CurrentLine>606</CurrentLine>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_rcc.c</PathWithFileName>
-      <FilenameWithoutPath>stm32f10x_rcc.c</FilenameWithoutPath>
+      <PathWithFileName>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</PathWithFileName>
+      <FilenameWithoutPath>stm32f10x_usart.c</FilenameWithoutPath>
     </File>
     <File>
       <GroupNumber>2</GroupNumber>
-      <FileNumber>7</FileNumber>
+      <FileNumber>0</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>42</ColumnNumber>
+      <ColumnNumber>98</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>202</TopLine>
-      <CurrentLine>211</CurrentLine>
+      <TopLine>906</TopLine>
+      <CurrentLine>918</CurrentLine>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_gpio.c</PathWithFileName>
-      <FilenameWithoutPath>stm32f10x_gpio.c</FilenameWithoutPath>
+      <PathWithFileName>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_rcc.c</PathWithFileName>
+      <FilenameWithoutPath>stm32f10x_rcc.c</FilenameWithoutPath>
     </File>
   </Group>
 
@@ -431,25 +445,25 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>2</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\test_simple.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>271</TopLine>
-          <CurrentLine>293</CurrentLine>
+          <TopLine>104</TopLine>
+          <CurrentLine>113</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\..\Source\startup_stm32f10x_md_vl.s</Name>
+          <Name>..\..\Source\usart1driver.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>153</TopLine>
-          <CurrentLine>153</CurrentLine>
+          <TopLine>194</TopLine>
+          <CurrentLine>214</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_gpio.c</Name>
-          <ColumnNumber>42</ColumnNumber>
-          <TopLine>202</TopLine>
-          <CurrentLine>211</CurrentLine>
+          <Name>..\..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</Name>
+          <ColumnNumber>51</ColumnNumber>
+          <TopLine>588</TopLine>
+          <CurrentLine>606</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
