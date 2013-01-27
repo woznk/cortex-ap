@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added call to Mavlink_Stream_Send() in telemetry task
+// Change: replaced GPIO and RCC configuration functions with HW_Init()
 //
 //============================================================================*/
 
@@ -93,8 +93,7 @@
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-void RCC_Configuration(void);
-void GPIO_Configuration(void);
+void HW_Init(void);
 
 /*--------------------------------- Functions --------------------------------*/
 
@@ -189,20 +188,26 @@ int32_t main(void) {
      To reconfigure the default setting of SystemInit() function, refer to
      system_stm32f10x.c file */
 
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
-  RCC_Configuration();                              // System Clocks Configuration
-  GPIO_Configuration();                             // GPIO Configuration
-  USART1_Init();              						// Initialize USART1 for telemetry
-  Servo_Init();                                     // Initialize PWM timers as servo outputs
-  PPM_Init();                                       // Initialize capture timers as RRC input
-  I2C_MEMS_Init();                                  // I2C peripheral initialization
+  SCB->AIRCR = 0x05FA0300;  // 4 bits for pre-emption priority, 0 bits for subpriority
+              // |  ||  |
+              // |  |+--+- NVIC_PriorityGroup_4
+              // |  |
+              // +--+----- AIRCR_VECTKEY_MASK
+
+  HW_Init();                // Initialize hardware
+
+  USART1_Init();            // Initialize USART1 for telemetry
+  Servo_Init();             // Initialize PWM timers as servo outputs
+  PPM_Init();               // Initialize capture timers as RRC input
+  I2C_MEMS_Init();          // I2C peripheral initialization
+
 /*
   xTelemetry_Queue = xQueueCreate( 3, sizeof( telStruct_Message ) );
-  while ( xTelemetry_Queue == 0 ) {                 // Halt if queue wasn't created
+  while ( xTelemetry_Queue == 0 ) { // Halt if queue wasn't created
   }
 */
   xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
-  while ( xLog_Queue == 0 ) {                       // Halt if queue wasn't created
+  while ( xLog_Queue == 0 ) {       // Halt if queue wasn't created
   }
 
   xTaskCreate(Attitude_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
@@ -219,101 +224,90 @@ int32_t main(void) {
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   Configure the different system clocks.
+/// \brief   Configure the hardware
 /// \return  -
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void RCC_Configuration(void)
+void HW_Init(void)
 {
-  /* HCLK = SYSCLK */
-  RCC_HCLKConfig(RCC_SYSCLK_Div1);
+#define GPIOA_CRL_MASK  0x00FF000F
+#define GPIOA_CRL_BITS  0xAA004A80
+                     //   ||  |||
+                     //   ||  ||+- Pin  1: TIM2 CH 2 input
+                     //   ||  |+-- Pin  2: USART 2 TX alternate push pull 2 MHz
+                     //   ||  +--- Pin  3: USART 2 RX input floating
+                     //   |+------ Pin  6: TIM3 CH 1 alternate push pull 2 MHz
+                     //   +------- Pin  7: TIM3 CH 2 alternate push pull 2 MHz
 
-  /* PCLK1 = HCLK/2 */
-  RCC_PCLK1Config(RCC_HCLK_Div2);
+#define GPIOA_CRH_MASK  0xFFFFF00F
+#define GPIOA_CRH_BITS  0x000004A0
+                    //         ||
+                    //         |+- Pin  9: USART 1 TX alternate push pull 2 MHz
+                    //         +-- Pin 10: USART 1 RX input floating
 
-  /* PCLK2 = HCLK */
-  RCC_PCLK2Config(RCC_HCLK_Div1);
+#define GPIOA_BSRR_BITS  0x00020000
+                     //       |
+                     //       +--- Pin  1: TIM2 CH 2 pull down
 
-  /* TIM2, TIM3 USART2 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 |  // Used for PPM signal capture
-                         RCC_APB1Periph_TIM3 |  // Used for servo signal PWM
-                         RCC_APB1Periph_USART2, // Used for GPS communication
-                         ENABLE);
+#define GPIOB_CRL_MASK  0xFFFFFF00
+#define GPIOB_CRL_BITS  0x000000AA
+                     //         ||
+                     //         |+- Pin  0: TIM3 CH 3 alternate push pull 2 MHz
+                     //         +-- Pin  1: TIM3 CH 4 alternate push pull 2 MHz
 
-  /* GPIOA, GPIOB, GPIOC, USART1 clock enable */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | // TIM2, TIM3, USART1, USART2
-                         RCC_APB2Periph_GPIOB | // TIM3
-                         RCC_APB2Periph_GPIOC | // LED
-                         RCC_APB2Periph_AFIO  | //
-                         RCC_APB2Periph_USART1, // Used for telemetry
-                         ENABLE);
-}
+#define GPIOC_CRH_MASK  0xFFFFFF00
+#define GPIOC_CRH_BITS  0x00000022
+                     //         ||
+                     //         |+- Pin  8: LED output push pull 2 MHz
+                     //         +-- Pin  9: LED output push pull 2 MHz
 
-///----------------------------------------------------------------------------
-///
-/// \brief   Configure pins.
-/// \return  -
-/// \remarks -
-///
-///----------------------------------------------------------------------------
-void GPIO_Configuration(void)
-{
-  GPIO_InitTypeDef GPIO_InitStructure;
+  uint32_t tmpreg;
 
-  /* GPIOA Configuration */
+  tmpreg = RCC->CFGR;
+  tmpreg &= 0xFFFFC00F; // Clear PPRE2[2:0] PPRE1[2:0] HPRE[3:0] bits
+  tmpreg |= 0x00000400; // Set HPRE[3:0] to SYSCLK, PPRE2[2:0] to HCLK, PPRE1[2:0] to HCLK/2
+  RCC->CFGR = tmpreg;   // Store the new value
 
-  // TIM2 Channel 2 as input pull down (1)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  tmpreg = RCC->APB1ENR;
+  tmpreg |= 0x00020003;
+            //   |   |
+            //   |   +- Timer 2 used for PPM signal capture (BIT 1)
+            //   |   +- Timer 3 used for servo signal PWM (BIT 2)
+            //   +----- Usart 2 used for GPS communication (BIT 17)
+  RCC->APB1ENR = tmpreg;
 
-  // TIM3 Channel 1, 2 as alternate function push-pull (6, 7)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  tmpreg = RCC->APB2ENR;
+  tmpreg |= 0x0000401D;
+            //    | ||
+            //    | |+- AFIO used for USART1, USART2 and TIM3 (BIT 0)
+            //    | |+- GPIOA used by TIM2, TIM3, USART1, USART2 (BIT 2)
+            //    | |+- GPIOB used for TIM3 (BIT 3)
+            //    | +-- GPIOC used for LEDs (BIT 4)
+            //    +---- USART 1 used for telemetry (BIT 14)
+  RCC->APB2ENR = tmpreg;
 
-  // USART 1 TX pin as alternate function push pull (9)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  tmpreg = GPIOA->CRL;             // Port A pins 0 - 7
+  tmpreg &= GPIOA_CRL_MASK;
+  tmpreg |= GPIOA_CRL_BITS;
+  GPIOA->CRL = tmpreg;
 
-  // USART 1 RX pin as input floating (10)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIOA->BSRR = GPIOA_BSRR_BITS;    // TIM2 CH 2 pull down
 
-  // USART 2 TX pin as alternate function push pull (2)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  tmpreg = GPIOA->CRH;             // Port A pins 8 - 15
+  tmpreg &= GPIOA_CRH_MASK;
+  tmpreg |= GPIOA_CRH_BITS;
+  GPIOA->CRH = tmpreg;
 
-  // USART 2 RX pin as input floating (3)
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  tmpreg = GPIOB->CRL;             // Port B pins 0 - 1
+  tmpreg &= GPIOB_CRL_MASK;
+  tmpreg |= GPIOB_CRL_BITS;
+  GPIOB->CRL = tmpreg;
 
-  /* GPIOB Configuration */
-
-  // TIM3 Channel 3, 4 as alternate function push-pull */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-  /* GPIOC Configuration */
-
-  // LED pins as push pull outputs
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
+  tmpreg = GPIOC->CRH;             // Port C pins 8 - 15
+  tmpreg &= GPIOC_CRH_MASK;
+  tmpreg |= GPIOC_CRH_BITS;
+  GPIOC->CRH = tmpreg;
 }
 
 
