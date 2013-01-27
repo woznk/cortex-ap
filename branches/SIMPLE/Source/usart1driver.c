@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Change: baud rate changed to 57600 to enable communication with OSD
+/// Change: added tentative code based on USART register manipulation only
 //
 //============================================================================*/
 
@@ -73,7 +73,16 @@ void USART1_Init( void ) {
 
     USART_InitTypeDef USART_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
-
+/*
+    USART1->BRR = 12000000L / 57600L;
+    USART1->CR1 = 0x0000002C;
+                  //      ||
+                  //      |+- enable tx (TE=1), enable rx (RE=1)
+                  //      +-- enable RXNE interrupt
+    USART1->CR1 |= 0x00002000;
+                  //     |
+                  //     +--- enable USART (UE=1)
+*/
     // Initialize USART1 structure
     USART_InitStructure.USART_BaudRate = 57600;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -114,6 +123,17 @@ void USART1_IRQHandler( void ) {
 //  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 //  portCHAR cChar;
 
+#define RXNE ((uint32_t)0x00000020)
+
+/*
+    if (USART1->SR & RXNE) != 0) {
+//		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
+		ucRxBuffer[ucRxWindex++] = (uint8_t)(USART1->DR);
+        if (ucRxWindex >= RX_BUFFER_LENGTH) {
+            ucRxWindex = 0;
+        }
+    }
+*/
 	if (USART_GetITStatus(USART1, USART_IT_RXNE) == SET) {
 //		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
 		ucRxBuffer[ucRxWindex++] = USART_ReceiveData( USART1 );
@@ -207,6 +227,17 @@ void USART1_Putf(float f) {
 //----------------------------------------------------------------------------
 void USART1_Transmit( void ) {
 
+#define TXE ((uint32_t)0x00000080)
+/*
+    while (ucTxRindex != ucTxWindex) {
+        while (USART1->SR & TXE) == 0) {
+        }
+        USART1_DR = ucTxBuffer[ucTxRindex++];
+        if (ucTxRindex >= RX_BUFFER_LENGTH) {
+            ucTxRindex = 0;
+        }
+    }
+*/
     while (ucTxRindex != ucTxWindex) {
         while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
         }
