@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Change: added tentative code based on USART register manipulation only
+/// Change: added some #defines
 //
 //============================================================================*/
 
@@ -71,10 +71,13 @@ VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    //!< downlink data buffer
 //----------------------------------------------------------------------------
 void USART1_Init( void ) {
 
-    USART_InitTypeDef USART_InitStructure;
+//    USART_InitTypeDef USART_InitStructure;
+#define UART_CLOCK 12000000L
+#define BAUD_RATE  57600L
+#define DIV_INT    (UART_CLOCK / (4L * BAUD_RATE))
+#define DIV_FR     (UART_CLOCK % (4L * BAUD_RATE))
     NVIC_InitTypeDef NVIC_InitStructure;
-/*
-    USART1->BRR = 12000000L / 57600L;
+    USART1->BRR = (DIV_INT << 4) + DIV_FR;
     USART1->CR1 = 0x0000002C;
                   //      ||
                   //      |+- enable tx (TE=1), enable rx (RE=1)
@@ -82,7 +85,7 @@ void USART1_Init( void ) {
     USART1->CR1 |= 0x00002000;
                   //     |
                   //     +--- enable USART (UE=1)
-*/
+/*
     // Initialize USART1 structure
     USART_InitStructure.USART_BaudRate = 57600;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -95,7 +98,7 @@ void USART1_Init( void ) {
 
     USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);  // enable USART1 interrupt
     //USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-
+*/
     // Configure NVIC for USART1 interrupt
     NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
@@ -103,7 +106,7 @@ void USART1_Init( void ) {
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init( &NVIC_InitStructure );
 
-    USART_Cmd(USART1, ENABLE);                      // enable the USART1
+//    USART_Cmd(USART1, ENABLE);                      // enable the USART1
 
     ucRxWindex = 0;                                 // clear uplink write index
     ucRxRindex = 0;                                 // clear uplink read index
