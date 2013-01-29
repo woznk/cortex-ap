@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Change: added some #defines
+/// Change: completed initialization of USART1 registers
 //
 //============================================================================*/
 
@@ -71,34 +71,21 @@ VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    //!< downlink data buffer
 //----------------------------------------------------------------------------
 void USART1_Init( void ) {
 
-//    USART_InitTypeDef USART_InitStructure;
-#define UART_CLOCK 12000000L
-#define BAUD_RATE  57600L
-#define DIV_INT    (UART_CLOCK / (4L * BAUD_RATE))
-#define DIV_FR     (UART_CLOCK % (4L * BAUD_RATE))
+#define UART_CLOCK (12000000)
+#define BAUD_RATE  (57600)
+#define DIV        ((float)UART_CLOCK / (16.0f * (float)BAUD_RATE))
+#define DIV_INT    ((uint32_t)DIV)
+#define DIV_FR     ((uint32_t)((DIV - DIV_INT) * 16.0f))
+
     NVIC_InitTypeDef NVIC_InitStructure;
-    USART1->BRR = (DIV_INT << 4) + DIV_FR;
-    USART1->CR1 = 0x0000002C;
+
+    USART1->BRR = DIV_INT << 4 + DIV_FR;    // BAUD rate register
+
+    USART1->CR1  = 0x0000002C;              // control register 1
                   //      ||
                   //      |+- enable tx (TE=1), enable rx (RE=1)
                   //      +-- enable RXNE interrupt
-    USART1->CR1 |= 0x00002000;
-                  //     |
-                  //     +--- enable USART (UE=1)
-/*
-    // Initialize USART1 structure
-    USART_InitStructure.USART_BaudRate = 57600;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 
-    USART_Init(USART1, &USART_InitStructure);       // configure USART1
-
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);  // enable USART1 interrupt
-    //USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
-*/
     // Configure NVIC for USART1 interrupt
     NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
@@ -106,12 +93,14 @@ void USART1_Init( void ) {
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init( &NVIC_InitStructure );
 
-//    USART_Cmd(USART1, ENABLE);                      // enable the USART1
+    USART1->CR1 |= 0x00002000;              // enable USART
+                  //     |
+                  //     +--- enable USART (UE=1)
 
-    ucRxWindex = 0;                                 // clear uplink write index
-    ucRxRindex = 0;                                 // clear uplink read index
-    ucTxWindex = 0;                                 // clear downlink write index
-    ucTxRindex = 0;                                 // clear downlink read index
+    ucRxWindex = 0;                         // clear uplink write index
+    ucRxRindex = 0;                         // clear uplink read index
+    ucTxWindex = 0;                         // clear downlink write index
+    ucTxRindex = 0;                         // clear downlink read index
 }
 
 //----------------------------------------------------------------------------
@@ -128,15 +117,14 @@ void USART1_IRQHandler( void ) {
 
 #define RXNE ((uint32_t)0x00000020)
 
-/*
-    if (USART1->SR & RXNE) != 0) {
+    if ((USART1->SR & RXNE) != 0) {
 //		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
 		ucRxBuffer[ucRxWindex++] = (uint8_t)(USART1->DR);
         if (ucRxWindex >= RX_BUFFER_LENGTH) {
             ucRxWindex = 0;
         }
     }
-*/
+/*
 	if (USART_GetITStatus(USART1, USART_IT_RXNE) == SET) {
 //		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
 		ucRxBuffer[ucRxWindex++] = USART_ReceiveData( USART1 );
@@ -144,6 +132,7 @@ void USART1_IRQHandler( void ) {
             ucRxWindex = 0;
         }
     }
+*/
 //	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 }
 
@@ -231,16 +220,16 @@ void USART1_Putf(float f) {
 void USART1_Transmit( void ) {
 
 #define TXE ((uint32_t)0x00000080)
-/*
+
     while (ucTxRindex != ucTxWindex) {
-        while (USART1->SR & TXE) == 0) {
+        while ((USART1->SR & TXE) == 0) {
         }
-        USART1_DR = ucTxBuffer[ucTxRindex++];
+        USART1->DR = ucTxBuffer[ucTxRindex++];
         if (ucTxRindex >= RX_BUFFER_LENGTH) {
             ucTxRindex = 0;
         }
     }
-*/
+/*
     while (ucTxRindex != ucTxWindex) {
         while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {
         }
@@ -249,4 +238,5 @@ void USART1_Transmit( void ) {
             ucTxRindex = 0;
         }
     }
+*/
 }
