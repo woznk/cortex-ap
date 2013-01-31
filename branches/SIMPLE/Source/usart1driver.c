@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Change: completed initialization of USART1 registers
+/// Change: added code for NVIC configuration based on register manipulation
 //
 //============================================================================*/
 
@@ -71,13 +71,20 @@ VAR_STATIC uint8_t ucTxBuffer[TX_BUFFER_LENGTH];    //!< downlink data buffer
 //----------------------------------------------------------------------------
 void USART1_Init( void ) {
 
+    NVIC_InitTypeDef NVIC_InitStructure;
+    uint32_t temp_reg;
+
 #define UART_CLOCK (12000000)
 #define BAUD_RATE  (57600)
 #define DIV        ((float)UART_CLOCK / (16.0f * (float)BAUD_RATE))
 #define DIV_INT    ((uint32_t)DIV)
 #define DIV_FR     ((uint32_t)((DIV - DIV_INT) * 16.0f))
 
-    NVIC_InitTypeDef NVIC_InitStructure;
+    ucRxWindex = 0;                         // clear uplink write index
+    ucRxRindex = 0;                         // clear uplink read index
+    ucTxWindex = 0;                         // clear downlink write index
+    ucTxRindex = 0;                         // clear downlink read index
+
 
     USART1->BRR = DIV_INT << 4 + DIV_FR;    // BAUD rate register
 
@@ -93,14 +100,21 @@ void USART1_Init( void ) {
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init( &NVIC_InitStructure );
 
+/* equivalente */
+
+    temp_reg = (0x700 - ((SCB->AIRCR) & (uint32_t)0x700)) >> 0x08;
+    temp_reg = (0x4 - temp_reg);
+    temp_reg = configLIBRARY_KERNEL_INTERRUPT_PRIORITY << temp_reg;
+    NVIC->IP[USART1_IRQn] = temp_reg << 0x04;
+
+    // Enable selected IRQ channel
+    NVIC->ISER[USART1_IRQn >> 0x05] = (uint32_t)0x01 << (USART1_IRQn & (uint8_t)0x1F);
+
+/* fine equivalente */
+
     USART1->CR1 |= 0x00002000;              // enable USART
                   //     |
                   //     +--- enable USART (UE=1)
-
-    ucRxWindex = 0;                         // clear uplink write index
-    ucRxRindex = 0;                         // clear uplink read index
-    ucTxWindex = 0;                         // clear downlink write index
-    ucTxRindex = 0;                         // clear downlink read index
 }
 
 //----------------------------------------------------------------------------
