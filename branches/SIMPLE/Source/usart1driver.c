@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Change: added code for NVIC configuration based on register manipulation
+/// Change: moved #definitions, added remarks
 //
 //============================================================================*/
 
@@ -33,6 +33,12 @@
 #   undef VAR_GLOBAL
 #endif
 #define   VAR_GLOBAL
+
+#define UART_CLOCK (12000000)
+#define BAUD_RATE  (57600)
+#define DIV        ((float)UART_CLOCK / (16.0f * (float)BAUD_RATE))
+#define DIV_INT    ((uint32_t)DIV)
+#define DIV_FR     ((uint32_t)((DIV - DIV_INT) * 16.0f))
 
 #define RX_BUFFER_LENGTH    48  //!< length of receive buffer
 #define TX_BUFFER_LENGTH    48  //!< length of transmit buffer
@@ -74,24 +80,17 @@ void USART1_Init( void ) {
     NVIC_InitTypeDef NVIC_InitStructure;
     uint32_t temp_reg;
 
-#define UART_CLOCK (12000000)
-#define BAUD_RATE  (57600)
-#define DIV        ((float)UART_CLOCK / (16.0f * (float)BAUD_RATE))
-#define DIV_INT    ((uint32_t)DIV)
-#define DIV_FR     ((uint32_t)((DIV - DIV_INT) * 16.0f))
-
     ucRxWindex = 0;                         // clear uplink write index
     ucRxRindex = 0;                         // clear uplink read index
     ucTxWindex = 0;                         // clear downlink write index
     ucTxRindex = 0;                         // clear downlink read index
 
-
     USART1->BRR = DIV_INT << 4 + DIV_FR;    // BAUD rate register
 
     USART1->CR1  = 0x0000002C;              // control register 1
-                  //      ||
-                  //      |+- enable tx (TE=1), enable rx (RE=1)
-                  //      +-- enable RXNE interrupt
+                   //      ||
+                   //      |+- enable tx (TE=1), enable rx (RE=1)
+                   //      +-- enable RXNE interrupt
 
     // Configure NVIC for USART1 interrupt
     NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
@@ -102,8 +101,11 @@ void USART1_Init( void ) {
 
 /* equivalente */
 
-    temp_reg = (0x700 - ((SCB->AIRCR) & (uint32_t)0x700)) >> 0x08;
-    temp_reg = (0x4 - temp_reg);
+    temp_reg = SCB->AIRCR;                 // read application interrupt and reset control reg 
+    temp_reg = temp_reg & (uint32_t)0x700; // get priority group
+    temp_reg = 0x700 - temp_reg;
+    temp_reg = temp_reg >> 0x08;
+    temp_reg = 0x4 - temp_reg;
     temp_reg = configLIBRARY_KERNEL_INTERRUPT_PRIORITY << temp_reg;
     NVIC->IP[USART1_IRQn] = temp_reg << 0x04;
 
