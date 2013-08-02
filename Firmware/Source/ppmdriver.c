@@ -29,12 +29,13 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change  added clearing of capture interrupt flag,
-//          corrected initial clearing of timer flags
+//  Change  added #inclusion of config.h
 //
 //============================================================================*/
 
 #include "stm32f10x.h"
+
+#include "config.h"
 #include "led.h"
 #include "freertosconfig.h"
 #include "ppmdriver.h"
