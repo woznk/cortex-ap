@@ -243,9 +243,8 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: changed frequencies of Mavlink data streams,
-///          changed source of aircraft heading from IMU to GPS,
-///          updated comments
+/// Changes: filled function Telemetry_Get_Gain()
+///          removed #inclusion of telemetry.h
 ///
 //============================================================================*/
 
@@ -265,7 +264,6 @@
 #include "nav.h"
 #include "attitude.h"
 #include "mavlink.h"
-#include "telemetry.h"
 #include "mav_telemetry.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -1269,7 +1267,13 @@ void Telemetry_Get_Sensors(int16_t * piSensors)
 ///
 //----------------------------------------------------------------------------
 float Telemetry_Get_Gain(telEnum_Gain gain)
-{}
+{
+    if (gain < TEL_GAIN_NUMBER) {
+        return fParam_Value[gain];
+    } else {
+        return 0.0f;
+    }
+}
 
 //----------------------------------------------------------------------------
 //
