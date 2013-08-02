@@ -9,7 +9,7 @@
 /// Tentative Mavlink protocol implementation
 ///
 ///
-/// Changes added Mavlink_Stream_Send()
+/// Changes added type definitions of gain indexes
 ///
 //============================================================================*/
 
@@ -25,6 +25,19 @@
 /*-------------------------------- Enumerations ------------------------------*/
 
 /*----------------------------------- Types ----------------------------------*/
+
+/// PID gains
+typedef enum {
+    TEL_ROLL_KP = 0,    ///<
+    TEL_ROLL_KI,        ///<
+    TEL_PITCH_KP,       ///<
+    TEL_PITCH_KI,       ///<
+    TEL_ALT_KP,         ///<
+    TEL_ALT_KI,         ///<
+    TEL_NAV_KP,         ///<
+    TEL_NAV_KI,         ///<
+    TEL_GAIN_NUMBER
+} telEnum_Gain;
 
 /*---------------------------------- Constants -------------------------------*/
 
