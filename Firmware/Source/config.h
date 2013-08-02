@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change added #definition of TELEMETRY_MAVLINK
+// Change moved here #definition of aircraft model
 //
 //============================================================================*/
 
@@ -143,3 +143,9 @@
 //#define HELI_120_CCPM
 //#define HELI_90_DEG
 
+/* Aircraft model */
+#define EASYSTAR            1   ///< Easystar, 3 axis, aileron direction control
+#define TYCHO               2   ///< Tycho, 2 axis, rudder only direction control
+#define LEUKO               3   ///< Leuko, flying wing, rudder and aileron mixed
+#define EPPFPV              4   ///< Hobby King EPP FPV, 3 axis, aileron direction control
+#define MODEL          EPPFPV   ///< current model
