@@ -78,7 +78,7 @@
 ///
 /// \endcode
 ///
-// Change: removed unused #inclusions
+// Change: Gps_Heading renamed Gps_Heading_Deg
 //
 //=============================================================================+
 
@@ -358,7 +358,7 @@ CompensateDrift( void )
     //
     // Course over ground
     //
-    fCourse_Over_Ground = (float)Gps_Heading();
+    fCourse_Over_Ground = (float)Gps_Heading_Deg();
     COGX = cosf(ToRad(fCourse_Over_Ground));
     COGY = sinf(ToRad(fCourse_Over_Ground));
 
