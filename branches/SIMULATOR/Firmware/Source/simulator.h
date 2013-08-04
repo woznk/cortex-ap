@@ -5,12 +5,12 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief telemetry interface header file
+/// \brief simulator interface header file
 ///
 /// \file
 ///
 ///
-//  Change function Telemetry_Get_Sensors() renamed Telemetry_Get_Raw_IMU()
+//  Change
 //
 //============================================================================
 
@@ -27,42 +27,39 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
-/// telemetry message structure
+/// Simulator message structure
 typedef struct {
     uint8_t ucLength;   //!< length of message
     uint16_t *pcData;   //!< pointer to message content
-} telStruct_Message;
+} simStruct_Message;
 
 /// PID gains
 typedef enum {
-    TEL_PITCH_KP = 0,   ///<
-    TEL_PITCH_KI,       ///<
-    TEL_ROLL_KP,        ///<
-    TEL_ROLL_KI,        ///<
-    TEL_NAV_KP,         ///<
-    TEL_NAV_KI,         ///<
-    TEL_ALT_KP,         ///<
-    TEL_ALT_KI,         ///<
-    TEL_GAIN_NUMBER
-} telEnum_Gain;
+    SIM_PITCH_KP = 0,   ///<
+    SIM_PITCH_KI,       ///<
+    SIM_ROLL_KP,        ///<
+    SIM_ROLL_KI,        ///<
+    SIM_NAV_KP,         ///<
+    SIM_NAV_KI,         ///<
+    SIM_ALT_KP,         ///<
+    SIM_ALT_KI,         ///<
+    SIM_GAIN_NUMBER
+} simEnum_Gain;
 
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
 
-//VAR_GLOBAL xQueueHandle xTelemetry_Queue;
-
 /*---------------------------------- Interface -------------------------------*/
 
-void Telemetry_Parse( void );
-void Telemetry_Send_Message(uint16_t *data, uint8_t num);
-void Telemetry_Send_DCM( void );
-void Telemetry_Send_Controls( void );
-void Telemetry_Send_Waypoint( void );
-void Telemetry_Send_Position( void );
-void Telemetry_Get_Raw_IMU(int16_t * piSensors);
-float Telemetry_Get_Gain(telEnum_Gain gain);
-float Telemetry_Get_Speed(void);
-float Telemetry_Get_Altitude(void);
-
+void Simulator_Parse( void );
+void Simulator_Send_Message(uint16_t *data, uint8_t num);
+void Simulator_Send_DCM( void );
+void Simulator_Send_Controls( void );
+void Simulator_Send_Waypoint( void );
+void Simulator_Send_Position( void );
+void Simulator_Get_Raw_IMU(int16_t * piSensors);
+float Simulator_Get_Gain(simEnum_Gain gain);
+float Simulator_Get_Speed(void);
+float Simulator_Get_Altitude(void);
 

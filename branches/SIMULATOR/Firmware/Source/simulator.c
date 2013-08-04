@@ -5,7 +5,7 @@
 // $Date:  $
 // $Author: $
 //
-/// \brief telemetry interface
+/// \brief simulator interface
 ///
 /// \file
 /// Reference systems :                                             \code
@@ -56,7 +56,7 @@
 #include "DCM.h"
 #include "servodriver.h"
 #include "usart1driver.h"
-#include "telemetry.h"
+#include "simulator.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
@@ -74,20 +74,20 @@
 
 /*-------------------------------- Enumerations ------------------------------*/
 
-/// telemetry message types
-typedef enum E_TELEMETRY {
-    TEL_NULL,
-    TEL_GPS_POSITION = 0xF0,
-    TEL_SERVO_POS,
-    TEL_WAYPOINT,
-    TEL_ACCEL,
-    TEL_GYRO,
-    TEL_DEBUG_I,
-    TEL_DEBUG_F,
-    TEL_DCM
+/// simulator message types
+typedef enum E_SIMULATOR {
+    SIM_NULL,
+    SIM_GPS_POSITION = 0xF0,
+    SIM_SERVO_POS,
+    SIM_WAYPOINT,
+    SIM_ACCEL,
+    SIM_GYRO,
+    SIM_DEBUG_I,
+    SIM_DEBUG_F,
+    SIM_DCM
 } wait_code_t;
 
-/// telemetry parser stati
+/// simulator parser stati
 typedef enum E_PARSER {
     PARSE_PREAMBLE = 0, // preamble
     PARSE_TYPE,         // 1: data type ('S'= sensor, 'K'= gains)
@@ -115,8 +115,6 @@ typedef enum E_PARSER {
 
 /*---------------------------------- Globals ---------------------------------*/
 
-//VAR_GLOBAL xQueueHandle xTelemetry_Queue;
-
 /*----------------------------------- Locals ---------------------------------*/
 /*
 "$S,100,200,300,400,500,600,110\n"
@@ -132,7 +130,7 @@ VAR_STATIC float fTemp = 0.0f;                      //!< temporary for parser
 VAR_STATIC float fTrueAirSpeed = 0.0f;              //!< simulator true air speed
 VAR_STATIC float fAltitude;                         //!< simulator altitude
 VAR_STATIC float fSensor[8];                        //!< simulator sensor data
-VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
+VAR_STATIC float fGain[SIM_GAIN_NUMBER] = {
     PITCH_KP,                                       //!< default pitch kp
     PITCH_KI,                                       //!< default pitch ki
     ROLL_KP,                                        //!< default roll kp
@@ -149,20 +147,19 @@ VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   parse telemetry data
+/// \brief   parse simulator data
 /// \returns -
-/// \remarks telemetry is used to upload different information during flight
-///          and during simulation:
+/// \remarks information uploadED during simulation:
 ///
-///          INFORMATION  SIMULATION  FLIGHT  NOTE
-///          ---------------------------------------------------------------
-///          sensor data      X         -     during flight, sensor data
-///                                           comes from actual gyroscopes,
-///                                           accelerometers and pressure
-///          PID gains        X         X     PID gains are input on ground
-///                                           control station
+///          INFORMATION  NOTE
+///          -------------------------------------------
+///          sensor data  during flight, sensor data
+///                       comes from actual gyroscopes,
+///                       accelerometers and pressure
+///          PID gains    PID gains are input on ground
+///                       control station
 ///
-///          Telemetry messages start with a preamble (2 characters) used to
+///          Simulator messages start with a preamble (2 characters) used to
 ///          discriminate the type of message. The preamble format has been
 ///          chosen to resemble the GPS NMEA sentences.
 ///          Preamble is followed by useful data. Number of data fields and
@@ -177,7 +174,7 @@ VAR_STATIC float fGain[TEL_GAIN_NUMBER] = {
 ///         conversion. Sensor data and gains have no final checksum.
 ///
 //----------------------------------------------------------------------------
-void Telemetry_Parse ( void )
+void Simulator_Parse ( void )
 {
     uint8_t c;
     while (USART1_Getch(&c)) {          // received another character
@@ -301,9 +298,9 @@ void Telemetry_Parse ( void )
 ///              16         "
 ///
 //----------------------------------------------------------------------------
-void Telemetry_Send_Controls(void)
+void Simulator_Send_Controls(void)
 {
-    USART1_Putch(TEL_SERVO_POS);                    // telemetry wait code
+    USART1_Putch(SIM_SERVO_POS);                    // simulator wait code
     USART1_Putf((float)Servo_Get(SERVO_ELEVATOR));  // elevator
     USART1_Putf((float)Servo_Get(SERVO_AILERON));   // ailerons
     USART1_Putf((float)Servo_Get(SERVO_RUDDER));    // rudder
@@ -330,11 +327,11 @@ void Telemetry_Send_Controls(void)
 ///               7         "
 ///
 //----------------------------------------------------------------------------
-void Telemetry_Send_Waypoint(void)
+void Simulator_Send_Waypoint(void)
 {
-    USART1_Putch(TEL_WAYPOINT);                 // telemetry wait code
+    USART1_Putch(SIM_WAYPOINT);                 // simulator wait code
     USART1_Putch(Nav_Wpt_Index());              // waypoint index
-    USART1_Putw((uint16_t)Nav_Bearing_Deg());       // bearing to waypoint
+    USART1_Putw((uint16_t)Nav_Bearing_Deg());   // bearing to waypoint
     USART1_Putw((uint16_t)Nav_Wpt_Altitude());  // waypoint altitude
     USART1_Putw(Nav_Distance());                // distance to waypoint
 
@@ -364,13 +361,13 @@ void Telemetry_Send_Waypoint(void)
 ///              10         "
 ///
 //----------------------------------------------------------------------------
-void Telemetry_Send_Position(void)
+void Simulator_Send_Position(void)
 {
-    USART1_Putch(TEL_GPS_POSITION);                     // telemetry wait code
+    USART1_Putch(SIM_GPS_POSITION);                     // simulator wait code
     USART1_Putf((float)Gps_Latitude() / 10000000.0f);   // current latitude
     USART1_Putf((float)Gps_Longitude() / 10000000.0f);  // current longitude
     USART1_Putf(Nav_Altitude());                        // current altitude
-    USART1_Putf(Nav_Heading_Deg());                         // heading
+    USART1_Putf(Nav_Heading_Deg());                     // heading
 
     USART1_Transmit();                                  // send data
 }
@@ -385,7 +382,7 @@ void Telemetry_Send_Position(void)
 ///          Each element is converted to an hexadecimal string and sent to UART
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Send_Message(uint16_t *data, uint8_t num)
+void Simulator_Send_Message(uint16_t *data, uint8_t num)
 {
     uint32_t l_temp;
     uint8_t digit, i = 0;
@@ -409,16 +406,16 @@ void Telemetry_Send_Message(uint16_t *data, uint8_t num)
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   sends DCM matrix via telemetry USART
+/// \brief   sends DCM matrix via USART
 /// \return  -
 /// \remarks entries of DCM matrix are sent as raw bytes
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Send_DCM(void) {
+void Simulator_Send_DCM(void) {
 
     uint8_t x, y;
 
-    USART1_Putch(TEL_DCM);                  // telemetry wait code
+    USART1_Putch(SIM_DCM);                  // telemetry wait code
     for (y = 0; y < 3; y++) {               // 3 rows
       for (x = 0; x < 3; x++) {             // 3 columns
           USART1_Putf(DCM_Matrix[y][x]);    // DCM entry
@@ -434,7 +431,7 @@ void Telemetry_Send_DCM(void) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-float Telemetry_Get_Speed(void) {
+float Simulator_Get_Speed(void) {
     return fTrueAirSpeed;
 }
 
@@ -445,7 +442,7 @@ float Telemetry_Get_Speed(void) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-float Telemetry_Get_Altitude(void) {
+float Simulator_Get_Altitude(void) {
     return fAltitude;
 }
 
@@ -457,8 +454,8 @@ float Telemetry_Get_Altitude(void) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-float Telemetry_Get_Gain(telEnum_Gain gain) {
-    if (gain < TEL_GAIN_NUMBER) {
+float Simulator_Get_Gain(simEnum_Gain gain) {
+    if (gain < SIM_GAIN_NUMBER) {
         return fGain[gain];
     } else {
         return 0.0f;
@@ -473,7 +470,7 @@ float Telemetry_Get_Gain(telEnum_Gain gain) {
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-void Telemetry_Get_Raw_IMU(int16_t * piSensor) {
+void Simulator_Get_Raw_IMU(int16_t * piSensor) {
     uint8_t j;
 
     for (j = 0; j < 6; j++) {
