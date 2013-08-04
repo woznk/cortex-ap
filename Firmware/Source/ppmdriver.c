@@ -9,7 +9,7 @@
 ///
 /// \file
 ///                                                 content of
-///  ucPulseIndex     aliases                      ulPulseBuffer[]
+///  ucPulseIndex     aliases                      uiPulseBuffer[]
 ///
 ///        0          see ppmdriver.h              channel 0 pulse
 ///        1          see ppmdriver.h              channel 1 pulse
@@ -29,7 +29,8 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change  added #inclusion of config.h
+//  Change  added management of channel reversed in the RC transmitter, 
+//          corrected prefixes of unsigned int variables
 //
 //============================================================================*/
 
@@ -53,9 +54,9 @@
 
 #define PPM_SYNC_MIN        4999    ///< min length of sync pulse, modify according to RC type
 #define PPM_SYNC_MAX        20001   ///< max length of sync pulse, modify according to RC type
-#define PPM_LENGTH_MIN      900     ///< length of channel pulse for full scale low
-#define PPM_LENGTH_MAX      2100    ///< length of channel pulse for full scale high
-#define PPM_LENGTH_NEUTRAL  1500    ///< length of channel pulse for neutral position
+#define PPM_PULSE_MIN       900     ///< length of channel pulse for full scale low
+#define PPM_PULSE_MAX       2100    ///< length of channel pulse for full scale high
+#define PPM_PULSE_NEUTRAL   1500    ///< length of channel pulse for neutral position
 
 #define PERIOD              65535   ///< capture timer period
 #define PRESCALER           23      ///< capture timer prescaler
@@ -78,11 +79,22 @@ VAR_STATIC int8_t cPulseCount;                  ///< counter of sync pulses
 VAR_STATIC int8_t cSignalLevel;                 ///< signal level estimation
 VAR_STATIC int8_t cOverflowCount;               ///< counter of timer overflows
 VAR_STATIC uint8_t ucPulseIndex;                ///< channel (pulse) index
-VAR_STATIC uint16_t ulCaptureTime;              ///< captured timer value
-VAR_STATIC uint16_t ulLastCapture;              ///< last captured timer value
-VAR_STATIC uint16_t ulPulseLength;              ///< length of channel pulse
-VAR_STATIC uint16_t ulTemp[RC_CHANNELS];        ///< temporary for channel pulses
-VAR_STATIC uint16_t ulPulseBuffer[RC_CHANNELS]; ///< rc channel pulses
+VAR_STATIC uint16_t uiCaptureTime;              ///< captured timer value
+VAR_STATIC uint16_t uiLastCapture;              ///< last captured timer value
+VAR_STATIC uint16_t uiPulseLength;              ///< length of channel pulse
+VAR_STATIC uint16_t uiTemp[RC_CHANNELS];        ///< temporary for channel pulses
+VAR_STATIC uint16_t uiPulseBuffer[RC_CHANNELS]; ///< rc channel pulses
+VAR_STATIC int16_t iReverse[RC_CHANNELS] = {    ///< channel reverse
+        //  # | TYCHO    | LEUKO            | EASYSTAR | EPPFPV
+        // ---+----------+------------------+----------+----------
+     1, //  0 | aileron  | elevator, delta1 | throttle | aileron
+     1, //  1 | elevator | delta2           | aileron  | elevator
+    -1, //  2 | throttle | throttle         | elevator | throttle
+     1, //  3 | rudder   | rudder           | rudder   | rudder
+    -1, //  4 | kp       | mode             | mode     | mode
+     1, //  5 | ki       | kp               | -        | -
+     1  //  6 | -        | ki               | kp       | kp
+};
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -108,24 +120,24 @@ TIM2_IRQHandler(void)
   }
 
   if (TIM_GetITStatus(TIM2, TIM_IT_CC2)) {              // Capture interrupt
-     ulCaptureTime = TIM_GetCapture2 (TIM2);            // read captured time
+     uiCaptureTime = TIM_GetCapture2 (TIM2);            // read captured time
      TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
      if (cOverflowCount < 2) {                          // at most one overflow
-        ulPulseLength = ulCaptureTime - ulLastCapture;  // compute time difference
+        uiPulseLength = uiCaptureTime - uiLastCapture;  // compute time difference
      } else {                                           // more than one overflow
-        ulPulseLength = 0;                              // force invalid pulse length
+        uiPulseLength = 0;                              // force invalid pulse length
      }
-     ulLastCapture = ulCaptureTime;                     // now is also last edge time
+     uiLastCapture = uiCaptureTime;                     // now is also last edge time
      cOverflowCount = 0;                                // clear overflow condition
 
      switch (ucPulseIndex) {
         case RC_CHANNELS:                               // waiting sync pulse
-           if (( ulPulseLength > PPM_SYNC_MIN ) &&      // sync pulse detected
-               ( ulPulseLength < PPM_SYNC_MAX )) {      //
+           if (( uiPulseLength > PPM_SYNC_MIN ) &&      // sync pulse detected
+               ( uiPulseLength < PPM_SYNC_MAX )) {      //
               ucPulseIndex = 0;                         // reset index
               if (cPulseCount == RC_CHANNELS) {         // all channels were good
                  for (j = 0; j < RC_CHANNELS; j++) {    // copy pulse lengths
-                    ulPulseBuffer[j] = ulTemp[j];       //
+                    uiPulseBuffer[j] = uiTemp[j];       //
                  }
               }
            }
@@ -134,9 +146,9 @@ TIM2_IRQHandler(void)
         break;
 
         default:                                        // waiting channel pulse
-           ulTemp[ucPulseIndex++] = ulPulseLength;      // save pulse length
-           if ((ulPulseLength > PPM_LENGTH_MIN) &&      // good pulse length
-               (ulPulseLength < PPM_LENGTH_MAX)) {
+           uiTemp[ucPulseIndex++] = uiPulseLength;      // save pulse length
+           if ((uiPulseLength > PPM_PULSE_MIN) &&       // good pulse length
+               (uiPulseLength < PPM_PULSE_MAX)) {
               cPulseCount++;                            // increase counter
            }
         break;
@@ -160,10 +172,10 @@ void PPM_Init(void) {
   NVIC_InitTypeDef NVIC_InitStructure;
 
   cPulseCount = 0;
-  ulLastCapture = 0;
+  uiLastCapture = 0;
   cOverflowCount = -1;
   for (ucPulseIndex = 0; ucPulseIndex < RC_CHANNELS; ucPulseIndex ++) {
-    ulPulseBuffer[ucPulseIndex] = PPM_LENGTH_NEUTRAL;
+    uiPulseBuffer[ucPulseIndex] = PPM_PULSE_NEUTRAL;
   }
   ucPulseIndex = RC_CHANNELS;
 
@@ -208,18 +220,23 @@ void PPM_Init(void) {
 
 ///----------------------------------------------------------------------------
 ///
-///  DESCRIPTION Get value of n-th radio channel
-/// \return      -
+///  DESCRIPTION Get position of n-th radio channel
+/// \return      Pulse length of n-th radio channel in microsecond
 /// \remarks
 ///
 ///----------------------------------------------------------------------------
-uint16_t PPMGetChannel(uint8_t ucChannel)
+int16_t PPMGetChannel(uint8_t ucChannel)
 {
+    int16_t position;
     if ( ucChannel < RC_CHANNELS ) {
-        return ulPulseBuffer[ ucChannel ];
+        position = (int16_t)uiPulseBuffer[ucChannel];
+        position -= PPM_PULSE_NEUTRAL;
+        position *= iReverse[ucChannel];
+        position += PPM_PULSE_NEUTRAL;
     } else {
-        return PPM_LENGTH_NEUTRAL;
+        position = PPM_PULSE_NEUTRAL;
     }
+	return position;
 }
 
 ///----------------------------------------------------------------------------
@@ -232,7 +249,7 @@ uint16_t PPMGetChannel(uint8_t ucChannel)
 uint8_t PPMGetMode(void)
 {
     uint16_t uiWidth;
-    uiWidth = ulPulseBuffer[MODE_CHANNEL];
+    uiWidth = uiPulseBuffer[MODE_CHANNEL];
 
     if (cSignalLevel == 0) {
         return MODE_RTL;
