@@ -243,8 +243,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: filled function Telemetry_Get_Gain()
-///          removed #inclusion of telemetry.h
+/// Changes: Gps_Heading renamed Gps_Heading_Deg
 ///
 //============================================================================*/
 
@@ -641,7 +640,7 @@ void Mavlink_Hud( void ) {
     *((float *)(&Tx_Msg[10])) = (float)Gps_Speed();        // GPS speed
     *((float *)(&Tx_Msg[14])) = Nav_Altitude();            // Altitude
     *((float *)(&Tx_Msg[18])) = 0.0f;                      // Climb rate
-    *((uint16_t *)(&Tx_Msg[22])) = Gps_Heading();          // Heading
+    *((uint16_t *)(&Tx_Msg[22])) = Gps_Heading_Deg();          // Heading
     *((uint16_t *)(&Tx_Msg[24])) = Nav_Throttle();         // Throttle
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_VFR_HUD]);
@@ -714,7 +713,7 @@ void Mavlink_Gps( void ) {
     *((uint16_t *)(&Tx_Msg[26])) = (uint16_t)Nav_Altitude();   // altitude
     *((uint16_t *)(&Tx_Msg[28])) = 65535;                      // epv
     *((uint16_t *)(&Tx_Msg[30])) = Gps_Speed();                // velocity
-    *((uint16_t *)(&Tx_Msg[32])) = Gps_Heading();              // course over ground
+    *((uint16_t *)(&Tx_Msg[32])) = Gps_Heading_Deg();              // course over ground
     Tx_Msg[34] = 3;                                            // fix type
     Tx_Msg[35] = 255;                                          // satellites
 
