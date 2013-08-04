@@ -243,7 +243,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: Gps_Heading renamed Gps_Heading_Deg
+/// Changes: Removed SIMULATOR options from Mavlink_Stream_Send()
 ///
 //============================================================================*/
 
@@ -1151,14 +1151,6 @@ void Mavlink_Stream_Send(void)
         }
     }
 */
-#if SIMULATOR != SIM_NONE
-    if (Mavlink_Stream_Trigger(STREAM_RAW_CONTROLLER)) {
-        // MSG_SERVO_OUT
-    }
-    if (Mavlink_Stream_Trigger(STREAM_RC_CHANNELS)) {
-        // MSG_RADIO_OUT
-    }
-#else
     if (Mavlink_Stream_Trigger(STREAM_RAW_SENSORS)) {
         // MSG_RAW_IMU1
         // MSG_RAW_IMU2
@@ -1201,7 +1193,6 @@ void Mavlink_Stream_Send(void)
         // MSG_HWSTATUS
         // MSG_WIND
     }
-#endif
 }
 
 //----------------------------------------------------------------------------
