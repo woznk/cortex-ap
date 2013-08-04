@@ -446,6 +446,11 @@
               <FileType>1</FileType>
               <FilePath>..\Source\mav_telemetry.c</FilePath>
             </File>
+            <File>
+              <FileName>simulator.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\simulator.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1060,6 +1065,11 @@
               <FileType>1</FileType>
               <FilePath>..\Source\mav_telemetry.c</FilePath>
             </File>
+            <File>
+              <FileName>simulator.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\simulator.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1673,6 +1683,11 @@
               <FileName>mav_telemetry.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Source\mav_telemetry.c</FilePath>
+            </File>
+            <File>
+              <FileName>simulator.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Source\simulator.c</FilePath>
             </File>
           </Files>
         </Group>
