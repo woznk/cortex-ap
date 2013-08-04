@@ -40,8 +40,8 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: pitch angle computation moved to attitude.c module,
-//         modified values of ucGps_Status for compatibility with mavlink
+// Change: removed PI/2 offset from bank and pitch angles,
+//         added _Deg or _Rad suffix to angle returning interface functions
 //
 //============================================================================*/
 
@@ -155,10 +155,10 @@ void Navigation_Task( void *pvParameters ) {
 
     float fTemp, fDx, fDy;
 
-    fBank = PI / 2.0f;                              // default bank angle
+    fBank = 0.0f;                                   // default bank angle
     fBearing = 0.0f;                                // angle to destination [°]
     fThrottle = -1.0f;                              // default throttle
-    fPitch = PI / 2.0f;                             // default pitch angle
+    fPitch = 0.0f;                                  // default pitch angle
     uiGps_Heading = 0;                              // aircraft GPS heading [°]
     uiSpeed = 0;                                    // speed [kt]
     uiDistance = 0;                                 // distance to destination [m]
@@ -225,7 +225,7 @@ void Navigation_Task( void *pvParameters ) {
             } else if (fTemp > 1.0f) {
                 fTemp = 2.0f - fTemp;
             }
-            fBank = (PI / 2.0f) - PID_Compute(&Nav_Pid, fTemp, 0.0f);
+            fBank = PID_Compute(&Nav_Pid, fTemp, 0.0f);
 
             /* Compute distance to waypoint */
             fTemp = sqrtf((fDy * fDy) + (fDx * fDx));
@@ -247,14 +247,14 @@ void Navigation_Task( void *pvParameters ) {
             fTemp = fAlt_Curr - fAlt_Dest;              // altitude error
             if (fTemp > fHeight_Margin) {               // above maximum
                 fThrottle = fThrottle_Min;              // minimum throttle
-                fPitch = (PI / 2.0f) + PITCHATMINTHROTTLE;
+                fPitch = PITCHATMINTHROTTLE;
             } else if (fTemp < - fHeight_Margin) {      // below minimum
                 fThrottle = fThrottle_Max;              // max throttle
-                fPitch = (PI / 2.0f) + PITCHATMAXTHROTTLE;
+                fPitch = PITCHATMAXTHROTTLE;
             } else {                                    // interpolate
                 fTemp = (fTemp - HEIGHT_MARGIN) / (2 * HEIGHT_MARGIN);
                 fThrottle = fTemp * (fThrottle_Min - fThrottle_Max) + fThrottle_Min;
-                fPitch = (PI / 2.0f) + fTemp * (PITCHATMINTHROTTLE - PITCHATMAXTHROTTLE) + PITCHATMINTHROTTLE;
+                fPitch = fTemp * (PITCHATMINTHROTTLE - PITCHATMAXTHROTTLE) + PITCHATMINTHROTTLE;
             }
         }
     }
@@ -660,7 +660,7 @@ void Nav_Set_Wpt ( uint8_t index, STRUCT_WPT wpt ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-float Nav_Bearing ( void ) {
+float Nav_Bearing_Deg ( void ) {
   if (fBearing < 0.0f)  {
     return 360.0f + (fBearing * 180.0f);
   } else {
@@ -676,7 +676,7 @@ float Nav_Bearing ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-float Nav_Heading ( void ) {
+float Nav_Heading_Deg ( void ) {
   if (fHeading < 0.0f)  {
     return 360.0f + (fHeading * 180.0f);
   } else {
@@ -704,7 +704,7 @@ uint16_t Nav_Distance ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-float Nav_Bank ( void ) {
+float Nav_Bank_Rad ( void ) {
   return fBank;
 }
 
@@ -728,7 +728,7 @@ float Nav_Throttle ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-float Nav_Pitch ( void ) {
+float Nav_Pitch_Rad ( void ) {
   return fPitch;
 }
 
@@ -776,7 +776,7 @@ uint16_t Gps_Speed ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Gps_Heading ( void ) {
+uint16_t Gps_Heading_Deg ( void ) {
   return uiGps_Heading;
 }
 
