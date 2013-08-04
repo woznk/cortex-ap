@@ -68,7 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change implemented MWI_WP (waypoint request) command 
+//  Change Nav_Heading renamed Nav_Heading_Deg
 //
 //============================================================================*/
 
@@ -450,7 +450,7 @@ void MWI_Parse_Command( void ) {
      MWI_Append_16(iTemp);              // roll
      iTemp = (int16_t)(10.0f * Attitude_Pitch());
      MWI_Append_16(iTemp);              // pitch
-     iTemp = (int16_t)Nav_Heading();
+     iTemp = (int16_t)Nav_Heading_Deg();
      MWI_Append_16(iTemp);              // yaw
      MWI_Append_16(0);	                // headFreeModeHold, ?
      break;
