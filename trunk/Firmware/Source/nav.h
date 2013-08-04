@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change: added function Gps_Fix()
+//  Change: added _Deg or _Rad suffix to angle returning interface functions
 //
 //============================================================================
 
@@ -41,16 +41,16 @@ typedef struct {
 
 uint8_t Gps_Fix( void );
 uint16_t Gps_Speed ( void );
-uint16_t Gps_Heading ( void );
+uint16_t Gps_Heading_Deg ( void );
 int32_t Gps_Latitude ( void );
 int32_t Gps_Longitude ( void );
 
 void Navigation_Task( void *pvParameters );
 float Nav_Altitude ( void );
-float Nav_Heading ( void );
-float Nav_Bearing ( void );
-float Nav_Bank ( void );
-float Nav_Pitch ( void ) ;
+float Nav_Heading_Deg ( void );
+float Nav_Bearing_Deg ( void );
+float Nav_Bank_Rad ( void );
+float Nav_Pitch_Rad ( void ) ;
 float Nav_Throttle ( void );
 uint16_t Nav_Distance ( void );
 uint8_t Nav_Wpt_Index ( void );
