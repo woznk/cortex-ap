@@ -8,8 +8,15 @@
 /// \brief attitude control
 ///
 /// \file
+///  Reference point for pitch and roll stabilization is computed as 
+///     -asinf(DCM[...][...])
+///  insetad of 
+///     acosf(DCM[...][...]) - PI/2
+///  This returns an angle value that's consistent with angle convention for
+///  roll and pitch angles, without need to either subtract PI/2 from reference
+///  point or to add PI/2 to the set point.
 ///
-// Change: corrected sign of value returned by Attitude_Pitch_Deg() / ..._Rad()
+// Change: modified reference point for roll and pitch stabilization.
 //
 //============================================================================*/
 
@@ -213,49 +220,57 @@ static __inline void Attitude_Control(void)
 
     switch (PPMGetMode()) {
 
-        case MODE_STAB:
+        case MODE_STAB:                                             // STABILIZED MODE
             iAileron = PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL;
             iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
             iThrottle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
 
-            fSetpoint = ((float)iElevator / 500.0f) + (PI / 2.0f);  // setpoint for pitch angle
-            fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
+            fSetpoint = ((float)iElevator / 500.0f);                // setpoint for pitch
+            fInput = -asinf(DCM_Matrix[2][0]);                      // current pitch
             fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
             iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
 
-            fSetpoint = ((float)iAileron / 500.0f) + (PI / 2.0f);   // setpoint for bank angle
-            fInput = acosf(DCM_Matrix[2][1]);                       // bank angle given by DCM
+            fSetpoint = ((float)iAileron / 500.0f);                 // setpoint for bank
+            fInput =  -asinf(DCM_Matrix[2][1]);                     // current bank
             fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
+
             iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
 
-            if (++ucBlink_Red >= 8) {
+            if (++ucBlink_Red >= 8) {                               // slow blink
                 ucBlink_Red = 0;
                 LEDToggle(RED);
             }
             break;
 
-        case MODE_NAV:
-            fSetpoint = Nav_Pitch();                                // setpoint for pitch angle
-            fInput = acosf(DCM_Matrix[2][0]);                       // pitch angle given by DCM
+        case MODE_NAV:                                              // NAVIGATION MODE
+            fSetpoint = Nav_Pitch_Rad();                            // setpoint for pitch
+            fInput = -asinf(DCM_Matrix[2][0]);                      // current pitch
             fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
             iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
 
-            fSetpoint = Nav_Bank();                                 // setpoint for bank angle
-            fInput = acosf(DCM_Matrix[2][1]);                       // bank angle given by DCM
+            fSetpoint = Nav_Bank_Rad();                             // setpoint for bank
+            fInput = -asinf(DCM_Matrix[2][1]);                      // current bank
             fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
             iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
 
             iThrottle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
 
-            if (++ucBlink_Red >= 4) {
+            if (++ucBlink_Red >= 4) {                               // fast blink
                 ucBlink_Red = 0;
                 LEDToggle(RED);
             }
             break;
 
+        case MODE_FPV:                                              // CAMERA STABILIZATION MODE
+            fInput = -(Attitude_Pitch_Rad() * 1800.0f) / PI;        // pitch angle given by DCM
+            iElevator = SERVO_NEUTRAL + (int16_t)fInput;            // show on elevator servo
+            fInput = -(Attitude_Roll_Rad() * 1800.0f) / PI;         // bank angle given by DCM
+            iAileron = SERVO_NEUTRAL + (int16_t)fInput;             // show on aileron servo
+            break;
+
 //       case MODE_MANUAL:
 //       case MODE_RTL:
-        default:
+        default:                                                    // MANUAL MODE
             iAileron = PPMGetChannel(AILERON_CHANNEL);
             iElevator = PPMGetChannel(ELEVATOR_CHANNEL);
             iThrottle = PPMGetChannel(THROTTLE_CHANNEL);
@@ -267,6 +282,7 @@ static __inline void Attitude_Control(void)
             }
             break;
     }
+
     /* Update controls */
     Servo_Set(SERVO_AILERON, iAileron);                             // update servos
     Servo_Set(SERVO_ELEVATOR, iElevator);
