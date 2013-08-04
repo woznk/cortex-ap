@@ -78,7 +78,7 @@
 ///
 /// \endcode
 ///
-// Change: Gps_Heading renamed Gps_Heading_Deg
+// Change: Telemetry_Get_Speed renamed Simulator_Get_Speed
 //
 //=============================================================================+
 
@@ -86,7 +86,7 @@
 
 #include "math.h"
 #include "vmath.h"
-#include "telemetry.h"
+#include "simulator.h"
 #include "config.h"
 #include "nav.h"
 #include "DCM.h"
@@ -299,7 +299,7 @@ AccelAdjust(void)
     fGround_Speed = ((float)Gps_Speed());
     fGround_Speed = (fGround_Speed * 1852.0f) / 36000.0f; // convert [kt] to [m/s]
 #else
-    fGround_Speed = Telemetry_Get_Speed();
+    fGround_Speed = Simulator_Get_Speed();
 #endif
     Accel_Vector[1] += ((fGround_Speed * Omega[2] * 9.81f) / GRAVITY);
     Accel_Vector[2] -= ((fGround_Speed * Omega[1] * 9.81f) / GRAVITY);
