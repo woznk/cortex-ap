@@ -8,15 +8,15 @@
 /// \brief attitude control
 ///
 /// \file
-///  Reference point for pitch and roll stabilization is computed as 
+///  Reference point for pitch and roll stabilization is computed as
 ///     -asinf(DCM[...][...])
-///  insetad of 
+///  insetad of
 ///     acosf(DCM[...][...]) - PI/2
 ///  This returns an angle value that's consistent with angle convention for
 ///  roll and pitch angles, without need to either subtract PI/2 from reference
 ///  point or to add PI/2 to the set point.
 ///
-// Change: modified reference point for roll and pitch stabilization.
+// Change: Telemetry_... funcions renamed Simulator_...
 //
 //============================================================================*/
 
@@ -36,7 +36,8 @@
 
 #include "config.h"
 #include "dcm.h"
-#include "telemetry.h"
+#include "simulator.h"
+#include "mav_telemetry.h"
 #include "log.h"
 #include "led.h"
 #include "nav.h"
@@ -155,7 +156,7 @@ void Attitude_Task(void *pvParameters)
         GetAccelRaw(ucSensor_Data);                 // acceleration
         GetAngRateRaw((uint8_t *)&ucSensor_Data[6]); // rotation
 #else                                               // simulation mode
-        Telemetry_Get_Raw_IMU((int16_t *)ucSensor_Data);// get simulator sensors
+        Simulator_Get_Raw_IMU((int16_t *)ucSensor_Data);// get simulator sensors
 #endif
         pSensor = (int16_t *)ucSensor_Data;
         for (j = 0; j < 6; j++) {                   // accumulate
@@ -182,7 +183,7 @@ void Attitude_Task(void *pvParameters)
         GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
         BMP085_Handler();
 #else                                               // simulation mode
-        Telemetry_Get_Raw_IMU((int16_t *)ucSensor_Data);// get simulator sensors
+        Simulator_Get_Raw_IMU((int16_t *)ucSensor_Data);// get simulator sensors
 #endif
         /* Offset and sign correction */
         pSensor = (int16_t *)ucSensor_Data;
@@ -213,11 +214,17 @@ void Attitude_Task(void *pvParameters)
 ///----------------------------------------------------------------------------
 static __inline void Attitude_Control(void)
 {
+#if (SIMULATOR == SIM_NONE)
     Pitch_Pid.fKp = Telemetry_Get_Gain(TEL_PITCH_KP);
     Pitch_Pid.fKi = Telemetry_Get_Gain(TEL_PITCH_KI);
     Roll_Pid.fKp = Telemetry_Get_Gain(TEL_ROLL_KP);
     Roll_Pid.fKi = Telemetry_Get_Gain(TEL_ROLL_KI);
-
+#else
+    Pitch_Pid.fKp = Simulator_Get_Gain(SIM_PITCH_KP);
+    Pitch_Pid.fKi = Simulator_Get_Gain(SIM_PITCH_KI);
+    Roll_Pid.fKp = Simulator_Get_Gain(SIM_ROLL_KP);
+    Roll_Pid.fKi = Simulator_Get_Gain(SIM_ROLL_KI);
+#endif
     switch (PPMGetMode()) {
 
         case MODE_STAB:                                             // STABILIZED MODE
