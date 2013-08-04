@@ -42,7 +42,7 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  Change: added function Telemetry_Send_Position()
+//  Change: Nav_Bearing / Nav_Heading renamed Nav_Bearing_Deg / Nav_Heading_Deg
 //
 //
 //============================================================================*/
@@ -334,7 +334,7 @@ void Telemetry_Send_Waypoint(void)
 {
     USART1_Putch(TEL_WAYPOINT);                 // telemetry wait code
     USART1_Putch(Nav_Wpt_Index());              // waypoint index
-    USART1_Putw((uint16_t)Nav_Bearing());       // bearing to waypoint
+    USART1_Putw((uint16_t)Nav_Bearing_Deg());       // bearing to waypoint
     USART1_Putw((uint16_t)Nav_Wpt_Altitude());  // waypoint altitude
     USART1_Putw(Nav_Distance());                // distance to waypoint
 
@@ -370,7 +370,7 @@ void Telemetry_Send_Position(void)
     USART1_Putf((float)Gps_Latitude() / 10000000.0f);   // current latitude
     USART1_Putf((float)Gps_Longitude() / 10000000.0f);  // current longitude
     USART1_Putf(Nav_Altitude());                        // current altitude
-    USART1_Putf(Nav_Heading());                         // heading
+    USART1_Putf(Nav_Heading_Deg());                         // heading
 
     USART1_Transmit();                                  // send data
 }
