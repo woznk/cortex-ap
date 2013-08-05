@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change moved here #definition of radio channels
+// Change increased ALT_HOLD_THROTTLE_MAX
 //
 //============================================================================*/
 
@@ -79,8 +79,8 @@
    when within HEIGHT_MARGIN of the target height.
    Use ALT_HOLD_THROTTLE_MIN when above HEIGHT_MARGIN of the target height.
    Throttle values are from -1.0 to +1.0.*/
-#define ALT_HOLD_THROTTLE_MIN   0.0f        //!< min throttle foe altitude hold
-#define ALT_HOLD_THROTTLE_MAX   0.6f        //!< max throttle for altitude hold
+#define ALT_HOLD_THROTTLE_MIN   0.0f        //!< min throttle for altitude hold
+#define ALT_HOLD_THROTTLE_MAX   0.8f        //!< max throttle for altitude hold
 
 #define HEIGHTMAX               1500.0f     //!< maximum target height [m]
 #define HEIGHT_MARGIN           20.0f       //!< height margin [m]
