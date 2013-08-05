@@ -40,7 +40,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: Added option for reading simulator gains instead of telemetry gains
+// Change: corrected computation of bearing / heading difference
 //
 //============================================================================*/
 
@@ -158,7 +158,7 @@ void Navigation_Task( void *pvParameters ) {
 
     fBank = 0.0f;                                   // default bank angle
     fBearing = 0.0f;                                // angle to destination [°]
-    fThrottle = -1.0f;                              // default throttle
+    fThrottle = MINIMUMTHROTTLE;                    // default throttle
     fPitch = 0.0f;                                  // default pitch angle
     uiGps_Heading = 0;                              // aircraft GPS heading [°]
     uiSpeed = 0;                                    // speed [kt]
@@ -220,7 +220,7 @@ void Navigation_Task( void *pvParameters ) {
             fBearing = atan2f(fDy, fDx) / PI;
 
             /* Navigation PID controller */
-            fTemp = fBearing - fHeading;
+            fTemp = fHeading - fBearing;
             if (fTemp < -1.0f) {
                 fTemp += 2.0f;
             } else if (fTemp > 1.0f) {
