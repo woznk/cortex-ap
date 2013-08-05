@@ -9,8 +9,7 @@
 ///
 /// \file
 ///
-//  Change corrected servo position value stored in iServoPosition[] array
-//         corrected servo reversal.
+//  Change removed reversal from throttle channel 
 //
 //============================================================================*/
 
@@ -62,7 +61,7 @@ VAR_STATIC int16_t iServoSign[SERVO_NUMBER] = {
      1,             // aileron
      1,             // rudder
      1,             // elevator
-    -1              // throttle
+     1              // throttle
 };
 
 /*--------------------------------- Prototypes -------------------------------*/
