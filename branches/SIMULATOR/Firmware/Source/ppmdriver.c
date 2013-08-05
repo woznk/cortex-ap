@@ -29,8 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change  added management of channel reversed in the RC transmitter, 
-//          corrected prefixes of unsigned int variables
+//  Change removed reversal from throttle channel 
 //
 //============================================================================*/
 
@@ -85,15 +84,15 @@ VAR_STATIC uint16_t uiPulseLength;              ///< length of channel pulse
 VAR_STATIC uint16_t uiTemp[RC_CHANNELS];        ///< temporary for channel pulses
 VAR_STATIC uint16_t uiPulseBuffer[RC_CHANNELS]; ///< rc channel pulses
 VAR_STATIC int16_t iReverse[RC_CHANNELS] = {    ///< channel reverse
-        //  # | TYCHO    | LEUKO            | EASYSTAR | EPPFPV
-        // ---+----------+------------------+----------+----------
-     1, //  0 | aileron  | elevator, delta1 | throttle | aileron
-     1, //  1 | elevator | delta2           | aileron  | elevator
-    -1, //  2 | throttle | throttle         | elevator | throttle
-     1, //  3 | rudder   | rudder           | rudder   | rudder
-    -1, //  4 | kp       | mode             | mode     | mode
-     1, //  5 | ki       | kp               | -        | -
-     1  //  6 | -        | ki               | kp       | kp
+        //  # | TYCHO    | LEUKO    | EASYSTAR | EPPFPV
+        // ---+----------+----------+----------+----------
+     1, //  0 | aileron  | delta 1  | throttle | aileron
+     1, //  1 | elevator | delta 2  | aileron  | elevator
+     1, //  2 | throttle | throttle | elevator | throttle
+     1, //  3 | rudder   | rudder   | rudder   | rudder
+    -1, //  4 | kp       | mode     | mode     | mode
+     1, //  5 | ki       | kp       | -        | -
+     1  //  6 | -        | ki       | kp       | kp
 };
 
 /*--------------------------------- Prototypes -------------------------------*/
