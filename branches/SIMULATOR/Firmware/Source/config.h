@@ -95,7 +95,7 @@
 #define SIM_NONE    0                   //!< No simulator
 #define XPLANE      1                   //!< Simulator X-Plane
 #define FLIGHTGEAR  2                   //!< Simulator Flightgear
-#define SIMULATOR   XPLANE              //!< Current simulator option
+#define SIMULATOR   SIM_NONE            //!< Current simulator option
 
 /* Sensor type definitions for multiwii protocol */
 #define ACC         1                   //!< Accelerometer available
