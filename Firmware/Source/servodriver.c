@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change  simplified initialization code
+//  Change removed reversal from throttle channel 
 //
 //============================================================================*/
 
@@ -58,10 +58,10 @@ VAR_STATIC int16_t iServoPosition[SERVO_NUMBER] = {
 
 /// sign of servo values
 VAR_STATIC int16_t iServoSign[SERVO_NUMBER] = {
-    -1,             // aileron reversed
-     1,             // rudder normal
-    -1,             // elevator reversed
-     1              // throttle normal
+     1,             // aileron
+     1,             // rudder
+     1,             // elevator
+     1              // throttle
 };
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -133,10 +133,10 @@ void Servo_Init(void) {
 void Servo_Set(SERVO_TYPE servo, int16_t position) {
 
    SATURATE(position);
-   iServoPosition[servo] = position;
    position -= SERVO_NEUTRAL;
    position *= iServoSign[servo];
    position += SERVO_NEUTRAL;
+   iServoPosition[servo] = position;
 
    switch (servo) {
       case SERVO_AILERON :

@@ -38,6 +38,7 @@
 /// PARAM_SET               23     23   Implemented
 /// GPS_RAW_INT             24     30   Verified
 /// ATTITUDE                30     28   Verified
+/// GLOBAL_POSITION_INT     33     28   Verified
 /// RC_CHANNELS_RAW         35     22
 /// MISSION_CURRENT         42      2
 /// MISSION_REQUEST_LIST    43      2
@@ -243,7 +244,9 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: Gps_Heading renamed Gps_Heading_Deg
+/// Changes: implemented global position message, 
+///          corrected name of navigation PID parameters 
+///          disabled VFR HUD stream
 ///
 //============================================================================*/
 
@@ -419,9 +422,9 @@ VAR_STATIC const uint8_t sParameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME
     "ALT_POS_P\0",  // Altitude Kp (via throttle)
     "ALT_POS_I\0",  // Altitude Ki (via throttle)
  //  ALT_POS_D"\0", // Altitude Kd (via throttle)
-    "ROL_ANG_P\0",  // Navigation Kp (via roll)
-    "ROL_ANG_I\0"   // Navigation Ki (via roll)
-//  "ROL_ANG_D\0"   // Navigation Kd (via roll)
+    "NAV_ANG_P\0",  // Navigation Kp (via roll)
+    "NAV_ANG_I\0"   // Navigation Ki (via roll)
+//  "NAV_ANG_D\0"   // Navigation Kd (via roll)
 
 };
 
@@ -499,7 +502,8 @@ static void Mavlink_Send( uint8_t crc_extra );
 void Mavlink_Heartbeat( void );
 void Mavlink_Hud( void );
 void Mavlink_Attitude( void );
-void Mavlink_Gps( void );
+void Mavlink_Gps_Raw( void );
+void Mavlink_Position( void );
 void Mavlink_Param_Value( uint16_t param_index, uint16_t param_count );
 void Mavlink_Param_Set( void );
 void Mavlink_HIL_State( void );
@@ -640,7 +644,7 @@ void Mavlink_Hud( void ) {
     *((float *)(&Tx_Msg[10])) = (float)Gps_Speed();        // GPS speed
     *((float *)(&Tx_Msg[14])) = Nav_Altitude();            // Altitude
     *((float *)(&Tx_Msg[18])) = 0.0f;                      // Climb rate
-    *((uint16_t *)(&Tx_Msg[22])) = Gps_Heading_Deg();          // Heading
+    *((uint16_t *)(&Tx_Msg[22])) = Gps_Heading_Deg();      // Heading
     *((uint16_t *)(&Tx_Msg[24])) = Nav_Throttle();         // Throttle
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_VFR_HUD]);
@@ -683,7 +687,7 @@ void Mavlink_Attitude( void ) {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Send GPS data
+/// \brief   Send GPS raw data
 /// \param   -
 /// \returns -
 /// \remarks
@@ -703,21 +707,60 @@ void Mavlink_Attitude( void ) {
 /// satellites_visible  29   uint8_t
 ///
 //----------------------------------------------------------------------------
-void Mavlink_Gps( void ) {
+void Mavlink_Gps_Raw( void ) {
 
     Tx_Msg[1] = 30;                                            // Payload length
     Tx_Msg[5] = MAVLINK_MSG_ID_GPS_RAW_INT;                    // GPS message ID
     *((uint64_t *)(&Tx_Msg[6])) = 0;                           // time from boot [us]
     *((int32_t *)(&Tx_Msg[14])) = Gps_Latitude();              // latitude
     *((int32_t *)(&Tx_Msg[18])) = Gps_Longitude();             // longitude
-    *((uint16_t *)(&Tx_Msg[26])) = (uint16_t)Nav_Altitude();   // altitude
+    *((int32_t *)(&Tx_Msg[22])) = (int32_t)Nav_Altitude();     // altitude
+    *((uint16_t *)(&Tx_Msg[26])) = 65535;                      // eph
     *((uint16_t *)(&Tx_Msg[28])) = 65535;                      // epv
     *((uint16_t *)(&Tx_Msg[30])) = Gps_Speed();                // velocity
-    *((uint16_t *)(&Tx_Msg[32])) = Gps_Heading_Deg();              // course over ground
+    *((uint16_t *)(&Tx_Msg[32])) = Gps_Heading_Deg();          // course over ground
     Tx_Msg[34] = 3;                                            // fix type
     Tx_Msg[35] = 255;                                          // satellites
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_GPS_RAW_INT]);
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send position
+/// \param   -
+/// \returns -
+/// \remarks
+/// Name = MAVLINK_MSG_ID_GLOBAL_POSITION_INT, ID = 33, Length = 28
+///
+/// Field             Offset Type       Meaning
+/// ------------------------------------------
+/// time_usec            0   uint32_t   time since boot [ms]
+/// lat                  8   int32_t    latitude
+/// lon                 12   int32_t    longitude
+/// alt                 16   int32_t    altitude
+/// relative_alt        20   int32_t    altitude above ground
+/// vx                  22   uint16_t   ground x speed (latitude)
+/// vy                  24   uint16_t   ground y speed (longitude)
+/// vz                  26   uint16_t   ground z speed (altitude)
+/// hdg                 28   uint16_t   compass heading
+///
+//----------------------------------------------------------------------------
+void Mavlink_Position( void ) {
+
+    Tx_Msg[1] = 28;                                            // payload length
+    Tx_Msg[5] = MAVLINK_MSG_ID_GLOBAL_POSITION_INT;            // global position message ID
+    *((uint32_t *)(&Tx_Msg[6])) = 0;                           // time from boot [ms]
+    *(( int32_t *)(&Tx_Msg[10])) = Gps_Latitude();             // latitude
+    *(( int32_t *)(&Tx_Msg[14])) = Gps_Longitude();            // longitude
+    *(( int32_t *)(&Tx_Msg[18])) = (int32_t)Nav_Altitude();    // altitude
+    *(( int32_t *)(&Tx_Msg[22])) = (int32_t)Nav_Altitude();    // altitude above ground
+    *((uint16_t *)(&Tx_Msg[26])) = 0;                          // ground x speed
+    *((uint16_t *)(&Tx_Msg[28])) = 0;                          // ground y speed
+    *((uint16_t *)(&Tx_Msg[30])) = 0;                          // ground z speed
+    *((uint16_t *)(&Tx_Msg[32])) = Gps_Heading_Deg();          // compass heading
+
+    Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_GLOBAL_POSITION_INT]);
 }
 
 //----------------------------------------------------------------------------
@@ -1151,14 +1194,6 @@ void Mavlink_Stream_Send(void)
         }
     }
 */
-#if SIMULATOR != SIM_NONE
-    if (Mavlink_Stream_Trigger(STREAM_RAW_CONTROLLER)) {
-        // MSG_SERVO_OUT
-    }
-    if (Mavlink_Stream_Trigger(STREAM_RC_CHANNELS)) {
-        // MSG_RADIO_OUT
-    }
-#else
     if (Mavlink_Stream_Trigger(STREAM_RAW_SENSORS)) {
         // MSG_RAW_IMU1
         // MSG_RAW_IMU2
@@ -1175,7 +1210,7 @@ void Mavlink_Stream_Send(void)
     }
 
     if (Mavlink_Stream_Trigger(STREAM_POSITION)) {
-        Mavlink_Gps();
+        Mavlink_Position();
     }
 
     if (Mavlink_Stream_Trigger(STREAM_RAW_CONTROLLER)) {
@@ -1193,7 +1228,7 @@ void Mavlink_Stream_Send(void)
     }
 
     if (Mavlink_Stream_Trigger(STREAM_EXTRA2)) {
-        Mavlink_Hud();
+//        Mavlink_Hud();
     }
 
     if (Mavlink_Stream_Trigger(STREAM_EXTRA3)) {
@@ -1201,7 +1236,6 @@ void Mavlink_Stream_Send(void)
         // MSG_HWSTATUS
         // MSG_WIND
     }
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -1294,7 +1328,9 @@ void Telemetry_Send_Controls(void)
 ///
 //----------------------------------------------------------------------------
 float Telemetry_Get_Speed(void)
-{}
+{
+    return 0.0f;    //fTrueAirSpeed;
+}
 
 //----------------------------------------------------------------------------
 //
@@ -1305,6 +1341,8 @@ float Telemetry_Get_Speed(void)
 ///
 //----------------------------------------------------------------------------
 float Telemetry_Get_Altitude(void)
-{}
+{
+    return 0.0f;    //fAltitude;
+}
 
 

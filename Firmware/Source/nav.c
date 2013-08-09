@@ -40,8 +40,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: removed PI/2 offset from bank and pitch angles,
-//         added _Deg or _Rad suffix to angle returning interface functions
+// Change: corrected computation of bearing / heading difference
 //
 //============================================================================*/
 
@@ -56,7 +55,9 @@
 #include "ppmdriver.h"
 #include "dcm.h"
 #include "math.h"
-#include "telemetry.h"
+#include "simulator.h"
+#include "mav_telemetry.h"
+#include "attitude.h"
 #include "config.h"
 #include "ff.h"
 #include "pid.h"
@@ -157,7 +158,7 @@ void Navigation_Task( void *pvParameters ) {
 
     fBank = 0.0f;                                   // default bank angle
     fBearing = 0.0f;                                // angle to destination [°]
-    fThrottle = -1.0f;                              // default throttle
+    fThrottle = MINIMUMTHROTTLE;                    // default throttle
     fPitch = 0.0f;                                  // default pitch angle
     uiGps_Heading = 0;                              // aircraft GPS heading [°]
     uiSpeed = 0;                                    // speed [kt]
@@ -195,18 +196,18 @@ void Navigation_Task( void *pvParameters ) {
     while (1) {
         if (Parse_GPS()) {                          // NMEA sentence completed
 
-            /* Update PID gains and possibly reset PID */
-            Nav_Pid.fKp = Telemetry_Get_Gain(TEL_NAV_KP);
+#if (SIMULATOR == SIM_NONE)                         		// normal mode
+            Nav_Pid.fKp = Telemetry_Get_Gain(TEL_NAV_KP);	// update PID gains
             Nav_Pid.fKi = Telemetry_Get_Gain(TEL_NAV_KI);
-            if (PPMGetMode() == MODE_MANUAL) {
+            fAlt_Curr = (float)BMP085_Get_Altitude();       // get barometric altitude
+#else                                               		// simulation mode
+            Nav_Pid.fKp = Simulator_Get_Gain(SIM_NAV_KP);	// update PID gains
+            Nav_Pid.fKi = Simulator_Get_Gain(SIM_NAV_KI);
+            fAlt_Curr = Simulator_Get_Altitude();       	// get simulator altitude
+#endif
+            if (PPMGetMode() == MODE_MANUAL) {		// possibly reset PID
                 PID_Init(&Nav_Pid);
             }
-
-#if (SIMULATOR == SIM_NONE)                             // normal mode
-            fAlt_Curr = (float)BMP085_Get_Altitude();   // get barometric altitude
-#else                                                   // simulation mode
-            fAlt_Curr = Telemetry_Get_Altitude();       // get simulator altitude
-#endif
 
             /* Get X and Y components of bearing */
             fDy = fLon_Dest - fLon_Curr;
@@ -219,7 +220,7 @@ void Navigation_Task( void *pvParameters ) {
             fBearing = atan2f(fDy, fDx) / PI;
 
             /* Navigation PID controller */
-            fTemp = fBearing - fHeading;
+            fTemp = fHeading - fBearing;
             if (fTemp < -1.0f) {
                 fTemp += 2.0f;
             } else if (fTemp > 1.0f) {
@@ -323,7 +324,6 @@ static void Load_Path( void ) {
 /// \param   -
 /// \return  -
 /// \remarks configures USART2 for receiving GPS data and initializes indexes.
-///          If simulator option is active, only indexes are initialized.
 ///          For direct register initialization of USART see:
 /// http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
 ///

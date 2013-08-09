@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change moved here #definition of aircraft model
+// Change increased ALT_HOLD_THROTTLE_MAX
 //
 //============================================================================*/
 
@@ -79,8 +79,8 @@
    when within HEIGHT_MARGIN of the target height.
    Use ALT_HOLD_THROTTLE_MIN when above HEIGHT_MARGIN of the target height.
    Throttle values are from -1.0 to +1.0.*/
-#define ALT_HOLD_THROTTLE_MIN   0.0f        //!< min throttle foe altitude hold
-#define ALT_HOLD_THROTTLE_MAX   0.6f        //!< max throttle for altitude hold
+#define ALT_HOLD_THROTTLE_MIN   0.0f        //!< min throttle for altitude hold
+#define ALT_HOLD_THROTTLE_MAX   0.8f        //!< max throttle for altitude hold
 
 #define HEIGHTMAX               1500.0f     //!< maximum target height [m]
 #define HEIGHT_MARGIN           20.0f       //!< height margin [m]
@@ -92,10 +92,10 @@
 #define PITCHATZEROTHROTTLE     ToRad(-6.0f)//!< Pitch angle while gliding [rad]
 
 /* Simulator option definitions */
-#define SIM_NONE    0                   //!< No simulator option
-#define XPLANE      1                   //!< Simulator X-Plane option
-#define FLIGHTGEAR  2                   //!< Simulator Flightgear option
-#define SIMULATOR   SIM_NONE            //!< simulator option
+#define SIM_NONE    0                   //!< No simulator
+#define XPLANE      1                   //!< Simulator X-Plane
+#define FLIGHTGEAR  2                   //!< Simulator Flightgear
+#define SIMULATOR   SIM_NONE            //!< Current simulator option
 
 /* Sensor type definitions for multiwii protocol */
 #define ACC         1                   //!< Accelerometer available
@@ -119,7 +119,6 @@
 /*! Telemetry type definition */
 //#define TELEMETRY_MULTIWII
 #define TELEMETRY_MAVLINK
-//#define TELEMETRY_ARDUPILOT
 
  /*! Type of aircraft */
 //#define GIMBAL
@@ -149,3 +148,45 @@
 #define LEUKO               3   ///< Leuko, flying wing, rudder and aileron mixed
 #define EPPFPV              4   ///< Hobby King EPP FPV, 3 axis, aileron direction control
 #define MODEL          EPPFPV   ///< current model
+
+/* RC channel definitions */
+#if (MODEL == TYCHO)
+#define AILERON_CHANNEL     0   ///< Aileron control channel
+#define ELEVATOR_CHANNEL    1   ///< Elevator control channel
+#define THROTTLE_CHANNEL    2   ///< Throttle control channel
+#define RUDDER_CHANNEL      3   ///< Rudder control channel
+#define KP_CHANNEL          4   ///< PID Kp channel
+#define KI_CHANNEL          5   ///< PID Ki channel
+#define RC_CHANNELS         7   ///< Number of channels, modify according to RC
+#elif (MODEL == LEUKO)
+#define ELEVATOR_CHANNEL    0   ///< Elevator control channel
+#define DELTA1_CHANNEL      0   ///< Delta control channel
+#define DELTA2_CHANNEL      1   ///< Delta control channel
+#define THROTTLE_CHANNEL    2   ///< Throttle control channel
+#define RUDDER_CHANNEL      3   ///< Rudder control channel
+#define MODE_CHANNEL        4   ///< Mode selection channel
+#define KP_CHANNEL          5   ///< PID Kp channel
+#define KI_CHANNEL          6   ///< PID Ki channel
+#define RC_CHANNELS         7   ///< Number of channels, modify according to RC
+#elif (MODEL == EASYSTAR)
+#define THROTTLE_CHANNEL    0   ///< Throttle control channel
+#define ELEVATOR_CHANNEL    2   ///< Elevator control channel
+#define RUDDER_CHANNEL      3   ///< Rudder control channel
+#define MODE_CHANNEL        4   ///< Mode selection channel
+#define AILERON_CHANNEL     1   ///< Aileron channel
+#define KP_CHANNEL          6   ///< PID Kp channel
+#define KI_CHANNEL          8   ///< PID Ki channel
+#define RC_CHANNELS         7   ///< Number of channels, modify according to RC
+#elif (MODEL == EPPFPV)
+#define AILERON_CHANNEL     0   ///< Aileron channel
+#define ELEVATOR_CHANNEL    1   ///< Elevator control channel
+#define THROTTLE_CHANNEL    2   ///< Throttle control channel
+#define RUDDER_CHANNEL      3   ///< Rudder control channel
+#define MODE_CHANNEL        4   ///< Mode selection channel
+#define KP_CHANNEL          6   ///< PID Kp channel
+#define KI_CHANNEL          8   ///< PID Ki channel
+#define RC_CHANNELS         7   ///< Number of channels, modify according to RC
+#else
+#error Aircraft model undefined !
+#endif
+
