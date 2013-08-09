@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added call to Mavlink_Stream_Send() in telemetry task
+// Change: Telemetry_ ... functions renamed Simulator_ ...
 //
 //============================================================================*/
 
@@ -38,8 +38,8 @@
 #include "diskio.h"
 
 #include "config.h"
+#include "simulator.h"
 /* uncomment telemetry type that applies */
-//#include "telemetry.h"
 #include "mav_telemetry.h"
 //#include "multiwii.h"
 #include "attitude.h"
@@ -120,10 +120,35 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
 ///----------------------------------------------------------------------------
 void Telemetry_Task( void *pvParameters ) {
 
-#if defined TELEMETRY_MAVLINK
+#if (SIMULATOR != SIM_NONE)
 
     uint8_t ucCycles = 0;
+    portTickType Last_Wake_Time;                //
+    Last_Wake_Time = xTaskGetTickCount();       //
 
+    while (TRUE) {
+        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
+        Simulator_Send_Controls();              // update simulator controls
+		Simulator_Parse();                      // parse simulator data
+        switch (++ucCycles) {
+            case 10:
+                Simulator_Send_Waypoint();      // send waypoint information
+                break;
+
+            case 20:
+                Simulator_Send_Position();      // send current position
+                break;
+
+            case 30:
+                ucCycles = 0;                   // reset cycle counter
+                Simulator_Send_DCM();           // send attitude
+                break;
+        }
+    }
+
+#elif defined TELEMETRY_MAVLINK
+
+    uint8_t ucCycles = 0;
     portTickType Last_Wake_Time;                //
     Last_Wake_Time = xTaskGetTickCount();       //
 //    global_data_reset_param_defaults();         // Load default parameters as fallback
@@ -135,32 +160,6 @@ void Telemetry_Task( void *pvParameters ) {
         Mavlink_Queued_Send(ucCycles);          // Send parameters at 10 Hz, if previously requested
         if (++ucCycles > 200) {
             ucCycles = 0;
-        }
-    }
-
-#elif defined TELEMETRY_ARDUPILOT
-
-    uint8_t ucCycles = 0;
-    portTickType Last_Wake_Time;                //
-    Last_Wake_Time = xTaskGetTickCount();       //
-
-    while (TRUE) {
-        vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);
-        Telemetry_Send_Controls();              // update simulator controls
-		Telemetry_Parse();                      // parse uplink data
-        switch (++ucCycles) {
-            case 10:
-                Telemetry_Send_Waypoint();      // send waypoint information
-                break;
-
-            case 20:
-                Telemetry_Send_Position();      // send current position
-                break;
-
-            case 30:
-                ucCycles = 0;                   // reset cycle counter
-                Telemetry_Send_DCM();           // send attitude
-                break;
         }
     }
 

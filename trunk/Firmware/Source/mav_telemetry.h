@@ -9,7 +9,7 @@
 /// Tentative Mavlink protocol implementation
 ///
 ///
-/// Changes added type definitions of gain indexes
+/// Changes added interface to Telemetry_Get_Gain()
 ///
 //============================================================================*/
 
@@ -48,3 +48,5 @@ typedef enum {
 void Mavlink_Receive(void);
 void Mavlink_Stream_Send(void);
 void Mavlink_Queued_Send(uint8_t cycles);
+float Telemetry_Get_Gain(telEnum_Gain gain);
+
