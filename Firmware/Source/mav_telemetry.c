@@ -35,7 +35,7 @@
 /// SYS_STATUS               1     31
 /// PARAM_REQUEST_LIST      21      2   Implemented
 /// PARAM_VALUE             22     25   Verified
-/// PARAM_SET               23     23   Implemented
+/// PARAM_SET               23     23   Verified
 /// GPS_RAW_INT             24     30   Verified
 /// ATTITUDE                30     28   Verified
 /// GLOBAL_POSITION_INT     33     28   Verified
@@ -244,9 +244,8 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: implemented global position message, 
-///          corrected name of navigation PID parameters 
-///          disabled VFR HUD stream
+/// Changes: PARAM_SYSTEM_ID, PARAM_COMPONENT_ID set to 1 to comply with droidplanner
+///          Mavlink_Param_Set(): corrected and verified with droidplanner
 ///
 //============================================================================*/
 
@@ -285,10 +284,10 @@
 #define ONBOARD_PARAM_COUNT         TEL_GAIN_NUMBER
 #define ONBOARD_PARAM_NAME_LENGTH   16
 
-#define PARAM_SYSTEM_ID     20
-#define PARAM_COMPONENT_ID  200
+#define PARAM_SYSTEM_ID     1       // 20
+#define PARAM_COMPONENT_ID  1       // 200
 
-//#define PACKET_LEN          MAVLINK_MAX_PACKET_LEN  // original length
+//#define PACKET_LEN        MAVLINK_MAX_PACKET_LEN  // original length
 #define PACKET_LEN          64                      // reduced because of RAM constraints
 #define PAYLOAD_LEN         64
 
@@ -823,25 +822,25 @@ void Mavlink_Param_Set( void ) {
 	uint8_t i, j;
 
     f_value = *(float *)(&Rx_Msg[0]);
-    if ((Rx_Msg[4] == PARAM_SYSTEM_ID) &&                       // Message is for this system
-        (Rx_Msg[5] == 0/*PARAM_COMPONENT_ID*/)) {               // Message is for this component
+    if ((Rx_Msg[4] == PARAM_SYSTEM_ID) &&                       // message is for this system
+        (Rx_Msg[5] == PARAM_COMPONENT_ID)) {                    // message is for this component
         for (i = 0; i < ONBOARD_PARAM_COUNT; i++) {
             match = TRUE;
             for (j = 0; j < ONBOARD_PARAM_NAME_LENGTH; j++) {
-                if (Rx_Msg[j + 6] != sParameter_Name[i][j]) {   // Compare
+                if (Rx_Msg[j + 6] != sParameter_Name[i][j]) {   // compare name
                     match = FALSE;
                 }
-                if (sParameter_Name[i][j] == '\0') {            // Null termination is reached
-                    j = ONBOARD_PARAM_NAME_LENGTH;              // Force termination of for loop
+                if (sParameter_Name[i][j] == '\0') {            // null termination is reached
+                    j = ONBOARD_PARAM_NAME_LENGTH;              // force termination of for loop
                 }
             }
-            if (match) {                                        // Check if matched
-                if ((fParam_Value[i] != f_value) &&             // There is a difference and
-                     !isnan(f_value) &&                         // New value is NOT "not-a-number" and
-                     !isinf(f_value) &&                         // Is NOT infinity
-                     (Rx_Msg[22] == 0/*MAVLINK_TYPE_FLOAT*/)) {
-                    fParam_Value[i] = f_value;                  // Write and emit changes
-                    Mavlink_Param_Value(i, 1);
+            if (match) {                                        // name matched and
+                if ((fParam_Value[i] != f_value) &&             // there is a difference and
+                     !isnan(f_value) &&                         // new value is a number and
+                     !isinf(f_value) &&                         // is NOT infinity and 
+                     (Rx_Msg[22] == MAVLINK_TYPE_FLOAT)) {      // is a float
+                    fParam_Value[i] = f_value;                  // write changes
+                    Mavlink_Param_Value(i, 1);                  // emit changes
                 }
             }
         }
