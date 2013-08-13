@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-/// Change: baud rate changed to 57600 to enable communication with OSD
+/// Change: UART receive interrupt: replaced call to function USART_GetITStatus() 
+///         with direct check of UART registers status
 //
 //============================================================================*/
 
@@ -114,7 +115,8 @@ void USART1_IRQHandler( void ) {
 //  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 //  portCHAR cChar;
 
-	if (USART_GetITStatus(USART1, USART_IT_RXNE) == SET) {
+    if (((USART1->CR1 & 0x00000020) != 0) &&
+        (USART1->SR & 0x00000020) != 0) {               // USART_IT_RXNE == SET
 //		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
 		ucRxBuffer[ucRxWindex++] = USART_ReceiveData( USART1 );
         if (ucRxWindex >= RX_BUFFER_LENGTH) {
@@ -123,6 +125,7 @@ void USART1_IRQHandler( void ) {
     }
 //	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 }
+
 
 //----------------------------------------------------------------------------
 //
