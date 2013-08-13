@@ -40,7 +40,8 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-// Change: corrected computation of bearing / heading difference
+/// Change: UART receive interrupt: replaced call to function USART_GetITStatus() 
+///         with direct check of UART registers status
 //
 //============================================================================*/
 
@@ -591,7 +592,8 @@ void USART2_IRQHandler( void )
 //  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 //  portCHAR cChar;
 
-	if (USART_GetITStatus(USART2, USART_IT_RXNE) == SET) {
+    if (((USART2->CR1 & 0x00000020) != 0) &&
+        (USART2->SR & 0x00000020) != 0) {              // USART_IT_RXNE == SET
 //		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
 		ucGpsBuffer[ucWindex++] = USART_ReceiveData( USART2 );
         if (ucWindex >= BUFFER_LENGTH) {
