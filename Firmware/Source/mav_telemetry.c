@@ -41,8 +41,8 @@
 /// GLOBAL_POSITION_INT     33     28   Verified
 /// RC_CHANNELS_RAW         35     22
 /// MISSION_CURRENT         42      2
-/// MISSION_REQUEST_LIST    43      2
-/// MISSION_COUNT           44      4
+/// MISSION_REQUEST_LIST    43      2   Verified
+/// MISSION_COUNT           44      4   Verified
 /// MISSION_CLEAR_ALL       45      2
 /// NAV_CONTROLLER_OUTPUT   62     26
 /// REQUEST_DATA_STREAM     66      6
@@ -99,8 +99,8 @@
 ///                       Channel 8           18   uint16_t
 ///                       RSSI                21   uint8_t
 ///
-/// MISSION_CLEAR_ALL     target_system        ?   uint8_t   System ID
-///                       target_component	   ?   uint8_t   Component ID
+/// MISSION_CLEAR_ALL     target_system        ?   uint8_t  System ID
+///                       target_component	   ?   uint8_t  Component ID
 ///
 /// MISSION_REQUEST_LIST  target_system	       ?   uint8_t  System ID
 ///                       target_component     ?   uint8_t  Component ID
@@ -244,8 +244,8 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: PARAM_SYSTEM_ID, PARAM_COMPONENT_ID set to 1 to comply with droidplanner
-///          Mavlink_Param_Set(): corrected and verified with droidplanner
+/// Changes: Implemented download of mission waypoints,
+///          function Mavlink_Param_Value() renamed Mavlink_Param_Send()
 ///
 //============================================================================*/
 
@@ -434,19 +434,23 @@ VAR_STATIC const uint8_t Component_ID = MAV_COMP_ID_IMU;
 
 /*---------------------------------- Globals ---------------------------------*/
 
-//VAR_GLOBAL xQueueHandle xTelemetry_Queue;
-//VAR_GLOBAL struct global_struct global_data;
+/*
+VAR_GLOBAL xQueueHandle xTelemetry_Queue;
+VAR_GLOBAL struct global_struct global_data;
+*/
 
 /*----------------------------------- Locals ---------------------------------*/
 
-//VAR_STATIC uint8_t System_Mode = MAV_MODE_PREFLIGHT;  // Booting up
-//VAR_STATIC uint8_t System_State = MAV_STATE_STANDBY;  // System ready for flight
-//VAR_STATIC uint16_t mode = MAV_MODE_UNINIT;           // Defined in mavlink_types.h, which is included by mavlink.h
-//VAR_STATIC uint32_t custom_mode;
-//VAR_STATIC mavlink_system_t mavlink_system;
-//VAR_STATIC mavlink_param_set_t set;
-//VAR_STATIC mavlink_status_t status;
-//VAR_STATIC mavlink_message_t msg;
+/*
+VAR_STATIC uint8_t System_Mode = MAV_MODE_PREFLIGHT;  // Booting up
+VAR_STATIC uint8_t System_State = MAV_STATE_STANDBY;  // System ready for flight
+VAR_STATIC uint16_t mode = MAV_MODE_UNINIT;           // Defined in mavlink_types.h, which is included by mavlink.h
+VAR_STATIC uint32_t custom_mode;
+VAR_STATIC mavlink_system_t mavlink_system;
+VAR_STATIC mavlink_param_set_t set;
+VAR_STATIC mavlink_status_t status;
+VAR_STATIC mavlink_message_t msg;
+*/
 
 VAR_STATIC uint8_t current_tx_seq = 0;
 VAR_STATIC uint16_t packet_drops = 0;
@@ -454,6 +458,7 @@ VAR_STATIC uint8_t packet_rx_drop_count;
 VAR_STATIC uint16_t m_parameter_i = ONBOARD_PARAM_COUNT;
 VAR_STATIC uint8_t msgid;
 VAR_STATIC uint16_t Crc;
+VAR_STATIC STRUCT_WPT wpt;
 
 VAR_STATIC uint8_t Rx_Msg[PAYLOAD_LEN];                 // buffer for incoming messages
 VAR_STATIC uint8_t Tx_Msg[PACKET_LEN];                  // buffer for outgoing messages
@@ -479,7 +484,7 @@ VAR_STATIC uint8_t ucStream_Rate[NUM_STREAMS] = {       // frequency of data str
     5,  // extra 1
     2,  // extra 2
     0,  // extra 3
-    0   // parameterss
+    0   // parameters
 };
 
 VAR_STATIC float fParam_Value[ONBOARD_PARAM_COUNT] = {
@@ -503,7 +508,7 @@ void Mavlink_Hud( void );
 void Mavlink_Attitude( void );
 void Mavlink_Gps_Raw( void );
 void Mavlink_Position( void );
-void Mavlink_Param_Value( uint16_t param_index, uint16_t param_count );
+void Mavlink_Param_Send( uint16_t param_index, uint16_t param_count );
 void Mavlink_Param_Set( void );
 void Mavlink_HIL_State( void );
 static bool Mavlink_Parse( void );
@@ -649,7 +654,6 @@ void Mavlink_Hud( void ) {
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_VFR_HUD]);
 }
 
-
 //----------------------------------------------------------------------------
 //
 /// \brief   Send attitude data
@@ -770,7 +774,7 @@ void Mavlink_Position( void ) {
 /// \remarks
 /// Name = MAVLINK_MSG_ID_PARAM_VALUE, ID = 22, Length = 25
 ///
-/// Field       Offset Type    Meaning
+/// Field       Offset Type      Meaning
 /// -------------------------------------
 /// param_value   0    float     Onboard parameter value
 /// param_count   4    uint16_t  Total number of onboard parameters
@@ -779,7 +783,7 @@ void Mavlink_Position( void ) {
 /// param_type    24   uint8_t   Onboard parameter type: see MAVLINK_TYPE enum
 ///
 //----------------------------------------------------------------------------
-void Mavlink_Param_Value( uint16_t param_index, uint16_t param_count ) {
+void Mavlink_Param_Send( uint16_t param_index, uint16_t param_count ) {
 
     uint8_t j;
 
@@ -837,10 +841,10 @@ void Mavlink_Param_Set( void ) {
             if (match) {                                        // name matched and
                 if ((fParam_Value[i] != f_value) &&             // there is a difference and
                      !isnan(f_value) &&                         // new value is a number and
-                     !isinf(f_value) &&                         // is NOT infinity and 
+                     !isinf(f_value) &&                         // is NOT infinity and
                      (Rx_Msg[22] == MAVLINK_TYPE_FLOAT)) {      // is a float
                     fParam_Value[i] = f_value;                  // write changes
-                    Mavlink_Param_Value(i, 1);                  // emit changes
+                    Mavlink_Param_Send(i, 1);                   // emit changes
                 }
             }
         }
@@ -891,7 +895,7 @@ void Mavlink_HIL_State( void ) {
 
 //----------------------------------------------------------------------------
 //
-/// \brief   Decode request data stream message
+/// \brief   Decode "request data stream" message
 /// \param   -
 /// \returns -
 /// \remarks
@@ -965,6 +969,90 @@ void Mavlink_HIL_State( void ) {
 
         default:
             break;
+    }
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send total number of waypoints
+/// \param   -
+/// \returns -
+/// \remarks
+/// Name = MAVLINK_MSG_ID_MISSION_COUNT, ID = 44, Length = 4
+///
+/// Field         Offset Type   Meaning
+/// ----------------------------------------------------------------------
+/// count            0 uint16_t number of waypoints
+/// target_system    2 uint8_t  target requested to send the stream
+/// target_component 3 uint8_t  component requested to send the stream
+///
+//----------------------------------------------------------------------------
+void Mavlink_Mission_Count( void ) {
+
+    if ((Rx_Msg[0] == PARAM_SYSTEM_ID) &&               // message is for this system
+        (Rx_Msg[1] == PARAM_COMPONENT_ID)) {            // message is for this component
+        Tx_Msg[1] = 4;                                  // payload length
+        Tx_Msg[5] = MAVLINK_MSG_ID_MISSION_COUNT;       // mission count message ID
+        *((uint16_t *)(&Tx_Msg[6])) = Nav_Wpt_Number(); // number of waypoints
+
+        Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_MISSION_COUNT]);
+    }
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Send waypoint data
+/// \param   wpt_index = index of waypoint to be sent
+/// \param   wpt_count = total number of waypoint
+/// \returns -
+/// \remarks
+/// Name = MAVLINK_MSG_ID_MISSION_ITEM, ID = 39, Length = 37
+///
+/// Field       Offset Type     Meaning
+/// --------------------------------------------------------------------
+/// param1            0 float    acceptance radius
+/// param2            4 float    permanence time
+/// param3            8 float    orbit direction
+/// param4           12 float    yaw orientation
+/// x                16 float    x position or latitude
+/// y                20 float    y position or longitude
+/// z                24 float    z position or altitude
+/// seq              28 uint16_t sequence
+/// command          30 uint16_t scheduled action
+/// target_system    32 uint8_t  target requested to send the stream
+/// target_component 33 uint8_t  component requested to send the stream
+/// frame            34 uint8_t  coordinate system
+/// current          35 uint8_t  false:0, true:1
+/// auto_continue    36 uint8_t  autocontinue to next wp
+///
+//----------------------------------------------------------------------------
+void Mavlink_Mission_Item( void ) {
+
+    uint16_t index;
+
+    if ((Rx_Msg[2] == PARAM_SYSTEM_ID) &&           // message is for this system
+        (Rx_Msg[3] == PARAM_COMPONENT_ID)) {        // message is for this component
+
+        index = *((uint16_t *)(&Rx_Msg[0]));                    // get waypoint index
+        Nav_Wpt_Get(index, &wpt);                               // get waypoint data
+        Tx_Msg[1] = 37;                                         // payload length
+        Tx_Msg[5] = MAVLINK_MSG_ID_MISSION_ITEM;                // message ID
+        *((float    *)(&Tx_Msg[ 6])) = 100.0f;                  // radius
+        *((float    *)(&Tx_Msg[10])) =   0.0f;                  // time
+        *((float    *)(&Tx_Msg[14])) =   0.0f;                  // orbit
+        *((float    *)(&Tx_Msg[18])) =   0.0f;                  // yaw
+        *((float    *)(&Tx_Msg[22])) = wpt.Lat;                 // latitude
+        *((float    *)(&Tx_Msg[26])) = wpt.Lon;                 // longitude
+        *((float    *)(&Tx_Msg[30])) = wpt.Alt;                 // altitude
+        *((uint16_t *)(&Tx_Msg[34])) = index;                   // sequence
+        *((uint16_t *)(&Tx_Msg[36])) = MAV_CMD_NAV_WAYPOINT;    // command
+                          Tx_Msg[38] = 1;                       // target sys
+                          Tx_Msg[39] = 1;                       // target comp
+                          Tx_Msg[40] = MAV_FRAME_GLOBAL;        // frame
+                          Tx_Msg[41] = 0;                       // current
+                          Tx_Msg[42] = 1;                       // auto continue
+
+        Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_MISSION_ITEM]);
     }
 }
 
@@ -1114,7 +1202,7 @@ static bool Mavlink_Parse(void) {
 /// \returns -
 /// \remarks Handles packet value by calling the appropriate functions.
 ///          See Ardupilot function handleMessage at following link:
-/// http://code.google.com/p/ardupilot-mega/source/browse/ArduPlane/GCS_Mavlink.pde
+/// https://github.com/diydrones/ardupilot/blob/master/ArduPlane/GCS_Mavlink.pde
 ///
 //----------------------------------------------------------------------------
 void Mavlink_Receive(void)
@@ -1139,6 +1227,12 @@ void Mavlink_Receive(void)
             case MAVLINK_MSG_ID_HIL_STATE:
                 Mavlink_HIL_State();
                 break;
+            case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
+                Mavlink_Mission_Count();
+                break;
+            case MAVLINK_MSG_ID_MISSION_REQUEST:
+                Mavlink_Mission_Item();
+                break;
             default:				                // Do nothing
                 break;
         }
@@ -1156,14 +1250,14 @@ void Mavlink_Receive(void)
 ///          until the buffer is empty.
 ///          Call this function with xx Hertz to increase/decrease bandwidth.
 ///          See Ardupilot function queued_param_send at link:
-/// http://code.google.com/p/ardupilot-mega/source/browse/ArduPlane/GCS_Mavlink.pde
+/// https://github.com/diydrones/ardupilot/blob/master/ArduPlane/GCS_Mavlink.pde
 ///
 //----------------------------------------------------------------------------
 void Mavlink_Queued_Send(uint8_t cycles)
 {
     if (m_parameter_i < ONBOARD_PARAM_COUNT) {      // must send parameters
         if ((cycles % 10) == 0) {                   // @ 5 Hz
-            Mavlink_Param_Value(m_parameter_i++, ONBOARD_PARAM_COUNT);  // send parameters
+            Mavlink_Param_Send(m_parameter_i++, ONBOARD_PARAM_COUNT);  // send parameters
         }
     } else if ((cycles % 200) == 0) {               // @ 0.25 Hz
     } else if ((cycles % 50) == 0) {                // @ 1 Hz
@@ -1171,7 +1265,6 @@ void Mavlink_Queued_Send(uint8_t cycles)
     } else if ((cycles % 5) == 0) {                 // @ 10 Hz
     }
 }
-
 
 //----------------------------------------------------------------------------
 //
@@ -1277,7 +1370,6 @@ bool Mavlink_Stream_Trigger(enum streams stream)
     ucStream_Tick[stream]--;            // count down at 50Hz
     return FALSE;
 }
-
 
 //----------------------------------------------------------------------------
 //
