@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-//  Change: added _Deg or _Rad suffix to angle returning interface functions
+//  Change: Nav_Get_Wpt, Nav_Set_Wpt renamed Nav_Wpt_Get, Nav_Wpt_Set
+//          added function Nav_Wpt_Number
 //
 //============================================================================
 
@@ -53,8 +54,9 @@ float Nav_Bank_Rad ( void );
 float Nav_Pitch_Rad ( void ) ;
 float Nav_Throttle ( void );
 uint16_t Nav_Distance ( void );
-uint8_t Nav_Wpt_Index ( void );
+uint16_t Nav_Wpt_Number ( void );
+uint16_t Nav_Wpt_Index ( void );
 uint16_t Nav_Wpt_Altitude ( void );
-STRUCT_WPT Nav_Get_Wpt ( uint8_t index );
-void Nav_Set_Wpt ( uint8_t index, STRUCT_WPT wpt );
+void Nav_Wpt_Get ( uint16_t index, STRUCT_WPT *wpt );
+void Nav_Wpt_Set ( uint16_t index, STRUCT_WPT wpt );
 
