@@ -40,8 +40,13 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: UART receive interrupt: replaced call to function USART_GetITStatus() 
-///         with direct check of UART registers status
+/// Change: corrected initial condition for GPS fix: parse of NMEA sentence was
+///         not completed, resulting in HOME coordinates being (0;0)
+///         corrected index of first waypoint read from SD file: HOME position 
+///         was overwritten by first waypoint
+///         Nav_Get_Wpt, Nav_Set_Wpt renamed Nav_Wpt_Get, Nav_Wpt_Set
+///         added function Nav_Wpt_Number
+///         uiWptNumber and uiWptIndex changed into uint16_t
 //
 //============================================================================*/
 
@@ -126,8 +131,8 @@ VAR_STATIC uint16_t uiGps_Heading;                      //!< aircraft GPS headin
 VAR_STATIC uint32_t ulTempCoord;                        //!< temporary for coordinate parser
 VAR_STATIC uint16_t uiSpeed;                            //!< speed [kt]
 VAR_STATIC uint16_t uiDistance;                         //!< distance to destination [m]
-VAR_STATIC uint8_t uiWptNumber;                         //!< total number of waypoints
-VAR_STATIC uint8_t uiWptIndex;                          //!< waypoint index
+VAR_STATIC uint16_t uiWptNumber;                        //!< total number of waypoints
+VAR_STATIC uint16_t uiWptIndex;                         //!< waypoint index
 VAR_STATIC uint8_t ucGps_Status;                        //!< status of GPS
 VAR_STATIC uint8_t ucCommas;                            //!< counter of commas in NMEA sentence
 VAR_STATIC uint8_t ucWindex;                            //!< USART buffer write index
@@ -174,10 +179,11 @@ void Navigation_Task( void *pvParameters ) {
     Nav_Pid.fKd = NAV_KD;                           //
     PID_Init(&Nav_Pid);                             // initialize navigation PID
     Load_Path();                                    // load path from SD card
+    /* WARNING: GPS UART must be initialized after loading mission file !!! */
     GPS_Init();                                     // initialize USART for GPS
 
     /* Wait first GPS fix */
-    while ((Parse_GPS() == FALSE) &&                // NMEA sentence not completed
+    while ((Parse_GPS() == FALSE) ||                // NMEA sentence not completed
            (ucGps_Status != GPS_STATUS_FIX)) {      // no satellite fix
         ;                                           // keep parsing NMEA sentences
     }
@@ -284,12 +290,12 @@ static void Load_Path( void ) {
     /* Mount file system and open waypoint file */
     if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
         uiWptNumber = 0;                            // no waypoint available
-    } else if (FR_OK != f_open(&stFile,
-                               (const XCHAR *)szFileName,
-                                FA_READ)) {         // error opening file
+    } else if (FR_OK != f_open(&stFile, (const XCHAR *)szFileName,FA_READ)) {
+                                                    // error opening file
         uiWptNumber = 0;                            // no waypoint available
     } else {                                        //
         bError = FALSE;                             // file succesfully open
+        uiWptNumber = 1;                            // waypoint available
     }
 
     /* Read waypoint file */
@@ -605,13 +611,25 @@ void USART2_IRQHandler( void )
 
 //----------------------------------------------------------------------------
 //
+/// \brief   Get total waypoint number
+/// \param   -
+/// \returns waypoint number
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Nav_Wpt_Number ( void ) {
+  return uiWptNumber;
+}
+
+//----------------------------------------------------------------------------
+//
 /// \brief   Get waypoint index
 /// \param   -
 /// \returns waypoint index
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint8_t Nav_Wpt_Index ( void ) {
+uint16_t Nav_Wpt_Index ( void ) {
   return uiWptIndex;
 }
 
@@ -635,11 +653,13 @@ uint16_t Nav_Wpt_Altitude ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-STRUCT_WPT Nav_Get_Wpt ( uint8_t index ) {
+void Nav_Wpt_Get ( uint16_t index, STRUCT_WPT * wpt ) {
   if (index > uiWptNumber) {
      index = 0;
   }
-  return Waypoint[index];
+  wpt->Lat = Waypoint[index].Lat;
+  wpt->Lon = Waypoint[index].Lon;
+  wpt->Alt = Waypoint[index].Alt;
 }
 
 //----------------------------------------------------------------------------
@@ -651,7 +671,7 @@ STRUCT_WPT Nav_Get_Wpt ( uint8_t index ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-void Nav_Set_Wpt ( uint8_t index, STRUCT_WPT wpt ) {
+void Nav_Wpt_Set ( uint16_t index, STRUCT_WPT wpt ) {
 }
 
 //----------------------------------------------------------------------------
