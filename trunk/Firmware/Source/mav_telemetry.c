@@ -244,8 +244,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: Implemented download of mission waypoints,
-///          function Mavlink_Param_Value() renamed Mavlink_Param_Send()
+/// Changes: added actual GPS fix information to Mavlink_Gps_Raw() function
 ///
 //============================================================================*/
 
@@ -722,7 +721,7 @@ void Mavlink_Gps_Raw( void ) {
     *((uint16_t *)(&Tx_Msg[28])) = 65535;                      // epv
     *((uint16_t *)(&Tx_Msg[30])) = Gps_Speed();                // velocity
     *((uint16_t *)(&Tx_Msg[32])) = Gps_Heading_Deg();          // course over ground
-    Tx_Msg[34] = 3;                                            // fix type
+    Tx_Msg[34] = Gps_Fix();                                    // fix type
     Tx_Msg[35] = 255;                                          // satellites
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_GPS_RAW_INT]);
