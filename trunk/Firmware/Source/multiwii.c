@@ -68,7 +68,8 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change Nav_Heading renamed Nav_Heading_Deg
+//  Change function Nav_Wpt_Get() renamed Nav_Get_Wpt(), changed parameters and
+//         return type
 //
 //============================================================================*/
 
@@ -513,7 +514,7 @@ void MWI_Parse_Command( void ) {
 #if defined(USE_MWI_WP)
    case MWI_WP:                         // requested waypoint
     i = read8();                        // get the number of required wp
-    wpt = Nav_Get_Wpt(i);
+    Nav_Get_Wpt((uint16_t)i, &wpt);
     MWI_Init_Response(12);              // initialize response
     MWI_Append_8(i);                    // append waypoint number
     lTemp = (int32_t)(wpt.Lat * 10000000.0f);
