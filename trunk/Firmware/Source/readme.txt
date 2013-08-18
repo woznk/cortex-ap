@@ -113,6 +113,28 @@
      Log dei messaggi inviati da AqGCS
      Log dei messaggi inviati da aq-gcs2
 
+     05/08/2013
+     Implementati messaggi prinicipali di mavlink e verificati con GCS andropilot:
+     - assetto
+     - posizione GPS
+     - download parametri
+     - impostazione parametri
+     - download waypoint
+     Mancano ancora:
+     - impostazione / modifica waypoint
+     - cancellazione waypoint
+     - salvataggio waypoint su scheda SD
+
+@par GPS
+
+     17/08/2013
+     Sostituito Haicom H 203 con Royaltek bluetooth collegando dei fili all'interno.
+     Impostato a 57600 baud rate UART del GPS.
+     Dopo un po' il micro si blocca sulla routine di interrupt dell'UART.
+     Interrupt troppo frequenti ?
+     Interrupt nidificati ?
+     Funzioni chiamate nell'interrupt non rientranti ?
+
 @par Telemetria MultiWii
 
      03/08/2012
@@ -225,6 +247,8 @@
      Aggiungere altre uscite per i servocomandi
      Togliere pulsante di reset ?
      Aggiungere soppressore di disturbi sull'alimentazione
+     Sostituire avvelerometri e giroscopi con MPU Invensense
+     Usare SPI per leggere giroscopi / sensori, I2C dà troppi problemi 
 
 @par How to use it ? 
 
