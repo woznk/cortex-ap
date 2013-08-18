@@ -36,10 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: function Parse_GPS(): added check of NMEA prefix
-///         removed function call from UART interrupt routine
-///         GPS UART initialized at 57600 baud
-///         renamed some variables according naming conventions 
+/// Change: enabled DMA for UART 2 reception
 //
 //============================================================================*/
 
@@ -49,6 +46,7 @@
 
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
+#include "stm32f10x_dma.h"
 #include "misc.h"
 #include "bmp085_driver.h"
 #include "ppmdriver.h"
@@ -72,6 +70,8 @@
 #   undef VAR_GLOBAL
 #endif
 #define   VAR_GLOBAL
+
+#define USART2_DR_Base      0x40004404
 
 #define MAX_WAYPOINTS       8       //!< Maximum number of waypoints
 #define MIN_DISTANCE        100     //!< Minimum distance from waypoint [m]
@@ -330,6 +330,7 @@ static void Load_Path( void ) {
 static void GPS_Init( void ) {
 
     USART_InitTypeDef USART_InitStructure;
+    DMA_InitTypeDef DMA_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
     ucGps_Status = GPS_STATUS_NOFIX;                // init GPS status
@@ -337,27 +338,47 @@ static void GPS_Init( void ) {
     ucRindex = 0;                                   // clear read index
     ulTempCoord = 0UL;                              // clear temporary coordinate
 
-    /* Initialize USART structure */
+    /* Initialize USART2 */
     USART_InitStructure.USART_BaudRate = 57600;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;
     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
     USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+    USART_Init(USART2, &USART_InitStructure);
 
-    USART_Init(USART2, &USART_InitStructure);       // configure USART2
+    USART_Cmd(USART2, ENABLE);                      // enable the USART2
 
-    USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);  // enable USART2 interrupt
-    //USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+    USART_DMACmd(USART2, USART_DMAReq_Rx, ENABLE);  // enable USART2 RX DMA request
 
-    /* Configure NVIC for USART 2 interrupt */
-    NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+    /* Initialize DMA1 channel, triggered by UART 2 RX */
+    DMA_DeInit(DMA1_Channel6);
+    DMA_InitStructure.DMA_PeripheralBaseAddr = USART2_DR_Base;
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)ucGpsBuffer;
+    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+    DMA_InitStructure.DMA_BufferSize = BUFFER_LENGTH;
+	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+    DMA_Init(DMA1_Channel6, &DMA_InitStructure);
+
+    DMA_Cmd(DMA1_Channel6, ENABLE);                 // enable USART2 RX DMA channel
+
+    /* Enable DMA 1 half transfer- and transfer complete interrupts */
+	DMA_ITConfig(DMA1_Channel6, DMA_IT_TC | DMA_IT_HT, ENABLE);
+
+    /* Initialize DMA interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel6_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init( &NVIC_InitStructure );
+    NVIC_Init(&NVIC_InitStructure);
 
-    USART_Cmd(USART2, ENABLE);                      // enable the USART2
+    NVIC_EnableIRQ(DMA1_Channel6_IRQn);             // enable DMA interrupt
 }
 
 
@@ -603,26 +624,24 @@ static bool Parse_GPS( void )
 
 //----------------------------------------------------------------------------
 //
-/// \brief   GPS USART interrupt handler
+/// \brief   USART DMA interrupt handler
 /// \param   -
 /// \returns -
-/// \remarks -
+/// \remarks interrupt is triggered on both "half transfer" event and "transfer 
+///          completed" event, so it must check which one was the cause.
+///          When the former occurs, write index is moved to half buffer size,
+///          whereas when the latter occurs, write index is reset to 0.
 ///
 //----------------------------------------------------------------------------
-void USART2_IRQHandler( void )
-{
-//  portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-//  portCHAR cChar;
+void DMA1_Channel6_IRQHandler( void ) {
 
-    if (((USART2->CR1 & 0x00000020) != 0) &&
-        (USART2->SR & 0x00000020) != 0) {              // USART_IT_RXNE == SET
-//		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
-		ucGpsBuffer[ucWindex++] = USART2->DR;
-        if (ucWindex >= BUFFER_LENGTH) {
-            ucWindex = 0;
-        }
-	}
-//	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
+    if (DMA_GetITStatus(DMA1_FLAG_TC6)) {    // transfer complete
+        DMA_ClearITPendingBit(DMA1_IT_TC6);
+        ucWindex = 0;
+    } else {                                 // half transfer
+        DMA_ClearITPendingBit(DMA1_IT_HT6);
+        ucWindex = BUFFER_LENGTH / 2;
+    }
 }
 
 //----------------------------------------------------------------------------
