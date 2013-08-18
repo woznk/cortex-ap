@@ -24,29 +24,22 @@
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
 /// \todo
-/// 1) Send configuration command to enable $GPGGA sentence only :
-/// 25 25 f1 04 01 00 00 01 00 00 00 00 f5 0d 0a
-///
-/// \todo
-/// 2) Compute longitude and latitude differences as :
+/// 1) Compute longitude and latitude differences as :
 /// \code
 ///     Delta Lat = Lat2 - Lat1
 ///     Delta Lon = (Lon2 - Lon1) * cos((Lat1 + Lat2)/2)
 /// \endcode
 ///
 /// \todo
-/// 3) Compute distance from waypoint as :
+/// 2) Compute distance from waypoint as :
 /// \code
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: corrected initial condition for GPS fix: parse of NMEA sentence was
-///         not completed, resulting in HOME coordinates being (0;0)
-///         corrected index of first waypoint read from SD file: HOME position 
-///         was overwritten by first waypoint
-///         Nav_Get_Wpt, Nav_Set_Wpt renamed Nav_Wpt_Get, Nav_Wpt_Set
-///         added function Nav_Wpt_Number
-///         uiWptNumber and uiWptIndex changed into uint16_t
+/// Change: function Parse_GPS(): added check of NMEA prefix
+///         removed function call from UART interrupt routine
+///         GPS UART initialized at 57600 baud
+///         renamed some variables according naming conventions 
 //
 //============================================================================*/
 
@@ -131,10 +124,9 @@ VAR_STATIC uint16_t uiGps_Heading;                      //!< aircraft GPS headin
 VAR_STATIC uint32_t ulTempCoord;                        //!< temporary for coordinate parser
 VAR_STATIC uint16_t uiSpeed;                            //!< speed [kt]
 VAR_STATIC uint16_t uiDistance;                         //!< distance to destination [m]
-VAR_STATIC uint16_t uiWptNumber;                        //!< total number of waypoints
-VAR_STATIC uint16_t uiWptIndex;                         //!< waypoint index
+VAR_STATIC uint16_t uiWpt_Number;                       //!< total number of waypoints
+VAR_STATIC uint16_t uiWpt_Index;                        //!< waypoint index
 VAR_STATIC uint8_t ucGps_Status;                        //!< status of GPS
-VAR_STATIC uint8_t ucCommas;                            //!< counter of commas in NMEA sentence
 VAR_STATIC uint8_t ucWindex;                            //!< USART buffer write index
 VAR_STATIC uint8_t ucRindex;                            //!< USART buffer read index
 VAR_STATIC xPID Nav_Pid;                                //!< Navigation PID loop
@@ -169,7 +161,7 @@ void Navigation_Task( void *pvParameters ) {
     uiGps_Heading = 0;                              // aircraft GPS heading [°]
     uiSpeed = 0;                                    // speed [kt]
     uiDistance = 0;                                 // distance to destination [m]
-    uiWptNumber = 0;                                // no waypoint yet
+    uiWpt_Number = 0;                               // no waypoint yet
 
     Nav_Pid.fGain = PI / 6.0f;                      // limit bank angle to -30°, 30°
     Nav_Pid.fMin = -1.0f;                           //
@@ -191,14 +183,14 @@ void Navigation_Task( void *pvParameters ) {
     /* Save launch position */
     Waypoint[0].Lon = fLon_Curr;                    // save launch position
     Waypoint[0].Lat = fLat_Curr;
-    if (uiWptNumber != 0) {                         // waypoint file available
-        uiWptIndex = 1;                             // read first waypoint
+    if (uiWpt_Number != 0) {                        // waypoint file available
+        uiWpt_Index = 1;                            // read first waypoint
     } else {                                        // no waypoint file
-        uiWptIndex = 0;                             // use launch position
+        uiWpt_Index = 0;                            // use launch position
     }
-    fLon_Dest = Waypoint[uiWptIndex].Lon;           // load destination longitude
-    fLat_Dest = Waypoint[uiWptIndex].Lat;           // load destination latitude
-    fAlt_Dest = Waypoint[uiWptIndex].Alt;           // load destination altitude
+    fLon_Dest = Waypoint[uiWpt_Index].Lon;          // load destination longitude
+    fLat_Dest = Waypoint[uiWpt_Index].Lat;          // load destination latitude
+    fAlt_Dest = Waypoint[uiWpt_Index].Alt;          // load destination altitude
 
     while (1) {
         if (Parse_GPS()) {                          // NMEA sentence completed
@@ -241,14 +233,14 @@ void Navigation_Task( void *pvParameters ) {
 
             /* Waypoint reached: next waypoint */
             if (uiDistance < MIN_DISTANCE) {
-                if (uiWptNumber != 0) {
-                    if (++uiWptIndex == uiWptNumber) {
-                        uiWptIndex = 1;
+                if (uiWpt_Number != 0) {
+                    if (++uiWpt_Index == uiWpt_Number) {
+                        uiWpt_Index = 1;
                     }
                 }
-                fLon_Dest = Waypoint[uiWptIndex].Lon;   // new destination longitude
-                fLat_Dest = Waypoint[uiWptIndex].Lat;   // new destination latitude
-                fAlt_Dest = Waypoint[uiWptIndex].Alt;   // new destination altitude
+                fLon_Dest = Waypoint[uiWpt_Index].Lon;   // new destination longitude
+                fLat_Dest = Waypoint[uiWpt_Index].Lat;   // new destination latitude
+                fAlt_Dest = Waypoint[uiWpt_Index].Alt;   // new destination altitude
             }
 
             /* Compute throttle and pitch based on altitude error */
@@ -289,13 +281,13 @@ static void Load_Path( void ) {
 
     /* Mount file system and open waypoint file */
     if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
-        uiWptNumber = 0;                            // no waypoint available
+        uiWpt_Number = 0;                           // no waypoint available
     } else if (FR_OK != f_open(&stFile, (const XCHAR *)szFileName,FA_READ)) {
                                                     // error opening file
-        uiWptNumber = 0;                            // no waypoint available
+        uiWpt_Number = 0;                           // no waypoint available
     } else {                                        //
         bError = FALSE;                             // file succesfully open
-        uiWptNumber = 1;                            // waypoint available
+        uiWpt_Number = 1;                           // waypoint available
     }
 
     /* Read waypoint file */
@@ -346,7 +338,7 @@ static void GPS_Init( void ) {
     ulTempCoord = 0UL;                              // clear temporary coordinate
 
     /* Initialize USART structure */
-    USART_InitStructure.USART_BaudRate = 4800;
+    USART_InitStructure.USART_BaudRate = 57600;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -430,9 +422,9 @@ static bool Parse_Waypoint ( uint8_t * pszLine ) {
         }
         /* assign */
         switch ( ucField++ ) {
-            case 0: Waypoint[uiWptNumber].Lon = fTemp; break;
-            case 1: Waypoint[uiWptNumber].Lat = fTemp; break;
-            case 2: Waypoint[uiWptNumber++].Alt = fTemp; break;
+            case 0: Waypoint[uiWpt_Number].Lon = fTemp; break;
+            case 1: Waypoint[uiWpt_Number].Lat = fTemp; break;
+            case 2: Waypoint[uiWpt_Number++].Alt = fTemp; break;
             default: break;
         }
     }
@@ -522,9 +514,11 @@ static void Parse_Coord( float * fCoord, uint8_t c )
 static bool Parse_GPS( void )
 {
     uint8_t c;
-    bool bResult = FALSE;
+    bool bCompleted = FALSE;                //!< true when NMEA sentence completed
+    static uint8_t ucPrefix = 5;            //!< counter of prefix characters
+    static uint8_t ucCommas;                //!< counter of commas in NMEA sentence
 
-    while ((bResult == FALSE) &&            // NMEA sentence not completed
+    while ((bCompleted == FALSE) &&         // NMEA sentence not completed
            (ucRindex != ucWindex)) {        // received another character
 
         c = ucGpsBuffer[ucRindex++];        // read character
@@ -535,7 +529,28 @@ static bool Parse_GPS( void )
 
         if ( c == '$' ) ucCommas = 0;       // start of NMEA sentence
 
-        if ( c == ',' ) ucCommas++;         // count commas
+        if (( c == ',' ) &&
+            (ucPrefix == 0)) ucCommas++;    // count commas
+
+        if ( ucCommas == 0 ) {              // check prefix
+           switch (ucPrefix) {
+              case 5:
+                 if (c == 'G') ucPrefix--;
+                 break;
+              case 4:
+                 if (c == 'P') ucPrefix--;
+                 break;
+              case 3:
+                 if (c == 'R') ucPrefix--;
+                 break;
+              case 2:
+                 if (c == 'M') ucPrefix--;
+                 break;
+              case 1:
+                 if (c == 'C') ucPrefix--;
+                 break;
+           }
+        }
 
         if ( ucCommas == 2 ) {              // get fix info
            if (c == 'A') {
@@ -576,13 +591,14 @@ static bool Parse_GPS( void )
         if ((ucCommas == 9) &&              // end of NMEA sentence
             (ucGps_Status == GPS_STATUS_FIX)) {
           ucCommas = 10;
+          ucPrefix = 5;
           uiGps_Heading /= 10;
           fLat_Curr = fLat_Temp;
           fLon_Curr = fLon_Temp;
-          bResult = TRUE;
+          bCompleted = TRUE;
         }
     }
-    return bResult;
+    return bCompleted;
 }
 
 //----------------------------------------------------------------------------
@@ -601,7 +617,7 @@ void USART2_IRQHandler( void )
     if (((USART2->CR1 & 0x00000020) != 0) &&
         (USART2->SR & 0x00000020) != 0) {              // USART_IT_RXNE == SET
 //		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
-		ucGpsBuffer[ucWindex++] = USART_ReceiveData( USART2 );
+		ucGpsBuffer[ucWindex++] = USART2->DR;
         if (ucWindex >= BUFFER_LENGTH) {
             ucWindex = 0;
         }
@@ -618,7 +634,7 @@ void USART2_IRQHandler( void )
 ///
 //----------------------------------------------------------------------------
 uint16_t Nav_Wpt_Number ( void ) {
-  return uiWptNumber;
+  return uiWpt_Number;
 }
 
 //----------------------------------------------------------------------------
@@ -630,7 +646,7 @@ uint16_t Nav_Wpt_Number ( void ) {
 ///
 //----------------------------------------------------------------------------
 uint16_t Nav_Wpt_Index ( void ) {
-  return uiWptIndex;
+  return uiWpt_Index;
 }
 
 //----------------------------------------------------------------------------
@@ -642,7 +658,7 @@ uint16_t Nav_Wpt_Index ( void ) {
 ///
 //----------------------------------------------------------------------------
 uint16_t Nav_Wpt_Altitude ( void ) {
-  return (uint16_t)Waypoint[uiWptIndex].Alt;
+  return (uint16_t)Waypoint[uiWpt_Index].Alt;
 }
 
 //----------------------------------------------------------------------------
@@ -654,7 +670,7 @@ uint16_t Nav_Wpt_Altitude ( void ) {
 ///
 //----------------------------------------------------------------------------
 void Nav_Wpt_Get ( uint16_t index, STRUCT_WPT * wpt ) {
-  if (index > uiWptNumber) {
+  if (index > uiWpt_Number) {
      index = 0;
   }
   wpt->Lat = Waypoint[index].Lat;
