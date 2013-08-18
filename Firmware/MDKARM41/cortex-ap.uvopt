@@ -150,8 +150,8 @@
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
-          <SubType>0</SubType>
-          <ItemText>ucTxBuffer</ItemText>
+          <SubType>8</SubType>
+          <ItemText>ucGpsBuffer</ItemText>
         </Mm>
       </MemoryWindow1>
       <DebugFlag>
@@ -533,8 +533,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>183</TopLine>
-      <CurrentLine>183</CurrentLine>
+      <TopLine>177</TopLine>
+      <CurrentLine>193</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -545,10 +545,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>28</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>188</TopLine>
-      <CurrentLine>197</CurrentLine>
+      <TopLine>611</TopLine>
+      <CurrentLine>617</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -657,10 +657,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>20</ColumnNumber>
+      <ColumnNumber>39</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>99</TopLine>
+      <CurrentLine>121</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\usart1driver.c</PathWithFileName>
       <FilenameWithoutPath>usart1driver.c</FilenameWithoutPath>
@@ -671,10 +671,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>38</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1196</TopLine>
-      <CurrentLine>1235</CurrentLine>
+      <TopLine>1012</TopLine>
+      <CurrentLine>1036</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\mav_telemetry.c</PathWithFileName>
       <FilenameWithoutPath>mav_telemetry.c</FilenameWithoutPath>
@@ -722,8 +722,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>80</TopLine>
+      <CurrentLine>89</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</PathWithFileName>
       <FilenameWithoutPath>i2c_mems_driver.c</FilenameWithoutPath>
@@ -736,8 +736,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>174</TopLine>
-      <CurrentLine>184</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\ADXL345_Driver\ADXL345_driver.c</PathWithFileName>
       <FilenameWithoutPath>ADXL345_driver.c</FilenameWithoutPath>
@@ -750,8 +750,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>1039</TopLine>
+      <CurrentLine>1048</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\fat_sd\sd_spi_stm32.c</PathWithFileName>
       <FilenameWithoutPath>sd_spi_stm32.c</FilenameWithoutPath>
@@ -832,10 +832,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>56</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>753</TopLine>
-      <CurrentLine>773</CurrentLine>
+      <TopLine>747</TopLine>
+      <CurrentLine>756</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\I2C_CPALV1.1.0\cpal_i2c.c</PathWithFileName>
       <FilenameWithoutPath>cpal_i2c.c</FilenameWithoutPath>
@@ -1000,10 +1000,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>53</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>605</TopLine>
+      <CurrentLine>617</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</PathWithFileName>
       <FilenameWithoutPath>stm32f10x_usart.c</FilenameWithoutPath>
@@ -1150,36 +1150,86 @@
     </File>
   </Group>
 
+  <AlienFiles>
+    <PathWithFilename>C:\Work\cxap\trunk\Firmware\Libraries\Mavlink\checksum.h</PathWithFilename>
+    <TopLine>1</TopLine>
+    <CurrentLine>22</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
   <MDIGroups>
     <Orientation>1</Orientation>
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>1</ActiveTab>
       <Documents>
-        <Doc>
-          <Name>..\Source\nav.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>188</TopLine>
-          <CurrentLine>197</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Libraries\I2C_CPALV1.1.0\cpal_i2c.c</Name>
-          <ColumnNumber>56</ColumnNumber>
-          <TopLine>753</TopLine>
-          <CurrentLine>773</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\mav_telemetry.c</Name>
-          <ColumnNumber>38</ColumnNumber>
-          <TopLine>1196</TopLine>
-          <CurrentLine>1235</CurrentLine>
-        </Doc>
         <Doc>
           <Name>..\Source\main.c</Name>
           <ColumnNumber>0</ColumnNumber>
-          <TopLine>183</TopLine>
-          <CurrentLine>183</CurrentLine>
+          <TopLine>177</TopLine>
+          <CurrentLine>193</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\nav.c</Name>
+          <ColumnNumber>28</ColumnNumber>
+          <TopLine>611</TopLine>
+          <CurrentLine>617</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\fat_sd\sd_spi_stm32.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>1039</TopLine>
+          <CurrentLine>1048</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\STM32F10x_StdPeriph_Driver\src\stm32f10x_usart.c</Name>
+          <ColumnNumber>53</ColumnNumber>
+          <TopLine>605</TopLine>
+          <CurrentLine>617</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\I2C_MEMS_Driver\i2c_mems_driver.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>80</TopLine>
+          <CurrentLine>89</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\usart1driver.c</Name>
+          <ColumnNumber>39</ColumnNumber>
+          <TopLine>99</TopLine>
+          <CurrentLine>121</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Libraries\I2C_CPALV1.1.0\cpal_i2c.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>747</TopLine>
+          <CurrentLine>756</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\mav_telemetry.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>1012</TopLine>
+          <CurrentLine>1036</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\startup_stm32f10x_md_vl.s</Name>
@@ -1188,10 +1238,10 @@
           <CurrentLine>153</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Libraries\ADXL345_Driver\ADXL345_driver.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>174</TopLine>
-          <CurrentLine>184</CurrentLine>
+          <Name>..\Libraries\Mavlink\matrixpilot\../checksum.h</Name>
+          <ColumnNumber>21</ColumnNumber>
+          <TopLine>1</TopLine>
+          <CurrentLine>22</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
