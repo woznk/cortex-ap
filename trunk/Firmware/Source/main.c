@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: Telemetry_ ... functions renamed Simulator_ ...
+// Change: enabled clock for DMA 1 channel
 //
 //============================================================================*/
 
@@ -247,6 +247,10 @@ void RCC_Configuration(void)
                          RCC_APB2Periph_AFIO  | //
                          RCC_APB2Periph_USART1, // Used for telemetry
                          ENABLE);
+
+  /* DMA 1 clock enable */
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+
 }
 
 ///----------------------------------------------------------------------------
