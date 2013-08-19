@@ -135,6 +135,10 @@
      Interrupt nidificati ?
      Funzioni chiamate nell'interrupt non rientranti ?
 
+     18/08/2013
+     Abilitato DMA su UART GPS, il micro non si blocca più.
+
+
 @par Telemetria MultiWii
 
      03/08/2012
@@ -238,17 +242,18 @@
 @par Modifiche hardware
      
      Aggiungere batteria tampone per RTC
-     Eliminare CD 4504 D
+     Eliminare CD 4504 D o sostituirlo con componente reperibile
      Correggere package LD1117 o cambiare tipo di stabilizzatore
      Sostituire sensore di pressione differenziale con MP3V5004DP
      Collegare il pin EOC del barometro BMP085 al micro
      Aggiungere la possibilità di resettare i sensori (accel, gyro, baro)
      Aggiungere SPI per modulo radio Hope RF 23
      Aggiungere altre uscite per i servocomandi
-     Togliere pulsante di reset ?
+     Togliere pulsante di reset 
      Aggiungere soppressore di disturbi sull'alimentazione
-     Sostituire avvelerometri e giroscopi con MPU Invensense
+     Sostituire avvelerometri e giroscopi con MPU 6000 o MPU 6050 Invensense
      Usare SPI per leggere giroscopi / sensori, I2C dà troppi problemi 
+     Prevedere connessione servi ad angolo retto
 
 @par How to use it ? 
 
