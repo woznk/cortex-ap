@@ -9,8 +9,8 @@
 ///
 /// \file
 ///
-//  Change: Nav_Get_Wpt, Nav_Set_Wpt renamed Nav_Wpt_Get, Nav_Wpt_Set
-//          added function Nav_Wpt_Number
+//  Change: added interface function for GPS altitude
+///         some function renamed according coding rules
 //
 //============================================================================
 
@@ -41,7 +41,8 @@ typedef struct {
 /*---------------------------------- Interface -------------------------------*/
 
 uint8_t Gps_Fix( void );
-uint16_t Gps_Speed ( void );
+uint16_t Gps_Alt_M ( void );
+uint16_t Gps_Speed_Kt ( void );
 uint16_t Gps_Heading_Deg ( void );
 int32_t Gps_Latitude ( void );
 int32_t Gps_Longitude ( void );
