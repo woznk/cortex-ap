@@ -68,8 +68,7 @@
 ///    - 29 velocity I      100
 ///    - 30 velocity D      1
 ///
-//  Change function Nav_Wpt_Get() renamed Nav_Get_Wpt(), changed parameters and
-//         return type
+//  Change function Gps_Speed() renamed Gps_Speed_Kt()
 //
 //============================================================================*/
 
@@ -535,7 +534,7 @@ void MWI_Parse_Command( void ) {
      MWI_Append_32(Gps_Latitude());     // latitude in 1/10 000 000 degres
      MWI_Append_32(Gps_Longitude());    // longitude in 1/10 000 000 degres
      MWI_Append_16(0);                  // gps altitude
-     MWI_Append_16(Gps_Speed());        // gps speed
+     MWI_Append_16(Gps_Speed_Kt());        // gps speed
      break;
 
    case MWI_COMP_GPS:                   // requested home information
