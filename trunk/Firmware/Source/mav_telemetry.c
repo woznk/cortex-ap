@@ -244,7 +244,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: added actual GPS fix information to Mavlink_Gps_Raw() function
+/// Changes: function Gps_Speed() renamed Gps_Speed_Kt()
 ///
 //============================================================================*/
 
@@ -644,7 +644,7 @@ void Mavlink_Hud( void ) {
     Tx_Msg[1] = 20;                                        // Payload length
     Tx_Msg[5] = MAVLINK_MSG_ID_VFR_HUD;                    // VFR HUD message ID
     *((float *)(&Tx_Msg[6])) = 0.0f;                       // Airspeed
-    *((float *)(&Tx_Msg[10])) = (float)Gps_Speed();        // GPS speed
+    *((float *)(&Tx_Msg[10])) = (float)Gps_Speed_Kt();     // GPS speed
     *((float *)(&Tx_Msg[14])) = Nav_Altitude();            // Altitude
     *((float *)(&Tx_Msg[18])) = 0.0f;                      // Climb rate
     *((uint16_t *)(&Tx_Msg[22])) = Gps_Heading_Deg();      // Heading
@@ -719,7 +719,7 @@ void Mavlink_Gps_Raw( void ) {
     *((int32_t *)(&Tx_Msg[22])) = (int32_t)Nav_Altitude();     // altitude
     *((uint16_t *)(&Tx_Msg[26])) = 65535;                      // eph
     *((uint16_t *)(&Tx_Msg[28])) = 65535;                      // epv
-    *((uint16_t *)(&Tx_Msg[30])) = Gps_Speed();                // velocity
+    *((uint16_t *)(&Tx_Msg[30])) = Gps_Speed_Kt();             // velocity
     *((uint16_t *)(&Tx_Msg[32])) = Gps_Heading_Deg();          // course over ground
     Tx_Msg[34] = Gps_Fix();                                    // fix type
     Tx_Msg[35] = 255;                                          // satellites
