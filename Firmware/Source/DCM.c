@@ -78,7 +78,7 @@
 ///
 /// \endcode
 ///
-// Change: Telemetry_Get_Speed renamed Simulator_Get_Speed
+// Change: function Gps_Speed() renamed Gps_Speed_Kt()
 //
 //=============================================================================+
 
@@ -296,7 +296,7 @@ void
 AccelAdjust(void)
 {
 #if (SIMULATOR == SIM_NONE)
-    fGround_Speed = ((float)Gps_Speed());
+    fGround_Speed = ((float)Gps_Speed_Kt());
     fGround_Speed = (fGround_Speed * 1852.0f) / 36000.0f; // convert [kt] to [m/s]
 #else
     fGround_Speed = Simulator_Get_Speed();
