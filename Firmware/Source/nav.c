@@ -36,7 +36,9 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: enabled DMA for UART 2 reception
+/// Change: added parsing of $GPGGA sentence
+///         GPS altitude temporarily assumed as aircraft altitude 
+///         some major renaming according coding rules
 //
 //============================================================================*/
 
@@ -71,16 +73,16 @@
 #endif
 #define   VAR_GLOBAL
 
-#define USART2_DR_Base      0x40004404
+#define USART2_DR_Base  0x40004404
 
-#define MAX_WAYPOINTS       8       //!< Maximum number of waypoints
-#define MIN_DISTANCE        100     //!< Minimum distance from waypoint [m]
+#define MAX_WAYPOINTS   8       //!< Maximum number of waypoints
+#define MIN_DISTANCE    100     //!< Minimum distance from waypoint [m]
 
-#define BUFFER_LENGTH       96      //!< Length of buffer for file and USART
-#define LINE_LENGTH         48      //!< Length of lines read from file
+#define BUFFER_LENGTH   96      //!< Length of buffer for file and USART
+#define LINE_LENGTH     48      //!< Length of lines read from file
 
-#define GPS_STATUS_FIX      3       //!< GPS status: satellite fix
-#define GPS_STATUS_NOFIX    0       //!< GPS status: waiting for first fix
+#define GPS_FIX         3       //!< GPS status: satellite fix
+#define GPS_NOFIX       0       //!< GPS status: waiting for first fix
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -94,38 +96,46 @@ typedef enum {
     NAV_WPT         //!< waypoint following
 } ENUM_NAV_MODE;
 
+/// NMEA string types
+typedef enum {
+    NMEA_GPRMC,     //!< recommended minimum specific GPS/transit data
+    NMEA_GPGGA,     //!< global positioning system fix data
+    NMEA_INVALID    //!< invalid NMEA string
+} ENUM_NMEA_TYPE;
+
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC uint8_t ucGpsBuffer[BUFFER_LENGTH];          //!< data buffer
+VAR_STATIC uint8_t ucGpsBuffer[BUFFER_LENGTH];          //!< gps data buffer
 VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];         	//!< waypoints array
-VAR_STATIC const uint8_t szFileName[16] = "path.txt";   //!< file name
+VAR_STATIC const uint8_t szFile[16] = "path.txt";     //!< file name
 VAR_STATIC uint8_t szLine[LINE_LENGTH];                 //!< input line
 VAR_STATIC FATFS stFat;                                 //!< FAT
 VAR_STATIC FIL stFile;                                  //!< file object
-VAR_STATIC UINT wFileBytes;                             //!< counter of read bytes
+VAR_STATIC UINT wFile_Bytes;                            //!< counter of read bytes
 VAR_STATIC float fBank;                                 //!< bank angle setpoint [rad]
 VAR_STATIC float fThrottle;                             //!< throttle
 VAR_STATIC float fPitch;                                //!< pitch setpoint [rad]
-VAR_STATIC float fLat_Dest;                             //!< destination latitude
-VAR_STATIC float fLon_Dest;                             //!< destination longitude
-VAR_STATIC float fAlt_Dest;                             //!< destination altitude
-VAR_STATIC float fLat_Curr;                             //!< current latitude
-VAR_STATIC float fLon_Curr;                             //!< current longitude
-VAR_STATIC float fAlt_Curr;                             //!< current altitude
-VAR_STATIC float fLon_Temp;                             //!< temporary longitude during parse
-VAR_STATIC float fLat_Temp;                             //!< temporary altitude during parse
+VAR_STATIC float fDest_Lat;                             //!< destination latitude
+VAR_STATIC float fDest_Lon;                             //!< destination longitude
+VAR_STATIC float fDest_Alt;                             //!< destination altitude
+VAR_STATIC float fCurr_Lat;                             //!< current latitude
+VAR_STATIC float fCurr_Lon;                             //!< current longitude
+VAR_STATIC float fCurr_Alt;                             //!< current altitude
+VAR_STATIC float fTemp_Lon;                             //!< temporary longitude during parse
+VAR_STATIC float fTemp_Lat;                             //!< temporary latitude during parse
 VAR_STATIC float fBearing;                              //!< angle to destination [°]
 VAR_STATIC float fHeading;                              //!< aircraft navigation heading [°]
-VAR_STATIC uint16_t uiGps_Heading;                      //!< aircraft GPS heading [°]
-VAR_STATIC uint32_t ulTempCoord;                        //!< temporary for coordinate parser
-VAR_STATIC uint16_t uiSpeed;                            //!< speed [kt]
+VAR_STATIC uint32_t ulTemp_Coord;                       //!< temporary for coordinate parser
 VAR_STATIC uint16_t uiDistance;                         //!< distance to destination [m]
 VAR_STATIC uint16_t uiWpt_Number;                       //!< total number of waypoints
 VAR_STATIC uint16_t uiWpt_Index;                        //!< waypoint index
+VAR_STATIC uint16_t uiGps_Heading;                      //!< aircraft GPS heading [°]
+VAR_STATIC uint16_t uiGps_Speed;                        //!< speed [kt/10]
+VAR_STATIC uint16_t uiGps_Alt;                          //!< altitude [m]
 VAR_STATIC uint8_t ucGps_Status;                        //!< status of GPS
 VAR_STATIC uint8_t ucWindex;                            //!< USART buffer write index
 VAR_STATIC uint8_t ucRindex;                            //!< USART buffer read index
@@ -136,30 +146,31 @@ VAR_STATIC float fThrottle_Max = ALT_HOLD_THROTTLE_MAX; //!< altitude hold max t
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-static void Load_Path( void );
-static void GPS_Init( void );
-static bool Parse_Waypoint ( uint8_t * pszLine );
-static void Parse_Coord( float * fCoord, uint8_t c );
-static bool Parse_GPS( void );
+static void load_path( void );
+static void gps_init( void );
+static bool parse_waypoint ( uint8_t * pszline );
+static void parse_coord( float * fCoord, uint8_t c );
+static bool parse_gps( void );
+static bool cmp_prefix( uint8_t * src , const uint8_t * dest );
 
 //----------------------------------------------------------------------------
 //
 /// \brief   navigation task
 ///
-/// \remarks Computation must be started only when Parse_GPS() returns TRUE,
+/// \remarks Computation must be started only when parse_gps() returns TRUE,
 ///          otherwise values of lat, lon, heading are undefined.
 ///
 //----------------------------------------------------------------------------
 void Navigation_Task( void *pvParameters ) {
 
-    float fTemp, fDx, fDy;
+    float ftemp, fdx, fdy;
 
     fBank = 0.0f;                                   // default bank angle
     fBearing = 0.0f;                                // angle to destination [°]
     fThrottle = MINIMUMTHROTTLE;                    // default throttle
     fPitch = 0.0f;                                  // default pitch angle
     uiGps_Heading = 0;                              // aircraft GPS heading [°]
-    uiSpeed = 0;                                    // speed [kt]
+    uiGps_Speed = 0;                                // aircraft GPS speed [kt]
     uiDistance = 0;                                 // distance to destination [m]
     uiWpt_Number = 0;                               // no waypoint yet
 
@@ -170,66 +181,67 @@ void Navigation_Task( void *pvParameters ) {
     Nav_Pid.fKi = NAV_KI;                           //
     Nav_Pid.fKd = NAV_KD;                           //
     PID_Init(&Nav_Pid);                             // initialize navigation PID
-    Load_Path();                                    // load path from SD card
+    load_path();                                    // load path from SD card
     /* WARNING: GPS UART must be initialized after loading mission file !!! */
-    GPS_Init();                                     // initialize USART for GPS
+    gps_init();                                     // initialize USART for GPS
 
     /* Wait first GPS fix */
-    while ((Parse_GPS() == FALSE) ||                // NMEA sentence not completed
-           (ucGps_Status != GPS_STATUS_FIX)) {      // no satellite fix
+    while ((parse_gps() == FALSE) ||                // NMEA sentence not completed
+           (ucGps_Status != GPS_FIX)) {             // no satellite fix
         ;                                           // keep parsing NMEA sentences
     }
 
     /* Save launch position */
-    Waypoint[0].Lon = fLon_Curr;                    // save launch position
-    Waypoint[0].Lat = fLat_Curr;
+    Waypoint[0].Lon = fCurr_Lon;                    // save launch position
+    Waypoint[0].Lat = fCurr_Lat;
     if (uiWpt_Number != 0) {                        // waypoint file available
         uiWpt_Index = 1;                            // read first waypoint
     } else {                                        // no waypoint file
         uiWpt_Index = 0;                            // use launch position
     }
-    fLon_Dest = Waypoint[uiWpt_Index].Lon;          // load destination longitude
-    fLat_Dest = Waypoint[uiWpt_Index].Lat;          // load destination latitude
-    fAlt_Dest = Waypoint[uiWpt_Index].Alt;          // load destination altitude
+    fDest_Lon = Waypoint[uiWpt_Index].Lon;          // load destination longitude
+    fDest_Lat = Waypoint[uiWpt_Index].Lat;          // load destination latitude
+    fDest_Alt = Waypoint[uiWpt_Index].Alt;          // load destination altitude
 
     while (1) {
-        if (Parse_GPS()) {                          // NMEA sentence completed
+        if (parse_gps()) {                          // NMEA sentence completed
 
-#if (SIMULATOR == SIM_NONE)                         		// normal mode
-            Nav_Pid.fKp = Telemetry_Get_Gain(TEL_NAV_KP);	// update PID gains
+#if (SIMULATOR == SIM_NONE)                                // normal mode
+            Nav_Pid.fKp = Telemetry_Get_Gain(TEL_NAV_KP);  // update PID gains
             Nav_Pid.fKi = Telemetry_Get_Gain(TEL_NAV_KI);
-            fAlt_Curr = (float)BMP085_Get_Altitude();       // get barometric altitude
-#else                                               		// simulation mode
-            Nav_Pid.fKp = Simulator_Get_Gain(SIM_NAV_KP);	// update PID gains
+//            fCurr_Alt = (float)BMP085_Get_Altitude();    // get barometric altitude
+            fCurr_Alt = (float)uiGps_Alt;                  // get GPS altitude
+#else                                                      // simulation mode
+            Nav_Pid.fKp = Simulator_Get_Gain(SIM_NAV_KP);  // update PID gains
             Nav_Pid.fKi = Simulator_Get_Gain(SIM_NAV_KI);
-            fAlt_Curr = Simulator_Get_Altitude();       	// get simulator altitude
+            fCurr_Alt = Simulator_Get_Altitude();          // get simulator altitude
 #endif
-            if (PPMGetMode() == MODE_MANUAL) {		// possibly reset PID
+            if (PPMGetMode() == MODE_MANUAL) {             // possibly reset PID
                 PID_Init(&Nav_Pid);
             }
 
             /* Get X and Y components of bearing */
-            fDy = fLon_Dest - fLon_Curr;
-            fDx = fLat_Dest - fLat_Curr;
+            fdy = fDest_Lon - fCurr_Lon;
+            fdx = fDest_Lat - fCurr_Lat;
 
             /* Compute heading */
             fHeading = Attitude_Yaw_Rad() / PI;
 
             /* Compute bearing to waypoint */
-            fBearing = atan2f(fDy, fDx) / PI;
+            fBearing = atan2f(fdy, fdx) / PI;
 
             /* Navigation PID controller */
-            fTemp = fHeading - fBearing;
-            if (fTemp < -1.0f) {
-                fTemp += 2.0f;
-            } else if (fTemp > 1.0f) {
-                fTemp = 2.0f - fTemp;
+            ftemp = fHeading - fBearing;
+            if (ftemp < -1.0f) {
+                ftemp += 2.0f;
+            } else if (ftemp > 1.0f) {
+                ftemp = 2.0f - ftemp;
             }
-            fBank = PID_Compute(&Nav_Pid, fTemp, 0.0f);
+            fBank = PID_Compute(&Nav_Pid, ftemp, 0.0f);
 
             /* Compute distance to waypoint */
-            fTemp = sqrtf((fDy * fDy) + (fDx * fDx));
-            uiDistance = (unsigned int)(fTemp * 111113.7f);
+            ftemp = sqrtf((fdy * fdy) + (fdx * fdx));
+            uiDistance = (unsigned int)(ftemp * 111113.7f);
 
             /* Waypoint reached: next waypoint */
             if (uiDistance < MIN_DISTANCE) {
@@ -238,23 +250,23 @@ void Navigation_Task( void *pvParameters ) {
                         uiWpt_Index = 1;
                     }
                 }
-                fLon_Dest = Waypoint[uiWpt_Index].Lon;   // new destination longitude
-                fLat_Dest = Waypoint[uiWpt_Index].Lat;   // new destination latitude
-                fAlt_Dest = Waypoint[uiWpt_Index].Alt;   // new destination altitude
+                fDest_Lon = Waypoint[uiWpt_Index].Lon;   // new destination longitude
+                fDest_Lat = Waypoint[uiWpt_Index].Lat;   // new destination latitude
+                fDest_Alt = Waypoint[uiWpt_Index].Alt;   // new destination altitude
             }
 
             /* Compute throttle and pitch based on altitude error */
-            fTemp = fAlt_Curr - fAlt_Dest;              // altitude error
-            if (fTemp > fHeight_Margin) {               // above maximum
+            ftemp = fCurr_Alt - fDest_Alt;              // altitude error
+            if (ftemp > fHeight_Margin) {               // above maximum
                 fThrottle = fThrottle_Min;              // minimum throttle
                 fPitch = PITCHATMINTHROTTLE;
-            } else if (fTemp < - fHeight_Margin) {      // below minimum
+            } else if (ftemp < - fHeight_Margin) {      // below minimum
                 fThrottle = fThrottle_Max;              // max throttle
                 fPitch = PITCHATMAXTHROTTLE;
             } else {                                    // interpolate
-                fTemp = (fTemp - HEIGHT_MARGIN) / (2 * HEIGHT_MARGIN);
-                fThrottle = fTemp * (fThrottle_Min - fThrottle_Max) + fThrottle_Min;
-                fPitch = fTemp * (PITCHATMINTHROTTLE - PITCHATMAXTHROTTLE) + PITCHATMINTHROTTLE;
+                ftemp = (ftemp - HEIGHT_MARGIN) / (2 * HEIGHT_MARGIN);
+                fThrottle = ftemp * (fThrottle_Min - fThrottle_Max) + fThrottle_Min;
+                fPitch = ftemp * (PITCHATMINTHROTTLE - PITCHATMAXTHROTTLE) + PITCHATMINTHROTTLE;
             }
         }
     }
@@ -269,48 +281,48 @@ void Navigation_Task( void *pvParameters ) {
 ///          USART 2 must be disabled because it uses same array for reception.
 ///
 //----------------------------------------------------------------------------
-static void Load_Path( void ) {
+static void load_path( void ) {
 
-    uint8_t c, cCounter;
-    uint8_t * ucGpsBufferPointer;
-    uint8_t * pszLinePointer;
-    bool bError = TRUE;
+    uint8_t c, uccounter;
+    uint8_t * pgps_buffer_pointer;
+    uint8_t * pszline_pointer;
+    bool berror = TRUE;
 
-    pszLinePointer = szLine;                        // init line pointer
-    cCounter = LINE_LENGTH - 1;                     // init char counter
+    pszline_pointer = szLine;                        // init line pointer
+    uccounter = LINE_LENGTH - 1;                     // init char counter
 
     /* Mount file system and open waypoint file */
     if (FR_OK != f_mount(0, &stFat)) {              // file system not mounted
         uiWpt_Number = 0;                           // no waypoint available
-    } else if (FR_OK != f_open(&stFile, (const XCHAR *)szFileName,FA_READ)) {
+    } else if (FR_OK != f_open(&stFile, (const XCHAR *)szFile,FA_READ)) {
                                                     // error opening file
         uiWpt_Number = 0;                           // no waypoint available
     } else {                                        //
-        bError = FALSE;                             // file succesfully open
+        berror = FALSE;                             // file succesfully open
         uiWpt_Number = 1;                           // waypoint available
     }
 
     /* Read waypoint file */
-    while ((!bError) &&
-           (FR_OK == f_read(&stFile, ucGpsBuffer, BUFFER_LENGTH, &wFileBytes))) {
-        bError = (wFileBytes == 0);                 // force error if end of file
-        ucGpsBufferPointer = ucGpsBuffer;           // init buffer pointer
-        while ((wFileBytes != 0) && (!bError)) {    // buffer not empty and no error
-            wFileBytes--;                           // decrease overall counter
-            c = *ucGpsBufferPointer++;              // read another char
+    while ((!berror) &&
+           (FR_OK == f_read(&stFile, ucGpsBuffer, BUFFER_LENGTH, &wFile_Bytes))) {
+        berror = (wFile_Bytes == 0);                // force error if end of file
+        pgps_buffer_pointer = ucGpsBuffer;          // init buffer pointer
+        while ((wFile_Bytes != 0) && (!berror)) {   // buffer not empty and no error
+            wFile_Bytes--;                          // decrease overall counter
+            c = *pgps_buffer_pointer++;             // read another char
             if ( c == 10 ) {                        // found new line
-                cCounter = 0;                       // reached end of line
+                uccounter = 0;                      // reached end of line
             } else if ( c == 13 ) {                 // found carriage return
-                cCounter--;                         // decrease counter
+                uccounter--;                        // decrease counter
             } else {                                // alphanumeric character
-                *pszLinePointer++ = c;              // copy character
-                cCounter--;                         // decrease counter
+                *pszline_pointer++ = c;             // copy character
+                uccounter--;                        // decrease counter
             }
-            if (cCounter == 0) {                    // end of line
-                *pszLinePointer = 0;                // append line delimiter
-                pszLinePointer = szLine;            // reset line pointer
-                cCounter = LINE_LENGTH - 1;         // reset char counter
-                bError = Parse_Waypoint(szLine);    // parse line for waypoint
+            if (uccounter == 0) {                   // end of line
+                *pszline_pointer = 0;               // append line delimiter
+                pszline_pointer = szLine;           // reset line pointer
+                uccounter = LINE_LENGTH - 1;        // reset char counter
+                berror = parse_waypoint(szLine);    // parse line for waypoint
             }
         }
     }
@@ -327,16 +339,16 @@ static void Load_Path( void ) {
 /// http://www.micromouseonline.com/2009/12/31/stm32-usart-basics/#ixzz1eG1EE8bT
 ///
 //----------------------------------------------------------------------------
-static void GPS_Init( void ) {
+static void gps_init( void ) {
 
     USART_InitTypeDef USART_InitStructure;
     DMA_InitTypeDef DMA_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    ucGps_Status = GPS_STATUS_NOFIX;                // init GPS status
+    ucGps_Status = GPS_NOFIX;                       // init GPS status
     ucWindex = 0;                                   // clear write index
     ucRindex = 0;                                   // clear read index
-    ulTempCoord = 0UL;                              // clear temporary coordinate
+    ulTemp_Coord = 0UL;                             // clear temporary coordinate
 
     /* Initialize USART2 */
     USART_InitStructure.USART_BaudRate = 57600;
@@ -395,57 +407,57 @@ static void GPS_Init( void ) {
 ///          [.[a]] is an optional decimal point with an optional decimal data
 ///
 //----------------------------------------------------------------------------
-static bool Parse_Waypoint ( uint8_t * pszLine ) {
-    uint8_t c;
-    float fTemp, fDiv;
-    uint8_t ucField = 0, ucCounter = LINE_LENGTH;
+static bool parse_waypoint ( uint8_t * pszline ) {
 
-    while (( ucField < 3 ) && ( ucCounter > 0 )) {
-        fDiv = 1.0f;                                // initialize divisor
-        fTemp = 0.0f;                               // initialize temporary
-        c = *pszLine++;                             // initialize char
+    uint8_t c, ucfield = 0, uccounter = LINE_LENGTH;
+    float ftemp, fdiv;
+
+    while (( ucfield < 3 ) && ( uccounter > 0 )) {
+        fdiv = 1.0f;                                // initialize divisor
+        ftemp = 0.0f;                               // initialize temporary
+        c = *pszline++;                             // initialize char
         /* leading spaces */
-        while (( c == ' ' ) && ( ucCounter > 0 )) {
-            c = *pszLine++;                         // next char
-            ucCounter--;                            // count characters
+        while (( c == ' ' ) && ( uccounter > 0 )) {
+            c = *pszline++;                         // next char
+            uccounter--;                            // count characters
         }
         /* start of integer part */
         if (( c < '0' ) || ( c > '9' )) {           //
             return TRUE;                            // first char not numeric
         }
         /* integer part */
-        while (( c >= '0' ) && ( c <= '9' ) && ( ucCounter > 0 )) {
-            fTemp = fTemp * 10.0f + (float)(c - '0'); // accumulate
-            c = *pszLine++;                         // next char
-            ucCounter--;                            // count characters
+        while (( c >= '0' ) && ( c <= '9' ) && ( uccounter > 0 )) {
+            ftemp = ftemp * 10.0f + (float)(c - '0'); // accumulate
+            c = *pszline++;                         // next char
+            uccounter--;                            // count characters
         }
         /* decimal point */
-        if (( c != '.' ) && ( ucField != 2 )) {     // altitude may lack decimal
+        if (( c != '.' ) && ( ucfield != 2 )) {     // altitude may lack decimal
             return TRUE;
         } else {
-            c = *pszLine++;                         // skip decimal point
-            ucCounter--;                            // count characters
+            c = *pszline++;                         // skip decimal point
+            uccounter--;                            // count characters
         }
         /* fractional part */
-        while (( c >= '0' ) && ( c <= '9' ) && ( ucCounter > 0 )) {
-            if (fDiv < 1000000.0f) {
-                fTemp = fTemp * 10.0f + (float)(c - '0'); // accumulate
-                fDiv = fDiv * 10.0f;                // update divisor
+        while (( c >= '0' ) && ( c <= '9' ) && ( uccounter > 0 )) {
+            if (fdiv < 1000000.0f) {
+                ftemp = ftemp * 10.0f + (float)(c - '0'); // accumulate
+                fdiv = fdiv * 10.0f;                // update divisor
             }
-            c = *pszLine++;                         // next char
-            ucCounter--;                            // count characters
+            c = *pszline++;                         // next char
+            uccounter--;                            // count characters
         }
         /* delimiter */
         if (( c != ',' ) && ( c != 0 )) {
             return TRUE;                            // error
         } else {
-            fTemp = fTemp / fDiv;                   // convert
+            ftemp = ftemp / fdiv;                   // convert
         }
         /* assign */
-        switch ( ucField++ ) {
-            case 0: Waypoint[uiWpt_Number].Lon = fTemp; break;
-            case 1: Waypoint[uiWpt_Number].Lat = fTemp; break;
-            case 2: Waypoint[uiWpt_Number++].Alt = fTemp; break;
+        switch ( ucfield++ ) {
+            case 0: Waypoint[uiWpt_Number].Lon = ftemp; break;
+            case 1: Waypoint[uiWpt_Number].Lat = ftemp; break;
+            case 2: Waypoint[uiWpt_Number++].Alt = ftemp; break;
             default: break;
         }
     }
@@ -461,7 +473,7 @@ static bool Parse_Waypoint ( uint8_t * pszLine ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-static void Parse_Coord( float * fCoord, uint8_t c )
+static void parse_coord( float * fcoord, uint8_t c )
 {
     switch (c) {
         case '0' :
@@ -474,19 +486,19 @@ static void Parse_Coord( float * fCoord, uint8_t c )
         case '7' :
         case '8' :
         case '9' :
-            ulTempCoord = ulTempCoord * 10UL + (uint32_t)(c - '0');
+            ulTemp_Coord = ulTemp_Coord * 10UL + (uint32_t)(c - '0');
             break;
         case '.' :
-            *fCoord = (float)(ulTempCoord % 100UL) / 60.0f;  // decimal part
-            *fCoord += (float)(ulTempCoord / 100UL);         // integer part
-            ulTempCoord = 0UL;
+            *fcoord = (float)(ulTemp_Coord % 100UL) / 60.0f;  // decimal part
+            *fcoord += (float)(ulTemp_Coord / 100UL);         // integer part
+            ulTemp_Coord = 0UL;
             break;
         case ',' :
-            *fCoord += (float)ulTempCoord / 600000.0f;       // decimal part
-            ulTempCoord = 0UL;
+            *fcoord += (float)ulTemp_Coord / 600000.0f;       // decimal part
+            ulTemp_Coord = 0UL;
             break;
         default :
-            ulTempCoord = 0UL;
+            ulTemp_Coord = 0UL;
             break;
     }
 }
@@ -498,128 +510,157 @@ static void Parse_Coord( float * fCoord, uint8_t c )
 /// \param   -
 /// \returns true if new coordinate data are available, false otherwise
 /// \remarks structure of NMEA sentences
+///              1
+///  $GPRMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,ddmmyy,x.x,a*hh
+///  hhmmss.ss = UTC of position fix
+///  A         = Data status (V = navigation receiver warning)
+///  llll.ll   = Latitude of fix
+///  a         = N or S
+///  yyyy.yy   = Longitude of fix
+///  a         = E or W
+///  x.x       = Speed over ground [kts]
+///  x.x       = Track made good in [deg] True
+///  ddmmyy    = UT date
+///  x.x       = Magnetic variation [deg] (Easterly var. subtracts from true course)
+///  a         = E or W
+///  hh        = Checksum
 ///
-///    $GPRMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,ddmmyy,x.x,a*hh
-///    1    = UTC of position fix
-///    2    = Data status (V=navigation receiver warning)
-///    3    = Latitude of fix
-///    4    = N or S
-///    5    = Longitude of fix
-///    6    = E or W
-///    7    = Speed over ground [kts]
-///    8    = Track made good in [deg] True
-///    9    = UT date
-///    10   = Magnetic variation [deg] (Easterly var. subtracts from true course)
-///    11   = E or W
-///    12   = Checksum
-///
-///    $GPGGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh
-///    1    = UTC of Position
-///    2    = Latitude
-///    3    = N or S
-///    4    = Longitude
-///    5    = E or W
-///    6    = GPS quality indicator (0=invalid; 1=GPS fix; 2=Diff. GPS fix)
-///    7    = Number of satellites in use [not those in view]
-///    8    = Horizontal dilution of position
-///    9    = Antenna altitude above/below mean sea level (geoid)
-///    10   = Meters (Antenna height unit)
-///    11   = Geoidal separation (Diff. between WGS-84 earth ellipsoid and
-///           mean sea level.-= geoid is below WGS-84 ellipsoid)
-///    12   = Meters  (Units of geoidal separation)
-///    13   = Age in seconds since last update from diff. reference station
-///    14   = Differential reference station ID#
-///    15   = Checksum
+///  $GPGGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh
+///  hhmmss.ss = UTC of Position
+///  llll.ll   = Latitude
+///  a         = N or S
+///  yyyy.yy   = Longitude
+///  a         = E or W
+///  x         = GPS quality indicator (0=invalid; 1=GPS fix; 2=Diff. GPS fix)
+///  xx        = Number of satellites in use [not those in view]
+///  x.x       = Horizontal dilution of position
+///  x.x       = Antenna altitude above/below mean sea level (geoid)
+///  M         = Meters (Antenna height unit)
+///  x.x       = Geoidal separation (Diff. between WGS-84 earth ellipsoid and
+///              mean sea level.-= geoid is below WGS-84 ellipsoid)
+///  M         = Meters  (Units of geoidal separation)
+///  x.x       = Age in seconds since last update from diff. reference station
+///  xxxx      = Differential reference station ID#
+///  hh        = Checksum
 ///
 //----------------------------------------------------------------------------
-static bool Parse_GPS( void )
+static bool parse_gps( void )
 {
-    uint8_t c;
-    bool bCompleted = FALSE;                //!< true when NMEA sentence completed
-    static uint8_t ucPrefix = 5;            //!< counter of prefix characters
-    static uint8_t ucCommas;                //!< counter of commas in NMEA sentence
+    uint8_t c, j = 0;
+    bool bcompleted = FALSE;                //!< true when NMEA sentence completed
+    static uint8_t uccommas;                //!< counter of commas in NMEA sentence
+    static ENUM_NMEA_TYPE enmea_type;
 
-    while ((bCompleted == FALSE) &&         // NMEA sentence not completed
-           (ucRindex != ucWindex)) {        // received another character
+    while ((bcompleted == FALSE) &&             // NMEA sentence not completed
+           (ucRindex != ucWindex)) {            // received another character
 
-        c = ucGpsBuffer[ucRindex++];        // read character
-
-        if (ucRindex >= BUFFER_LENGTH) {    // update read index
+        c = ucGpsBuffer[ucRindex++];            // read character
+        if (ucRindex >= BUFFER_LENGTH) {        // update read index
             ucRindex = 0;
         }
 
-        if ( c == '$' ) ucCommas = 0;       // start of NMEA sentence
+        if (c == '$') uccommas = 0;             // start of NMEA sentence
+        if (c == ',') uccommas++;               // count commas
 
-        if (( c == ',' ) &&
-            (ucPrefix == 0)) ucCommas++;    // count commas
+        switch (uccommas) {
+            case 0:
+                if (j < 6) {
+                    szLine[j++] = c;            // read prefix
+                } else {
+                    szLine[j] = 0;              // terminate prefix
+                }
+                break;
 
-        if ( ucCommas == 0 ) {              // check prefix
-           switch (ucPrefix) {
-              case 5:
-                 if (c == 'G') ucPrefix--;
-                 break;
-              case 4:
-                 if (c == 'P') ucPrefix--;
-                 break;
-              case 3:
-                 if (c == 'R') ucPrefix--;
-                 break;
-              case 2:
-                 if (c == 'M') ucPrefix--;
-                 break;
-              case 1:
-                 if (c == 'C') ucPrefix--;
-                 break;
-           }
-        }
+            case 1:                             // check prefix
+                if (cmp_prefix(szLine, "$GPRMC")) {
+                    enmea_type = NMEA_GPRMC;
+                } else if (cmp_prefix(szLine, "$GPGGA")) {
+                    enmea_type = NMEA_GPGGA;
+                } else {
+                    enmea_type = NMEA_INVALID;
+                    uccommas = 11;
+                }
+                j = 0;
+                break;
 
-        if ( ucCommas == 2 ) {              // get fix info
-           if (c == 'A') {
-             ucGps_Status = GPS_STATUS_FIX;
-           } else if (c == 'V') {
-             ucGps_Status = GPS_STATUS_NOFIX;
-           }
-        }
+            case 2:
+                if (enmea_type == NMEA_GPRMC) { // get fix info
+                    if (c == 'A') {
+                     ucGps_Status = GPS_FIX;
+                   } else if (c == 'V') {
+                     ucGps_Status = GPS_NOFIX;
+                   }
+                }
+                break;
 
-        if (( ucCommas == 3 ) ||
-            ( ucCommas == 4 )) {            // get latitude data (3rd comma)
-          Parse_Coord (&fLat_Temp, c);
-        }
+            case 3:
+            case 4:
+                if (enmea_type == NMEA_GPRMC) { // get latitude data
+                    parse_coord (&fTemp_Lat, c);
+                }
+                break;
 
-        if (( ucCommas == 5 ) ||
-            ( ucCommas == 6 )) {            // get longitude data (5th comma)
-          Parse_Coord (&fLon_Temp, c);
-        }
+            case 5:
+            case 6:
+                if (enmea_type == NMEA_GPRMC) { // get longitude data
+                    parse_coord (&fTemp_Lon, c);
+                }
+                break;
 
-        if ( ucCommas == 7 ) {              // get speed (7th comma)
-          if ( c == ',' ) {
-            uiSpeed = 0;
-          } else if ( c != '.' ) {
-            uiSpeed *= 10;
-            uiSpeed += (c - '0');
-          }
-        }
+            case 7:
+                if (enmea_type == NMEA_GPRMC) { // get speed
+                    if (c == ',') {
+                        uiGps_Speed = 0;
+                    } else if (c != '.') {
+                        uiGps_Speed *= 10;
+                        uiGps_Speed += (c - '0');
+                    }
+                }
+                break;
 
-        if ( ucCommas == 8 ) {              // get heading (8th comma)
-          if ( c == ',' ) {
-            uiGps_Heading = 0;
-          } else if ( c != '.' ) {
-            uiGps_Heading *= 10;
-            uiGps_Heading += (c - '0');
-          }
-        }
+            case 8:
+                if (enmea_type == NMEA_GPRMC) { // get heading
+                    if (c == ',') {
+                        uiGps_Heading = 0;
+                    } else if (c != '.') {
+                        uiGps_Heading *= 10;
+                        uiGps_Heading += (c - '0');
+                    }
+                }
+                break;
 
-        if ((ucCommas == 9) &&              // end of NMEA sentence
-            (ucGps_Status == GPS_STATUS_FIX)) {
-          ucCommas = 10;
-          ucPrefix = 5;
-          uiGps_Heading /= 10;
-          fLat_Curr = fLat_Temp;
-          fLon_Curr = fLon_Temp;
-          bCompleted = TRUE;
+            case 9:
+                switch (enmea_type) {
+                    case NMEA_GPRMC:            // end of GPRMC sentence
+                        if (ucGps_Status == GPS_FIX) {
+                            uiGps_Heading /= 10;
+                            fCurr_Lat = fTemp_Lat;
+                            fCurr_Lon = fTemp_Lon;
+                            uccommas = 11;
+                            bcompleted = TRUE;
+                        }
+                        break;
+
+                    case NMEA_GPGGA:            // get altitude
+                        if (c == ',') {
+                          uiGps_Alt = 0;
+                        } else if ( c != '.' ) {
+                          uiGps_Alt *= 10;
+                          uiGps_Alt += (c - '0');
+                        }
+                        break;
+                }
+                break;
+
+            case 10:
+                if (enmea_type == NMEA_GPGGA) { // end of GPGGA sentence
+                    uiGps_Alt /= 10;
+                    uccommas = 11;
+                }
+                break;
         }
     }
-    return bCompleted;
+    return bcompleted;
 }
 
 //----------------------------------------------------------------------------
@@ -627,7 +668,7 @@ static bool Parse_GPS( void )
 /// \brief   USART DMA interrupt handler
 /// \param   -
 /// \returns -
-/// \remarks interrupt is triggered on both "half transfer" event and "transfer 
+/// \remarks interrupt is triggered on both "half transfer" event and "transfer
 ///          completed" event, so it must check which one was the cause.
 ///          When the former occurs, write index is moved to half buffer size,
 ///          whereas when the latter occurs, write index is reset to 0.
@@ -642,6 +683,25 @@ void DMA1_Channel6_IRQHandler( void ) {
         DMA_ClearITPendingBit(DMA1_IT_HT6);
         ucWindex = BUFFER_LENGTH / 2;
     }
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Compare NMEA prefixes
+/// \param   -
+/// \returns
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+static bool cmp_prefix( uint8_t * src , const uint8_t * dest ) {
+    uint8_t j = 0;
+    bool bmatch = TRUE;
+
+    while ((j < 6) && (*src != 0) && bmatch) {
+        bmatch = (*src++ == *dest++);
+        j++;
+    }
+    return bmatch;
 }
 
 //----------------------------------------------------------------------------
@@ -798,7 +858,7 @@ float Nav_Pitch_Rad ( void ) {
 ///
 //----------------------------------------------------------------------------
 float Nav_Altitude ( void ) {
-  return fAlt_Curr;
+  return fCurr_Alt;
 }
 
 //----------------------------------------------------------------------------
@@ -821,8 +881,20 @@ uint8_t Gps_Fix ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-uint16_t Gps_Speed ( void ) {
-  return uiSpeed;
+uint16_t Gps_Speed_Kt ( void ) {
+  return uiGps_Speed;
+}
+
+//----------------------------------------------------------------------------
+//
+/// \brief   Get altitude detected by GPS [m]
+/// \param   -
+/// \returns Altitude in centimeters
+/// \remarks -
+///
+//----------------------------------------------------------------------------
+uint16_t Gps_Alt_M ( void ) {
+  return uiGps_Alt;
 }
 
 //----------------------------------------------------------------------------
@@ -846,7 +918,7 @@ uint16_t Gps_Heading_Deg ( void ) {
 ///
 //----------------------------------------------------------------------------
 int32_t Gps_Latitude ( void ) {
-  return (int32_t)(fLat_Curr * 10000000.0f);
+  return (int32_t)(fCurr_Lat * 10000000.0f);
 }
 
 //----------------------------------------------------------------------------
@@ -858,6 +930,6 @@ int32_t Gps_Latitude ( void ) {
 ///
 //----------------------------------------------------------------------------
 int32_t Gps_Longitude ( void ) {
-  return (int32_t)(fLon_Curr * 10000000.0f);
+  return (int32_t)(fCurr_Lon * 10000000.0f);
 }
 
