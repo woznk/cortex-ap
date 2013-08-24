@@ -6,8 +6,7 @@
 // $Author: $
 /// \brief BMP085 lPressure sensor driver
 ///
-//  Change restored previous approximation of altitude
-//         added function to return altitude
+//  Change some major renaming according coding rules
 //
 //============================================================================*/
 
@@ -50,11 +49,11 @@ typedef enum {
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC STRUCT_BMP85 Bmp85;      // BMP085 device data structure
-VAR_STATIC uint16_t raw_t;
+VAR_STATIC STRUCT_BMP85 Bmp85;          // BMP085 device data structure
+VAR_STATIC uint16_t uiRaw_Temp;
 VAR_STATIC int16_t iTemperature;
-VAR_STATIC int32_t raw_p, lPressure, lAltitude;
-VAR_STATIC ENUM_BMP085_STATUS ucBMP085_Status;
+VAR_STATIC int32_t lRaw_Press, lPressure, lAltitude;
+VAR_STATIC ENUM_BMP085_STATUS eBMP085_Status;
 VAR_STATIC portTickType Last_Wake_Time;
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -93,7 +92,7 @@ uint8_t BMP085_Init(void)
   /* extract bmp085 calibration parameter structure */
   BMP085_Get_Calibration( );
 
-  ucBMP085_Status = START_TEMP_CONVERSION;
+  eBMP085_Status = START_TEMP_CONVERSION;
 
   return comres;
 }
@@ -110,60 +109,60 @@ uint8_t BMP085_Init(void)
 ///----------------------------------------------------------------------------
 void BMP085_Handler(void)
 {
-  uint8_t ucTemp = 0;
+  uint8_t uctemp = 0;
   uint8_t data[3];
 
-  switch (ucBMP085_Status) {
+  switch (eBMP085_Status) {
 
     case START_TEMP_CONVERSION:     /* start temperature conversion */
-        ucTemp = I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, BMP085_T_MEASURE);
+        uctemp = I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, BMP085_T_MEASURE);
         Last_Wake_Time = xTaskGetTickCount();
-        ucBMP085_Status = READ_UNCOMPENSATED_TEMP;
+        eBMP085_Status = READ_UNCOMPENSATED_TEMP;
         break;
 
     case READ_UNCOMPENSATED_TEMP:   /* read uncompensated temperature */
         if (xTaskGetTickCount() > Last_Wake_Time + BMP085_TEMP_CONVERSION_TIME) {
-            ucTemp  = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 2);
-            raw_t = (data[0] << 8) | data[1];
-            ucBMP085_Status = COMPENSATE_TEMP;
+            uctemp  = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 2);
+            uiRaw_Temp = (data[0] << 8) | data[1];
+            eBMP085_Status = COMPENSATE_TEMP;
         }
         break;
 
     case COMPENSATE_TEMP:           /* compute compensated temperature */
         Compensate_Temperature();
-        ucBMP085_Status = START_PRESS_CONVERSION;
+        eBMP085_Status = START_PRESS_CONVERSION;
         break;
 
     case START_PRESS_CONVERSION:    /* start pressure conversion */
-        ucTemp = BMP085_P_MEASURE + (Bmp85.oversampling << 6);
-        I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, ucTemp);
+        uctemp = BMP085_P_MEASURE + (Bmp85.oversampling << 6);
+        I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, uctemp);
         Last_Wake_Time = xTaskGetTickCount();
-        ucBMP085_Status = READ_UNCOMPENSATED_PRESS;
+        eBMP085_Status = READ_UNCOMPENSATED_PRESS;
         break;
 
     case READ_UNCOMPENSATED_PRESS:  /* read uncompensated pressure */
         if (xTaskGetTickCount() > Last_Wake_Time + (2 + (3 << (Bmp85.oversampling)))) {
-            ucTemp  = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 3);
-            raw_p = (((uint32_t) data[0] << 16) |
-                     ((uint32_t) data[1] << 8) |
-                      (uint32_t) data[2]) >> (8 - Bmp85.oversampling);
-            ucBMP085_Status = COMPENSATE_PRESS;
+            uctemp  = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_ADC_OUT_MSB_REG, data, 3);
+            lRaw_Press = (((uint32_t) data[0] << 16) |
+                          ((uint32_t) data[1] << 8) |
+                           (uint32_t) data[2]) >> (8 - Bmp85.oversampling);
+            eBMP085_Status = COMPENSATE_PRESS;
         }
         break;
 
     case COMPENSATE_PRESS:          /* compute compensated pressure */
         Compensate_Pressure();
-        ucBMP085_Status = COMPUTE_ALTITUDE;
+        eBMP085_Status = COMPUTE_ALTITUDE;
         break;
 
     case COMPUTE_ALTITUDE:          /* compute altitude from pressure */
         lAltitude =(((745 * (11390 - (lPressure / 10))) / 256 + 46597) * (11390 - (lPressure / 10))) / 65536 - 966;
-        ucBMP085_Status = START_PRESS_CONVERSION;
+        eBMP085_Status = START_PRESS_CONVERSION;
         break;
 
     default:
         break;
-    }
+  }
 }
 
 
@@ -216,7 +215,7 @@ static void Compensate_Temperature(void)
 {
     int32_t x1, x2;
 
-    x1 = (((int32_t) raw_t - (int32_t) Bmp85.calibration.ac6) * (int32_t) Bmp85.calibration.ac5) >> 15;
+    x1 = (((int32_t) uiRaw_Temp - (int32_t) Bmp85.calibration.ac6) * (int32_t) Bmp85.calibration.ac5) >> 15;
     x2 = ((int32_t) Bmp85.calibration.mc << 11) / (x1 + Bmp85.calibration.md);
     Bmp85.param_b5 = x1 + x2;
     iTemperature = ((Bmp85.param_b5 + 8) >> 4);  // iTemperature in 0.1°C
@@ -255,7 +254,7 @@ static void Compensate_Pressure(void)
     b4 = (Bmp85.calibration.ac4 * (uint32_t) (x3 + 32768)) >> 15;
 
     /* calculate B7 */
-    b7 = ((uint32_t)(raw_p - b3) * (50000 >> Bmp85.oversampling));
+    b7 = ((uint32_t)(lRaw_Press - b3) * (50000 >> Bmp85.oversampling));
     if (b7 < 0x80000000) {
       lPressure = (b7 << 1) / b4;
     } else {
