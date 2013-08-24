@@ -244,7 +244,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: function Gps_Speed() renamed Gps_Speed_Kt()
+/// Changes: restored transmission of HUD message
 ///
 //============================================================================*/
 
@@ -1319,7 +1319,7 @@ void Mavlink_Stream_Send(void)
     }
 
     if (Mavlink_Stream_Trigger(STREAM_EXTRA2)) {
-//        Mavlink_Hud();
+        Mavlink_Hud();
     }
 
     if (Mavlink_Stream_Trigger(STREAM_EXTRA3)) {
