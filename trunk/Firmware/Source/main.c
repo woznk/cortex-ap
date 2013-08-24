@@ -18,7 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: enabled clock for DMA 1 channel
+// Change: removed inclusion of multiwii.h
 //
 //============================================================================*/
 
@@ -39,9 +39,7 @@
 
 #include "config.h"
 #include "simulator.h"
-/* uncomment telemetry type that applies */
 #include "mav_telemetry.h"
-//#include "multiwii.h"
 #include "attitude.h"
 #include "log.h"
 #include "led.h"
