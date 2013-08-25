@@ -9,8 +9,9 @@
 ///
 /// \file
 ///
-//  Change: added interface function for GPS altitude
-///         some function renamed according coding rules
+//  Change: added functions Gps_Buffer_Index() and Gps_Buffer_Pointer(),
+///         moved here definitions of GPS_FIX, GPS_NOFIX, BUFFER_LENGTH to be
+///         visible for log task.
 //
 //============================================================================
 
@@ -20,6 +21,11 @@
 #undef VAR_GLOBAL
 #endif
 #define VAR_GLOBAL extern
+
+#define GPS_FIX         3       //!< GPS status: satellite fix
+#define GPS_NOFIX       0       //!< GPS status: waiting for first fix
+
+#define BUFFER_LENGTH   96      //!< length of buffer for file and USART
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -46,6 +52,8 @@ uint16_t Gps_Speed_Kt ( void );
 uint16_t Gps_Heading_Deg ( void );
 int32_t Gps_Latitude ( void );
 int32_t Gps_Longitude ( void );
+uint8_t Gps_Buffer_Index ( void );
+uint8_t * Gps_Buffer_Pointer ( void );
 
 void Navigation_Task( void *pvParameters );
 float Nav_Altitude ( void );
