@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change  removed minor defects detectd by static analysis
+//  Change added log of NMEA sentences
 //
 //============================================================================*/
 
@@ -18,11 +18,10 @@
 #include "queue.h"
 
 #include "stm32f10x.h"
-#include "stm32f10x_usart.h"
-#include "math.h"
 #include "ff.h"
-#include "DCM.h"
 #include "ppmdriver.h"
+#include "nav.h"
+#include "globals.h"
 #include "log.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -49,21 +48,19 @@
 
 /*---------------------------------- Globals ---------------------------------*/
 
-VAR_GLOBAL xQueueHandle xLog_Queue; //!< Queue for log messages
+//VAR_GLOBAL xQueueHandle xLog_Queue; //!< Queue for log messages
 
 /*----------------------------------- Locals ---------------------------------*/
 
-
-VAR_STATIC uint8_t szFileName[16] = "log0.txt"; //!< file name
-VAR_STATIC FATFS stFat;                         //!< FAT
-VAR_STATIC FIL stFile;                          //!< file object
-VAR_STATIC uint8_t szString[48];                //!< generic string
-VAR_STATIC bool bFileOk = FALSE;                //!< file status
-VAR_STATIC uint16_t uiSamples;                  //!< sample counter
+VAR_STATIC bool b_File_Ok = FALSE;
+VAR_STATIC uint8_t * p_Data;
+VAR_STATIC uint16_t ui_Samples = 0;             //!< sample counter
+VAR_STATIC uint8_t sz_String[48];               //!< generic string
+VAR_STATIC uint8_t sz_File[16] = "log0.nmea";   //!< file name
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-static void Log_Write(uint16_t *data, uint8_t num);
+static void log_write(uint16_t *data, uint8_t num);
 
 /*--------------------------------- Functions --------------------------------*/
 
@@ -77,40 +74,58 @@ static void Log_Write(uint16_t *data, uint8_t num);
 void Log_Task( void *pvParameters ) {
 
     uint8_t j;
-    xLog_Message message;
+    bool b_found = TRUE;
+    UINT wWritten;
+//    xLog_Message message;
+    portTickType Last_Wake_Time;
 
-    uiSamples = 0;
-    bFileOk = TRUE;                             //
+    Last_Wake_Time = xTaskGetTickCount();
+    vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 20);
 
-    // Open log file
-    if (FR_OK == f_mount(0, &stFat)) {          // Mount file system
-        for (j = 0; (j < 10) && bFileOk; j++) { // Search last log file
-            szFileName[3] = '0' + j;            // Append file number
-            if (FR_OK == f_open(&stFile, (const XCHAR *)szFileName, FA_WRITE)) {
-                bFileOk = TRUE;                 // File exist
-                ( void )f_close(&stFile);       // Close file
-            } else {                            //
-                bFileOk = FALSE;                // File doesn't exist
-            }
-        }
-        if (!bFileOk) {                         // File doesn't exist
-            if (FR_OK == f_open(&stFile, (const XCHAR *)szFileName, FA_WRITE|FA_CREATE_ALWAYS)) {
-                bFileOk = TRUE;                 // File succesfully open
-            } else {                            // Error opening file
-                bFileOk = FALSE;                // Halt file logging
-            }
-        } else {
-            bFileOk = FALSE;                    // Halt file logging
-        }
-    } else {                                    // Error mounting FS
-        bFileOk = FALSE;                        // Halt file logging
+    while ((!b_FS_Ok) ||                        // wait until file system mounted
+           (Gps_Fix() != GPS_FIX)) {            // and GPS got fix
     }
 
+    // Search last log file
+    for (j = 0; (j < 10) && b_found; j++) {     //
+        sz_File[3] = '0' + j;                   // Append file number
+        if (FR_OK == f_open(&st_File, (const XCHAR *)sz_File, FA_WRITE)) {
+            b_found = TRUE;                     // File exist
+            ( void )f_close(&st_File);          // Close file
+        } else {                                //
+            b_found = FALSE;                    // File doesn't exist
+        }
+    }
+
+    // Open new log file
+    if (!b_found) {                             // File doesn't exist
+        if (FR_OK == f_open(&st_File, (const XCHAR *)sz_File, FA_WRITE|FA_CREATE_ALWAYS)) {
+            b_File_Ok = TRUE;                   // File succesfully open
+        }
+    }
+
+    j = 0;
+
+    while (1) {
+        while (!b_File_Ok);                                             // halt if file not open
+        while (Gps_Buffer_Index() == j);                                // halt if GPS buffer empty
+        p_Data = Gps_Buffer_Pointer();                                  // get GPS buffer pointer
+        (void)f_write(&st_File, p_Data, (BUFFER_LENGTH / 2), &wWritten);// write
+        j = (j + (BUFFER_LENGTH / 2)) % BUFFER_LENGTH;                  // update index
+
+        if ((PPMGetMode() == MODE_RTL) ||                               // RC turned off
+            ((BUFFER_LENGTH / 2) != wWritten)) {                        // no file space
+            ( void )f_close(&st_File);                                  // close file
+            b_File_Ok = FALSE;                                          // halt GPS logging
+        }
+    }
+/*
     while ( xLog_Queue != 0 ) {
         while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
         }
-        Log_Write(message.pcData, message.ucLength);
+        log_write(message.pcData, message.uc_length);
     }
+*/
 }
 
 
@@ -125,7 +140,7 @@ void Log_Task( void *pvParameters ) {
 ///          exceeded maximum or if RC was temporarily shut off.
 ///
 ///----------------------------------------------------------------------------
-static void Log_Write(uint16_t *data, uint8_t num)
+static void log_write(uint16_t *data, uint8_t num)
 {
     uint32_t l_temp;
     uint8_t digit, mode, i, j = 0;
@@ -133,53 +148,74 @@ static void Log_Write(uint16_t *data, uint8_t num)
 
     for (i = 0; i < num; i++) {
         l_temp = *data++;
-        szString[j++] = ' ';
+        sz_String[j++] = ' ';
         digit = ((l_temp >> 12) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = ((l_temp >> 8) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = ((l_temp >> 4) & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
         digit = (l_temp & 0x0000000F);
-        szString[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
     }
-    szString[j++] = '\n';
+    sz_String[j++] = '\n';
     mode = PPMGetMode();
-    if (bFileOk) {                                          //
-        ( void )f_write(&stFile, szString, j, &wWritten);   // write
+    if (b_File_Ok) {                                        //
+        ( void )f_write(&st_File, sz_String, j, &wWritten); // write
         if (                                                // button pressed
             (j != wWritten) ||                              // no file space
             (mode == MODE_RTL) ||                           // RC turned off
-            (uiSamples >= MAX_SAMPLES)) {                   // too many samples
-            ( void )f_close(&stFile);                       // close file
-            bFileOk = FALSE;                                // halt file logging
+            (ui_Samples >= MAX_SAMPLES)) {                  // too many samples
+            ( void )f_close(&st_File);                      // close file
+            b_File_Ok = FALSE;                              // halt file logging
         } else {                                            // write successfull
-            uiSamples++;                                    // update sample counter
+            ui_Samples++;                                   // update sample counter
         }
     }
 }
 
 
-/*
-uint8_t ftoa (float fVal, uint8_t *pucString) {
+///----------------------------------------------------------------------------
+///
+/// \brief   float to ASCII conversion
+/// \param   f_val = value to be converted
+/// \param   p_string = pointer to destination string
+/// \return  length of resulting string
+/// \remarks -
+///
+///----------------------------------------------------------------------------
+uint8_t ftoa (float f_val, uint8_t * p_string) {
 
-    long lTemp, lSign = 1;
-    uint8_t pucTemp[10];
-    uint8_t ucLength, j = 0;
+    int32_t l_temp, l_sign = 1L;
+    uint8_t uc_temp[10];
+    uint8_t uc_length, j = 0;
 
-    lTemp = (long)(fVal * 1000000.0f);
-    if (lTemp < 0) { lSign = -1; lTemp = -lTemp; }
-    if (lTemp > 1000000) { lTemp = 1000000; }
-    do {
-        pucTemp[j++] = '0' + (unsigned char)(lTemp % 10);
-        lTemp /= 10;
-    } while (lTemp != 0);
-    if (lSign == -1) { pucTemp[j++] = '-'; }
-    ucLength = j;
-    while (j) {
-        *pucString++ = pucTemp[--j];
+    l_temp = (int32_t)(f_val * 1000000.0f);
+
+    if (l_temp < 0L) {
+        l_sign = -1L;
+        l_temp = -l_temp;
     }
-    return ucLength;
+
+    if (l_temp > 1000000L) {
+        l_temp = 1000000L;
+    }
+
+    do {
+        uc_temp[j++] = '0' + (uint8_t)(l_temp % 10L);
+        l_temp /= 10L;
+    } while (l_temp != 0L);
+
+    if (l_sign == -1L) {
+        uc_temp[j++] = '-';
+    }
+
+    uc_length = j;
+
+    while (j) {
+        *p_string++ = uc_temp[--j];
+    }
+
+    return uc_length;
 }
 
-*/
