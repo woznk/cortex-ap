@@ -18,7 +18,10 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: removed inclusion of multiwii.h
+// Change: added file system mount, removed from log.c and nav.c,
+//         related FAT and file structures made global
+//         disabled creation of log queue,
+//         activated log task
 //
 //============================================================================*/
 
@@ -36,6 +39,7 @@
 #include "ppmdriver.h"
 #include "usart1driver.h"
 #include "diskio.h"
+#include "ff.h"
 
 #include "config.h"
 #include "simulator.h"
@@ -44,6 +48,7 @@
 #include "log.h"
 #include "led.h"
 #include "nav.h"
+#include "globals.h"
 
 /** @addtogroup cortex_ap
   * @{
@@ -86,6 +91,10 @@
 /*---------------------------------- Constants -------------------------------*/
 
 /*---------------------------------- Globals ---------------------------------*/
+
+VAR_GLOBAL FATFS st_Fat;    //!< FAT object
+VAR_GLOBAL FIL st_File;     //!< file object
+VAR_GLOBAL bool b_FS_Ok;    //!< file status
 
 /*----------------------------------- Locals ---------------------------------*/
 
@@ -197,16 +206,22 @@ int32_t main(void) {
   xTelemetry_Queue = xQueueCreate( 3, sizeof( telStruct_Message ) );
   while ( xTelemetry_Queue == 0 ) {                 // Halt if queue wasn't created
   }
-*/
+
   xLog_Queue = xQueueCreate( 3, sizeof( xLog_Message ) );
   while ( xLog_Queue == 0 ) {                       // Halt if queue wasn't created
   }
+*/
+  if (FR_OK == f_mount(0, &st_Fat)) {               // Mount file system
+    b_FS_Ok = TRUE;                                 //
+  } else {
+    b_FS_Ok = FALSE;                                //
+  }
 
-  xTaskCreate(Attitude_Task, ( signed portCHAR * ) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
-  xTaskCreate(disk_timerproc, ( signed portCHAR * ) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
-  xTaskCreate(Navigation_Task, ( signed portCHAR * ) "Navigation", 128, NULL, mainNAV_PRIORITY, NULL);
-  xTaskCreate(Telemetry_Task, ( signed portCHAR * ) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
-//  xTaskCreate(Log_Task, ( signed portCHAR * ) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
+  xTaskCreate(Attitude_Task, (signed portCHAR *) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
+  xTaskCreate(disk_timerproc, (signed portCHAR *) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
+  xTaskCreate(Navigation_Task, (signed portCHAR *) "Navigation", 128, NULL, mainNAV_PRIORITY, NULL);
+  xTaskCreate(Telemetry_Task, (signed portCHAR *) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
+  xTaskCreate(Log_Task, (signed portCHAR *) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
   vTaskStartScheduler();
 
