@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change   Log task moved to Log.c
+//  Change removed log queue variable
 //
 //============================================================================
 
@@ -38,8 +38,9 @@ typedef struct
 /*----------------------------------- Globals --------------------------------*/
 
 /// queue of log messages
-VAR_GLOBAL xQueueHandle xLog_Queue;
+//VAR_GLOBAL xQueueHandle xLog_Queue;
 
 /*---------------------------------- Interface -------------------------------*/
 
 void Log_Task( void *pvParameters );
+
