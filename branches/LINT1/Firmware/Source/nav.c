@@ -36,7 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: restored barometric altitude
+/// Change: first Lint pass
 //
 //============================================================================*/
 
@@ -45,9 +45,9 @@
 #include "queue.h"
 
 #include "stm32f10x.h"
-#include "stm32f10x_usart.h"
+//#include "stm32f10x_usart.h"
 #include "stm32f10x_dma.h"
-#include "misc.h"
+//#include "misc.h"
 #include "bmp085_driver.h"
 #include "ppmdriver.h"
 #include "dcm.h"
@@ -199,7 +199,7 @@ void Navigation_Task( void *pvParameters ) {
     f_Dest_Lat = Waypoint[ui_Wpt_Index].Lat;            // load destination latitude
     f_Dest_Alt = Waypoint[ui_Wpt_Index].Alt;            // load destination altitude
 
-    while (1) {
+    for (;;) {
         if (parse_gps()) {                                  // NMEA sentence completed
 
 #if (SIMULATOR == SIM_NONE)                                 // normal mode
@@ -237,7 +237,7 @@ void Navigation_Task( void *pvParameters ) {
 
             /* Compute distance to waypoint */
             f_temp = sqrtf((f_dy * f_dy) + (f_dx * f_dx));
-            ui_Distance = (unsigned int)(f_temp * 111113.7f);
+            ui_Distance = (uint16_t)(f_temp * 111113.7f);
 
             /* Waypoint reached: next waypoint */
             if (ui_Distance < MIN_DISTANCE) {
@@ -568,9 +568,9 @@ static bool parse_gps( void )
                 break;
 
             case 1:                             // check prefix
-                if (cmp_prefix(sz_Line, "$GPRMC")) {
+                if (cmp_prefix(sz_Line, (const uint8_t *)"$GPRMC")) {
                     e_nmea_type = NMEA_GPRMC;
-                } else if (cmp_prefix(sz_Line, "$GPGGA")) {
+                } else if (cmp_prefix(sz_Line, (const uint8_t *)"$GPGGA")) {
                     e_nmea_type = NMEA_GPGGA;
                 } else {
                     e_nmea_type = NMEA_INVALID;
@@ -582,10 +582,10 @@ static bool parse_gps( void )
             case 2:
                 if (e_nmea_type == NMEA_GPRMC) { // get fix info
                     if (c == 'A') {
-                     uc_Gps_Status = GPS_FIX;
-                   } else if (c == 'V') {
-                     uc_Gps_Status = GPS_NOFIX;
-                   }
+                       uc_Gps_Status = GPS_FIX;
+                    } else if (c == 'V') {
+                       uc_Gps_Status = GPS_NOFIX;
+                    }
                 }
                 break;
 
@@ -644,6 +644,12 @@ static bool parse_gps( void )
                           ui_Gps_Alt *= 10;
                           ui_Gps_Alt += (c - '0');
                         }
+                        break;
+
+                    case NMEA_INVALID:          // invalid
+                        break;
+
+                    default:                    // error
                         break;
                 }
                 break;

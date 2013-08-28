@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change removed reversal from throttle channel 
+//  Change first Lint pass
 //
 //============================================================================*/
 
@@ -150,6 +150,8 @@ void Servo_Set(SERVO_TYPE servo, int16_t position) {
        break;
        case SERVO_THROTTLE:
            TIM_SetCompare4(TIM3, position);
+       break;
+       case SERVO_NUMBER:
        break;
        default:
        break;
