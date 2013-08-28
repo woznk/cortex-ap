@@ -36,8 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: added functions Gps_Buffer_Index() and Gps_Buffer_Pointer()
-///         further major renaming according coding rules
+/// Change: restored barometric altitude
 //
 //============================================================================*/
 
@@ -119,7 +118,7 @@ VAR_STATIC float f_Dest_Lon;                            //!< destination longitu
 VAR_STATIC float f_Dest_Alt;                            //!< destination altitude
 VAR_STATIC float f_Curr_Lat;                            //!< current latitude
 VAR_STATIC float f_Curr_Lon;                            //!< current longitude
-VAR_STATIC float f_Curr_Alt;                            //!< current altitude
+VAR_STATIC float f_Curr_Alt;                            //!< current altitude [m]
 VAR_STATIC float f_Temp_Lon;                            //!< temporary longitude during parse
 VAR_STATIC float f_Temp_Lat;                            //!< temporary latitude during parse
 VAR_STATIC float f_Bearing;                             //!< angle to destination [°]
@@ -206,8 +205,8 @@ void Navigation_Task( void *pvParameters ) {
 #if (SIMULATOR == SIM_NONE)                                 // normal mode
             Nav_Pid.fKp = Telemetry_Get_Gain(TEL_NAV_KP);   // update PID gains
             Nav_Pid.fKi = Telemetry_Get_Gain(TEL_NAV_KI);
-//            f_Curr_Alt = (float)BMP085_Get_Altitude();    // get barometric altitude
-            f_Curr_Alt = (float)ui_Gps_Alt;                 // get GPS altitude
+            f_Curr_Alt = (float)BMP085_Get_Altitude();    // get barometric altitude
+//            f_Curr_Alt = (float)ui_Gps_Alt;                 // get GPS altitude
 #else                                                       // simulation mode
             Nav_Pid.fKp = Simulator_Get_Gain(SIM_NAV_KP);   // update PID gains
             Nav_Pid.fKi = Simulator_Get_Gain(SIM_NAV_KI);
@@ -261,7 +260,7 @@ void Navigation_Task( void *pvParameters ) {
                 f_Throttle = f_Throttle_Max;                // max throttle
                 f_Pitch = PITCHATMAXTHROTTLE;
             } else {                                        // interpolate
-                f_temp = (f_temp - HEIGHT_MARGIN) / (2 * HEIGHT_MARGIN);
+                f_temp = (f_temp - HEIGHT_MARGIN) / (2.0f * HEIGHT_MARGIN);
                 f_Throttle = f_temp * (f_Throttle_Min - f_Throttle_Max) + f_Throttle_Min;
                 f_Pitch = f_temp * (PITCHATMINTHROTTLE - PITCHATMAXTHROTTLE) + PITCHATMINTHROTTLE;
             }
