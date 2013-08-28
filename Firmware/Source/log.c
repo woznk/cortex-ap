@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change added log of NMEA sentences
+//  Change simplified waiting loops
 //
 //============================================================================*/
 
@@ -35,8 +35,7 @@
 #endif
 #define   VAR_GLOBAL
 
-#define FILE_BUFFER_LENGTH 128      //!< Length of file buffer
-#define MAX_SAMPLES        20000    //!< Max number of samples that can be written
+#define MAX_SAMPLES 20000    //!< Max number of samples that can be written
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -68,7 +67,8 @@ static void log_write(uint16_t *data, uint8_t num);
 ///
 /// \brief   log task
 /// \return  -
-/// \remarks -
+/// \remarks task initially waits 20 sec to avoid contention between log file
+///          and path file, read by navigation task.
 ///
 ///----------------------------------------------------------------------------
 void Log_Task( void *pvParameters ) {
@@ -107,8 +107,9 @@ void Log_Task( void *pvParameters ) {
     j = 0;
 
     while (1) {
-        while (!b_File_Ok);                                             // halt if file not open
-        while (Gps_Buffer_Index() == j);                                // halt if GPS buffer empty
+        while ((!b_File_Ok) ||                                          // file not open
+               (Gps_Buffer_Index() == j)) {                             // GPS buffer empty
+        }                                                               // halt
         p_Data = Gps_Buffer_Pointer();                                  // get GPS buffer pointer
         (void)f_write(&st_File, p_Data, (BUFFER_LENGTH / 2), &wWritten);// write
         j = (j + (BUFFER_LENGTH / 2)) % BUFFER_LENGTH;                  // update index
