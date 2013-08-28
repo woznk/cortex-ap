@@ -18,17 +18,14 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added file system mount, removed from log.c and nav.c,
-//         related FAT and file structures made global
-//         disabled creation of log queue,
-//         activated log task
+// Change: first Lint pass
 //
 //============================================================================*/
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "semphr.h"
+//#include "semphr.h"
 
 #include "stm32f10x.h"
 
@@ -115,7 +112,8 @@ void GPIO_Configuration(void);
 void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
     ( void ) pxTask;
     ( void ) pcTaskName;
-    while (1);
+    for (;;) {
+    }
 }
 
 ///----------------------------------------------------------------------------
@@ -160,7 +158,7 @@ void Telemetry_Task( void *pvParameters ) {
     Last_Wake_Time = xTaskGetTickCount();       //
 //    global_data_reset_param_defaults();         // Load default parameters as fallback
 
-    while (TRUE)  {
+    for (;;)  {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);  // Use any wait function, better not use sleep
         Mavlink_Receive();                      // Process parameter request, if occured
         Mavlink_Stream_Send();                  // Send data streams
@@ -172,9 +170,9 @@ void Telemetry_Task( void *pvParameters ) {
 
 #elif defined TELEMETRY_MULTIWII
 
-    while (TRUE) {
+    for (;;) {
         MWI_Receive();          				//
-	}
+    }
 
 #endif
 
@@ -217,15 +215,15 @@ int32_t main(void) {
     b_FS_Ok = FALSE;                                //
   }
 
-  xTaskCreate(Attitude_Task, (signed portCHAR *) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
-  xTaskCreate(disk_timerproc, (signed portCHAR *) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
-  xTaskCreate(Navigation_Task, (signed portCHAR *) "Navigation", 128, NULL, mainNAV_PRIORITY, NULL);
-  xTaskCreate(Telemetry_Task, (signed portCHAR *) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
-  xTaskCreate(Log_Task, (signed portCHAR *) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
+  (void)xTaskCreate(Attitude_Task, (signed portCHAR *) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
+  (void)xTaskCreate(disk_timerproc, (signed portCHAR *) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
+  (void)xTaskCreate(Navigation_Task, (signed portCHAR *) "Navigation", 128, NULL, mainNAV_PRIORITY, NULL);
+  (void)xTaskCreate(Telemetry_Task, (signed portCHAR *) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
+  (void)xTaskCreate(Log_Task, (signed portCHAR *) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
   vTaskStartScheduler();
 
-  while (1) {
+  for (;;) {
   }
 }
 
