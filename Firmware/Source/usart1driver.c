@@ -9,18 +9,17 @@
 ///
 /// \file
 ///
-/// Change: UART interrupt: replaced call to function USART_ReceivedData() 
-///         with direct read of UART DR register
+/// Change: first Lint pass
 //
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
 
 #include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
+//#include "task.h"
+//#include "queue.h"
 #include "stm32f10x.h"
-#include "stm32f10x_usart.h"
+//#include "stm32f10x_usart.h"
 #include "usart1driver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
@@ -118,7 +117,7 @@ void USART1_IRQHandler( void ) {
     if (((USART1->CR1 & 0x00000020) != 0) &&
         (USART1->SR & 0x00000020) != 0) {               // USART_IT_RXNE == SET
 //		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
-		ucRxBuffer[ucRxWindex++] = USART1->DR;
+		ucRxBuffer[ucRxWindex++] = (uint8_t)USART1->DR;
         if (ucRxWindex >= RX_BUFFER_LENGTH) {
             ucRxWindex = 0;
         }

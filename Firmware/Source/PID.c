@@ -9,11 +9,11 @@
 ///
 /// \file
 ///
-//  Change simplified anti wind up, removed output saturation
+//  Change first Lint pass
 //
 //============================================================================*/
 
-#include "stm32f10x.h"
+//#include "stm32f10x.h"
 #include "config.h"
 #include "pid.h"
 

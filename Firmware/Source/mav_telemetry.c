@@ -244,14 +244,14 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: restored transmission of HUD message
+/// Changes: first Lint pass
 ///
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
 
 #include "stm32f10x.h"
-#include "stm32f10x_usart.h"
+//#include "stm32f10x_usart.h"
 #include "usart1driver.h"
 #include "math.h"
 
@@ -260,7 +260,7 @@
 #include "queue.h"
 
 #include "config.h"
-#include "misc.h"
+//#include "misc.h"
 #include "nav.h"
 #include "attitude.h"
 #include "mavlink.h"
