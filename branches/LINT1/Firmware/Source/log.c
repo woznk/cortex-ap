@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change simplified waiting loops
+//  Change first Lint pass
 //
 //============================================================================*/
 
@@ -106,7 +106,7 @@ void Log_Task( void *pvParameters ) {
 
     j = 0;
 
-    while (1) {
+    for (;;) {
         while ((!b_File_Ok) ||                                          // file not open
                (Gps_Buffer_Index() == j)) {                             // GPS buffer empty
         }                                                               // halt
@@ -151,13 +151,13 @@ static void log_write(uint16_t *data, uint8_t num)
         l_temp = *data++;
         sz_String[j++] = ' ';
         digit = ((l_temp >> 12) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = ((l_temp >> 8) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = ((l_temp >> 4) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = (l_temp & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
     }
     sz_String[j++] = '\n';
     mode = PPMGetMode();
