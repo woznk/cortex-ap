@@ -16,7 +16,8 @@
 ///  roll and pitch angles, without need to either subtract PI/2 from reference
 ///  point or to add PI/2 to the set point.
 ///
-// Change: Telemetry_... funcions renamed Simulator_...
+// Change: major renaming according naming convention
+//         faster blue led blink
 //
 //============================================================================*/
 
@@ -85,19 +86,19 @@ VAR_STATIC const int16_t iSensor_Sign[6] = {
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC bool bTuning = FALSE;        //!< in flight PID tuning activated
-VAR_STATIC int16_t iAileron;            //!< aileron servo position
-VAR_STATIC int16_t iElevator;           //!< elevator servo position
-VAR_STATIC int16_t iThrottle;           //!< throttle servo position
-VAR_STATIC uint8_t ucBlink_Red = 0;     //!< red LED blinking counter
-VAR_STATIC uint8_t ucBlink_Blue = 0;    //!< blue LED blinking counter
-VAR_STATIC xPID Roll_Pid;               //!< roll PID
-VAR_STATIC xPID Pitch_Pid;              //!< pitch PID
-VAR_STATIC float fSetpoint;             //!< PID setpoint
-VAR_STATIC float fInput;                //!< PID input
-VAR_STATIC float fOutput;               //!< PID output
-VAR_STATIC uint8_t ucSensor_Data[12];   //!< raw IMU data
-VAR_STATIC int16_t iSensor_Offset[6] =  //!< IMU sensors offset
+VAR_STATIC bool b_Tuning = FALSE;        //!< in flight PID tuning activated
+VAR_STATIC int16_t i_Aileron;            //!< aileron servo position
+VAR_STATIC int16_t i_Elevator;           //!< elevator servo position
+VAR_STATIC int16_t i_Throttle;           //!< throttle servo position
+VAR_STATIC uint8_t uc_Blink_Red = 0;     //!< red LED blinking counter
+VAR_STATIC uint8_t uc_Blink_Blue = 0;    //!< blue LED blinking counter
+VAR_STATIC xPID Roll_Pid;                //!< roll PID
+VAR_STATIC xPID Pitch_Pid;               //!< pitch PID
+VAR_STATIC float f_Setpoint;             //!< PID setpoint
+VAR_STATIC float f_Input;                //!< PID input
+VAR_STATIC float f_Output;               //!< PID output
+VAR_STATIC uint8_t uc_Sensor_Data[12];   //!< raw IMU data
+VAR_STATIC int16_t i_Sensor_Offset[6] =  //!< IMU sensors offset
 { 0, 0, 0, 0, 0, 0 };
 
 /*--------------------------------- Prototypes -------------------------------*/
@@ -117,7 +118,7 @@ static __inline void Attitude_Control(void);
 void Attitude_Task(void *pvParameters)
 {
     uint8_t i = 0, j = 0;
-    int16_t * pSensor;
+    int16_t * p_sensor;
     portTickType Last_Wake_Time;
 
     Last_Wake_Time = xTaskGetTickCount();
@@ -152,19 +153,19 @@ void Attitude_Task(void *pvParameters)
     /* Compute sensor offsets */
     for (i = 0; i < 64; i++) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
-#if (SIMULATOR == SIM_NONE)                         // normal mode
-        GetAccelRaw(ucSensor_Data);                 // acceleration
-        GetAngRateRaw((uint8_t *)&ucSensor_Data[6]); // rotation
-#else                                               // simulation mode
-        Simulator_Get_Raw_IMU((int16_t *)ucSensor_Data);// get simulator sensors
+#if (SIMULATOR == SIM_NONE)                             // normal mode
+        GetAccelRaw(uc_Sensor_Data);                    // acceleration
+        GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]);   // rotation
+#else                                                   // simulation mode
+        Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);// get simulator sensors
 #endif
-        pSensor = (int16_t *)ucSensor_Data;
-        for (j = 0; j < 6; j++) {                   // accumulate
-            iSensor_Offset[j] += *pSensor++;
+        p_sensor = (int16_t *)uc_Sensor_Data;
+        for (j = 0; j < 6; j++) {                       // accumulate
+            i_Sensor_Offset[j] += *p_sensor++;
         }
     }
-    for (j = 0; j < 6; j++) {                       // average
-        iSensor_Offset[j] = iSensor_Offset[j] / 64;
+    for (j = 0; j < 6; j++) {                           // average
+        i_Sensor_Offset[j] = i_Sensor_Offset[j] / 64;
     }
 
     /* Compute attitude and heading */
@@ -172,35 +173,37 @@ void Attitude_Task(void *pvParameters)
 
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
 
-        if (++ucBlink_Blue == 100) {                 // blink led every 100 cycles
-           ucBlink_Blue = 0;
-           LEDToggle(BLUE);
+        uc_Blink_Blue = (uc_Blink_Blue + 1) % 10;       // blink led @ 10 Hz
+        if (uc_Blink_Blue < 3) {                        // duty cycle 30 %
+            LEDOn(BLUE);
+        } else {
+            LEDOff(BLUE);
         }
 
         /* Read sensors */
-#if (SIMULATOR == SIM_NONE)                         // normal mode
-        GetAccelRaw(ucSensor_Data);                 // acceleration
-        GetAngRateRaw((uint8_t *)&ucSensor_Data[6]);// rotation
+#if (SIMULATOR == SIM_NONE)                             // normal mode
+        GetAccelRaw(uc_Sensor_Data);                    // acceleration
+        GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]);   // rotation
         BMP085_Handler();
-#else                                               // simulation mode
-        Simulator_Get_Raw_IMU((int16_t *)ucSensor_Data);// get simulator sensors
+#else                                                   // simulation mode
+        Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);// get simulator sensors
 #endif
         /* Offset and sign correction */
-        pSensor = (int16_t *)ucSensor_Data;
+        p_sensor = (int16_t *)uc_Sensor_Data;
         for (j = 0; j < 6; j++) {
-            *pSensor = *pSensor - iSensor_Offset[j];// strip offset
-            *pSensor = *pSensor * iSensor_Sign[j];  // correct sign
-            if (j == 2) {                           // z acceleration
-               *pSensor += (int16_t)GRAVITY;        // add gravity
+            *p_sensor = *p_sensor - i_Sensor_Offset[j]; // strip offset
+            *p_sensor = *p_sensor * iSensor_Sign[j];    // correct sign
+            if (j == 2) {                               // z acceleration
+               *p_sensor += (int16_t)GRAVITY;           // add gravity
             }
-            pSensor++;
+            p_sensor++;
         }
 
         /* AHRS */
-        MatrixUpdate((int16_t *)ucSensor_Data);     // compute DCM
-        CompensateDrift();                          // compensate
-        Normalize();                                // normalize DCM
-        Attitude_Control();                         // attitude control loop
+        MatrixUpdate((int16_t *)uc_Sensor_Data);        // compute DCM
+        CompensateDrift();                              // compensate
+        Normalize();                                    // normalize DCM
+        Attitude_Control();                             // attitude control loop
     }
 }
 
@@ -228,72 +231,72 @@ static __inline void Attitude_Control(void)
     switch (PPMGetMode()) {
 
         case MODE_STAB:                                             // STABILIZED MODE
-            iAileron = PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL;
-            iElevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
-            iThrottle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
+            i_Aileron = PPMGetChannel(AILERON_CHANNEL) - SERVO_NEUTRAL;
+            i_Elevator = PPMGetChannel(ELEVATOR_CHANNEL) - SERVO_NEUTRAL;
+            i_Throttle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
 
-            fSetpoint = ((float)iElevator / 500.0f);                // setpoint for pitch
-            fInput = -asinf(DCM_Matrix[2][0]);                      // current pitch
-            fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
-            iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
+            f_Setpoint = ((float)i_Elevator / 500.0f);                // setpoint for pitch
+            f_Input = -asinf(DCM_Matrix[2][0]);                      // current pitch
+            f_Output = PID_Compute(&Pitch_Pid, f_Setpoint, f_Input);   // PID controller
+            i_Elevator = SERVO_NEUTRAL + (int16_t)f_Output;
 
-            fSetpoint = ((float)iAileron / 500.0f);                 // setpoint for bank
-            fInput =  -asinf(DCM_Matrix[2][1]);                     // current bank
-            fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
+            f_Setpoint = ((float)i_Aileron / 500.0f);                 // setpoint for bank
+            f_Input =  -asinf(DCM_Matrix[2][1]);                     // current bank
+            f_Output = PID_Compute(&Roll_Pid, f_Setpoint, f_Input);    // PID controller
 
-            iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
+            i_Aileron = SERVO_NEUTRAL + (int16_t)f_Output;
 
-            if (++ucBlink_Red >= 8) {                               // slow blink
-                ucBlink_Red = 0;
+            if (++uc_Blink_Red >= 8) {                               // slow blink
+                uc_Blink_Red = 0;
                 LEDToggle(RED);
             }
             break;
 
         case MODE_NAV:                                              // NAVIGATION MODE
-            fSetpoint = Nav_Pitch_Rad();                            // setpoint for pitch
-            fInput = -asinf(DCM_Matrix[2][0]);                      // current pitch
-            fOutput = PID_Compute(&Pitch_Pid, fSetpoint, fInput);   // PID controller
-            iElevator = SERVO_NEUTRAL + (int16_t)fOutput;
+            f_Setpoint = Nav_Pitch_Rad();                            // setpoint for pitch
+            f_Input = -asinf(DCM_Matrix[2][0]);                      // current pitch
+            f_Output = PID_Compute(&Pitch_Pid, f_Setpoint, f_Input);   // PID controller
+            i_Elevator = SERVO_NEUTRAL + (int16_t)f_Output;
 
-            fSetpoint = Nav_Bank_Rad();                             // setpoint for bank
-            fInput = -asinf(DCM_Matrix[2][1]);                      // current bank
-            fOutput = PID_Compute(&Roll_Pid, fSetpoint, fInput);    // PID controller
-            iAileron = SERVO_NEUTRAL + (int16_t)fOutput;
+            f_Setpoint = Nav_Bank_Rad();                             // setpoint for bank
+            f_Input = -asinf(DCM_Matrix[2][1]);                      // current bank
+            f_Output = PID_Compute(&Roll_Pid, f_Setpoint, f_Input);    // PID controller
+            i_Aileron = SERVO_NEUTRAL + (int16_t)f_Output;
 
-            iThrottle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
+            i_Throttle = SERVO_NEUTRAL + (int16_t)(500.0f * Nav_Throttle());
 
-            if (++ucBlink_Red >= 4) {                               // fast blink
-                ucBlink_Red = 0;
+            if (++uc_Blink_Red >= 4) {                               // fast blink
+                uc_Blink_Red = 0;
                 LEDToggle(RED);
             }
             break;
 
         case MODE_FPV:                                              // CAMERA STABILIZATION MODE
-            fInput = -(Attitude_Pitch_Rad() * 1800.0f) / PI;        // pitch angle given by DCM
-            iElevator = SERVO_NEUTRAL + (int16_t)fInput;            // show on elevator servo
-            fInput = -(Attitude_Roll_Rad() * 1800.0f) / PI;         // bank angle given by DCM
-            iAileron = SERVO_NEUTRAL + (int16_t)fInput;             // show on aileron servo
+            f_Input = -(Attitude_Pitch_Rad() * 1800.0f) / PI;        // pitch angle given by DCM
+            i_Elevator = SERVO_NEUTRAL + (int16_t)f_Input;            // show on elevator servo
+            f_Input = -(Attitude_Roll_Rad() * 1800.0f) / PI;         // bank angle given by DCM
+            i_Aileron = SERVO_NEUTRAL + (int16_t)f_Input;             // show on aileron servo
             break;
 
 //       case MODE_MANUAL:
 //       case MODE_RTL:
         default:                                                    // MANUAL MODE
-            iAileron = PPMGetChannel(AILERON_CHANNEL);
-            iElevator = PPMGetChannel(ELEVATOR_CHANNEL);
-            iThrottle = PPMGetChannel(THROTTLE_CHANNEL);
+            i_Aileron = PPMGetChannel(AILERON_CHANNEL);
+            i_Elevator = PPMGetChannel(ELEVATOR_CHANNEL);
+            i_Throttle = PPMGetChannel(THROTTLE_CHANNEL);
             PID_Init(&Roll_Pid);                                    // reset PID controllers
             PID_Init(&Pitch_Pid);
             LEDOff(RED);
-            if (bTuning) {
-                bTuning = FALSE;
+            if (b_Tuning) {
+                b_Tuning = FALSE;
             }
             break;
     }
 
     /* Update controls */
-    Servo_Set(SERVO_AILERON, iAileron);                             // update servos
-    Servo_Set(SERVO_ELEVATOR, iElevator);
-    Servo_Set(SERVO_THROTTLE, iThrottle);
+    Servo_Set(SERVO_AILERON, i_Aileron);                             // update servos
+    Servo_Set(SERVO_ELEVATOR, i_Elevator);
+    Servo_Set(SERVO_THROTTLE, i_Throttle);
 }
 
 ///----------------------------------------------------------------------------
