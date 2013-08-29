@@ -244,14 +244,13 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes: first Lint pass
+/// Changes (Lint) corrected file #inclusion, removed #undef
 ///
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
 
 #include "stm32f10x.h"
-//#include "stm32f10x_usart.h"
 #include "usart1driver.h"
 #include "math.h"
 
@@ -260,7 +259,6 @@
 #include "queue.h"
 
 #include "config.h"
-//#include "misc.h"
 #include "nav.h"
 #include "attitude.h"
 #include "mavlink.h"
@@ -269,9 +267,8 @@
 /*--------------------------------- Definitions ------------------------------*/
 
 #ifdef    VAR_STATIC
-#   undef VAR_STATIC
-#endif
 #define   VAR_STATIC static
+#endif
 
 #ifdef    VAR_GLOBAL
 #   undef VAR_GLOBAL
