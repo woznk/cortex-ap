@@ -10,7 +10,7 @@
 /// \file
 ///
 ///
-//  Change
+//  Change (Lint) pointer argument made const when possible
 //
 //============================================================================
 
@@ -53,7 +53,7 @@ typedef enum {
 /*---------------------------------- Interface -------------------------------*/
 
 void Simulator_Parse( void );
-void Simulator_Send_Message(uint16_t *data, uint8_t num);
+void Simulator_Send_Message(const uint16_t *data, uint8_t num);
 void Simulator_Send_DCM( void );
 void Simulator_Send_Controls( void );
 void Simulator_Send_Waypoint( void );
