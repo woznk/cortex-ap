@@ -9,30 +9,21 @@
 ///
 /// \file
 ///
-/// Change: first Lint pass
+/// Change (Lint) modified file #inclusion, removed #undef and VAR_GLOBAL, 
 //
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
 
 #include "FreeRTOS.h"
-//#include "task.h"
-//#include "queue.h"
-#include "stm32f10x.h"
-//#include "stm32f10x_usart.h"
+#include "stm32f10x_usart.h"
 #include "usart1driver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef    VAR_STATIC
-#   undef VAR_STATIC
-#endif
+#ifndef   VAR_STATIC
 #define   VAR_STATIC static
-
-#ifdef    VAR_GLOBAL
-#   undef VAR_GLOBAL
 #endif
-#define   VAR_GLOBAL
 
 #define RX_BUFFER_LENGTH    48  //!< length of receive buffer
 #define TX_BUFFER_LENGTH    48  //!< length of transmit buffer
