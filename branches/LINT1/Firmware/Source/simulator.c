@@ -10,14 +10,14 @@
 /// \file
 /// Reference systems :                                             \code
 ///                                   __|__
-///                                  /  |  \
+///                                  /  |  .
 ///                                 |___|___|
 ///                                    | |
-///                                    / \
+///                                    / .
 ///                                   |   |
 ///                                   |   |
 ///                      _____________|___|_____________
-///                     /                               \
+///                     /                               .
 ///                    |                                 |
 ///                    |_________________________________|
 ///                                   |   |
@@ -30,7 +30,7 @@
 ///       - >     -         |       - >     -        | YAW+  -         - >
 ///     /      Z+   \       |     /      Z+   \      |     /     Z+  /
 /// <--| ----(X)     |      | <--| ----(.)     |     |    |    (X)--| ---> X+
-/// Y+  \     |     /       | Y+  \     |     /      |     \    |    \
+/// Y+  \     |     /       | Y+  \     |     /      |     \    |    .
 ///       -   |  <- YAW+    |       -   |  <- YAW+   |       - >|      -
 ///           |   ^         |           |   ^        |          |   ^
 ///       \   |   /         |       \   |   /        |      \   |   /
@@ -42,14 +42,15 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  Change: Nav_Bearing / Nav_Heading renamed Nav_Bearing_Deg / Nav_Heading_Deg
-//
+//  Change (Lint) corrected file #inclusion, removed #undef and VAR_GLOBAL,
+//         PERIOD renamed SERVO_PERIOD, added some cast, pointer argument
+//         made const when possible
 //
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
 
-#include "misc.h"
+#include "stm32f10x.h"
 
 #include "config.h"
 #include "nav.h"
@@ -60,15 +61,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef    VAR_STATIC
-#   undef VAR_STATIC
+#ifndef VAR_STATIC
+#define VAR_STATIC static
 #endif
-#define   VAR_STATIC static
-
-#ifdef    VAR_GLOBAL
-#   undef VAR_GLOBAL
-#endif
-#define   VAR_GLOBAL
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -330,7 +325,7 @@ void Simulator_Send_Controls(void)
 void Simulator_Send_Waypoint(void)
 {
     USART1_Putch(SIM_WAYPOINT);                 // simulator wait code
-    USART1_Putch(Nav_Wpt_Index());              // waypoint index
+    USART1_Putch((uint8_t)Nav_Wpt_Index());     // waypoint index
     USART1_Putw((uint16_t)Nav_Bearing_Deg());   // bearing to waypoint
     USART1_Putw((uint16_t)Nav_Wpt_Altitude());  // waypoint altitude
     USART1_Putw(Nav_Distance());                // distance to waypoint
@@ -382,7 +377,7 @@ void Simulator_Send_Position(void)
 ///          Each element is converted to an hexadecimal string and sent to UART
 ///
 ///----------------------------------------------------------------------------
-void Simulator_Send_Message(uint16_t *data, uint8_t num)
+void Simulator_Send_Message(const uint16_t *data, uint8_t num)
 {
     uint32_t l_temp;
     uint8_t digit, i = 0;
