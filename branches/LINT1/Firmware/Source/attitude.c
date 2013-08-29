@@ -16,7 +16,7 @@
 ///  roll and pitch angles, without need to either subtract PI/2 from reference
 ///  point or to add PI/2 to the set point.
 ///
-// Change: first Lint pass
+// Change (Lint) removed VAR_GLOBAL and #undef, pvParameters made (void)
 //
 //============================================================================*/
 
@@ -54,14 +54,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -120,6 +115,7 @@ void Attitude_Task(void *pvParameters)
     int16_t * p_sensor;
     portTickType Last_Wake_Time;
 
+    (void)pvParameters;
     Last_Wake_Time = xTaskGetTickCount();
 
     /* Task specific initializations */
