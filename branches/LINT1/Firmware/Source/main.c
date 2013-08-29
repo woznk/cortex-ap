@@ -18,16 +18,17 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: first Lint pass
+// Change (Lint) corrected file #inclusion, removed #undef, 
+//        commented unused functions, pvParameters made (void)
 //
 //============================================================================*/
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-//#include "semphr.h"
 
-#include "stm32f10x.h"
+#include "stm32f10x_rcc.h"
+#include "misc.h"
 
 #include "i2c_mems_driver.h"
 #include "l3g4200d_driver.h"
@@ -57,10 +58,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
+#endif
 #ifdef VAR_GLOBAL
 #undef VAR_GLOBAL
 #endif
@@ -109,12 +109,14 @@ void GPIO_Configuration(void);
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
+/*
 void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
     ( void ) pxTask;
     ( void ) pcTaskName;
     for (;;) {
     }
 }
+*/
 
 ///----------------------------------------------------------------------------
 ///
@@ -157,6 +159,8 @@ void Telemetry_Task( void *pvParameters ) {
     portTickType Last_Wake_Time;                //
     Last_Wake_Time = xTaskGetTickCount();       //
 //    global_data_reset_param_defaults();         // Load default parameters as fallback
+
+    (void)pvParameters;
 
     for (;;)  {
         vTaskDelayUntil(&Last_Wake_Time, TELEMETRY_DELAY);  // Use any wait function, better not use sleep
