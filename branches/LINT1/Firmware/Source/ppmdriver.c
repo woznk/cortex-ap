@@ -29,11 +29,12 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change removed reversal from throttle channel 
+//  Change (Lint) corrected file #inclusion, removed #undef and VAR_GLOBAL,
+//         PERIOD renamed PPM_PERIOD
 //
 //============================================================================*/
 
-#include "stm32f10x.h"
+#include "stm32f10x_tim.h"
 
 #include "config.h"
 #include "led.h"
@@ -42,14 +43,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
 
 #define PPM_SYNC_MIN        4999    ///< min length of sync pulse, modify according to RC type
 #define PPM_SYNC_MAX        20001   ///< max length of sync pulse, modify according to RC type
@@ -57,7 +53,7 @@
 #define PPM_PULSE_MAX       2100    ///< length of channel pulse for full scale high
 #define PPM_PULSE_NEUTRAL   1500    ///< length of channel pulse for neutral position
 
-#define PERIOD              65535   ///< capture timer period
+#define PPM_PERIOD          65535   ///< capture timer period
 #define PRESCALER           23      ///< capture timer prescaler
 
 /*----------------------------------- Macros ---------------------------------*/
@@ -182,7 +178,7 @@ void PPM_Init(void) {
   TIM_DeInit(TIM2);
 
   /* Time base configuration */
-  TIM_TimeBaseStructure.TIM_Period = PERIOD;
+  TIM_TimeBaseStructure.TIM_Period = PPM_PERIOD;
   TIM_TimeBaseStructure.TIM_Prescaler = PRESCALER;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
