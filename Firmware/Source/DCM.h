@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change  removed minor defects detectd by static analysis
+//  Change (Lint) argument sensor of MatriUxpdate made const int16_t *
 //
 //============================================================================
 
@@ -46,5 +46,5 @@ VAR_GLOBAL float fGround_Speed ;    //!< Velocity 3D
 void Normalize( void );
 void CompensateDrift( void );
 void AccelAdjust( void );
-void MatrixUpdate( int16_t * sensor );
+void MatrixUpdate( const int16_t * sensor );
 
