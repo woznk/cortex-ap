@@ -244,19 +244,14 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes removed #inclusion of mavlink.h, copied here all relevant types, 
-///         enumerations and definitions, removed function Telemetry_Send_Controls().
-///         (Lint) commented unused variables and definitions, 
-///         redefined some variables as corresponding enum,
-///         enum members casted to int when used as part of a mavlink message
+/// Changes (Lint) removed unused #inclusions, commented unsed variables,
+///         suppressed info messages on unused enum and members
 ///
 //============================================================================*/
 
 #include "stm32f10x.h"
 #include "usart1driver.h"
 #include "math.h"
-
-#include "FreeRTOS.h"
 
 #include "config.h"
 #include "nav.h"
@@ -341,6 +336,7 @@
 
 /*-------------------------------- Enumerations ------------------------------*/
 
+/*lint -e753 -e749 -e751 */
 enum MAV_AUTOPILOT {
 	MAV_AUTOPILOT_GENERIC=0,        /* Generic autopilot, full support for everything */
 	MAV_AUTOPILOT_PIXHAWK=1,        /* PIXHAWK autopilot, http://pixhawk.ethz.ch */
@@ -487,17 +483,17 @@ enum MAV_CMD {                      // Origin: mavlink\common\common.h
 /*----------------------------------- Types ----------------------------------*/
 
 typedef enum {                  // Origin: mavlink\mavlink_types.h
-	MAVLINK_TYPE_CHAR     = 0,
-	MAVLINK_TYPE_UINT8_T  = 1,
-	MAVLINK_TYPE_INT8_T   = 2,
-	MAVLINK_TYPE_UINT16_T = 3,
-	MAVLINK_TYPE_INT16_T  = 4,
-	MAVLINK_TYPE_UINT32_T = 5,
-	MAVLINK_TYPE_INT32_T  = 6,
-	MAVLINK_TYPE_UINT64_T = 7,
-	MAVLINK_TYPE_INT64_T  = 8,
-	MAVLINK_TYPE_FLOAT    = 9,
-	MAVLINK_TYPE_DOUBLE   = 10
+   MAVLINK_TYPE_CHAR     = 0,
+   MAVLINK_TYPE_UINT8_T  = 1,
+   MAVLINK_TYPE_INT8_T   = 2,
+   MAVLINK_TYPE_UINT16_T = 3,
+   MAVLINK_TYPE_INT16_T  = 4,
+   MAVLINK_TYPE_UINT32_T = 5,
+   MAVLINK_TYPE_INT32_T  = 6,
+   MAVLINK_TYPE_UINT64_T = 7,
+   MAVLINK_TYPE_INT64_T  = 8,
+   MAVLINK_TYPE_FLOAT    = 9,
+   MAVLINK_TYPE_DOUBLE   = 10
 } mavlink_message_type_t;
 
 typedef enum {                  // Origin: mavlink\mavlink_types.h
@@ -559,7 +555,6 @@ VAR_STATIC const uint8_t sParameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME
     "NAV_ANG_P\0",  // Navigation Kp (via roll)
     "NAV_ANG_I\0"   // Navigation Ki (via roll)
 //  "NAV_ANG_D\0"   // Navigation Kd (via roll)
-
 };
 
 //VAR_STATIC const uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;
@@ -588,8 +583,8 @@ VAR_STATIC mavlink_message_t msg;
 */
 
 VAR_STATIC uint8_t current_tx_seq = 0;
-VAR_STATIC uint16_t packet_drops = 0;
-VAR_STATIC uint8_t packet_rx_drop_count;
+//VAR_STATIC uint16_t packet_drops = 0;
+//VAR_STATIC uint8_t packet_rx_drop_count;
 VAR_STATIC uint16_t m_parameter_i = ONBOARD_PARAM_COUNT;
 VAR_STATIC uint8_t msgid;
 VAR_STATIC uint16_t Crc;
@@ -1212,12 +1207,12 @@ static bool Mavlink_Parse(void) {
 //    static uint8_t compid;
     static mavlink_parse_state_t parse_state = MAVLINK_PARSE_STATE_UNINIT;
     static uint8_t len;
-    static uint8_t buffer_overrun = 0;
-    static uint8_t parse_error = 0;
+//    static uint8_t buffer_overrun = 0;
+//    static uint8_t parse_error = 0;
     static uint8_t packet_idx;
     static uint8_t seq;
     static uint8_t current_rx_seq;
-    static uint8_t packet_rx_success_count = 0;
+//    static uint8_t packet_rx_success_count = 0;
 
     bool msg_received = FALSE;
 
@@ -1235,8 +1230,8 @@ static bool Mavlink_Parse(void) {
 
         case MAVLINK_PARSE_STATE_GOT_STX:
             if (msg_received || (c > PAYLOAD_LEN)) {
-                buffer_overrun++;
-                parse_error++;
+//                buffer_overrun++;
+//                parse_error++;
                 msg_received = FALSE;
                 parse_state = MAVLINK_PARSE_STATE_IDLE;
             } else {
@@ -1286,7 +1281,7 @@ static bool Mavlink_Parse(void) {
         case MAVLINK_PARSE_STATE_GOT_PAYLOAD:
             Checksum_Accumulate(Mavlink_Crc[msgid]);
             if (c != (Crc & 0xFF)) { // Check first checksum byte
-                parse_error++;
+//                parse_error++;
                 msg_received = FALSE;
                 parse_state = MAVLINK_PARSE_STATE_IDLE;
                 if (c == MAVLINK_STX) {
@@ -1302,7 +1297,7 @@ static bool Mavlink_Parse(void) {
 
         case MAVLINK_PARSE_STATE_GOT_CRC1:
             if (c != (Crc >> 8)) {	// Check second checksum byte
-                parse_error++;
+//                parse_error++;
                 msg_received = FALSE;
                 parse_state = MAVLINK_PARSE_STATE_IDLE;
                 if (c == MAVLINK_STX) {
@@ -1323,14 +1318,14 @@ static bool Mavlink_Parse(void) {
         if (msg_received) {
             current_rx_seq = seq;
             // Initial condition: If no packet has been received so far, drop count is undefined
-            if (packet_rx_success_count == 0) packet_rx_drop_count = 0;
+//            if (packet_rx_success_count == 0) packet_rx_drop_count = 0;
             // Count this packet as received
-            packet_rx_success_count++;
+//            packet_rx_success_count++;
         }
 
         current_rx_seq = current_rx_seq + 1;
-        packet_rx_drop_count = parse_error;
-        parse_error = 0;
+//        packet_rx_drop_count = parse_error;
+//        parse_error = 0;
 	}
     return (msg_received);
 }
@@ -1377,7 +1372,7 @@ void Mavlink_Receive(void)
                 break;
         }
     }		                                        //
-    packet_drops += packet_rx_drop_count;           // Update global packet drops counter
+//    packet_drops += packet_rx_drop_count;           // Update global packet drops counter
 }
 
 //----------------------------------------------------------------------------
