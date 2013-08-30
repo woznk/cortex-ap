@@ -9,22 +9,15 @@
 ///
 /// \file
 ///
-//  Change  Lint: inclusion of freertos.h replaced with stm32f10x.h
+//  Change (Lint) modified file #inclusion, removed VAR_STATIC and VAR_GLOBAL, 
+//         pointer arguments made const when possible
 //
 //============================================================================*/
 
-#include "stm32f10x.h"
+#include "stdint.h"
+#include "vmath.h"
 
 /*--------------------------------- Definitions ------------------------------*/
-
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
-#define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
-#endif
-#define VAR_GLOBAL
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -48,7 +41,7 @@
 ///
 ///----------------------------------------------------------------------------
 float
-VectorDotProduct(float fVectorA[3], float fVectorB[3])
+VectorDotProduct(const float fVectorA[3], const float fVectorB[3])
 {
     float fDotP = 0.0f;
     uint8_t c;
@@ -68,7 +61,7 @@ VectorDotProduct(float fVectorA[3], float fVectorB[3])
 ///
 ///----------------------------------------------------------------------------
 void
-VectorCrossProduct(float fCrossP[3], float fVectorA[3], float fVectorB[3])
+VectorCrossProduct(float fCrossP[3], const float fVectorA[3], const float fVectorB[3])
 {
     fCrossP[0] = (fVectorA[1] * fVectorB[2]) - (fVectorA[2] * fVectorB[1]);
     fCrossP[1] = (fVectorA[2] * fVectorB[0]) - (fVectorA[0] * fVectorB[2]);
@@ -83,7 +76,7 @@ VectorCrossProduct(float fCrossP[3], float fVectorA[3], float fVectorB[3])
 ///
 ///----------------------------------------------------------------------------
 void
-VectorScale(float fScaledV[3], float fVector[3], float fScale)
+VectorScale(float fScaledV[3], const float fVector[3], const float fScale)
 {
     uint8_t c;
 
@@ -101,7 +94,7 @@ VectorScale(float fScaledV[3], float fVector[3], float fScale)
 ///
 ///----------------------------------------------------------------------------
 void
-VectorAdd(float fSumV[3], float fVectorA[3], float fVectorB[3])
+VectorAdd(float fSumV[3], const float fVectorA[3], const float fVectorB[3])
 {
     uint8_t c;
 
@@ -119,7 +112,7 @@ VectorAdd(float fSumV[3], float fVectorA[3], float fVectorB[3])
 ///
 ///----------------------------------------------------------------------------
 void
-MatrixMultiply(float fMatrixA[3][3], float fMatrixB[3][3], float fMatrixR[3][3])
+MatrixMultiply(const float fMatrixA[3][3], const float fMatrixB[3][3], float fMatrixR[3][3])
 {
     uint8_t x, y, w;
     float fMatrixT[3];
