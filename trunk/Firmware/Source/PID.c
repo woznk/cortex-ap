@@ -9,25 +9,18 @@
 ///
 /// \file
 ///
-//  Change simplified anti wind up, removed output saturation
+//  Change (Lint) corrected file #inclusion, removed #undef
 //
 //============================================================================*/
 
-#include "stm32f10x.h"
 #include "config.h"
 #include "pid.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
-
 
 /*----------------------------------- Macros ---------------------------------*/
 

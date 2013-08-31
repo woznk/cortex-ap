@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-//  Change simplified waiting loops
+//  Change (Lint) removed #undef, commented unused variables, 
+//         pvParameters made (void), commented unused functions
 //
 //============================================================================*/
 
@@ -26,16 +27,11 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef    VAR_STATIC
-#   undef VAR_STATIC
+#ifndef    VAR_STATIC
+#   define VAR_STATIC static
 #endif
-#define   VAR_STATIC static
-#ifdef    VAR_GLOBAL
-#   undef VAR_GLOBAL
-#endif
-#define   VAR_GLOBAL
 
-#define MAX_SAMPLES 20000    //!< Max number of samples that can be written
+//#define MAX_SAMPLES 20000    //!< Max number of samples that can be written
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -53,13 +49,13 @@
 
 VAR_STATIC bool b_File_Ok = FALSE;
 VAR_STATIC uint8_t * p_Data;
-VAR_STATIC uint16_t ui_Samples = 0;             //!< sample counter
-VAR_STATIC uint8_t sz_String[48];               //!< generic string
+//VAR_STATIC uint16_t ui_Samples = 0;             //!< sample counter
+//VAR_STATIC uint8_t sz_String[48];               //!< generic string
 VAR_STATIC uint8_t sz_File[16] = "log0.nmea";   //!< file name
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-static void log_write(uint16_t *data, uint8_t num);
+//static void log_write(const uint16_t *data, uint8_t num);
 
 /*--------------------------------- Functions --------------------------------*/
 
@@ -78,6 +74,8 @@ void Log_Task( void *pvParameters ) {
     UINT wWritten;
 //    xLog_Message message;
     portTickType Last_Wake_Time;
+
+    (void) pvParameters;
 
     Last_Wake_Time = xTaskGetTickCount();
     vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 20);
@@ -106,7 +104,7 @@ void Log_Task( void *pvParameters ) {
 
     j = 0;
 
-    while (1) {
+    for (;;) {
         while ((!b_File_Ok) ||                                          // file not open
                (Gps_Buffer_Index() == j)) {                             // GPS buffer empty
         }                                                               // halt
@@ -141,7 +139,8 @@ void Log_Task( void *pvParameters ) {
 ///          exceeded maximum or if RC was temporarily shut off.
 ///
 ///----------------------------------------------------------------------------
-static void log_write(uint16_t *data, uint8_t num)
+/*
+static void log_write(const uint16_t *data, uint8_t num)
 {
     uint32_t l_temp;
     uint8_t digit, mode, i, j = 0;
@@ -151,13 +150,13 @@ static void log_write(uint16_t *data, uint8_t num)
         l_temp = *data++;
         sz_String[j++] = ' ';
         digit = ((l_temp >> 12) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = ((l_temp >> 8) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = ((l_temp >> 4) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
         digit = (l_temp & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : (digit - 10 + 'A'));
+        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
     }
     sz_String[j++] = '\n';
     mode = PPMGetMode();
@@ -174,7 +173,7 @@ static void log_write(uint16_t *data, uint8_t num)
         }
     }
 }
-
+*/
 
 ///----------------------------------------------------------------------------
 ///
@@ -185,6 +184,7 @@ static void log_write(uint16_t *data, uint8_t num)
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
+/*
 uint8_t ftoa (float f_val, uint8_t * p_string) {
 
     int32_t l_temp, l_sign = 1L;
@@ -219,4 +219,4 @@ uint8_t ftoa (float f_val, uint8_t * p_string) {
 
     return uc_length;
 }
-
+*/

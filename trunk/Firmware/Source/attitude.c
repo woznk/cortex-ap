@@ -16,8 +16,7 @@
 ///  roll and pitch angles, without need to either subtract PI/2 from reference
 ///  point or to add PI/2 to the set point.
 ///
-// Change: major renaming according naming convention
-//         faster blue led blink
+// Change (Lint) removed VAR_GLOBAL and #undef, pvParameters made (void)
 //
 //============================================================================*/
 
@@ -55,14 +54,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -121,10 +115,11 @@ void Attitude_Task(void *pvParameters)
     int16_t * p_sensor;
     portTickType Last_Wake_Time;
 
+    (void)pvParameters;
     Last_Wake_Time = xTaskGetTickCount();
 
     /* Task specific initializations */
-    ( void )L3G4200_Init();                         // init L3G4200 gyro
+    L3G4200_Init();                                 // init L3G4200 gyro
     ( void )ADXL345_Init();                         // init ADXL345 accelerometer
     ( void )BMP085_Init();
 
@@ -153,11 +148,11 @@ void Attitude_Task(void *pvParameters)
     /* Compute sensor offsets */
     for (i = 0; i < 64; i++) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
-#if (SIMULATOR == SIM_NONE)                             // normal mode
-        GetAccelRaw(uc_Sensor_Data);                    // acceleration
-        GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]);   // rotation
-#else                                                   // simulation mode
-        Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);// get simulator sensors
+#if (SIMULATOR == SIM_NONE)                                 // normal mode
+        (void)GetAccelRaw(uc_Sensor_Data);                  // acceleration
+        (void)GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]); // rotation
+#else                                                       // simulation mode
+        Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);   // get simulator sensors
 #endif
         p_sensor = (int16_t *)uc_Sensor_Data;
         for (j = 0; j < 6; j++) {                       // accumulate
@@ -169,7 +164,7 @@ void Attitude_Task(void *pvParameters)
     }
 
     /* Compute attitude and heading */
-    while (1) {
+    for (;;) {
 
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
 
@@ -181,18 +176,18 @@ void Attitude_Task(void *pvParameters)
         }
 
         /* Read sensors */
-#if (SIMULATOR == SIM_NONE)                             // normal mode
-        GetAccelRaw(uc_Sensor_Data);                    // acceleration
-        GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]);   // rotation
+#if (SIMULATOR == SIM_NONE)                                   // normal mode
+        (void)GetAccelRaw(uc_Sensor_Data);                    // acceleration
+        (void)GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]);   // rotation
         BMP085_Handler();
-#else                                                   // simulation mode
-        Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);// get simulator sensors
+#else                                                         // simulation mode
+        Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);     // get simulator sensors
 #endif
         /* Offset and sign correction */
         p_sensor = (int16_t *)uc_Sensor_Data;
         for (j = 0; j < 6; j++) {
-            *p_sensor = *p_sensor - i_Sensor_Offset[j]; // strip offset
-            *p_sensor = *p_sensor * iSensor_Sign[j];    // correct sign
+            *p_sensor -= i_Sensor_Offset[j];            // strip offset
+            *p_sensor *= iSensor_Sign[j];               // correct sign
             if (j == 2) {                               // z acceleration
                *p_sensor += (int16_t)GRAVITY;           // add gravity
             }

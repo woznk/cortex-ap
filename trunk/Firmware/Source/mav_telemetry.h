@@ -9,7 +9,7 @@
 /// Tentative Mavlink protocol implementation
 ///
 ///
-/// Changes added interface to Telemetry_Get_Gain()
+/// Changes (Lint) added missing interface functions
 ///
 //============================================================================*/
 
@@ -49,4 +49,7 @@ void Mavlink_Receive(void);
 void Mavlink_Stream_Send(void);
 void Mavlink_Queued_Send(uint8_t cycles);
 float Telemetry_Get_Gain(telEnum_Gain gain);
+void Telemetry_Get_Sensors(int16_t * piSensors);
+float Telemetry_Get_Speed(void);
+float Telemetry_Get_Altitude(void);
 
