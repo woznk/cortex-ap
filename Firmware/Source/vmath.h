@@ -9,9 +9,7 @@
 ///
 /// \file
 ///
-//  Change
-//
-//
+//  Change (Lint) pointer arguments made const when possible
 //
 //============================================================================*/
 
@@ -34,9 +32,9 @@
 
 /*---------------------------------- Interface -------------------------------*/
 
-float VectorDotProduct(float fVectorA[3], float fVectorB[3]);
-void VectorCrossProduct(float fCrossP[3], float fVectorA[3], float fVectorB[3]);
-void VectorScale(float fScaledV[3],float fVector[3], float fScale);
-void VectorAdd(float fSumV[3], float fVectorA[3], float fVectorB[3]);
-void MatrixMultiply(float fMatrixA[3][3], float fMatrixB[3][3], float fMatrixR[3][3]);
+float VectorDotProduct(const float fVectorA[3], const float fVectorB[3]);
+void VectorCrossProduct(float fCrossP[3], const float fVectorA[3], const float fVectorB[3]);
+void VectorScale(float fScaledV[3], const float fVector[3], const float fScale);
+void VectorAdd(float fSumV[3], const float fVectorA[3], const float fVectorB[3]);
+void MatrixMultiply(const float fMatrixA[3][3], const float fMatrixB[3][3], float fMatrixR[3][3]);
 

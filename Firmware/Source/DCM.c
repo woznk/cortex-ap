@@ -78,7 +78,7 @@
 ///
 /// \endcode
 ///
-// Change: function Gps_Speed() renamed Gps_Speed_Kt()
+// Change (Lint) removed #undef, added VAR_STATIC to local variables
 //
 //=============================================================================+
 
@@ -93,10 +93,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
+#endif
 #ifdef VAR_GLOBAL
 #undef VAR_GLOBAL
 #endif
@@ -164,51 +163,51 @@ VAR_GLOBAL float fGround_Speed = 0.0f;
 /*----------------------------------- Locals ---------------------------------*/
 
 /// Gyros here
-float Update_Matrix[3][3] = {
+VAR_STATIC float Update_Matrix[3][3] = {
     { 1.0f, 0.0f, 0.0f },
     { 0.0f, 1.0f, 0.0f },
     { 0.0f, 0.0f, 1.0f }
 };
 
 /// Temporary matrix
-float Temporary_Matrix[3][3] = {
+VAR_STATIC float Temporary_Matrix[3][3] = {
     { 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f }
 };
 
 /// Acceleration vector
-float Accel_Vector[3] =
+VAR_STATIC float Accel_Vector[3] =
     { 0.0f, 0.0f, 0.0f };
 
 /// Temporary for intermediate calculation
-float Omega[3] =
+VAR_STATIC float Omega[3] =
     { 0.0f, 0.0f, 0.0f };
 
 /// Omega proportional correction
-float Omega_P[3] =
+VAR_STATIC float Omega_P[3] =
     { 0.0f, 0.0f, 0.0f };
 
 /// Omega integral correction
-float Omega_I[3] =
+VAR_STATIC float Omega_I[3] =
     { 0.0f, 0.0f, 0.0f };
 
 /// roll/pitch error vector
-float errorRollPitch[3] =
+VAR_STATIC float errorRollPitch[3] =
     { 0.0f, 0.0f, 0.0f };
 
 /// yaw error vector
-float errorYaw[3] =
+VAR_STATIC float errorYaw[3] =
     { 0.0f, 0.0f, 0.0f };
 
 /// course error in deg
-float errorCourse = 180.0f;
+VAR_STATIC float errorCourse = 180.0f;
 
 /// Course overground X axis
-float COGX = 1.0f;
+VAR_STATIC float COGX = 1.0f;
 
 /// Course overground Y axis
-float COGY = 0.0f;
+VAR_STATIC float COGY = 0.0f;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -402,7 +401,7 @@ CompensateDrift( void )
 ///
 ///----------------------------------------------------------------------------
 void
-MatrixUpdate(int16_t *sensor)
+MatrixUpdate(const int16_t *sensor)
 {
     //
     // Indexes for multiplication
@@ -450,7 +449,7 @@ MatrixUpdate(int16_t *sensor)
     //
     //  Update DCM matrix
     //
-    MatrixMultiply(DCM_Matrix, Update_Matrix, Temporary_Matrix);
+    MatrixMultiply((const float (*)[3])DCM_Matrix, (const float (*)[3])Update_Matrix, Temporary_Matrix);
     for ( x = 0; x < 3; x++ ) {
         for ( y = 0; y < 3; y++ ) {
             DCM_Matrix[x][y] += Temporary_Matrix[x][y];

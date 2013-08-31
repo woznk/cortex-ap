@@ -9,28 +9,24 @@
 ///
 /// \file
 ///
-//  Change removed reversal from throttle channel 
+//  Change (Lint) corrected file #inclusion, removed #undef and VAR_GLOBAL,
+//         PERIOD renamed SERVO_PERIOD
 //
 //============================================================================*/
 
-#include "stm32f10x.h"
+#include "stm32f10x_tim.h"
 #include "led.h"
 #include "ppmdriver.h"
 #include "servodriver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
 
-#define PRESCALER      23       ///< timer prescaler
-#define PERIOD         19999    ///< timer period
+#define PRESCALER       23      ///< timer prescaler
+#define SERVO_PERIOD    19999   ///< timer period
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -85,7 +81,7 @@ void Servo_Init(void) {
   TIM_DeInit(TIM3);
 
   /* Time base configuration */
-  TIM_TimeBaseStructure.TIM_Period = PERIOD;
+  TIM_TimeBaseStructure.TIM_Period = SERVO_PERIOD;
   TIM_TimeBaseStructure.TIM_Prescaler = PRESCALER;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -140,16 +136,18 @@ void Servo_Set(SERVO_TYPE servo, int16_t position) {
 
    switch (servo) {
       case SERVO_AILERON :
-          TIM_SetCompare1(TIM3, position);
+          TIM_SetCompare1(TIM3, (uint16_t)position);
        break;
        case SERVO_ELEVATOR:
-           TIM_SetCompare2(TIM3, position);
+           TIM_SetCompare2(TIM3, (uint16_t)position);
        break;
        case SERVO_RUDDER:
-           TIM_SetCompare3(TIM3, position);
+           TIM_SetCompare3(TIM3, (uint16_t)position);
        break;
        case SERVO_THROTTLE:
-           TIM_SetCompare4(TIM3, position);
+           TIM_SetCompare4(TIM3, (uint16_t)position);
+       break;
+       case SERVO_NUMBER:
        break;
        default:
        break;

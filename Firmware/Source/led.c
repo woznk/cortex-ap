@@ -9,23 +9,19 @@
 ///
 /// \file
 ///
-// Change: added function LEDStatus to read status of leds
+// Change (Lint) removed #undef, added VAR_STATIC to local constants, 
+//        corrected file #inclusion
 //
 //============================================================================*/
 
-#include "stm32f10x.h"
+#include "stm32f10x_gpio.h"
 #include "led.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
 
 #define RED_PIN     GPIO_Pin_9     ///< I/O pin for red LED
 #define BLUE_PIN    GPIO_Pin_8     ///< I/O pin for blue LED
@@ -39,7 +35,7 @@
 /*---------------------------------- Constants -------------------------------*/
 
 /// pins connected to LEDs
-const uint32_t GPIO_PIN[LED_NUM] =
+VAR_STATIC const uint32_t GPIO_PIN[LED_NUM] =
 { RED_PIN, BLUE_PIN };
 
 /*---------------------------------- Globals ---------------------------------*/

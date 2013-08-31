@@ -9,31 +9,21 @@
 ///
 /// \file
 ///
-/// Change: UART interrupt: replaced call to function USART_ReceivedData() 
-///         with direct read of UART DR register
+/// Change (Lint) modified file #inclusion, removed #undef and VAR_GLOBAL, 
 //
 //============================================================================*/
 
 // ---- Include Files -------------------------------------------------------
 
 #include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "stm32f10x.h"
 #include "stm32f10x_usart.h"
 #include "usart1driver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef    VAR_STATIC
-#   undef VAR_STATIC
-#endif
+#ifndef   VAR_STATIC
 #define   VAR_STATIC static
-
-#ifdef    VAR_GLOBAL
-#   undef VAR_GLOBAL
 #endif
-#define   VAR_GLOBAL
 
 #define RX_BUFFER_LENGTH    48  //!< length of receive buffer
 #define TX_BUFFER_LENGTH    48  //!< length of transmit buffer
@@ -118,7 +108,7 @@ void USART1_IRQHandler( void ) {
     if (((USART1->CR1 & 0x00000020) != 0) &&
         (USART1->SR & 0x00000020) != 0) {               // USART_IT_RXNE == SET
 //		xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
-		ucRxBuffer[ucRxWindex++] = USART1->DR;
+		ucRxBuffer[ucRxWindex++] = (uint8_t)USART1->DR;
         if (ucRxWindex >= RX_BUFFER_LENGTH) {
             ucRxWindex = 0;
         }

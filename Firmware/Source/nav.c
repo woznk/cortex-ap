@@ -36,18 +36,15 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: restored barometric altitude
+/// Change restored expression f_coord += (float)(ul_Temp_Coord / 100UL); in 
+///        function parse_coord() (modified because of Lint warning)
 //
 //============================================================================*/
 
 #include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
 
-#include "stm32f10x.h"
 #include "stm32f10x_usart.h"
 #include "stm32f10x_dma.h"
-#include "misc.h"
 #include "bmp085_driver.h"
 #include "ppmdriver.h"
 #include "dcm.h"
@@ -64,14 +61,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef    VAR_STATIC
-#   undef VAR_STATIC
+#ifndef   VAR_STATIC
+#   define VAR_STATIC static
 #endif
-#define   VAR_STATIC static
-#ifdef    VAR_GLOBAL
-#   undef VAR_GLOBAL
-#endif
-#define   VAR_GLOBAL
 
 #define USART2_DR_Base  0x40004404
 
@@ -85,13 +77,13 @@
 /*-------------------------------- Enumerations ------------------------------*/
 
 /*----------------------------------- Types ----------------------------------*/
-
+/*
 /// navigation modes
 typedef enum {
     NAV_RTL,        //!< return to launch
     NAV_WPT         //!< waypoint following
 } ENUM_NAV_MODE;
-
+*/
 /// NMEA string types
 typedef enum {
     NMEA_GPRMC,     //!< recommended minimum specific GPS/transit data
@@ -142,10 +134,10 @@ VAR_STATIC float f_Throttle_Max = ALT_HOLD_THROTTLE_MAX; //!< altitude hold max 
 
 static void load_path( void );
 static void gps_init( void );
-static bool parse_waypoint ( uint8_t * psz_line );
+static bool parse_waypoint ( const uint8_t * psz_line );
 static void parse_coord( float * fCoord, uint8_t c );
 static bool parse_gps( void );
-static bool cmp_prefix( uint8_t * src , const uint8_t * dest );
+static bool cmp_prefix( const uint8_t * src , const uint8_t * dest );
 
 //----------------------------------------------------------------------------
 //
@@ -158,6 +150,8 @@ static bool cmp_prefix( uint8_t * src , const uint8_t * dest );
 void Navigation_Task( void *pvParameters ) {
 
     float f_temp, f_dx, f_dy;
+
+    (void)pvParameters;
 
     f_Bank = 0.0f;                                      // default bank angle
     f_Bearing = 0.0f;                                   // angle to destination [°]
@@ -199,7 +193,7 @@ void Navigation_Task( void *pvParameters ) {
     f_Dest_Lat = Waypoint[ui_Wpt_Index].Lat;            // load destination latitude
     f_Dest_Alt = Waypoint[ui_Wpt_Index].Alt;            // load destination altitude
 
-    while (1) {
+    for (;;) {
         if (parse_gps()) {                                  // NMEA sentence completed
 
 #if (SIMULATOR == SIM_NONE)                                 // normal mode
@@ -237,7 +231,7 @@ void Navigation_Task( void *pvParameters ) {
 
             /* Compute distance to waypoint */
             f_temp = sqrtf((f_dy * f_dy) + (f_dx * f_dx));
-            ui_Distance = (unsigned int)(f_temp * 111113.7f);
+            ui_Distance = (uint16_t)(f_temp * 111113.7f);
 
             /* Waypoint reached: next waypoint */
             if (ui_Distance < MIN_DISTANCE) {
@@ -402,7 +396,7 @@ static void gps_init( void ) {
 ///          [.[a]] is an optional decimal point with an optional decimal data
 ///
 //----------------------------------------------------------------------------
-static bool parse_waypoint ( uint8_t * psz_line ) {
+static bool parse_waypoint ( const uint8_t * psz_line ) {
 
     uint8_t c, uc_field = 0, uc_counter = LINE_LENGTH;
     float f_temp, fdiv;
@@ -546,7 +540,7 @@ static bool parse_gps( void )
     static uint8_t uc_commas;           //!< counter of commas in NMEA sentence
     static ENUM_NMEA_TYPE e_nmea_type;
 
-    while ((b_completed == FALSE) &&            // NMEA sentence not completed
+    while (!b_completed &&                      // NMEA sentence not completed
            (uc_Rindex != uc_Windex)) {          // received another character
 
         c = uc_Gps_Buffer[uc_Rindex++];         // read character
@@ -568,9 +562,9 @@ static bool parse_gps( void )
                 break;
 
             case 1:                             // check prefix
-                if (cmp_prefix(sz_Line, "$GPRMC")) {
+                if (cmp_prefix(sz_Line, (const uint8_t *)"$GPRMC")) {
                     e_nmea_type = NMEA_GPRMC;
-                } else if (cmp_prefix(sz_Line, "$GPGGA")) {
+                } else if (cmp_prefix(sz_Line, (const uint8_t *)"$GPGGA")) {
                     e_nmea_type = NMEA_GPGGA;
                 } else {
                     e_nmea_type = NMEA_INVALID;
@@ -582,10 +576,10 @@ static bool parse_gps( void )
             case 2:
                 if (e_nmea_type == NMEA_GPRMC) { // get fix info
                     if (c == 'A') {
-                     uc_Gps_Status = GPS_FIX;
-                   } else if (c == 'V') {
-                     uc_Gps_Status = GPS_NOFIX;
-                   }
+                       uc_Gps_Status = GPS_FIX;
+                    } else if (c == 'V') {
+                       uc_Gps_Status = GPS_NOFIX;
+                    }
                 }
                 break;
 
@@ -645,6 +639,12 @@ static bool parse_gps( void )
                           ui_Gps_Alt += (c - '0');
                         }
                         break;
+
+                    case NMEA_INVALID:          // invalid
+                        break;
+
+                    default:                    // error
+                        break;
                 }
                 break;
 
@@ -653,6 +653,9 @@ static bool parse_gps( void )
                     ui_Gps_Alt /= 10;
                     uc_commas = 11;
                 }
+                break;
+
+            default:
                 break;
         }
     }
@@ -689,7 +692,7 @@ void DMA1_Channel6_IRQHandler( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-static bool cmp_prefix( uint8_t * src , const uint8_t * dest ) {
+static bool cmp_prefix( const uint8_t * src , const uint8_t * dest ) {
     uint8_t j = 0;
     bool bmatch = TRUE;
 
@@ -763,6 +766,8 @@ void Nav_Wpt_Get ( uint16_t index, STRUCT_WPT * wpt ) {
 ///
 //----------------------------------------------------------------------------
 void Nav_Wpt_Set ( uint16_t index, STRUCT_WPT wpt ) {
+    (void) index;
+    (void) wpt;
 }
 
 //----------------------------------------------------------------------------
