@@ -244,8 +244,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes (Lint) removed unused #inclusions, commented unsed variables,
-///         suppressed info messages on unused enum and members
+/// Changes corrected initialization of ucStream_Rate[]
 ///
 //============================================================================*/
 
@@ -604,9 +603,9 @@ VAR_STATIC uint8_t ucStream_Tick[MAV_DATA_STREAM_ENUM_END] = { // tick counters 
     MAX_STREAM_RATE,    /*  7: - */
     MAX_STREAM_RATE,    /*  8: - */
     MAX_STREAM_RATE,    /*  9: - */
-    MAX_STREAM_RATE,    /* 10: Parameters, autopilot dependent */
-    MAX_STREAM_RATE,    /* 11: -, autopilot dependent */
-    MAX_STREAM_RATE     /* 12: -, autopilot dependent */
+    MAX_STREAM_RATE,    /* 10: Extra 1, autopilot dependent */
+    MAX_STREAM_RATE,    /* 11: Extra 2, autopilot dependent */
+    MAX_STREAM_RATE     /* 12: Extra 3, autopilot dependent */
 };
 
 VAR_STATIC uint8_t ucStream_Rate[MAV_DATA_STREAM_ENUM_END] = { // frequency of data streams
@@ -617,12 +616,12 @@ VAR_STATIC uint8_t ucStream_Rate[MAV_DATA_STREAM_ENUM_END] = { // frequency of d
     0,  /*  4: ATTITUDE_CONTROLLER_OUTPUT, POSITION_CONTROLLER_OUTPUT, NAV_CONTROLLER_OUTPUT */
     0,  /*  5: - */
     1,  /*  6: LOCAL_POSITION, GLOBAL_POSITION/GLOBAL_POSITION_INT */
-    5,  /*  7: - */
-    2,  /*  8: - */
+    0,  /*  7: - */
+    0,  /*  8: - */
     0,  /*  9: - */
-    0,  /* 10: Parameters, autopilot dependent */
-    0,  /* 11: -, autopilot dependent */
-    0   /* 12: -, autopilot dependent */
+    5,  /* 10: Extra 1, autopilot dependent */
+    2,  /* 11: Extra 2, autopilot dependent */
+    0   /* 12: Extra 3, autopilot dependent */
 };
 
 VAR_STATIC float fParam_Value[ONBOARD_PARAM_COUNT] = {
