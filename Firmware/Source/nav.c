@@ -36,9 +36,8 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change (Lint) corrected file #inclusion, removed #undef and VAR_GLOBAL,
-///        commented unused var, types, functions, unused function parameters
-///        made (void), removed boolean comparison
+/// Change restored expression f_coord += (float)(ul_Temp_Coord / 100UL); in 
+///        function parse_coord() (modified because of Lint warning)
 //
 //============================================================================*/
 
@@ -480,7 +479,7 @@ static void parse_coord( float * f_coord, uint8_t c )
             break;
         case '.' :
             *f_coord = (float)(ul_Temp_Coord % 100UL) / 60.0f;  // decimal part
-            *f_coord += (float)ul_Temp_Coord / 100.0f;          // integer part
+            *f_coord += (float)(ul_Temp_Coord / 100UL);         // integer part
             ul_Temp_Coord = 0UL;
             break;
         case ',' :
