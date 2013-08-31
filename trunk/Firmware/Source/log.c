@@ -9,8 +9,9 @@
 ///
 /// \file
 ///
-//  Change (Lint) removed #undef, commented unused variables, 
-//         pvParameters made (void), commented unused functions
+//  Change added log of position (lat, lon, GPS alt, baro alt),
+//         code for different log types moved to specific inline functions,
+//         log type selected by RC mode switch at startup
 //
 //============================================================================*/
 
@@ -20,6 +21,7 @@
 
 #include "stm32f10x.h"
 #include "ff.h"
+#include "bmp085_driver.h"
 #include "ppmdriver.h"
 #include "nav.h"
 #include "globals.h"
@@ -31,7 +33,7 @@
 #   define VAR_STATIC static
 #endif
 
-//#define MAX_SAMPLES 20000    //!< Max number of samples that can be written
+#define MAX_SAMPLES 20000    //!< Max number of samples that can be written
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -47,15 +49,21 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
+VAR_STATIC uint8_t uc_Index = 0;
 VAR_STATIC bool b_File_Ok = FALSE;
+VAR_STATIC UINT wWritten;
 VAR_STATIC uint8_t * p_Data;
-//VAR_STATIC uint16_t ui_Samples = 0;             //!< sample counter
-//VAR_STATIC uint8_t sz_String[48];               //!< generic string
-VAR_STATIC uint8_t sz_File[16] = "log0.nmea";   //!< file name
+VAR_STATIC portTickType Last_Wake_Time;
+VAR_STATIC int32_t l_Value[8];                  //!< sample values
+VAR_STATIC uint16_t ui_Samples = 0;             //!< sample counter
+VAR_STATIC uint8_t sz_String[48];               //!< generic string
+VAR_STATIC uint8_t sz_File[16] = "log0.txt";    //!< file name
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-//static void log_write(const uint16_t *data, uint8_t num);
+static void log_write(int32_t *data, uint8_t num);
+static __inline void log_raw_gps(void);
+static __inline void log_position(void);
 
 /*--------------------------------- Functions --------------------------------*/
 
@@ -71,17 +79,17 @@ void Log_Task( void *pvParameters ) {
 
     uint8_t j;
     bool b_found = TRUE;
-    UINT wWritten;
 //    xLog_Message message;
-    portTickType Last_Wake_Time;
 
     (void) pvParameters;
 
     Last_Wake_Time = xTaskGetTickCount();
-    vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 20);
 
-    while ((!b_FS_Ok) ||                        // wait until file system mounted
-           (Gps_Fix() != GPS_FIX)) {            // and GPS got fix
+    // wait 10 sec for navigation task to complete reading waypoint file
+    vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 10);
+
+    // wait until file system mounted and GPS got fix
+    while ((!b_FS_Ok) || (Gps_Fix() != GPS_FIX)) {
     }
 
     // Search last log file
@@ -102,21 +110,14 @@ void Log_Task( void *pvParameters ) {
         }
     }
 
-    j = 0;
+    // wait until RC is turned on
+    while (PPMGetMode() == MODE_RTL) {
+    }
 
-    for (;;) {
-        while ((!b_File_Ok) ||                                          // file not open
-               (Gps_Buffer_Index() == j)) {                             // GPS buffer empty
-        }                                                               // halt
-        p_Data = Gps_Buffer_Pointer();                                  // get GPS buffer pointer
-        (void)f_write(&st_File, p_Data, (BUFFER_LENGTH / 2), &wWritten);// write
-        j = (j + (BUFFER_LENGTH / 2)) % BUFFER_LENGTH;                  // update index
-
-        if ((PPMGetMode() == MODE_RTL) ||                               // RC turned off
-            ((BUFFER_LENGTH / 2) != wWritten)) {                        // no file space
-            ( void )f_close(&st_File);                                  // close file
-            b_File_Ok = FALSE;                                          // halt GPS logging
-        }
+    if (PPMGetMode() == MODE_MANUAL) {  // mode manual
+        log_raw_gps();                  // log GPS data
+    } else {                            // mode stab or nav
+        log_position();                 // log position
     }
 /*
     while ( xLog_Queue != 0 ) {
@@ -136,15 +137,13 @@ void Log_Task( void *pvParameters ) {
 /// \return  -
 /// \remarks increases counter of samples at each function call.
 ///          closes log file if there is no file space, or if sample counter
-///          exceeded maximum or if RC was temporarily shut off.
+///          exceeded maximum.
 ///
 ///----------------------------------------------------------------------------
-/*
-static void log_write(const uint16_t *data, uint8_t num)
+static void log_write(int32_t *data, uint8_t num)
 {
-    uint32_t l_temp;
-    uint8_t digit, mode, i, j = 0;
-    UINT wWritten;
+    int32_t l_temp;
+    uint8_t digit, i, j = 0;
 
     for (i = 0; i < num; i++) {
         l_temp = *data++;
@@ -159,12 +158,9 @@ static void log_write(const uint16_t *data, uint8_t num)
         sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
     }
     sz_String[j++] = '\n';
-    mode = PPMGetMode();
     if (b_File_Ok) {                                        //
         ( void )f_write(&st_File, sz_String, j, &wWritten); // write
-        if (                                                // button pressed
-            (j != wWritten) ||                              // no file space
-            (mode == MODE_RTL) ||                           // RC turned off
+        if ((j != wWritten) ||                              // no file space
             (ui_Samples >= MAX_SAMPLES)) {                  // too many samples
             ( void )f_close(&st_File);                      // close file
             b_File_Ok = FALSE;                              // halt file logging
@@ -173,7 +169,74 @@ static void log_write(const uint16_t *data, uint8_t num)
         }
     }
 }
-*/
+
+///----------------------------------------------------------------------------
+///
+/// \brief
+/// \param   -
+/// \return  -
+/// \remarks
+///
+///
+///
+///----------------------------------------------------------------------------
+static __inline void log_raw_gps(void) {
+
+    while (1) {
+        // halt if file not open GPS buffer empty
+        while ((!b_File_Ok) || (Gps_Buffer_Index() == uc_Index)) {
+        }
+
+        // get GPS buffer pointer
+        p_Data = Gps_Buffer_Pointer();
+
+        // log raw GPS buffer
+        (void)f_write(&st_File, p_Data, (BUFFER_LENGTH / 2), &wWritten);
+
+        // update index
+        uc_Index = (uc_Index + (BUFFER_LENGTH / 2)) % BUFFER_LENGTH;
+
+        if (((BUFFER_LENGTH / 2) != wWritten) || // no file space
+             (PPMGetMode() == MODE_RTL)) {       // RC turned off
+            ( void )f_close(&st_File);           // close file
+            b_File_Ok = FALSE;                   // halt GPS logging
+        }
+    }
+}
+
+///----------------------------------------------------------------------------
+///
+/// \brief
+/// \param   -
+/// \return  -
+/// \remarks
+///
+///
+///
+///----------------------------------------------------------------------------
+static __inline void log_position(void) {
+
+    while (1) {
+
+        // wake up once every second
+        vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ);
+
+        // halt if file not open
+        while (!b_File_Ok) {
+        }
+
+        l_Value [0] = Gps_Longitude();          // get longitude
+        l_Value [1] = Gps_Latitude();           // get latitude
+        l_Value [2] = (int32_t)Gps_Alt_M();     // get GPS altitude
+        l_Value [3] = BMP085_Get_Altitude();    // get baro altitude
+        log_write(l_Value, 4);                  // log position
+
+        if (PPMGetMode() == MODE_RTL) {         // RC turned off
+            ( void )f_close(&st_File);          // close file
+            b_File_Ok = FALSE;                  // halt position logging
+        }
+    }
+}
 
 ///----------------------------------------------------------------------------
 ///
@@ -184,7 +247,6 @@ static void log_write(const uint16_t *data, uint8_t num)
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-/*
 uint8_t ftoa (float f_val, uint8_t * p_string) {
 
     int32_t l_temp, l_sign = 1L;
@@ -219,4 +281,4 @@ uint8_t ftoa (float f_val, uint8_t * p_string) {
 
     return uc_length;
 }
-*/
+
