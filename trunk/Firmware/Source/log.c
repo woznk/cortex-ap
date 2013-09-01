@@ -9,9 +9,7 @@
 ///
 /// \file
 ///
-//  Change added log of position (lat, lon, GPS alt, baro alt),
-//         code for different log types moved to specific inline functions,
-//         log type selected by RC mode switch at startup
+//  Change modified function log_write() for 32 bit variables
 //
 //============================================================================*/
 
@@ -131,8 +129,8 @@ void Log_Task( void *pvParameters ) {
 
 ///----------------------------------------------------------------------------
 ///
-/// \brief   write some 16 bit variables to SD card
-/// \param   data = pointer to variable
+/// \brief   writes an array of 32 bit variables to SD card
+/// \param   data = pointer to variable array
 /// \param   num = number of variables to be written
 /// \return  -
 /// \remarks increases counter of samples at each function call.
@@ -143,27 +141,27 @@ void Log_Task( void *pvParameters ) {
 static void log_write(int32_t *data, uint8_t num)
 {
     int32_t l_temp;
-    uint8_t digit, i, j = 0;
+    uint8_t digit, i, k, j = 0;
 
-    for (i = 0; i < num; i++) {
-        l_temp = *data++;
-        sz_String[j++] = ' ';
-        digit = ((l_temp >> 12) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
-        digit = ((l_temp >> 8) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
-        digit = ((l_temp >> 4) & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
-        digit = (l_temp & 0x0000000F);
-        sz_String[j++] = ((digit < 10) ? (digit + '0') : ((digit - 10) + 'A'));
+    for (i = 0; i < num; i++) {                             // repeat for all variables
+        l_temp = *data++;                                   // get variable value
+        sz_String[j++] = ' ';                               // separate with blank space
+        for (k = 0; k < 8; k++) {                           // repeat for all 8 digits
+            digit = ((l_temp >> ((7 - k) * 4)) & 0x0000000F); // extract digit
+            if ((digit < 10) ) {                            // digit is numerical
+                sz_String[j++] = digit + '0';               // write number
+            } else {                                        // digit is alphabetical
+                sz_String[j++] = (digit - 10) + 'A';        // write letter
+            }
+        }
     }
-    sz_String[j++] = '\n';
-    if (b_File_Ok) {                                        //
-        ( void )f_write(&st_File, sz_String, j, &wWritten); // write
+    sz_String[j++] = '\n';                                  // terminate line
+    if (b_File_Ok) {                                        // file is open
+        ( void )f_write(&st_File, sz_String, j, &wWritten); // write line
         if ((j != wWritten) ||                              // no file space
             (ui_Samples >= MAX_SAMPLES)) {                  // too many samples
             ( void )f_close(&st_File);                      // close file
-            b_File_Ok = FALSE;                              // halt file logging
+            b_File_Ok = FALSE;                              // halt logging
         } else {                                            // write successfull
             ui_Samples++;                                   // update sample counter
         }
@@ -225,8 +223,8 @@ static __inline void log_position(void) {
         while (!b_File_Ok) {
         }
 
-        l_Value [0] = Gps_Longitude();          // get longitude
-        l_Value [1] = Gps_Latitude();           // get latitude
+        l_Value [0] = Gps_Latitude();           // get latitude
+        l_Value [1] = Gps_Longitude();          // get longitude
         l_Value [2] = (int32_t)Gps_Alt_M();     // get GPS altitude
         l_Value [3] = BMP085_Get_Altitude();    // get baro altitude
         log_write(l_Value, 4);                  // log position
