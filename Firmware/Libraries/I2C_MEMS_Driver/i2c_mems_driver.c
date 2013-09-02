@@ -6,8 +6,9 @@
 // $Author: $
 //
 /// \brief I2C driver for MEMS sensors
-/// Changes: introduced CPAL library
-//           removed references to external links
+///
+/// Changes: (Lint) local variables declared VAR_STATIC, single line loops
+//           replaced with code block, non void function calls casted to (void)
 //
 //============================================================================*/
 
@@ -16,14 +17,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -37,8 +33,8 @@
 
 /*----------------------------------- Locals ---------------------------------*/
 
-CPAL_TransferTypeDef TransferRx;
-CPAL_TransferTypeDef TransferTx;
+VAR_STATIC CPAL_TransferTypeDef TransferRx;
+VAR_STATIC CPAL_TransferTypeDef TransferTx;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -54,13 +50,17 @@ CPAL_TransferTypeDef TransferTx;
 ///----------------------------------------------------------------------------
 uint8_t I2C_MEMS_Read_Reg(uint8_t slave, uint8_t reg, uint8_t* data)
 {
-    while (CPAL_I2C_IsDeviceReady(&I2C1_DevStructure) != CPAL_PASS); // Wait while the device is busy
+	// Wait while the device is busy
+    while (CPAL_I2C_IsDeviceReady(&I2C1_DevStructure) != CPAL_PASS){
+    }
     I2C1_DevStructure.pCPAL_TransferRx->pbBuffer = data;
     I2C1_DevStructure.pCPAL_TransferRx->wNumData = 1;
     I2C1_DevStructure.pCPAL_TransferRx->wAddr1 = slave;
     I2C1_DevStructure.pCPAL_TransferRx->wAddr2 = reg;
     if (CPAL_I2C_Read(&I2C1_DevStructure) == CPAL_PASS) {
-        while (I2C1_DevStructure.CPAL_State != CPAL_STATE_READY);  // Wait end of read operation
+        // Wait end of read operation
+        while ((CPAL_StateTypeDef)(I2C1_DevStructure.CPAL_State) != CPAL_STATE_READY){
+        }
         return 1;
     } else {
         return 0;
@@ -80,13 +80,17 @@ uint8_t I2C_MEMS_Read_Reg(uint8_t slave, uint8_t reg, uint8_t* data)
 ///----------------------------------------------------------------------------
 uint8_t I2C_MEMS_Read_Buff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t length)
 {
-    while (CPAL_I2C_IsDeviceReady(&I2C1_DevStructure) != CPAL_PASS); // Wait while the device is busy
+    // Wait while the device is busy
+    while (CPAL_I2C_IsDeviceReady(&I2C1_DevStructure) != CPAL_PASS){
+    }
     I2C1_DevStructure.pCPAL_TransferRx->pbBuffer = data;
     I2C1_DevStructure.pCPAL_TransferRx->wNumData = length;
     I2C1_DevStructure.pCPAL_TransferRx->wAddr1 = slave;
     I2C1_DevStructure.pCPAL_TransferRx->wAddr2 = reg;
     if (CPAL_I2C_Read(&I2C1_DevStructure) == CPAL_PASS) {
-        while (I2C1_DevStructure.CPAL_State != CPAL_STATE_READY);  // Wait end of read operation
+        // Wait end of read operation
+        while ((CPAL_StateTypeDef)(I2C1_DevStructure.CPAL_State) != CPAL_STATE_READY){
+        }
         return 1;
     } else {
         return 0;
@@ -105,13 +109,17 @@ uint8_t I2C_MEMS_Read_Buff(uint8_t slave, uint8_t reg, uint8_t* data, uint8_t le
 ///----------------------------------------------------------------------------
 uint8_t I2C_MEMS_Write_Reg(uint8_t slave, uint8_t reg, uint8_t data)
 {
-    while (CPAL_I2C_IsDeviceReady(&I2C1_DevStructure) != CPAL_PASS); // Wait while the device is busy
+    // Wait while the device is busy
+    while (CPAL_I2C_IsDeviceReady(&I2C1_DevStructure) != CPAL_PASS){
+    }
     I2C1_DevStructure.pCPAL_TransferTx->pbBuffer = &data;
     I2C1_DevStructure.pCPAL_TransferTx->wNumData = 1;
     I2C1_DevStructure.pCPAL_TransferTx->wAddr1 = slave;
     I2C1_DevStructure.pCPAL_TransferTx->wAddr2 = reg;
     if (CPAL_I2C_Write(&I2C1_DevStructure) == CPAL_PASS) {
-        while (I2C1_DevStructure.CPAL_State != CPAL_STATE_READY);  // Wait end of read operation
+        // Wait end of read operation
+        while ((CPAL_StateTypeDef)(I2C1_DevStructure.CPAL_State) != CPAL_STATE_READY){
+        }
         return 1;
     } else {
         return 0;
@@ -129,11 +137,11 @@ uint8_t I2C_MEMS_Write_Reg(uint8_t slave, uint8_t reg, uint8_t data)
 ///----------------------------------------------------------------------------
 void I2C_MEMS_Init( void )
 {
-  CPAL_I2C_StructInit(&I2C1_DevStructure);          // Initialize CPAL structure for I2C 1
+  (void)CPAL_I2C_StructInit(&I2C1_DevStructure);    // Initialize CPAL structure for I2C 1
 
   I2C1_DevStructure.CPAL_ProgModel = CPAL_PROGMODEL_INTERRUPT;
   I2C1_DevStructure.pCPAL_TransferRx = &TransferRx;
   I2C1_DevStructure.pCPAL_TransferTx = &TransferTx;
 
-  CPAL_I2C_Init(&I2C1_DevStructure);                // Initialize CPAL I2C
+  (void)CPAL_I2C_Init(&I2C1_DevStructure);          // Initialize CPAL I2C
 }
