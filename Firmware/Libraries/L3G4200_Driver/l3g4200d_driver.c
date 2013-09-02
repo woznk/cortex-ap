@@ -3,8 +3,11 @@
 /// File Name: L3G4200D_Driver.c
 /// $Revision:$
 /// $Date:$
+/// \brief
 /// L3G4200D driver file
-/// Changes: disabled fifo, watermark and interrupts in initialization
+///
+/// Changes: (Lint) unsigned char replaced with uint8_t, casted several 
+///          variables to uint8_t, non void function calls casted to (void)
 ///
 ///----------------------------------------------------------------------------
 
@@ -28,13 +31,13 @@
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetODR(ODR_t ov) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG1, &value) )
     return MEMS_ERROR;
 
   value &= 0x0f;
-  value |= ov<<4;
+  value |= ((uint8_t)ov << 4);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG1, value) )
     return MEMS_ERROR;
@@ -51,7 +54,7 @@ status_t SetODR(ODR_t ov) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetMode(Mode_t md) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG1, &value) )
     return MEMS_ERROR;
@@ -92,7 +95,7 @@ status_t SetMode(Mode_t md) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetAxis(Axis_t axis) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG1, &value) )
     return MEMS_ERROR;
@@ -115,13 +118,13 @@ status_t SetAxis(Axis_t axis) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetFullScale(Fullscale_t fs) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, &value) )
     return MEMS_ERROR;
 
   value &= 0xCF;
-  value |= (fs<<FS);
+  value |= ((uint8_t)fs << FS);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, value) )
     return MEMS_ERROR;
@@ -138,13 +141,13 @@ status_t SetFullScale(Fullscale_t fs) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetBDU(State_t bdu) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, &value) )
     return MEMS_ERROR;
 
   value &= 0x7F;
-  value |= (bdu<<BDU);
+  value |= ((uint8_t)bdu << BDU);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, value) )
     return MEMS_ERROR;
@@ -161,13 +164,13 @@ status_t SetBDU(State_t bdu) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetBLE(Endianess_t ble) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, &value) )
     return MEMS_ERROR;
 
   value &= 0xBF;
-  value |= (ble<<BLE);
+  value |= ((uint8_t)ble << BLE);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, value) )
     return MEMS_ERROR;
@@ -184,13 +187,13 @@ status_t SetBLE(Endianess_t ble) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetSelfTest(SelfTest_t st) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, &value) )
     return MEMS_ERROR;
 
   value &= 0xF9;
-  value |= (st<<SELF_TEST);
+  value |= ((uint8_t)st << SELF_TEST);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, value) )
     return MEMS_ERROR;
@@ -207,13 +210,13 @@ status_t SetSelfTest(SelfTest_t st) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t HPFEnable(State_t hpf) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG5, &value) )
     return MEMS_ERROR;
 
   value &= 0xEF;
-  value |= (hpf<<HPEN);
+  value |= ((uint8_t)hpf << HPEN);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG5, value) )
     return MEMS_ERROR;
@@ -230,13 +233,13 @@ status_t HPFEnable(State_t hpf) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetHPFMode(HPFMode_t hpf) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG2, &value) )
     return MEMS_ERROR;
 
   value &= 0xCF;
-  value |= (hpf<<HPM);
+  value |= ((uint8_t)hpf << HPM);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG2, value) )
     return MEMS_ERROR;
@@ -253,13 +256,13 @@ status_t SetHPFMode(HPFMode_t hpf) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetHPFCutOFF(HPFCutOffFreq_t hpf) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG2, &value) )
     return MEMS_ERROR;
 
   value &= 0xF0;
-  value |= (hpf<<HPFC0);
+  value |= ((uint8_t)hpf << HPFC0);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG2, value) )
     return MEMS_ERROR;
@@ -276,13 +279,13 @@ status_t SetHPFCutOFF(HPFCutOffFreq_t hpf) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetIntPinMode(IntPinMode_t pm) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG3, &value) )
     return MEMS_ERROR;
 
   value &= 0xEF;
-  value |= (pm<<PP_OD);
+  value |= ((uint8_t)pm << PP_OD);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG3, value) )
     return MEMS_ERROR;
@@ -302,7 +305,7 @@ status_t SetIntPinMode(IntPinMode_t pm) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetInt1Pin(Int1PinConf_t pinConf) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG3, &value) )
     return MEMS_ERROR;
@@ -328,7 +331,7 @@ status_t SetInt1Pin(Int1PinConf_t pinConf) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetInt2Pin(Int2PinConf_t pinConf) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG3, &value) )
     return MEMS_ERROR;
@@ -351,13 +354,13 @@ status_t SetInt2Pin(Int2PinConf_t pinConf) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t Int1LatchEnable(State_t latch) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,INT1_CFG, &value) )
     return MEMS_ERROR;
 
   value &= 0xBF;
-  value |= latch<<LIR;
+  value |= ((uint8_t)latch << LIR);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,INT1_CFG, value) )
     return MEMS_ERROR;
@@ -374,7 +377,7 @@ status_t Int1LatchEnable(State_t latch) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t ResetInt1Latch(void) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,INT1_SRC, &value) )
     return MEMS_ERROR;
@@ -391,7 +394,7 @@ status_t ResetInt1Latch(void) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetIntConfiguration(Int1Conf_t ic) {
-  unsigned char value;
+  uint8_t value;
 
   value = ic;
 
@@ -409,43 +412,43 @@ status_t SetIntConfiguration(Int1Conf_t ic) {
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-status_t SetInt1Threshold(IntThsAxis axis, unsigned short int ths) {
-  unsigned char value;
+status_t SetInt1Threshold(IntThsAxis axis, uint16_t ths) {
+  uint8_t value;
 
   switch (axis) {
 
     case THS_X:
       //write the threshold LSB
-      value = (unsigned char)(ths & 0x00ff);
+      value = (uint8_t)(ths & 0x00ff);
       if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,INT1_THS_XL, value) )
         return MEMS_ERROR;
 
       //write the threshold LSB
-      value = (unsigned char)(ths >> 8);
+      value = (uint8_t)(ths >> 8);
       if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,INT1_THS_XH, value) )
         return MEMS_ERROR;
       break;
 
     case THS_Y:
       //write the threshold LSB
-      value = (unsigned char)(ths & 0x00ff);
+      value = (uint8_t)(ths & 0x00ff);
       if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,INT1_THS_YL, value) )
         return MEMS_ERROR;
 
       //write the threshold LSB
-      value = (unsigned char)(ths >> 8);
+      value = (uint8_t)(ths >> 8);
       if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,INT1_THS_YH, value) )
         return MEMS_ERROR;
       break;
 
     case THS_Z:
       //write the threshold LSB
-      value = (unsigned char)(ths & 0x00ff);
+      value = (uint8_t)(ths & 0x00ff);
       if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,INT1_THS_ZL, value) )
         return MEMS_ERROR;
 
       //write the threshold LSB
-      value = (unsigned char)(ths >> 8);
+      value = (uint8_t)(ths >> 8);
       if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,INT1_THS_ZH, value) )
         return MEMS_ERROR;
       break;
@@ -482,7 +485,7 @@ status_t SetInt1Duration(Int1Conf_t id) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t FIFOModeEnable(FifoMode_t fm) {
-  unsigned char value;
+  uint8_t value;
 
   if (fm == FIFO_DISABLE) {
 
@@ -510,7 +513,7 @@ status_t FIFOModeEnable(FifoMode_t fm) {
       return MEMS_ERROR;
 
     value &= 0x1f;
-    value |= (fm<<FM0);
+    value |= ((uint8_t)fm << FM0);
 
     if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,FIFO_CTRL_REG, value) )
       return MEMS_ERROR;
@@ -527,8 +530,8 @@ status_t FIFOModeEnable(FifoMode_t fm) {
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-status_t SetWaterMark(unsigned char wtm) {
-  unsigned char value;
+status_t SetWaterMark(uint8_t wtm) {
+  uint8_t value;
 
   if (wtm > 31)
     return MEMS_ERROR;
@@ -553,7 +556,7 @@ status_t SetWaterMark(unsigned char wtm) {
 * Output         : status register buffer
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-status_t GetStatusReg(unsigned char* buff) {
+status_t GetStatusReg(uint8_t* buff) {
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR, STATUS_REG, buff) )
       return MEMS_ERROR;
@@ -596,7 +599,7 @@ bool GetAngRateRaw(uint8_t* data) {
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-status_t GetInt1Src(unsigned char* buff) {
+status_t GetInt1Src(uint8_t* buff) {
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,INT1_SRC, buff) )
     return MEMS_ERROR;
@@ -612,7 +615,7 @@ status_t GetInt1Src(unsigned char* buff) {
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-status_t GetFifoSourceReg(unsigned char* buff) {
+status_t GetFifoSourceReg(uint8_t* buff) {
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,FIFO_SRC_REG, buff) )
     return MEMS_ERROR;
@@ -630,7 +633,7 @@ status_t GetFifoSourceReg(unsigned char* buff) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetOutputDataAndFifoFilters(HPF_LPF2_Enable hpf){
-  unsigned char value;
+  uint8_t value;
 
   //HPF
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG5, &value) )
@@ -676,7 +679,7 @@ status_t SetOutputDataAndFifoFilters(HPF_LPF2_Enable hpf){
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetInt1Filters(HPF_LPF2_Enable hpf){
-  unsigned char value;
+  uint8_t value;
 
   //HPF
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG5, &value) )
@@ -722,13 +725,13 @@ status_t SetInt1Filters(HPF_LPF2_Enable hpf){
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
 status_t SetSPIInterface(SPIMode_t spi) {
-  unsigned char value;
+  uint8_t value;
 
   if (!I2C_MEMS_Read_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, &value) )
     return MEMS_ERROR;
 
   value &= 0xFE;
-  value |= spi<<SIM;
+  value |= ((uint8_t)spi << SIM);
 
   if (!I2C_MEMS_Write_Reg(L3G4200_SLAVE_ADDR,CTRL_REG4, value) )
     return MEMS_ERROR;
@@ -746,13 +749,13 @@ status_t SetSPIInterface(SPIMode_t spi) {
 void L3G4200_Init( void )
 {
   //set the ODR and Bandwith
-  SetODR(ODR_100Hz_BW_12_5);
+  (void)SetODR(ODR_100Hz_BW_12_5);
   //enable all axis
-  SetAxis(X_ENABLE | Y_ENABLE | Z_ENABLE);
+  (void)SetAxis((Axis_t)((uint8_t)X_ENABLE | (uint8_t)Y_ENABLE | (uint8_t)Z_ENABLE));
   //set the fullscale
-  SetFullScale(FULLSCALE_2000);
+  (void)SetFullScale(FULLSCALE_2000);
   //set sensor mode
-  SetMode(NORMAL);
+  (void)SetMode(NORMAL);
   //bypass fifo
-  FIFOModeEnable(FIFO_BYPASS_MODE);
+  (void)FIFOModeEnable(FIFO_BYPASS_MODE);
 }
