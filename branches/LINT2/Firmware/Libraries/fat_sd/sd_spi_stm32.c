@@ -29,7 +29,12 @@
   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE. */
+  POSSIBILITY OF SUCH DAMAGE. 
+
+Changes (Lint) non void functions casted to (void), added cast to several
+        variables, replaced single line loops with code blocks {}, added 
+        initialization of variable pv in disktimer_proc task.
+*/
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -226,7 +231,7 @@ static void interface_speed( enum speed_setting speed )
 		/* Set fast clock (depends on the CSD) */
 		tmp = ( tmp & ~SPI_BaudRatePrescaler_256 ) | SPI_BaudRatePrescaler_SPI_SD;
 	}
-	SPI_SD->CR1 = tmp;
+	SPI_SD->CR1 = (uint16_t)tmp;
 }
 
 #if SOCKET_WP_CONNECTED
@@ -364,7 +369,7 @@ static BYTE stm32_spi_rw( BYTE out )
 	while (SPI_I2S_GetFlagStatus(SPI_SD, SPI_I2S_FLAG_RXNE) == RESET) { ; }
 
 	/* Return the byte read from the SPI bus */
-	return SPI_I2S_ReceiveData(SPI_SD);
+	return (BYTE)SPI_I2S_ReceiveData(SPI_SD);
 }
 
 
@@ -399,16 +404,14 @@ BYTE wait_ready (void)
 {
 	BYTE res;
 
-
 	Timer2 = 50;	/* Wait for ready in timeout of 500ms */
-	rcvr_spi();
+	(void)rcvr_spi();
 	do
 		res = rcvr_spi();
 	while ((res != 0xFF) && Timer2);
 
 	return res;
 }
-
 
 
 /*-----------------------------------------------------------------------*/
@@ -419,7 +422,7 @@ static
 void release_spi (void)
 {
 	DESELECT();
-	rcvr_spi();
+	(void)rcvr_spi();
 }
 
 #ifdef STM32_SD_USE_DMA
@@ -533,7 +536,8 @@ void power_on (void)
 	socket_cp_init();
 	socket_wp_init();
 
-	for (Timer1 = 25; Timer1; );	/* Wait for 250ms */
+	for (Timer1 = 25; Timer1; ){  	/* Wait for 250ms */
+        }
 
 	/* Configure I/O for Flash Chip select */
 	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_CS;
@@ -571,7 +575,7 @@ void power_on (void)
 
 	/* drain SPI */
 	while (SPI_I2S_GetFlagStatus(SPI_SD, SPI_I2S_FLAG_TXE) == RESET) { ; }
-	dummyread = SPI_I2S_ReceiveData(SPI_SD);
+	dummyread = (BYTE)SPI_I2S_ReceiveData(SPI_SD);
 
 #ifdef STM32_SD_USE_DMA
 	/* enable DMA clock */
@@ -586,7 +590,7 @@ void power_off (void)
 
 	if (!(Stat & STA_NOINIT)) {
 		SELECT();
-		wait_ready();
+		(void)wait_ready();
 		release_spi();
 	}
 
@@ -635,8 +639,8 @@ BOOL rcvr_datablock (
 	} while (btr -= 4);
 #endif /* STM32_SD_USE_DMA */
 
-	rcvr_spi();						/* Discard CRC */
-	rcvr_spi();
+	(void)rcvr_spi();				/* Discard CRC */
+	(void)rcvr_spi();
 
 	return TRUE;					/* Return with success */
 }
@@ -661,21 +665,21 @@ BOOL xmit_datablock (
 
 	if (wait_ready() != 0xFF) return FALSE;
 
-	xmit_spi(token);					/* transmit data token */
-	if (token != 0xFD) {	/* Is data token */
+	(void)xmit_spi(token);				/* transmit data token */
+	if (token != 0xFD) {				/* Is data token */
 
 #ifdef STM32_SD_USE_DMA
 		stm32_dma_transfer( FALSE, buff, 512 );
 #else
 		wc = 0;
 		do {							/* transmit the 512 byte data block to MMC */
-			xmit_spi(*buff++);
-			xmit_spi(*buff++);
+			(void)xmit_spi(*buff++);
+			(void)xmit_spi(*buff++);
 		} while (--wc);
 #endif /* STM32_SD_USE_DMA */
 
-		xmit_spi(0xFF);					/* CRC (Dummy) */
-		xmit_spi(0xFF);
+		(void)xmit_spi(0xFF);			/* CRC (Dummy) */
+		(void)xmit_spi(0xFF);
 		resp = rcvr_spi();				/* Receive data response */
 		if ((resp & 0x1F) != 0x05)		/* If not accepted, return with error */
 			return FALSE;
@@ -714,18 +718,20 @@ BYTE send_cmd (
 	}
 
 	/* Send command packet */
-	xmit_spi(cmd);						/* Start + Command index */
-	xmit_spi((BYTE)(arg >> 24));		/* Argument[31..24] */
-	xmit_spi((BYTE)(arg >> 16));		/* Argument[23..16] */
-	xmit_spi((BYTE)(arg >> 8));			/* Argument[15..8] */
-	xmit_spi((BYTE)arg);				/* Argument[7..0] */
+	(void)xmit_spi(cmd);				/* Start + Command index */
+	(void)xmit_spi((BYTE)(arg >> 24));	/* Argument[31..24] */
+	(void)xmit_spi((BYTE)(arg >> 16));	/* Argument[23..16] */
+	(void)xmit_spi((BYTE)(arg >> 8));	/* Argument[15..8] */
+	(void)xmit_spi((BYTE)arg);			/* Argument[7..0] */
 	n = 0x01;							/* Dummy CRC + Stop */
 	if (cmd == CMD0) n = 0x95;			/* Valid CRC for CMD0(0) */
 	if (cmd == CMD8) n = 0x87;			/* Valid CRC for CMD8(0x1AA) */
-	xmit_spi(n);
+	(void)xmit_spi(n);
 
 	/* Receive command response */
-	if (cmd == CMD12) rcvr_spi();		/* Skip a stuff byte when stop reading */
+	if (cmd == CMD12) {					/* Skip a stuff byte when stop reading */
+		(void)rcvr_spi();
+	}
 
 	n = 10;								/* Wait for a valid response in timeout of 10 attempts */
 	do
@@ -759,15 +765,20 @@ DSTATUS disk_initialize (
 
 	power_on();							/* Force socket power on and initialize interface */
 	interface_speed(INTERFACE_SLOW);
-	for (n = 10; n; n--) rcvr_spi();	/* 80 dummy clocks */
+	for (n = 10; n; n--) {				/* 80 dummy clocks */
+		(void)rcvr_spi();
+	}
 
 	ty = 0;
 	if (send_cmd(CMD0, 0) == 1) {			/* Enter Idle state */
 		Timer1 = 100;						/* Initialization timeout of 1000 milliseconds */
 		if (send_cmd(CMD8, 0x1AA) == 1) {	/* SDHC */
-			for (n = 0; n < 4; n++) ocr[n] = rcvr_spi();		/* Get trailing return value of R7 response */
+			for (n = 0; n < 4; n++) {
+				ocr[n] = rcvr_spi();		/* Get trailing return value of R7 response */
+			}
 			if (ocr[2] == 0x01 && ocr[3] == 0xAA) {				/* The card can work at VDD range of 2.7-3.6V */
-				while (Timer1 && send_cmd(ACMD41, 1UL << 30));	/* Wait for leaving idle state (ACMD41 with HCS bit) */
+				while (Timer1 && send_cmd(ACMD41, 1UL << 30)) {	/* Wait for leaving idle state (ACMD41 with HCS bit) */
+				}
 				if (Timer1 && send_cmd(CMD58, 0) == 0) {		/* Check CCS bit in the OCR */
 					for (n = 0; n < 4; n++) ocr[n] = rcvr_spi();
 					ty = (ocr[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;
@@ -779,7 +790,8 @@ DSTATUS disk_initialize (
 			} else {
 				ty = CT_MMC; cmd = CMD1;	/* MMC */
 			}
-			while (Timer1 && send_cmd(cmd, 0));			/* Wait for leaving idle state */
+			while (Timer1 && send_cmd(cmd, 0)) {		/* Wait for leaving idle state */
+			}
 			if (!Timer1 || send_cmd(CMD16, 512) != 0)	/* Set R/W block length to 512 */
 				ty = 0;
 		}
@@ -844,7 +856,7 @@ DRESULT disk_read (
 				}
 				buff += 512;
 			} while (--count);
-			send_cmd(CMD12, 0);				/* STOP_TRANSMISSION */
+			(void)send_cmd(CMD12, 0);				/* STOP_TRANSMISSION */
 		}
 	}
 	release_spi();
@@ -879,7 +891,7 @@ DRESULT disk_write (
 			count = 0;
 	}
 	else {				/* Multiple block write */
-		if (CardType & CT_SDC) send_cmd(ACMD23, count);
+		if (CardType & CT_SDC) (void)send_cmd(ACMD23, count);
 		if (send_cmd(CMD25, sector) == 0) {	/* WRITE_MULTIPLE_BLOCK */
 			do {
 				if (!xmit_datablock(buff, 0xFC)) break;
@@ -967,9 +979,9 @@ DRESULT disk_ioctl (
 		case GET_BLOCK_SIZE :	/* Get erase block size in unit of sector (DWORD) */
 			if (CardType & CT_SD2) {	/* SDC version 2.00 */
 				if (send_cmd(ACMD13, 0) == 0) {	/* Read SD status */
-					rcvr_spi();
+					(void)rcvr_spi();
 					if (rcvr_datablock(csd, 16)) {				/* Read partial block */
-						for (n = 64 - 16; n; n--) rcvr_spi();	/* Purge trailing data */
+						for (n = 64 - 16; n; n--) (void)rcvr_spi();	/* Purge trailing data */
 						*(DWORD*)buff = 16UL << (csd[10] >> 4);
 						res = RES_OK;
 					}
@@ -1012,7 +1024,7 @@ DRESULT disk_ioctl (
 
 		case MMC_GET_SDSTAT :	/* Receive SD status as a data block (64 bytes) */
 			if (send_cmd(ACMD13, 0) == 0) {	/* SD_STATUS */
-				rcvr_spi();
+				(void)rcvr_spi();
 				if (rcvr_datablock(ptr, 64))
 					res = RES_OK;
 			}
@@ -1036,26 +1048,27 @@ DRESULT disk_ioctl (
 
 /*RAMFUNC*/ void disk_timerproc (void *pvParameters)
 {
-	static DWORD pv;
-	DWORD ns;
-	BYTE n, s;
-
     portTickType Last_Wake_Time;
+    static DWORD pv;
+    DWORD ns;
+    BYTE n, s;
+
+    (void)pvParameters;
     Last_Wake_Time = xTaskGetTickCount();
+    pv = socket_is_empty() | socket_is_write_protected();	/* Sample socket switch */
 
-    while (1) {
-
+    for (;;) {
 		vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / 100);
 
-	   	n = Timer1;                /* 100Hz decrement timers */
+	   	n = (BYTE)Timer1;                /* 100Hz decrement timers */
 		if (n) Timer1 = --n;
-		n = Timer2;
+		n = (BYTE)Timer2;
 		if (n) Timer2 = --n;
 	
 		ns = pv;
 		pv = socket_is_empty() | socket_is_write_protected();	/* Sample socket switch */
 	
-		if (ns == pv) {                         /* Have contacts stabled? */
+		if (ns == pv) {                         /* Have contacts settled? */
 			s = Stat;
 	
 			if (pv & socket_state_mask_wp)      /* WP is H (write protected) */
