@@ -6,7 +6,8 @@
 // $Author: $
 /// \brief BMP085 lPressure sensor driver
 ///
-//  Change some major renaming according coding rules
+//  Change (Lint) non void function calls casted to (void), Bmp85.oversampling
+//         casted to (uint8_t)
 //
 //============================================================================*/
 
@@ -18,14 +19,9 @@
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -90,7 +86,7 @@ uint8_t BMP085_Init(void)
   Bmp85.al_version = BMP085_GET_BITSLICE(data, BMP085_AL_VERSION);
 
   /* extract bmp085 calibration parameter structure */
-  BMP085_Get_Calibration( );
+  (void)BMP085_Get_Calibration( );
 
   eBMP085_Status = START_TEMP_CONVERSION;
 
@@ -134,8 +130,8 @@ void BMP085_Handler(void)
         break;
 
     case START_PRESS_CONVERSION:    /* start pressure conversion */
-        uctemp = BMP085_P_MEASURE + (Bmp85.oversampling << 6);
-        I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, uctemp);
+        uctemp = BMP085_P_MEASURE + (uint8_t)(Bmp85.oversampling << 6);
+        (void)I2C_MEMS_Write_Reg(BMP085_SLAVE_ADDR, BMP085_CTRL_MEAS_REG, uctemp);
         Last_Wake_Time = xTaskGetTickCount();
         eBMP085_Status = READ_UNCOMPENSATED_PRESS;
         break;
@@ -183,21 +179,21 @@ static uint8_t BMP085_Get_Calibration(void)
   comres = I2C_MEMS_Read_Buff(BMP085_SLAVE_ADDR, BMP085_PROM_START_ADDR, data, BMP085_PROM_DATA_LEN);
 
   /* parameters AC1-AC6 */
-  Bmp85.calibration.ac1 =  (data[0] <<8) | data[1];
-  Bmp85.calibration.ac2 =  (data[2] <<8) | data[3];
-  Bmp85.calibration.ac3 =  (data[4] <<8) | data[5];
-  Bmp85.calibration.ac4 =  (data[6] <<8) | data[7];
-  Bmp85.calibration.ac5 =  (data[8] <<8) | data[9];
-  Bmp85.calibration.ac6 = (data[10] <<8) | data[11];
+  Bmp85.calibration.ac1 =  (data[0] << 8) | data[1];
+  Bmp85.calibration.ac2 =  (data[2] << 8) | data[3];
+  Bmp85.calibration.ac3 =  (data[4] << 8) | data[5];
+  Bmp85.calibration.ac4 =  (data[6] << 8) | data[7];
+  Bmp85.calibration.ac5 =  (data[8] << 8) | data[9];
+  Bmp85.calibration.ac6 = (data[10] << 8) | data[11];
 
   /* parameters B1,B2 */
-  Bmp85.calibration.b1 =  (data[12] <<8) | data[13];
-  Bmp85.calibration.b2 =  (data[14] <<8) | data[15];
+  Bmp85.calibration.b1 =  (data[12] << 8) | data[13];
+  Bmp85.calibration.b2 =  (data[14] << 8) | data[15];
 
   /* parameters MB,MC,MD */
-  Bmp85.calibration.mb =  (data[16] <<8) | data[17];
-  Bmp85.calibration.mc =  (data[18] <<8) | data[19];
-  Bmp85.calibration.md =  (data[20] <<8) | data[21];
+  Bmp85.calibration.mb =  (data[16] << 8) | data[17];
+  Bmp85.calibration.mc =  (data[18] << 8) | data[19];
+  Bmp85.calibration.md =  (data[20] << 8) | data[21];
 
   return comres;
 }
@@ -215,7 +211,7 @@ static void Compensate_Temperature(void)
 {
     int32_t x1, x2;
 
-    x1 = (((int32_t) uiRaw_Temp - (int32_t) Bmp85.calibration.ac6) * (int32_t) Bmp85.calibration.ac5) >> 15;
+    x1 = (((int32_t)uiRaw_Temp - (int32_t)Bmp85.calibration.ac6) * (int32_t) Bmp85.calibration.ac5) >> 15;
     x2 = ((int32_t) Bmp85.calibration.mc << 11) / (x1 + Bmp85.calibration.md);
     Bmp85.param_b5 = x1 + x2;
     iTemperature = ((Bmp85.param_b5 + 8) >> 4);  // iTemperature in 0.1°C
