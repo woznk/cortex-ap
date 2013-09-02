@@ -7,7 +7,7 @@
 /// \file
 /// \brief  BMP085 lPressure sensor driver
 ///
-//  Change added function to return altitude
+//  Change member oversampling of struct STRUCT_BMP85 defined as unsigned
 //
 //============================================================================
 
@@ -132,7 +132,7 @@ typedef struct  {
     STRUCT_CALIBRATION calibration;
     uint8_t chip_id, ml_version, al_version;
     uint32_t param_b5;
-    int16_t oversampling;
+    uint16_t oversampling;
 } STRUCT_BMP85;
 
 /*---------------------------------- Constants -------------------------------*/
