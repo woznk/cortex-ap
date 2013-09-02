@@ -6,8 +6,7 @@
 // $Author: $
 /// \brief I2C driver for MEMS sensors
 ///
-//  Change: Set_Range(): added
-//          ADXL345_Init(): full range set to 8 g
+//  Change: (Lint) non void function calls casted to (void)
 //
 //============================================================================*/
 
@@ -15,16 +14,11 @@
 #include "adxl345_driver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
-
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
+/*
+#ifndef VAR_STATIC
 #define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
 #endif
-#define VAR_GLOBAL
-
+*/
 /*----------------------------------- Macros ---------------------------------*/
 
 /*-------------------------------- Enumerations ------------------------------*/
@@ -149,10 +143,10 @@ bool ADXL345_Init( void )
   if (!I2C_MEMS_Read_Reg(ADXL345_SLAVE_ADDR, DEVID, &id)) {
       id = 0;
   }
-  Set_Fifo_Mode(BYPASS_MODE);   // Disable FIFO
-  Set_Range(RANGE_8G);          // Set full scale range to +/- 8 g
-  Set_Output_Rate(RATE_100HZ);  // Set output rate to 100 Hz
-  Start_Measurement( );         // Start measurement
+  (void)Set_Fifo_Mode(BYPASS_MODE);   // Disable FIFO
+  (void)Set_Range(RANGE_8G);          // Set full scale range to +/- 8 g
+  (void)Set_Output_Rate(RATE_100HZ);  // Set output rate to 100 Hz
+  (void)Start_Measurement( );         // Start measurement
   return (bool)(id == I_AM_ADXL345);
 }
 
