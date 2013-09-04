@@ -29,8 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change (Lint) corrected file #inclusion, removed #undef and VAR_GLOBAL,
-//         PERIOD renamed PPM_PERIOD
+//  Change added low pass filter on cSignalLevel
 //
 //============================================================================*/
 
@@ -136,7 +135,8 @@ TIM2_IRQHandler(void)
                  }
               }
            }
-           cSignalLevel = cPulseCount;                  // update signal level
+           cSignalLevel += (16 * cPulseCount);          // update signal level
+           cSignalLevel /= 2;
            cPulseCount = 0;                             // clear pulse counter
         break;
 
