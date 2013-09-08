@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change (Lint) corrected file #inclusion, removed #undef
+//  Change restored saturation of output value
 //
 //============================================================================*/
 
@@ -90,6 +90,14 @@ float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput)
     fOutput = pxPid->fKp * fError +
               pxPid->fKi * pxPid->fIntegral -
               pxPid->fKd * fDelta;
+
+    // Saturate output
+    if (fOutput > pxPid->fMax) {
+       fOutput = pxPid->fMax;
+    } else if (fOutput < pxPid->fMin) {
+       fOutput = pxPid->fMin;
+    } else {
+    }
 
     // Multiply by output gain
     fOutput = pxPid->fGain * fOutput;
