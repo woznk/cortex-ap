@@ -244,7 +244,7 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes corrected initialization of ucStream_Rate[]
+/// Changes added parameter "NAV_BANK" for maximum bank rate during navigation
 ///
 //============================================================================*/
 
@@ -552,8 +552,9 @@ VAR_STATIC const uint8_t sParameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME
     "ALT_POS_I\0",  // Altitude Ki (via throttle)
 //  "ALT_POS_D"\0", // Altitude Kd (via throttle)
     "NAV_ANG_P\0",  // Navigation Kp (via roll)
-    "NAV_ANG_I\0"   // Navigation Ki (via roll)
-//  "NAV_ANG_D\0"   // Navigation Kd (via roll)
+    "NAV_ANG_I\0",  // Navigation Ki (via roll)
+//  "NAV_ANG_D\0",  // Navigation Kd (via roll)
+    "NAV_BANK\0"    // Max bank angle during navigation [deg]
 };
 
 //VAR_STATIC const uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;
@@ -632,7 +633,8 @@ VAR_STATIC float fParam_Value[ONBOARD_PARAM_COUNT] = {
     0.0f,       //!< dummy placeholder
     0.0f,       //!< dummy placeholder
     NAV_KP,     //!< default direction kp
-    NAV_KI      //!< default direction ki
+    NAV_KI,     //!< default direction ki
+    NAV_BANK    //!< default max bank angle
 };              //!< gains for PID loops
 
 /*--------------------------------- Prototypes -------------------------------*/
