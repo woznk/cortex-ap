@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change increased ALT_HOLD_THROTTLE_MAX
+// Change: added definition of NAV_BANK, maximum bank angle during navigation
 //
 //============================================================================*/
 
@@ -40,6 +40,7 @@
 #define NAV_KP          5.0f            //!< Navigation P gain
 #define NAV_KI          0.05f           //!< Navigation I gain
 #define NAV_KD          0.0f            //!< Navigation D gain
+#define NAV_BANK        0.1745329f      //!< Navigation bank angle max [rad]
 
 /* Speed PID initial gains */
 #define SPEED_KP        1.0f            //!< Speed P gain
