@@ -9,8 +9,7 @@
 ///
 /// \file
 ///
-//  Change (Lint) corrected file #inclusion, removed #undef and VAR_GLOBAL,
-//         PERIOD renamed SERVO_PERIOD
+//  Change: reversed directionof aileron and elevator 
 //
 //============================================================================*/
 
@@ -54,9 +53,9 @@ VAR_STATIC int16_t iServoPosition[SERVO_NUMBER] = {
 
 /// sign of servo values
 VAR_STATIC int16_t iServoSign[SERVO_NUMBER] = {
-     1,             // aileron
+    -1,             // aileron
      1,             // rudder
-     1,             // elevator
+    -1,             // elevator
      1              // throttle
 };
 
