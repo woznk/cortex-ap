@@ -9,9 +9,7 @@
 /
 / \file
 /
-/  Change (Lint) all comments made in C style, added U suffix to unsigned values
-/         conditions with side effects evaluated first in multiple conditions,
-/         while (1) replaced with for (;;), added some explicit cast
+/  Change added missing parenthesis
 /
 /============================================================================*/
 
@@ -106,7 +104,7 @@ void Log_Task( void *pvParameters ) {
     /* Open new log file */
     if (!b_found) {                             /* File doesn't exist */
         if (FR_OK == f_open(&st_File, 
-                            const XCHAR *)sz_File,
+                            (const XCHAR *)sz_File,
                             (BYTE)(FA_WRITE|FA_CREATE_ALWAYS))) {
             b_File_Ok = TRUE;                   /* File succesfully open */
         }
