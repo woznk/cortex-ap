@@ -9,9 +9,7 @@
 ///
 /// \file
 ///
-//  Change: added functions Gps_Buffer_Index() and Gps_Buffer_Pointer(),
-///         moved here definitions of GPS_FIX, GPS_NOFIX, BUFFER_LENGTH to be
-///         visible for log task.
+//  Change: added suffix U to explicit unsigned values 
 //
 //============================================================================
 
@@ -22,10 +20,10 @@
 #endif
 #define VAR_GLOBAL extern
 
-#define GPS_FIX         3       //!< GPS status: satellite fix
-#define GPS_NOFIX       0       //!< GPS status: waiting for first fix
+#define GPS_FIX         3U       //!< GPS status: satellite fix
+#define GPS_NOFIX       0U       //!< GPS status: waiting for first fix
 
-#define BUFFER_LENGTH   96      //!< length of buffer for file and USART
+#define BUFFER_LENGTH   96U      //!< length of buffer for file and USART
 
 /*----------------------------------- Macros ---------------------------------*/
 
