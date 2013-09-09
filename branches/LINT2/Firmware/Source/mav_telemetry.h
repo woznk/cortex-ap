@@ -9,7 +9,7 @@
 /// Tentative Mavlink protocol implementation
 ///
 ///
-/// Changes (Lint) added missing interface functions
+/// Changes: added TEL_NAV_BANK parameter, maximum bank angle during navigation
 ///
 //============================================================================*/
 
@@ -36,6 +36,7 @@ typedef enum {
     TEL_ALT_KI,         ///<
     TEL_NAV_KP,         ///<
     TEL_NAV_KI,         ///<
+    TEL_NAV_BANK,       ///<
     TEL_GAIN_NUMBER
 } telEnum_Gain;
 
