@@ -36,8 +36,8 @@
 /     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 / \endcode
 /
-/ Change: (Lint) all comments made in C style, commented code included in 
-/         #if(0) ... #endif clause, added paranteses to arithmetic expressions
+/ Change: output gain of navigation PID (maximum bank angle) read from telemetry, 
+/         #defined its initial value in config.h
 /
 /============================================================================*/
 
@@ -165,7 +165,7 @@ void Navigation_Task( void *pvParameters ) {
     ui_Distance = 0;                                    /* distance to destination [m] */
     ui_Wpt_Number = 0;                                  /* no waypoint yet */
 
-    Nav_Pid.fGain = PI / 6.0f;                          /* limit bank angle to -30°, 30° */
+    Nav_Pid.fGain = NAV_BANK;                           /* limit bank angle */
     Nav_Pid.fMin = -1.0f;                               /* */
     Nav_Pid.fMax = 1.0f;                                /* */
     Nav_Pid.fKp = NAV_KP;                               /* init gains with default values */
@@ -201,8 +201,8 @@ void Navigation_Task( void *pvParameters ) {
 #if (SIMULATOR == SIM_NONE)                                 /* normal mode */
             Nav_Pid.fKp = Telemetry_Get_Gain(TEL_NAV_KP);   /* update PID gains */
             Nav_Pid.fKi = Telemetry_Get_Gain(TEL_NAV_KI);
-            f_Curr_Alt = (float)BMP085_Get_Altitude();      /* get barometric altitude */
-/*          f_Curr_Alt = (float)ui_Gps_Alt; */              /* get GPS altitude */
+/*          f_Curr_Alt = (float)BMP085_Get_Altitude(); */   /* get barometric altitude */
+            f_Curr_Alt = (float)ui_Gps_Alt;                 /* get GPS altitude */
 #else                                                       /* simulation mode */
             Nav_Pid.fKp = Simulator_Get_Gain(SIM_NAV_KP);   /* update PID gains */
             Nav_Pid.fKi = Simulator_Get_Gain(SIM_NAV_KI);
