@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-// Change: added definition of NAV_BANK, maximum bank angle during navigation
+// Change: added option CALIBRATE_SENSOR
 //
 //============================================================================*/
 
@@ -69,6 +69,9 @@
 
 /* comment out this line if you are not going to use altitude hold */
 #define ALTITUDEHOLD                    //!< altitude hold option
+
+/* comment out this line to disable initial sensor calibration */
+//#define CALIBRATE_SENSORS               //!< initial calibration option
 
 /* The range of altitude within which to linearly vary the throttle
    and pitch to maintain altitude. Bigger values makes altitude hold
