@@ -16,7 +16,8 @@
 ///  roll and pitch angles, without need to either subtract PI/2 from reference
 ///  point or to add PI/2 to the set point.
 ///
-// Change (Lint) removed VAR_GLOBAL and #undef, pvParameters made (void)
+// Change: sensor offsets initialized with plausible values, 
+//         sensor offset measured only if CALIBRATE_SENSOR is #defined
 //
 //============================================================================*/
 
@@ -93,7 +94,8 @@ VAR_STATIC float f_Input;                //!< PID input
 VAR_STATIC float f_Output;               //!< PID output
 VAR_STATIC uint8_t uc_Sensor_Data[12];   //!< raw IMU data
 VAR_STATIC int16_t i_Sensor_Offset[6] =  //!< IMU sensors offset
-{ 0, 0, 0, 0, 0, 0 };
+{ 0x02, 0x00, 0x3F, 0x02, 0x05, 0x06 };
+
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -145,15 +147,16 @@ void Attitude_Task(void *pvParameters)
     vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 5);
     LEDOff(BLUE);
 
+#ifdef CALIBRATE_SENSORS
     /* Compute sensor offsets */
     for (i = 0; i < 64; i++) {
         vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
-#if (SIMULATOR == SIM_NONE)                                 // normal mode
+  #if (SIMULATOR == SIM_NONE)                               // normal mode
         (void)GetAccelRaw(uc_Sensor_Data);                  // acceleration
         (void)GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]); // rotation
-#else                                                       // simulation mode
+  #else                                                     // simulation mode
         Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);   // get simulator sensors
-#endif
+  #endif
         p_sensor = (int16_t *)uc_Sensor_Data;
         for (j = 0; j < 6; j++) {                       // accumulate
             i_Sensor_Offset[j] += *p_sensor++;
@@ -162,6 +165,7 @@ void Attitude_Task(void *pvParameters)
     for (j = 0; j < 6; j++) {                           // average
         i_Sensor_Offset[j] = i_Sensor_Offset[j] / 64;
     }
+#endif
 
     /* Compute attitude and heading */
     for (;;) {
