@@ -6,7 +6,7 @@
 // $Author: $
 /// \brief BMP085 lPressure sensor driver
 ///
-//  Change some major renaming according coding rules
+//  Change: temperature read with every pressure sample, not only at start up
 //
 //============================================================================*/
 
@@ -157,7 +157,7 @@ void BMP085_Handler(void)
 
     case COMPUTE_ALTITUDE:          /* compute altitude from pressure */
         lAltitude =(((745 * (11390 - (lPressure / 10))) / 256 + 46597) * (11390 - (lPressure / 10))) / 65536 - 966;
-        eBMP085_Status = START_PRESS_CONVERSION;
+        eBMP085_Status = START_TEMP_CONVERSION;
         break;
 
     default:
