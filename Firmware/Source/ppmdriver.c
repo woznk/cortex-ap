@@ -29,7 +29,9 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change added low pass filter on cSignalLevel
+//  Change: NAVIGATION mode enabled only if switch mode is in NAV position and 
+//          both elevator and aileron joysticks are in the rest position,
+//          #defined some explicit constants, #defined some explicit constants.
 //
 //============================================================================*/
 
@@ -54,6 +56,14 @@
 
 #define PPM_PERIOD          65535   ///< capture timer period
 #define PRESCALER           23      ///< capture timer prescaler
+
+#define MANUAL_THRESHOLD_L  1100    ///< lower threshold for MANUAL mode
+#define STAB_THRESHOLD_L    1400    ///< lower threshold for STABILIZED mode
+#define STAB_THRESHOLD_U    1600    ///< upper threshold for STABILIZED mode
+#define NAV_THRESHOLD_U     1900    ///< upper threshold for NAVIGATION mode
+
+#define REST_THRESHOLD_L    1450    ///< lower threshold for rest position
+#define REST_THRESHOLD_U    1550    ///< upper threshold for rest position
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -243,16 +253,24 @@ int16_t PPMGetChannel(uint8_t ucChannel)
 ///----------------------------------------------------------------------------
 uint8_t PPMGetMode(void)
 {
-    uint16_t uiWidth;
-    uiWidth = uiPulseBuffer[MODE_CHANNEL];
+    uint16_t ui_mode, ui_aileron, ui_elevator;
+
+    ui_mode = uiPulseBuffer[MODE_CHANNEL];
+    ui_aileron = uiPulseBuffer[AILERON_CHANNEL];
+    ui_elevator = uiPulseBuffer[ELEVATOR_CHANNEL];
 
     if (cSignalLevel == 0) {
         return MODE_RTL;
-    } else if ( uiWidth < 1100 ) {
+    } else if (ui_mode < MANUAL_THRESHOLD_L) {      // mode switch in manual
         return MODE_MANUAL;
-    } else if (( uiWidth > 1400 ) && ( uiWidth < 1600 )) {
+    } else if ((ui_mode > STAB_THRESHOLD_L) &&      // mode switch in stabilized
+               (ui_mode < STAB_THRESHOLD_U)) {
         return MODE_STAB;
-    } else if ( uiWidth > 1900 ) {
+    } else if ((ui_mode > NAV_THRESHOLD_U) &&       // mode switch in navigation
+               (ui_aileron < REST_THRESHOLD_U) &&   // aileron joystick released
+               (ui_aileron > REST_THRESHOLD_L) &&
+               (ui_elevator < REST_THRESHOLD_U) &&  // elevator joystick released
+               (ui_elevator > REST_THRESHOLD_L)) {
         return MODE_NAV;
     } else {
         return MODE_UNDEFINED;
