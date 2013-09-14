@@ -9,7 +9,8 @@
 ///
 /// \file
 ///
-// Change: added option CALIBRATE_SENSOR
+// Change: parameter "NAV_BANK"expressed in degrees istead of radians for 
+//         easier modification with GCS
 //
 //============================================================================*/
 
@@ -40,7 +41,7 @@
 #define NAV_KP          5.0f            //!< Navigation P gain
 #define NAV_KI          0.05f           //!< Navigation I gain
 #define NAV_KD          0.0f            //!< Navigation D gain
-#define NAV_BANK        0.1745329f      //!< Navigation bank angle max [rad]
+#define NAV_BANK        20.0f           //!< Navigation bank angle max [deg]
 
 /* Speed PID initial gains */
 #define SPEED_KP        1.0f            //!< Speed P gain
