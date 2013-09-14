@@ -31,23 +31,22 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
+/* Change: enabled DMA */
+
 #include "FreeRTOS.h"
 #include "task.h"
 
 #include "stm32f10x.h"
 #include "stm32f10x_spi.h"
+#include "stm32f10x_dma.h"
+
 #include "ffconf.h"
 #include "diskio.h"
 
 #define USE_STM32_DISCOVERY
 
 // demo uses a command line option to define this (see Makefile):
-// #define STM32_SD_USE_DMA
-
-#ifdef STM32_SD_USE_DMA
-// #warning "Information only: using DMA"
-#pragma message "*** Using DMA ***"
-#endif
+#define STM32_SD_USE_DMA
 
 /* set to 1 to provide a disk_ioctrl function even if not needed by the FatFs */
 #define STM32_SD_DISK_IOCTRL_FORCE      0
