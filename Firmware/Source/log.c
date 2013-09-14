@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change modified function log_write() for 32 bit variables
+//  Change: log file no longer closed when radio signal of RC is lost
 //
 //============================================================================*/
 
@@ -31,7 +31,7 @@
 #   define VAR_STATIC static
 #endif
 
-#define MAX_SAMPLES 20000    //!< Max number of samples that can be written
+#define MAX_SAMPLES 2000    //!< Max number of samples that can be written
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -71,6 +71,8 @@ static __inline void log_position(void);
 /// \return  -
 /// \remarks task initially waits 20 sec to avoid contention between log file
 ///          and path file, read by navigation task.
+/// \todo    replace delay with another synchonization system between log task
+///          and nav task
 ///
 ///----------------------------------------------------------------------------
 void Log_Task( void *pvParameters ) {
@@ -195,7 +197,7 @@ static __inline void log_raw_gps(void) {
         uc_Index = (uc_Index + (BUFFER_LENGTH / 2)) % BUFFER_LENGTH;
 
         if (((BUFFER_LENGTH / 2) != wWritten) || // no file space
-             (PPMGetMode() == MODE_RTL)) {       // RC turned off
+             (++ui_Samples >= MAX_SAMPLES)) {    // too many samples
             ( void )f_close(&st_File);           // close file
             b_File_Ok = FALSE;                   // halt GPS logging
         }
@@ -229,10 +231,6 @@ static __inline void log_position(void) {
         l_Value [3] = BMP085_Get_Altitude();    // get baro altitude
         log_write(l_Value, 4);                  // log position
 
-        if (PPMGetMode() == MODE_RTL) {         // RC turned off
-            ( void )f_close(&st_File);          // close file
-            b_File_Ok = FALSE;                  // halt position logging
-        }
     }
 }
 
