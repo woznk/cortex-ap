@@ -244,7 +244,8 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Changes added parameter "NAV_BANK" for maximum bank rate during navigation
+/// Change: parameter "TEL_NAV_BANK" converted from degrees into radians before 
+///         returning its value, in function Telemetry_Get_Gainvalue()
 ///
 //============================================================================*/
 
@@ -1532,11 +1533,30 @@ void Telemetry_Get_Sensors(int16_t * piSensors)
 //----------------------------------------------------------------------------
 float Telemetry_Get_Gain(telEnum_Gain gain)
 {
-    if (gain < TEL_GAIN_NUMBER) {
-        return fParam_Value[gain];
-    } else {
-        return 0.0f;
+    float f_result;
+
+    switch (gain) {
+        case TEL_ROLL_KP :
+        case TEL_ROLL_KI :
+        case TEL_PITCH_KP :
+        case TEL_PITCH_KI :
+        case TEL_ALT_KP :
+        case TEL_ALT_KI :
+        case TEL_NAV_KP :
+        case TEL_NAV_KI :
+            f_result = fParam_Value[gain];
+            break;
+
+        case TEL_NAV_BANK :
+            f_result = ToRad(fParam_Value[gain]);
+            break;
+
+        case TEL_GAIN_NUMBER :
+        default :
+            f_result = 0.0f;
+            break;
     }
+    return f_result;
 }
 
 //----------------------------------------------------------------------------
