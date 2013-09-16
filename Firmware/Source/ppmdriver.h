@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change  #definition of radio channels model moved to config.h
+//  Change: added #definition of MODE_NUM
 //
 //============================================================================*/
 
@@ -29,11 +29,12 @@
 
 /* Control mode definitions */
 #define MODE_UNDEFINED      0   ///< mode is undefined
-#define MODE_STAB           1   ///< stabilize roll and pitch
-#define MODE_NAV            2   ///< navigate
-#define MODE_MANUAL         3   ///< manual control
+#define MODE_MANUAL         1   ///< manual control
+#define MODE_STAB           2   ///< stabilize roll and pitch
+#define MODE_NAV            3   ///< navigate
 #define MODE_RTL            4   ///< return to launch
 #define MODE_FPV            5   ///< stabilize camera for FPV
+#define MODE_NUM            6
 
 /*----------------------------------- Macros ---------------------------------*/
 
