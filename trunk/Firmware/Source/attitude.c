@@ -16,8 +16,8 @@
 ///  roll and pitch angles, without need to either subtract PI/2 from reference
 ///  point or to add PI/2 to the set point.
 ///
-// Change: sensor offsets initialized with plausible values, 
-//         sensor offset measured only if CALIBRATE_SENSOR is #defined
+// Change: added watchdog reset,
+//         initial 5 sec delay conditioned to CALIBRATE-SENSORS #define
 //
 //============================================================================*/
 
@@ -27,6 +27,7 @@
 #include "math.h"
 
 #include "stm32f10x.h"
+#include "stm32f10x_wwdg.h"
 
 #include "i2c_mems_driver.h"
 #include "l3g4200d_driver.h"
@@ -58,6 +59,9 @@
 #ifndef VAR_STATIC
 #define VAR_STATIC static
 #endif
+
+/* delay for attitude task */
+#define AHRS_DELAY      (configTICK_RATE_HZ / SAMPLES_PER_SECOND)
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -142,15 +146,16 @@ void Attitude_Task(void *pvParameters)
     PID_Init(&Roll_Pid);
     PID_Init(&Pitch_Pid);
 
+#ifdef CALIBRATE_SENSORS
+
     /* Wait until aircraft settles */
     LEDOn(BLUE);
     vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 5);
     LEDOff(BLUE);
 
-#ifdef CALIBRATE_SENSORS
     /* Compute sensor offsets */
     for (i = 0; i < 64; i++) {
-        vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
+        vTaskDelayUntil(&Last_Wake_Time, AHRS_DELAY);
   #if (SIMULATOR == SIM_NONE)                               // normal mode
         (void)GetAccelRaw(uc_Sensor_Data);                  // acceleration
         (void)GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]); // rotation
@@ -158,11 +163,11 @@ void Attitude_Task(void *pvParameters)
         Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);   // get simulator sensors
   #endif
         p_sensor = (int16_t *)uc_Sensor_Data;
-        for (j = 0; j < 6; j++) {                       // accumulate
+        for (j = 0; j < 6; j++) {                           // accumulate
             i_Sensor_Offset[j] += *p_sensor++;
         }
     }
-    for (j = 0; j < 6; j++) {                           // average
+    for (j = 0; j < 6; j++) {                               // average
         i_Sensor_Offset[j] = i_Sensor_Offset[j] / 64;
     }
 #endif
@@ -170,30 +175,32 @@ void Attitude_Task(void *pvParameters)
     /* Compute attitude and heading */
     for (;;) {
 
-        vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ / SAMPLES_PER_SECOND);
+        vTaskDelayUntil(&Last_Wake_Time, AHRS_DELAY);
 
-        uc_Blink_Blue = (uc_Blink_Blue + 1) % 10;       // blink led @ 10 Hz
-        if (uc_Blink_Blue < 3) {                        // duty cycle 30 %
+        WWDG_SetCounter(127);                               // Update WWDG counter
+
+        uc_Blink_Blue = (uc_Blink_Blue + 1) % 10;           // blink led @ 10 Hz
+        if (uc_Blink_Blue < 3) {                            // duty cycle 30 %
             LEDOn(BLUE);
         } else {
             LEDOff(BLUE);
         }
 
         /* Read sensors */
-#if (SIMULATOR == SIM_NONE)                                   // normal mode
-        (void)GetAccelRaw(uc_Sensor_Data);                    // acceleration
-        (void)GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]);   // rotation
+#if (SIMULATOR == SIM_NONE)                                 // normal mode
+        (void)GetAccelRaw(uc_Sensor_Data);                  // acceleration
+        (void)GetAngRateRaw((uint8_t *)&uc_Sensor_Data[6]); // rotation
         BMP085_Handler();
-#else                                                         // simulation mode
-        Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);     // get simulator sensors
+#else                                                       // simulation mode
+        Simulator_Get_Raw_IMU((int16_t *)uc_Sensor_Data);   // get simulator sensors
 #endif
         /* Offset and sign correction */
         p_sensor = (int16_t *)uc_Sensor_Data;
         for (j = 0; j < 6; j++) {
-            *p_sensor -= i_Sensor_Offset[j];            // strip offset
-            *p_sensor *= iSensor_Sign[j];               // correct sign
-            if (j == 2) {                               // z acceleration
-               *p_sensor += (int16_t)GRAVITY;           // add gravity
+            *p_sensor -= i_Sensor_Offset[j];                // strip offset
+            *p_sensor *= iSensor_Sign[j];                   // correct sign
+            if (j == 2) {                                   // z acceleration
+               *p_sensor += (int16_t)GRAVITY;               // add gravity
             }
             p_sensor++;
         }
