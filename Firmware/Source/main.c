@@ -18,7 +18,10 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: added watchdog initialization
+// Change: removed watchdog start from configuration function (watchdog started
+//         at first run of attitude task), watchdog reset flag saved in 
+//         b_watchdog_reset variable and indicated by red LED prior of task
+//         creation
 //
 //============================================================================*/
 
@@ -94,6 +97,8 @@ VAR_GLOBAL FIL st_File;     //!< file object
 VAR_GLOBAL bool b_FS_Ok;    //!< file status
 
 /*----------------------------------- Locals ---------------------------------*/
+
+VAR_STATIC bool b_watchdog_reset;
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -199,19 +204,22 @@ int32_t main(void) {
      system_stm32f10x.c file */
 
   if (RCC_GetFlagStatus(RCC_FLAG_WWDGRST) != RESET) {   /* the system has resumed from WWDG reset */
-    LEDOn(RED);                                         /* */
+    b_watchdog_reset = TRUE;                            /* */
     RCC_ClearFlag();                                    /* clear flags of reset source */
   } else {
-    LEDOff(RED);                                        /* */
+    b_watchdog_reset = FALSE;                           /* */
   }
 
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
-  RCC_Configuration();                              // System Clocks Configuration
-  GPIO_Configuration();                             // GPIO Configuration
+  RCC_Configuration();                              // Configure System Clocks 
+  GPIO_Configuration();                             // Configure GPIO 
+  WWDG_Configuration();                             // Configure watchdog
+
   USART1_Init();              						// Initialize USART1 for telemetry
   Servo_Init();                                     // Initialize PWM timers as servo outputs
   PPM_Init();                                       // Initialize capture timers as RRC input
-  I2C_MEMS_Init();                                  // I2C peripheral initialization
+  I2C_MEMS_Init();                                  // Initialize I2C peripheral 
+
 /*
   xTelemetry_Queue = xQueueCreate( 3, sizeof( telStruct_Message ) );
   while ( xTelemetry_Queue == 0 ) {                 // Halt if queue wasn't created
@@ -227,13 +235,18 @@ int32_t main(void) {
     b_FS_Ok = FALSE;                                //
   }
 
+  if (b_watchdog_reset) {
+     LEDOn(RED);
+  } else {
+     LEDOff(RED);
+  }
+
   (void)xTaskCreate(Attitude_Task, (signed portCHAR *) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
   (void)xTaskCreate(disk_timerproc, (signed portCHAR *) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
   (void)xTaskCreate(Navigation_Task, (signed portCHAR *) "Navigation", 128, NULL, mainNAV_PRIORITY, NULL);
   (void)xTaskCreate(Telemetry_Task, (signed portCHAR *) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
   (void)xTaskCreate(Log_Task, (signed portCHAR *) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
-  WWDG_Configuration();                             // Configure watchdog and start it
   vTaskStartScheduler();                            // Start scheduler
 
   for (;;) {
@@ -259,9 +272,10 @@ void RCC_Configuration(void)
   RCC_PCLK2Config(RCC_HCLK_Div1);
 
   /* TIM2, TIM3 USART2 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 |  // Used for PPM signal capture
-                         RCC_APB1Periph_TIM3 |  // Used for servo signal PWM
-                         RCC_APB1Periph_USART2, // Used for GPS communication
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 |   // Used for PPM signal capture
+                         RCC_APB1Periph_TIM3 |   // Used for servo signal PWM
+                         RCC_APB1Periph_USART2 | // Used for GPS communication
+                         RCC_APB1Periph_WWDG,    // Used for watchdog
                          ENABLE);
 
   /* GPIOA, GPIOB, GPIOC, USART1 clock enable */
@@ -274,9 +288,6 @@ void RCC_Configuration(void)
 
   /* DMA 1 clock enable */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-
-  /* WWDG clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
 
 }
 
@@ -373,7 +384,6 @@ void WWDG_Configuration(void)
 {
   WWDG_SetPrescaler(WWDG_Prescaler_4);    /* Set WWDG clock */
   WWDG_SetWindowValue(100);               /* Set Window value to 100 */
-  WWDG_Enable(127);                       /* Enable WWDG  */
 }
 
 #ifdef  USE_FULL_ASSERT
