@@ -18,8 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change (Lint) corrected file #inclusion, removed #undef, 
-//        commented unused functions, pvParameters made (void)
+// Change: added watchdog initialization
 //
 //============================================================================*/
 
@@ -28,6 +27,7 @@
 #include "queue.h"
 
 #include "stm32f10x_rcc.h"
+#include "stm32f10x_wwdg.h"
 #include "misc.h"
 
 #include "i2c_mems_driver.h"
@@ -99,6 +99,7 @@ VAR_GLOBAL bool b_FS_Ok;    //!< file status
 
 void RCC_Configuration(void);
 void GPIO_Configuration(void);
+void WWDG_Configuration(void);
 
 /*--------------------------------- Functions --------------------------------*/
 
@@ -197,6 +198,13 @@ int32_t main(void) {
      To reconfigure the default setting of SystemInit() function, refer to
      system_stm32f10x.c file */
 
+  if (RCC_GetFlagStatus(RCC_FLAG_WWDGRST) != RESET) {   /* the system has resumed from WWDG reset */
+    LEDOn(RED);                                         /* */
+    RCC_ClearFlag();                                    /* clear flags of reset source */
+  } else {
+    LEDOff(RED);                                        /* */
+  }
+
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
   RCC_Configuration();                              // System Clocks Configuration
   GPIO_Configuration();                             // GPIO Configuration
@@ -225,7 +233,8 @@ int32_t main(void) {
   (void)xTaskCreate(Telemetry_Task, (signed portCHAR *) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
   (void)xTaskCreate(Log_Task, (signed portCHAR *) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
-  vTaskStartScheduler();
+  WWDG_Configuration();                             // Configure watchdog and start it
+  vTaskStartScheduler();                            // Start scheduler
 
   for (;;) {
   }
@@ -265,6 +274,9 @@ void RCC_Configuration(void)
 
   /* DMA 1 clock enable */
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+
+  /* WWDG clock enable */
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
 
 }
 
@@ -334,6 +346,35 @@ void GPIO_Configuration(void)
   GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
+///----------------------------------------------------------------------------
+///
+/// \brief   Configuration of window watchdog
+/// \param   -
+/// \return  -
+/// \remarks The WWDG clock is:
+///
+///          PCLK1 / 4096 / PRESCALER = 24MHz / 4096 / 4 = 1465 Hz (~682 us).
+///
+///          WWDG counter should be refreshed only when the counter is below
+///          window value and above 64, otherwise a reset will be generated.
+///
+///          WWDG is enabled setting counter value to 127 (fixed).
+///
+///          The WWDG timeout is:
+///
+///          ~682 us * 64 = 43.69 ms
+///
+///          The refresh window is:
+///
+///          ~682us * (127 - 100) = 18.41ms < window < ~682us * 64 = 43.69ms
+///
+///----------------------------------------------------------------------------
+void WWDG_Configuration(void)
+{
+  WWDG_SetPrescaler(WWDG_Prescaler_4);    /* Set WWDG clock */
+  WWDG_SetWindowValue(100);               /* Set Window value to 100 */
+  WWDG_Enable(127);                       /* Enable WWDG  */
+}
 
 #ifdef  USE_FULL_ASSERT
 ///----------------------------------------------------------------------------
