@@ -244,8 +244,9 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Change: parameter "TEL_NAV_BANK" converted from degrees into radians before 
-///         returning its value, in function Telemetry_Get_Gainvalue()
+/// Change: restored original system ID (20) and component ID (200),
+///         replaced #defines PARAM_SYSTEM_ID and PARAM_COMPONENT_ID with
+///         System_ID and Component_ID variables respectively
 ///
 //============================================================================*/
 
@@ -269,8 +270,7 @@
 #define ONBOARD_PARAM_COUNT         ((uint16_t)TEL_GAIN_NUMBER)
 #define ONBOARD_PARAM_NAME_LENGTH   16
 
-#define PARAM_SYSTEM_ID             1       // 20
-#define PARAM_COMPONENT_ID          1       // 200
+#define SYSTEM_ID                   20
 
 //#define PACKET_LEN                MAVLINK_MAX_PACKET_LEN  // original length
 #define PACKET_LEN                  64                      // reduced because of RAM constraints
@@ -558,10 +558,10 @@ VAR_STATIC const uint8_t sParameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME
     "NAV_BANK\0"    // Max bank angle during navigation [deg]
 };
 
-//VAR_STATIC const uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;
-//VAR_STATIC const uint8_t System_Type = MAV_TYPE_FIXED_WING;       // Define system type, airplane
-VAR_STATIC const uint8_t System_ID = 20;
-VAR_STATIC const enum MAV_COMPONENT Component_ID = MAV_COMP_ID_IMU;
+//VAR_STATIC const uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;  // Autopilot capabilities
+//VAR_STATIC const uint8_t System_Type = MAV_TYPE_FIXED_WING;       // Aircraft type
+VAR_STATIC const uint8_t System_ID = SYSTEM_ID;                     // System ID
+VAR_STATIC const enum MAV_COMPONENT Component_ID = MAV_COMP_ID_IMU; // Component ID
 
 /*---------------------------------- Globals ---------------------------------*/
 
@@ -963,8 +963,8 @@ void Mavlink_Param_Set( void ) {
 	uint8_t i, j;
 
     f_value = *(float *)(&Rx_Msg[0]);
-    if ((Rx_Msg[4] == PARAM_SYSTEM_ID) &&                       // message is for this system
-        (Rx_Msg[5] == PARAM_COMPONENT_ID)) {                    // message is for this component
+    if ((Rx_Msg[0] == System_ID) &&                // message is for this system
+        (Rx_Msg[1] == Component_ID)) {             // message is for this component
         for (i = 0; i < ONBOARD_PARAM_COUNT; i++) {
             match = TRUE;
             for (j = 0; j < ONBOARD_PARAM_NAME_LENGTH; j++) {
@@ -1126,8 +1126,8 @@ void Mavlink_HIL_State( void ) {
 //----------------------------------------------------------------------------
 void Mavlink_Mission_Count( void ) {
 
-    if ((Rx_Msg[0] == PARAM_SYSTEM_ID) &&               // message is for this system
-        (Rx_Msg[1] == PARAM_COMPONENT_ID)) {            // message is for this component
+    if ((Rx_Msg[0] == System_ID) &&                // message is for this system
+        (Rx_Msg[1] == Component_ID)) {             // message is for this component
         Tx_Msg[1] = 4;                                  // payload length
         Tx_Msg[5] = MAVLINK_MSG_ID_MISSION_COUNT;       // mission count message ID
         *((uint16_t *)(&Tx_Msg[6])) = Nav_Wpt_Number(); // number of waypoints
@@ -1167,8 +1167,8 @@ void Mavlink_Mission_Item( void ) {
 
     uint16_t index;
 
-    if ((Rx_Msg[2] == PARAM_SYSTEM_ID) &&           // message is for this system
-        (Rx_Msg[3] == PARAM_COMPONENT_ID)) {        // message is for this component
+    if ((Rx_Msg[0] == System_ID) &&                // message is for this system
+        (Rx_Msg[1] == Component_ID)) {             // message is for this component
 
         index = *((uint16_t *)(&Rx_Msg[0]));                    // get waypoint index
         Nav_Wpt_Get(index, &wpt);                               // get waypoint data
