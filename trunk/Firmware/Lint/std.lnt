@@ -2,7 +2,7 @@
 //  Standard lint options
 
 +v  
--i"D:\Work\cxap\branches\LINT1\Firmware\Lint"
+-i"D:\Work\cxap\trunk\Firmware\Lint"
 //au-misra2.lnt
 CO-RV.LNT
 options.lnt  -si4 -sp4
