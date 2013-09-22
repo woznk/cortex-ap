@@ -244,9 +244,10 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Change: restored original system ID (20) and component ID (200),
-///         replaced #defines PARAM_SYSTEM_ID and PARAM_COMPONENT_ID with
-///         System_ID and Component_ID variables respectively
+/// Change: system ID and component ID set to 1 (still some issue with 
+///         droidplanner; will be fixed in future releases, according user forum),
+///         corrected offsets of System_ID and Component_ID in the received
+//          buffer for message of MAVLINK_MSG_ID_MISSION_ITEM message.
 ///
 //============================================================================*/
 
@@ -269,8 +270,6 @@
 
 #define ONBOARD_PARAM_COUNT         ((uint16_t)TEL_GAIN_NUMBER)
 #define ONBOARD_PARAM_NAME_LENGTH   16
-
-#define SYSTEM_ID                   20
 
 //#define PACKET_LEN                MAVLINK_MAX_PACKET_LEN  // original length
 #define PACKET_LEN                  64                      // reduced because of RAM constraints
@@ -560,8 +559,8 @@ VAR_STATIC const uint8_t sParameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME
 
 //VAR_STATIC const uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;  // Autopilot capabilities
 //VAR_STATIC const uint8_t System_Type = MAV_TYPE_FIXED_WING;       // Aircraft type
-VAR_STATIC const uint8_t System_ID = SYSTEM_ID;                     // System ID
-VAR_STATIC const enum MAV_COMPONENT Component_ID = MAV_COMP_ID_IMU; // Component ID
+VAR_STATIC const uint8_t System_ID = 1;                             // System ID (original: 20)
+VAR_STATIC const enum MAV_COMPONENT Component_ID = 1;               // Component ID (original: MAV_COMP_ID_IMU)
 
 /*---------------------------------- Globals ---------------------------------*/
 
@@ -1167,8 +1166,8 @@ void Mavlink_Mission_Item( void ) {
 
     uint16_t index;
 
-    if ((Rx_Msg[0] == System_ID) &&                // message is for this system
-        (Rx_Msg[1] == Component_ID)) {             // message is for this component
+    if ((Rx_Msg[2] == System_ID) &&                // message is for this system
+        (Rx_Msg[3] == Component_ID)) {             // message is for this component
 
         index = *((uint16_t *)(&Rx_Msg[0]));                    // get waypoint index
         Nav_Wpt_Get(index, &wpt);                               // get waypoint data
