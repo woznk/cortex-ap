@@ -11,6 +11,20 @@
      facilmente sostituibile dal task di telemetria che può inviare i valori di 
      sensori al suo posto.
 
+     22/09/13
+     Trovato dove si blocca il micro e lo scheduler di FreeRTOS.
+     Riga 756 di cpal_i2c.c, chiamata alla macro:
+
+     __CPAL_I2C_TIMEOUT(__CPAL_I2C_HAL_GET_SB(pDevInitStruct->CPAL_Dev), CPAL_I2C_TIMEOUT_SB);
+
+     Lo stack di chiamata è:
+
+       Attitude_Task()
+       L3G4200_Init()
+       SetODR()
+       I2CMEMS_Read_Reg()
+       CPAL_I2C_IsDeviceReady()
+
 
 @par Simulazione
 
