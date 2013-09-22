@@ -36,8 +36,8 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: parameter "NAV_BANK"expressed in degrees istead of radians for 
-///         easier modification with GCS
+/// Change: corrected parsing of coordinates according higher precision of
+///         uBlox GPS: 5 decimal digits instead of 4.
 //
 //============================================================================*/
 
@@ -484,7 +484,7 @@ static void parse_coord( float * f_coord, uint8_t c )
             ul_Temp_Coord = 0UL;
             break;
         case ',' :
-            *f_coord += (float)ul_Temp_Coord / 600000.0f;       // decimal part
+            *f_coord += (float)ul_Temp_Coord / 6000000.0f;      // decimal part
             ul_Temp_Coord = 0UL;
             break;
         default :
