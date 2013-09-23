@@ -20,12 +20,21 @@
 
      Lo stack di chiamata è:
 
-       Attitude_Task()
-       L3G4200_Init()
-       SetODR()
-       I2CMEMS_Read_Reg()
-       CPAL_I2C_IsDeviceReady()
+       Funzione                      Occupazione stack
+       ----------------------------------------------------
+       Attitude_Task()               14 
+       L3G4200_Init()                 0 + indirizzo ritorno
+       SetODR()                       2 + indirizzo ritorno
+       I2CMEMS_Read_Reg()             6 + indirizzo ritorno
+       CPAL_I2C_IsDeviceReady()       8 + indirizzo ritorno
+       CPAL_I2C_Timeout()             8 + indirizzo ritorno
+       CPAL_TIMEOUT_UserCallback()    4 + indirizzo ritorno
+       ----------------------------------------------------
+                             Totale  42 + 6 indirizzi di ritorno
 
+       Ipotizzando 4 bytes per l'indirizzo di ritorno, l'occupazione totale
+       di stack è di 64 bytes, pari esattamente allo stack allocato per il 
+       task attitude: potrebbe essere insufficiente.
 
 @par Simulazione
 
