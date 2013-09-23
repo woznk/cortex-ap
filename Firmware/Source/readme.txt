@@ -6,6 +6,7 @@
 
 @par Sensori
 
+\todo
      Creare un task di lettura dei MEMS che accoda un messaggio al task attitude 
      con i valori dei sensori. In questo modo, il task di lettura dei MEMS è più 
      facilmente sostituibile dal task di telemetria che può inviare i valori di 
@@ -56,11 +57,6 @@
 
 @par Log
 
-     Il task di log potrebbe funzionare a tempo e salvare su SD i dati utili 
-     leggendoli autonomamente mediante funzioni di interfaccia.
-     Problemi di inconsistenza dei dati potrebbero essere risolti con semafori
-     che "occupano" il dato quando deve essere aggiornato.
-
      01/09/13
      Abilitato task di log con funzionamento dipendente dalla posizione del 
      selettore MODE all'accensione del RC:
@@ -74,7 +70,7 @@
      Conflitti sul file system sono evitati attendendo che il task di 
      navigazione abbia terminato di leggere il file dei waypoint (10 secondi).
 
-     \todo
+\todo
      Migliorare la sincronizzazione sostituendo l'attesa con un semaforo.
 
 
@@ -277,7 +273,6 @@
      del motore ? pesi ?). 
      Abilitando la navigazione l'aereo entra in vite perchè L'escursione degli alettoni 
      è eccessiva.
-      
 
      12/09/13
      Seconda prova sul campo.
@@ -322,8 +317,13 @@
      longitudine ed è aggiornata a 1 Hz (GPS).
      L'angolo di bank dovrebbe quindi essere aggiornato a 20 Hz, e non avere un andamento  
      a scatti con frequenza 1 Hz.
-     Il movimento a scatti potrebbe essere dovuto ai parametri del PID di navigazione, 
-     Kp = 5 (alto) e Ki = 0,001 (basso).
+     Il movimento a scatti potrebbe essere dovuto a:
+        - parametri del PID di navigazione, Kp = 5 (alto) e Ki = 0,001 (basso).
+        - periodo di ricalcolo PID = 1 sec (troppo lungo)
+
+\todo
+     Aggiornare il PID di navigazione con frequenza maggiore, spostandolo nel task AHRS
+     oppure chiamandolo anche se la funzione GPS_Parse() ritorna FALSE.
 
      Analisi crash:
      Ormai da escludere problemi di alimentazione, più probabile un blocco del micro.
@@ -332,6 +332,13 @@
      Se si tratta di un blocco del micro, la causa potrebbe essere un eccesso di interrupt
      di cattura dovuti a disturbi sul segnale PPM proveniente dalla radio.
 
+     17/09/13
+     Stress test interrupt di cattura con generatore di segnale all'ingresso PPM.
+     GPS e £D Radio sconnessi, nessun altra fonte di interrupt esterno.
+
+     Risultato:
+     Il sistema non fa una piega. Provata frequenza di impulsi fino a 17 MHz.
+     
 
 @par PID
      
@@ -362,19 +369,23 @@
 
 @par Modifiche hardware
      
-     Aggiungere batteria tampone per RTC
-     Eliminare CD 4504 D o sostituirlo con componente reperibile
-     Correggere package LD1117 o cambiare tipo di stabilizzatore
-     Sostituire sensore di pressione differenziale con MP3V5004DP
-     Collegare il pin EOC del barometro BMP085 al micro
-     Aggiungere la possibilità di resettare i sensori (accel, gyro, baro)
-     Aggiungere SPI per modulo radio Hope RF 23
-     Aggiungere altre uscite per i servocomandi
-     Togliere pulsante di reset 
-     Aggiungere soppressore di disturbi sull'alimentazione
-     Sostituire avvelerometri e giroscopi con MPU 6000 o MPU 6050 Invensense
-     Usare SPI per leggere giroscopi / sensori, I2C dà troppi problemi 
-     Prevedere connessione servi ad angolo retto
+     Modifiche:
+        - eliminare CD 4504 D / sostituire con componente reperibile 
+        - correggere package LD1117 / cambiare tipo di stabilizzatore
+        - sostituire sensore di pressione differenziale con MP3V5004DP
+        - collegare il pin EOC del barometro BMP085 al micro
+        - sostituire BMP085 con altro sensore barometrico
+        - sostituire accelerometri e giroscopi con MPU 6000 Invensense
+        - togliere pulsante di reset 
+
+     Aggiunte :
+        - batteria tampone per RTC
+        - linea di reset per i sensori (accel, gyro, baro) comandata dal micro
+        - altre uscite per i servocomandi
+        - connessione servi ad angolo retto
+        - soppressore di disturbi sull'alimentazione
+        - SPI per leggere sensori (I2C dà troppi problemi)
+
 
 @par How to use it ? 
 
