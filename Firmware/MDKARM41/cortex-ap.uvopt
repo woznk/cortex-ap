@@ -613,8 +613,8 @@
       <Focus>0</Focus>
       <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>143</TopLine>
+      <CurrentLine>162</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\nav.c</PathWithFileName>
       <FilenameWithoutPath>nav.c</FilenameWithoutPath>
@@ -709,10 +709,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>58</ColumnNumber>
+      <ColumnNumber>29</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>43</TopLine>
-      <CurrentLine>64</CurrentLine>
+      <TopLine>186</TopLine>
+      <CurrentLine>210</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\attitude.c</PathWithFileName>
       <FilenameWithoutPath>attitude.c</FilenameWithoutPath>
@@ -1216,7 +1216,7 @@
     </File>
     <File>
       <GroupNumber>4</GroupNumber>
-      <FileNumber>0</FileNumber>
+      <FileNumber>45</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
@@ -1231,7 +1231,7 @@
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>D:\Work\cxap\trunk\Firmware\Source\config.h</PathWithFilename>
+    <PathWithFilename>D:\Work\cxap\branches\NAV_PID\Firmware\Source\config.h</PathWithFilename>
     <TopLine>1</TopLine>
     <CurrentLine>15</CurrentLine>
     <Constant>0</Constant>
@@ -1261,8 +1261,20 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>0</ActiveTab>
+      <ActiveTab>1</ActiveTab>
       <Documents>
+        <Doc>
+          <Name>..\Source\config.h</Name>
+          <ColumnNumber>78</ColumnNumber>
+          <TopLine>1</TopLine>
+          <CurrentLine>15</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>..\Source\attitude.c</Name>
+          <ColumnNumber>29</ColumnNumber>
+          <TopLine>186</TopLine>
+          <CurrentLine>210</CurrentLine>
+        </Doc>
         <Doc>
           <Name>..\Source\main.c</Name>
           <ColumnNumber>36</ColumnNumber>
@@ -1270,16 +1282,10 @@
           <CurrentLine>375</CurrentLine>
         </Doc>
         <Doc>
-          <Name>..\Source\attitude.c</Name>
-          <ColumnNumber>58</ColumnNumber>
-          <TopLine>43</TopLine>
-          <CurrentLine>64</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>..\Source\config.h</Name>
-          <ColumnNumber>78</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>15</CurrentLine>
+          <Name>..\Source\nav.c</Name>
+          <ColumnNumber>0</ColumnNumber>
+          <TopLine>143</TopLine>
+          <CurrentLine>162</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
