@@ -59,13 +59,14 @@ void Navigation_Task( void *pvParameters );
 float Nav_Altitude ( void );
 float Nav_Heading_Deg ( void );
 float Nav_Bearing_Deg ( void );
-float Nav_Bank_Rad ( void );
 float Nav_Pitch_Rad ( void ) ;
-float Nav_Throttle ( void );
 uint16_t Nav_Distance ( void );
 uint16_t Nav_Wpt_Number ( void );
 uint16_t Nav_Wpt_Index ( void );
 uint16_t Nav_Wpt_Altitude ( void );
 void Nav_Wpt_Get ( uint16_t index, STRUCT_WPT *wpt );
 void Nav_Wpt_Set ( uint16_t index, STRUCT_WPT wpt );
+
+float Nav_Dir_Error ( void ) ;
+float Nav_Alt_Error ( void ) ;
 

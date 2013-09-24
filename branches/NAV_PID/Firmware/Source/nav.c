@@ -102,8 +102,8 @@ VAR_STATIC STRUCT_WPT Waypoint[MAX_WAYPOINTS];         	//!< waypoints array
 VAR_STATIC const uint8_t sz_File[16] = "path.txt";      //!< file name
 VAR_STATIC uint8_t sz_Line[LINE_LENGTH];                //!< input line
 VAR_STATIC UINT w_File_Bytes;                           //!< counter of read bytes
-VAR_STATIC float f_Bank;                                //!< bank angle setpoint [rad]
-VAR_STATIC float f_Throttle;                            //!< throttle
+VAR_STATIC float f_Dir_Error;                           //!< direction error [rad]
+VAR_STATIC float f_Alt_Error;                           //!< altitude error [m]
 VAR_STATIC float f_Pitch;                               //!< pitch setpoint [rad]
 VAR_STATIC float f_Dest_Lat;                            //!< destination latitude
 VAR_STATIC float f_Dest_Lon;                            //!< destination longitude
@@ -125,10 +125,6 @@ VAR_STATIC uint16_t ui_Gps_Alt;                         //!< altitude [m]
 VAR_STATIC uint8_t uc_Gps_Status;                       //!< status of GPS
 VAR_STATIC uint8_t uc_Windex;                           //!< USART buffer write index
 VAR_STATIC uint8_t uc_Rindex;                           //!< USART buffer read index
-VAR_STATIC xPID Nav_Pid;                                //!< Navigation PID loop
-VAR_STATIC float f_Height_Margin = HEIGHT_MARGIN;        //!< altitude hold margin
-VAR_STATIC float f_Throttle_Min = ALT_HOLD_THROTTLE_MIN; //!< altitude hold min throttle
-VAR_STATIC float f_Throttle_Max = ALT_HOLD_THROTTLE_MAX; //!< altitude hold max throttle
 
 /*--------------------------------- Prototypes -------------------------------*/
 
@@ -153,9 +149,9 @@ void Navigation_Task( void *pvParameters ) {
 
     (void)pvParameters;
 
-    f_Bank = 0.0f;                                      // default bank angle
+    f_Dir_Error = 0.0f;                                 // default direction error
+    f_Alt_Error = 0.0f;                                 // default altitude error
     f_Bearing = 0.0f;                                   // angle to destination [°]
-    f_Throttle = MINIMUMTHROTTLE;                       // default throttle
     f_Pitch = 0.0f;                                     // default pitch angle
     uc_Gps_Status = GPS_NOFIX;                          // init GPS status
     ui_Gps_Heading = 0;                                 // aircraft GPS heading [°]
@@ -163,14 +159,6 @@ void Navigation_Task( void *pvParameters ) {
     ui_Distance = 0;                                    // distance to destination [m]
     ui_Wpt_Number = 0;                                  // no waypoint yet
 
-    Nav_Pid.fGain = ToRad(NAV_BANK);                    // limit bank angle during navigation
-    Nav_Pid.fMin = -1.0f;                               //
-    Nav_Pid.fMax = 1.0f;                                //
-    Nav_Pid.fKp = NAV_KP;                               // init gains with default values
-    Nav_Pid.fKi = NAV_KI;                               //
-    Nav_Pid.fKd = NAV_KD;                               //
-
-    PID_Init(&Nav_Pid);                                 // initialize navigation PID
     load_path();                                        // load path from SD card
     /* WARNING: GPS UART must be initialized after loading mission file !!! */
     gps_init();                                         // initialize USART for GPS
@@ -182,7 +170,7 @@ void Navigation_Task( void *pvParameters ) {
     }
 
     /* Save launch position */
-    Waypoint[0].Lon = f_Curr_Lon;                       // save launch position
+    Waypoint[0].Lon = f_Curr_Lon;                       // launch position as first waypoint
     Waypoint[0].Lat = f_Curr_Lat;
     if (ui_Wpt_Number != 0) {                           // waypoint file available
         ui_Wpt_Index = 1;                               // read first waypoint
@@ -195,22 +183,12 @@ void Navigation_Task( void *pvParameters ) {
 
     for (;;) {
         if (parse_gps()) {                                  // NMEA sentence completed
-
 #if (SIMULATOR == SIM_NONE)                                 // normal mode
-            Nav_Pid.fKp = Telemetry_Get_Gain(TEL_NAV_KP);   // update PID gains
-            Nav_Pid.fKi = Telemetry_Get_Gain(TEL_NAV_KI);
-            Nav_Pid.fGain = Telemetry_Get_Gain(TEL_NAV_BANK);
             f_Curr_Alt = (float)BMP085_Get_Altitude();    // get barometric altitude
 //            f_Curr_Alt = (float)ui_Gps_Alt;                 // get GPS altitude
 #else                                                       // simulation mode
-            Nav_Pid.fKp = Simulator_Get_Gain(SIM_NAV_KP);   // update PID gains
-            Nav_Pid.fKi = Simulator_Get_Gain(SIM_NAV_KI);
             f_Curr_Alt = Simulator_Get_Altitude();          // get simulator altitude
 #endif
-            if (PPMGetMode() == MODE_MANUAL) {              // possibly reset PID
-                PID_Init(&Nav_Pid);
-            }
-
             /* Get X and Y components of bearing */
             f_dy = f_Dest_Lon - f_Curr_Lon;
             f_dx = f_Dest_Lat - f_Curr_Lat;
@@ -221,14 +199,14 @@ void Navigation_Task( void *pvParameters ) {
             /* Compute bearing to waypoint */
             f_Bearing = atan2f(f_dy, f_dx) / PI;
 
-            /* Navigation PID controller */
+            /* Compute direction error */
             f_temp = f_Heading - f_Bearing;
             if (f_temp < -1.0f) {
                 f_temp += 2.0f;
             } else if (f_temp > 1.0f) {
                 f_temp = 2.0f - f_temp;
             }
-            f_Bank = PID_Compute(&Nav_Pid, f_temp, 0.0f);
+            f_Dir_Error = f_temp;
 
             /* Compute distance to waypoint */
             f_temp = sqrtf((f_dy * f_dy) + (f_dx * f_dx));
@@ -245,11 +223,14 @@ void Navigation_Task( void *pvParameters ) {
                 f_Dest_Lat = Waypoint[ui_Wpt_Index].Lat;    // new destination latitude
                 f_Dest_Alt = Waypoint[ui_Wpt_Index].Alt;    // new destination altitude
             }
+            f_temp = f_Curr_Alt - f_Dest_Alt;               // altitude error
+            f_Alt_Error = f_temp;
 
             /* Compute throttle and pitch based on altitude error */
+/*
             f_temp = f_Curr_Alt - f_Dest_Alt;               // altitude error
             if (f_temp > f_Height_Margin) {                 // above maximum
-                f_Throttle = f_Throttle_Min;                // minimum throttle
+                f_Throttle = f_Throttle_Min;                // minimum  throttle
                 f_Pitch = PITCHATMINTHROTTLE;
             } else if (f_temp < - f_Height_Margin) {        // below minimum
                 f_Throttle = f_Throttle_Max;                // max throttle
@@ -259,6 +240,7 @@ void Navigation_Task( void *pvParameters ) {
                 f_Throttle = f_temp * (f_Throttle_Min - f_Throttle_Max) + f_Throttle_Min;
                 f_Pitch = f_temp * (PITCHATMINTHROTTLE - PITCHATMAXTHROTTLE) + PITCHATMINTHROTTLE;
             }
+*/
         }
     }
 }
@@ -823,8 +805,8 @@ uint16_t Nav_Distance ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-float Nav_Bank_Rad ( void ) {
-  return f_Bank;
+float Nav_Dir_Error ( void ) {
+  return f_Dir_Error;
 }
 
 //----------------------------------------------------------------------------
@@ -835,8 +817,8 @@ float Nav_Bank_Rad ( void ) {
 /// \remarks -
 ///
 //----------------------------------------------------------------------------
-float Nav_Throttle ( void ) {
-  return f_Throttle;
+float Nav_Alt_Error ( void ) {
+  return f_Alt_Error;
 }
 
 //----------------------------------------------------------------------------
