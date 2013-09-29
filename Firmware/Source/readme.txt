@@ -379,7 +379,7 @@
 @par Modifiche hardware
      
      Modifiche:
-        - eliminare CD 4504 D / sostituire con componente reperibile 
+        - eliminare CD 4504 D / sostituire con componente reperibile (ULN2003 ?)
         - correggere package LD1117 / cambiare tipo di stabilizzatore
         - sostituire sensore di pressione differenziale con MP3V5004DP
         - collegare il pin EOC del barometro BMP085 al micro
