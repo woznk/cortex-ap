@@ -18,10 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: removed watchdog start from configuration function (watchdog started
-//         at first run of attitude task), watchdog reset flag saved in 
-//         b_watchdog_reset variable and indicated by red LED prior of task
-//         creation
+// Change: removed transmission of DCM matrix
 //
 //============================================================================*/
 
@@ -115,14 +112,14 @@ void WWDG_Configuration(void);
 /// \remarks -
 ///
 ///----------------------------------------------------------------------------
-/*
+#if(0)
 void vApplicationStackOverflowHook( xTaskHandle *pxTask, int8_t *pcTaskName ) {
     ( void ) pxTask;
     ( void ) pcTaskName;
     for (;;) {
     }
 }
-*/
+#endif
 
 ///----------------------------------------------------------------------------
 ///
@@ -151,10 +148,7 @@ void Telemetry_Task( void *pvParameters ) {
             case 20:
                 Simulator_Send_Position();      // send current position
                 break;
-
-            case 30:
-                ucCycles = 0;                   // reset cycle counter
-                Simulator_Send_DCM();           // send attitude
+            default:
                 break;
         }
     }
@@ -211,14 +205,14 @@ int32_t main(void) {
   }
 
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
-  RCC_Configuration();                              // Configure System Clocks 
-  GPIO_Configuration();                             // Configure GPIO 
+  RCC_Configuration();                              // Configure System Clocks
+  GPIO_Configuration();                             // Configure GPIO
   WWDG_Configuration();                             // Configure watchdog
 
   USART1_Init();              						// Initialize USART1 for telemetry
   Servo_Init();                                     // Initialize PWM timers as servo outputs
   PPM_Init();                                       // Initialize capture timers as RRC input
-  I2C_MEMS_Init();                                  // Initialize I2C peripheral 
+  I2C_MEMS_Init();                                  // Initialize I2C peripheral
 
 /*
   xTelemetry_Queue = xQueueCreate( 3, sizeof( telStruct_Message ) );
