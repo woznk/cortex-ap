@@ -36,8 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: corrected parsing of coordinates according higher precision of
-///         uBlox GPS: 5 decimal digits instead of 4.
+/// Change: removed altitude control.
 //
 //============================================================================*/
 
@@ -104,7 +103,6 @@ VAR_STATIC uint8_t sz_Line[LINE_LENGTH];                //!< input line
 VAR_STATIC UINT w_File_Bytes;                           //!< counter of read bytes
 VAR_STATIC float f_Dir_Error;                           //!< direction error [rad]
 VAR_STATIC float f_Alt_Error;                           //!< altitude error [m]
-VAR_STATIC float f_Pitch;                               //!< pitch setpoint [rad]
 VAR_STATIC float f_Dest_Lat;                            //!< destination latitude
 VAR_STATIC float f_Dest_Lon;                            //!< destination longitude
 VAR_STATIC float f_Dest_Alt;                            //!< destination altitude
@@ -152,18 +150,18 @@ void Navigation_Task( void *pvParameters ) {
     f_Dir_Error = 0.0f;                                 // default direction error
     f_Alt_Error = 0.0f;                                 // default altitude error
     f_Bearing = 0.0f;                                   // angle to destination [°]
-    f_Pitch = 0.0f;                                     // default pitch angle
     uc_Gps_Status = GPS_NOFIX;                          // init GPS status
     ui_Gps_Heading = 0;                                 // aircraft GPS heading [°]
     ui_Gps_Speed = 0;                                   // aircraft GPS speed [kt]
     ui_Distance = 0;                                    // distance to destination [m]
     ui_Wpt_Number = 0;                                  // no waypoint yet
 
+    /* WARNING: mission file must be loaded before initializing GPS UART !!! */
     load_path();                                        // load path from SD card
     /* WARNING: GPS UART must be initialized after loading mission file !!! */
     gps_init();                                         // initialize USART for GPS
 
-    /* Wait first GPS fix */
+    /* Wait GPS fix */
     while ((parse_gps() == FALSE) ||                    // NMEA sentence not completed
            (uc_Gps_Status != GPS_FIX)) {                // no satellite fix
         ;                                               // keep parsing NMEA sentences
@@ -182,19 +180,23 @@ void Navigation_Task( void *pvParameters ) {
     f_Dest_Alt = Waypoint[ui_Wpt_Index].Alt;            // load destination altitude
 
     for (;;) {
-        if (parse_gps()) {                                  // NMEA sentence completed
-#if (SIMULATOR == SIM_NONE)                                 // normal mode
-            f_Curr_Alt = (float)BMP085_Get_Altitude();    // get barometric altitude
-//            f_Curr_Alt = (float)ui_Gps_Alt;                 // get GPS altitude
-#else                                                       // simulation mode
-            f_Curr_Alt = Simulator_Get_Altitude();          // get simulator altitude
+        if (parse_gps()) {                              // NMEA sentence completed
+#if (SIMULATOR == SIM_NONE)                             // normal mode
+            f_Curr_Alt = (float)BMP085_Get_Altitude();  // get barometric altitude
+//            f_Curr_Alt = (float)ui_Gps_Alt;             // get GPS altitude
+#else                                                   // simulation mode
+            f_Curr_Alt = Simulator_Get_Altitude();      // get simulator altitude
 #endif
-            /* Get X and Y components of bearing */
-            f_dy = f_Dest_Lon - f_Curr_Lon;
-            f_dx = f_Dest_Lat - f_Curr_Lat;
+            /* Compute altitude error */
+            f_temp = f_Curr_Alt - f_Dest_Alt;
+            f_Alt_Error = f_temp;
 
             /* Compute heading */
             f_Heading = Attitude_Yaw_Rad() / PI;
+
+            /* Get X and Y components of bearing */
+            f_dy = f_Dest_Lon - f_Curr_Lon;
+            f_dx = f_Dest_Lat - f_Curr_Lat;
 
             /* Compute bearing to waypoint */
             f_Bearing = atan2f(f_dy, f_dx) / PI;
@@ -212,35 +214,17 @@ void Navigation_Task( void *pvParameters ) {
             f_temp = sqrtf((f_dy * f_dy) + (f_dx * f_dx));
             ui_Distance = (uint16_t)(f_temp * 111113.7f);
 
-            /* Waypoint reached: next waypoint */
-            if (ui_Distance < MIN_DISTANCE) {
-                if (ui_Wpt_Number != 0) {
-                    if (++ui_Wpt_Index == ui_Wpt_Number) {
-                        ui_Wpt_Index = 1;
+            /* Check distance to waypoint */
+            if (ui_Distance < MIN_DISTANCE) {               // waypoint reached
+                if (ui_Wpt_Number != 0) {                   // waypoints do exist
+                    if (++ui_Wpt_Index == ui_Wpt_Number) {  // get next waypoint or
+                        ui_Wpt_Index = 1;                   // go back to first waypoint
                     }
                 }
                 f_Dest_Lon = Waypoint[ui_Wpt_Index].Lon;    // new destination longitude
                 f_Dest_Lat = Waypoint[ui_Wpt_Index].Lat;    // new destination latitude
                 f_Dest_Alt = Waypoint[ui_Wpt_Index].Alt;    // new destination altitude
             }
-            f_temp = f_Curr_Alt - f_Dest_Alt;               // altitude error
-            f_Alt_Error = f_temp;
-
-            /* Compute throttle and pitch based on altitude error */
-/*
-            f_temp = f_Curr_Alt - f_Dest_Alt;               // altitude error
-            if (f_temp > f_Height_Margin) {                 // above maximum
-                f_Throttle = f_Throttle_Min;                // minimum  throttle
-                f_Pitch = PITCHATMINTHROTTLE;
-            } else if (f_temp < - f_Height_Margin) {        // below minimum
-                f_Throttle = f_Throttle_Max;                // max throttle
-                f_Pitch = PITCHATMAXTHROTTLE;
-            } else {                                        // interpolate
-                f_temp = (f_temp - HEIGHT_MARGIN) / (2.0f * HEIGHT_MARGIN);
-                f_Throttle = f_temp * (f_Throttle_Min - f_Throttle_Max) + f_Throttle_Min;
-                f_Pitch = f_temp * (PITCHATMINTHROTTLE - PITCHATMAXTHROTTLE) + PITCHATMINTHROTTLE;
-            }
-*/
         }
     }
 }
@@ -819,18 +803,6 @@ float Nav_Dir_Error ( void ) {
 //----------------------------------------------------------------------------
 float Nav_Alt_Error ( void ) {
   return f_Alt_Error;
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Get pitch setpoint [rad]
-/// \param   -
-/// \returns throttle
-/// \remarks -
-///
-//----------------------------------------------------------------------------
-float Nav_Pitch_Rad ( void ) {
-  return f_Pitch;
 }
 
 //----------------------------------------------------------------------------
