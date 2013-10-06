@@ -36,7 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: removed altitude control.
+/// Change: corrected formula for bearing and direction error.
 //
 //============================================================================*/
 
@@ -191,22 +191,26 @@ void Navigation_Task( void *pvParameters ) {
             f_temp = f_Curr_Alt - f_Dest_Alt;
             f_Alt_Error = f_temp;
 
-            /* Compute heading */
-            f_Heading = Attitude_Yaw_Rad() / PI;
+            /* Get aircraft heading */
+            f_Heading = Attitude_Yaw_Rad() / PI;        // normalize radian angle
 
             /* Get X and Y components of bearing */
-            f_dy = f_Dest_Lon - f_Curr_Lon;
-            f_dx = f_Dest_Lat - f_Curr_Lat;
+            f_dx = f_Dest_Lon - f_Curr_Lon;
+            f_dy = f_Dest_Lat - f_Curr_Lat;
 
             /* Compute bearing to waypoint */
-            f_Bearing = atan2f(f_dy, f_dx) / PI;
+            f_Bearing = atan2f(f_dy, f_dx) / PI;        // normalize radian angle
+            f_Bearing = 0.5f - f_Bearing;
+            if (f_Bearing < 0.0f) {
+               f_Bearing = f_Bearing + 2.0f;
+            }
 
             /* Compute direction error */
-            f_temp = f_Heading - f_Bearing;
+            f_temp = f_Bearing - f_Heading;
             if (f_temp < -1.0f) {
-                f_temp += 2.0f;
+               f_temp = 2.0f + f_temp;
             } else if (f_temp > 1.0f) {
-                f_temp = 2.0f - f_temp;
+               f_temp = -2.0f + f_temp;
             }
             f_Dir_Error = f_temp;
 
