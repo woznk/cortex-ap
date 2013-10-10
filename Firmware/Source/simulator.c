@@ -42,9 +42,8 @@
 /// ------------------------+------------------------+-------------------------
 ///                                                                     \endcode
 ///
-//  Change (Lint) corrected file #inclusion, removed #undef and VAR_GLOBAL,
-//         PERIOD renamed SERVO_PERIOD, added some cast, pointer argument
-//         made const when possible
+//  Change removed function Simulator_Send_Position() for transmitting GPS 
+//         position (not used since X-Plane already knows aircraft position)
 //
 //============================================================================*/
 
@@ -265,7 +264,6 @@ void Simulator_Parse ( void )
     }
 }
 
-
 //----------------------------------------------------------------------------
 //
 /// \brief   Downlink controls
@@ -331,40 +329,6 @@ void Simulator_Send_Waypoint(void)
     USART1_Putw(Nav_Distance());                // distance to waypoint
 
     USART1_Transmit();                          // send data
-}
-
-//----------------------------------------------------------------------------
-//
-/// \brief   Downlink GPS position
-/// \returns -
-/// \remarks buffer content:
-///
-///             index   content
-///
-///               0     TEL_GPS_POSITION
-///               1     latitude
-///               2         "
-///               3         "
-///               4         "
-///               5     longitude
-///               6         "
-///               7         "
-///               8         "
-///               9     altitude
-///              10         "
-///              10     heading
-///              10         "
-///
-//----------------------------------------------------------------------------
-void Simulator_Send_Position(void)
-{
-    USART1_Putch(SIM_GPS_POSITION);                     // simulator wait code
-    USART1_Putf((float)Gps_Latitude() / 10000000.0f);   // current latitude
-    USART1_Putf((float)Gps_Longitude() / 10000000.0f);  // current longitude
-    USART1_Putf(Nav_Altitude());                        // current altitude
-    USART1_Putf(Nav_Heading_Deg());                     // heading
-
-    USART1_Transmit();                                  // send data
 }
 
 ///----------------------------------------------------------------------------
