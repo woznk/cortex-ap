@@ -9,8 +9,8 @@
 ///
 /// \file
 ///
-// Change: parameter "NAV_BANK"expressed in degrees istead of radians for 
-//         easier modification with GCS
+// Change: increased SAMPLES_PER_SECOND to 50 Hz
+//         corrected conversion factor gains and added justification
 //
 //============================================================================*/
 
@@ -20,22 +20,37 @@
 #define ToDeg(x) (((x) * 180.0f) / PI)  //!< radian to degree conversion
 
 /// Frequency of attitude control loop
-#define SAMPLES_PER_SECOND  40
+#define SAMPLES_PER_SECOND  50
 
 /// DCM matrix updating interval
 #define DELTA_T         (1.0f / SAMPLES_PER_SECOND)
 
-/// Equivalent to 1 g in the raw data from accelerometer
-//#define GRAVITY         256           // full scale = 2g
+/// Accelerometer sensitivity (source: ADXL345 datasheet)
+// Equivalent to 1 g in the raw data from accelerometer
+//  Full scale | Sensitivity [LSB/g]
+// ------------+----------------------
+//     +/-2 g  |       256
+//     +/-4 g  |       128
+//     +/-8 g  |        64
+//    +/-16 g  |        32
 #define GRAVITY         64              // full scale = 8g
 
-/// Accelerometer conversion factor to [m/s/s]
-//#define ACCEL_GAIN      0.03828125f   // full scale = 2g
-#define ACCEL_GAIN      0.153125f       // full scale = 8g
+/// Accelerometer scale factor (source: ADXL345 datasheet)
+//  Full scale | Factor [g/digit] | Factor [mss/digit]
+// ------------+------------------+------------------------
+//     +/-2 g  |      0.0039      |      0.03822
+//     +/-4 g  |      0.0078      |      0.7644
+//     +/-8 g  |      0.0156      |      0.15288
+//    +/-16 g  |      0.0312      |      0.30576
+#define ACCEL_GAIN      0.15288f         // full scale = 8g
 
-/// Gyroscope conversion factor to [rad/s]
-//#define GYRO_GAIN       0.0001527163f // full scale = 250 dps
-#define GYRO_GAIN       0.0012217f      // full scale = 2000 dps
+/// Gyroscope scale factor (source: L3G4200 datasheet)
+//  Full scale | Factor [dps/digit] | Factor [rps/digit]
+// ------------+--------------------+----------------------
+//  +/-250 dps |       0.00875      |      0.000152716
+//  +/-500 dps |       0.01750      |      0.000366519
+// +/-2000 dps |       0.07000      |      0.001221730
+#define GYRO_GAIN       0.001221730f    // full scale = 2000 dps
 
 /* Navigation PID initial gains */
 #define NAV_KP          5.0f            //!< Navigation P gain
