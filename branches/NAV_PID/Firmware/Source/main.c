@@ -18,7 +18,8 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: removed transmission of DCM matrix
+// Change: simulator mode: increased frequency of DCM matrix transmission,
+//         decreased frequency of waypoint transmission
 //
 //============================================================================*/
 
@@ -141,14 +142,16 @@ void Telemetry_Task( void *pvParameters ) {
         Simulator_Send_Controls();              // update simulator controls
 		Simulator_Parse();                      // parse simulator data
         switch (++ucCycles) {
-            case 10:
-                Simulator_Send_Waypoint();      // send waypoint information
+            case 8:
+            case 16:
+            case 24:
+            case 32:
+                Simulator_Send_DCM();           // send attitude
                 break;
 
-            case 20:
-                Simulator_Send_Position();      // send current position
-                break;
-            default:
+            case 40:
+                ucCycles = 0;                   // reset cycle counter
+                Simulator_Send_Waypoint();      // send waypoint information
                 break;
         }
     }
