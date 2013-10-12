@@ -19,8 +19,8 @@
 ///   of array Waypoint[], computes heading and distance to next waypoint.
 ///   If available waypoints are 0, computes heading and distance to launch
 ///   point (RTL).
-///   PID loop setpoint is the difference (bearing - heading), sign corrected
-///   when < -180° or > 180°. Cross produt and dot product of heading vector
+///   Navigation error is the difference (heading - bearing), sign corrected
+///   when < -180° or > 180°. Cross product and dot product of heading vector
 ///   with bearing vector doesn't work because bearing vector is not a versor.
 ///
 /// \todo
@@ -36,7 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: corrected formula for bearing and direction error.
+/// Change: corrected sign of direction error, corrected heading range [0,2PI].
 //
 //============================================================================*/
 
@@ -137,8 +137,18 @@ static bool cmp_prefix( const uint8_t * src , const uint8_t * dest );
 //
 /// \brief   navigation task
 ///
-/// \remarks Computation must be started only when parse_gps() returns TRUE,
-///          otherwise values of lat, lon, heading are undefined.
+/// \remarks Bearing is computed as :
+///             PI/2 - atan2(latitude difference, longitude difference)
+///          The sign is changed because atan2 angles are positive CCW,
+///          whereas bearing angles are positive CW.
+///          The PI/2 offset is added because atan2 angles are measured from
+///          X axis (East direction), whereas bearing angles are measured
+///          from Y axis (North direction).
+///
+/// \warning Variables containing latitude and longitude are changed by NMEA
+///          parsing functions: computation of bearing must start only when
+///          parse_gps() returns TRUE, otherwise latitude and longitude may
+///          be undefined.
 ///
 //----------------------------------------------------------------------------
 void Navigation_Task( void *pvParameters ) {
@@ -193,6 +203,9 @@ void Navigation_Task( void *pvParameters ) {
 
             /* Get aircraft heading */
             f_Heading = Attitude_Yaw_Rad() / PI;        // normalize radian angle
+            if (f_Heading < 0.0f) {
+               f_Heading = f_Heading + 2.0f;
+            }
 
             /* Get X and Y components of bearing */
             f_dx = f_Dest_Lon - f_Curr_Lon;
@@ -206,7 +219,7 @@ void Navigation_Task( void *pvParameters ) {
             }
 
             /* Compute direction error */
-            f_temp = f_Bearing - f_Heading;
+            f_temp = f_Heading - f_Bearing;
             if (f_temp < -1.0f) {
                f_temp = 2.0f + f_temp;
             } else if (f_temp > 1.0f) {
