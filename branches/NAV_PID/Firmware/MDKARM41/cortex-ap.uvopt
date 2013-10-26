@@ -597,10 +597,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>45</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>186</TopLine>
-      <CurrentLine>197</CurrentLine>
+      <CurrentLine>195</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\Source\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -1251,9 +1251,9 @@
         </Doc>
         <Doc>
           <Name>..\Source\main.c</Name>
-          <ColumnNumber>45</ColumnNumber>
+          <ColumnNumber>0</ColumnNumber>
           <TopLine>186</TopLine>
-          <CurrentLine>197</CurrentLine>
+          <CurrentLine>195</CurrentLine>
         </Doc>
         <Doc>
           <Name>..\Source\attitude.c</Name>
