@@ -29,9 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change: NAVIGATION mode enabled only if switch mode is in NAV position and 
-//          both elevator and aileron joysticks are in the rest position,
-//          #defined some explicit constants, #defined some explicit constants.
+//  Change: reversed elevator channel
 //
 //============================================================================*/
 
@@ -92,7 +90,7 @@ VAR_STATIC int16_t iReverse[RC_CHANNELS] = {    ///< channel reverse
         //  # | TYCHO    | LEUKO    | EASYSTAR | EPPFPV
         // ---+----------+----------+----------+----------
      1, //  0 | aileron  | delta 1  | throttle | aileron
-     1, //  1 | elevator | delta 2  | aileron  | elevator
+    -1, //  1 | elevator | delta 2  | aileron  | elevator
      1, //  2 | throttle | throttle | elevator | throttle
      1, //  3 | rudder   | rudder   | rudder   | rudder
     -1, //  4 | kp       | mode     | mode     | mode

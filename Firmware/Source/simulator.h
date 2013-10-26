@@ -10,7 +10,8 @@
 /// \file
 ///
 ///
-//  Change (Lint) pointer argument made const when possible
+//  Change removed function Simulator_Send_Position() for transmitting GPS
+//         position (not used since X-Plane already knows aircraft position)
 //
 //============================================================================
 
@@ -57,7 +58,6 @@ void Simulator_Send_Message(const uint16_t *data, uint8_t num);
 void Simulator_Send_DCM( void );
 void Simulator_Send_Controls( void );
 void Simulator_Send_Waypoint( void );
-void Simulator_Send_Position( void );
 void Simulator_Get_Raw_IMU(int16_t * piSensors);
 float Simulator_Get_Gain(simEnum_Gain gain);
 float Simulator_Get_Speed(void);

@@ -244,10 +244,8 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Change: system ID and component ID set to 1 (still some issue with 
-///         droidplanner; will be fixed in future releases, according user forum),
-///         corrected offsets of System_ID and Component_ID in the received
-//          buffer for message of MAVLINK_MSG_ID_MISSION_ITEM message.
+/// Change: replaced throttle value commanded by navigation task with 
+///         corresponding servo position.
 ///
 //============================================================================*/
 
@@ -257,6 +255,7 @@
 
 #include "config.h"
 #include "nav.h"
+#include "servodriver.h"
 #include "attitude.h"
 #include "mav_telemetry.h"
 
@@ -592,7 +591,6 @@ VAR_STATIC STRUCT_WPT wpt;
 
 VAR_STATIC uint8_t Rx_Msg[PAYLOAD_LEN];                 // buffer for incoming messages
 VAR_STATIC uint8_t Tx_Msg[PACKET_LEN];                  // buffer for outgoing messages
-
 VAR_STATIC uint8_t ucStream_Tick[MAV_DATA_STREAM_ENUM_END] = { // tick counters for data streams
     MAX_STREAM_RATE,    /*  0: all data streams */
     MAX_STREAM_RATE,    /*  1: IMU_RAW, GPS_RAW, GPS_STATUS */
@@ -608,7 +606,6 @@ VAR_STATIC uint8_t ucStream_Tick[MAV_DATA_STREAM_ENUM_END] = { // tick counters 
     MAX_STREAM_RATE,    /* 11: Extra 2, autopilot dependent */
     MAX_STREAM_RATE     /* 12: Extra 3, autopilot dependent */
 };
-
 VAR_STATIC uint8_t ucStream_Rate[MAV_DATA_STREAM_ENUM_END] = { // frequency of data streams
     0,  /*  0: all data streams */
     0,  /*  1: IMU_RAW, GPS_RAW, GPS_STATUS */
@@ -624,7 +621,6 @@ VAR_STATIC uint8_t ucStream_Rate[MAV_DATA_STREAM_ENUM_END] = { // frequency of d
     2,  /* 11: Extra 2, autopilot dependent */
     0   /* 12: Extra 3, autopilot dependent */
 };
-
 VAR_STATIC float fParam_Value[ONBOARD_PARAM_COUNT] = {
     ROLL_KP,    //!< default roll kp
     ROLL_KI,    //!< default roll ki
@@ -785,7 +781,7 @@ void Mavlink_Hud( void ) {
     *((float *)(&Tx_Msg[14])) = Nav_Altitude();              // Altitude
     *((float *)(&Tx_Msg[18])) = 0.0f;                        // Climb rate
     *((uint16_t *)(&Tx_Msg[22])) = Gps_Heading_Deg();        // Heading
-    *((uint16_t *)(&Tx_Msg[24])) = (uint16_t)Nav_Throttle(); // Throttle
+    *((int16_t *)(&Tx_Msg[24])) = Servo_Get(SERVO_THROTTLE); // Throttle
 
     Mavlink_Send(Mavlink_Crc[MAVLINK_MSG_ID_VFR_HUD]);
 }
@@ -1206,15 +1202,14 @@ static bool Mavlink_Parse(void) {
 //    static uint8_t magic;
 //    static uint8_t sysid;
 //    static uint8_t compid;
-    static mavlink_parse_state_t parse_state = MAVLINK_PARSE_STATE_UNINIT;
-    static uint8_t len;
 //    static uint8_t buffer_overrun = 0;
 //    static uint8_t parse_error = 0;
+//    static uint8_t packet_rx_success_count = 0;
+    static mavlink_parse_state_t parse_state = MAVLINK_PARSE_STATE_UNINIT;
+    static uint8_t len;
     static uint8_t packet_idx;
     static uint8_t seq;
     static uint8_t current_rx_seq;
-//    static uint8_t packet_rx_success_count = 0;
-
     bool msg_received = FALSE;
 
     while (USART1_Getch (&c)) {               // received another character
