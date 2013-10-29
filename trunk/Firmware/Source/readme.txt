@@ -330,6 +330,53 @@
         - parametri del PID di navigazione, Kp = 5 (alto) e Ki = 0,001 (basso).
         - periodo di ricalcolo PID = 1 sec (troppo lungo)
 
+     26/10/13
+     Quarta prova sul campo.
+     (revisione firmware REV2, risultato del merge con il branch NAV_PID + 
+     ricevente doppia conversione tarata in laboratorio)
+
+     Risultato:
+     La stabilizzazione sembra funzioni, la navigazione no: l'aereo vira continuamente 
+     con raggio abbastanza stretto e perde quota.
+     Disabilitata la navigazione per riprendere quota e riabilitata in varie posizioni 
+     del campo: stesso risultato, l'aereo orbita e perde quota.
+     Dopo qualche minuto di prove l'aereo entra in vite (con stabilizzazione attiva).
+     Riportato in modo manuale per uscire dalla vite e fatto atterrare l'aereo.
+     Spenta e riaccesa la scheda, ridecollato in modo manuale.
+     Appena abilitata la navigazione l'aereo entra in vite, tolta stabilizzazione e 
+     atterrato. 
+     Effettuato un ultimo lancio, attivando la stabilizzazione con motore al minimo:
+     l'aereo oscilla a destra e a sinistra in modo brusco fino a diventare instabile.
+     Dopo l'atterraggio, attivata la stabilizzazione con aereo a terra: gli alettoni 
+     si comportano come in volo, girano bruscamente, oscillano lentamente per qualche 
+     secondo, poi si fermano.
+     Verificata la telemetria con Andropilot: l'orizzonte artificiale segue l'assetto
+     dell'aereo, la posizione del GPS è corretta, non risulta caricato nessun waypoint.
+     La scheda SD non contiene nessun file di log.
+
+     Analisi stabilizzazione:
+     Il comportamento della stabilizzazione è simile alle precedenti prove sul campo.
+     Anche in quel caso l'aereo entrava improvvisamente in vite, con la differenza che
+     questa volta è stato possibile tornare in modo manuale e recuperare l'aereo.
+     Probabilmente la qualità della ricevente ha permesso di mantenere il collegamento.
+     Il problema potrebbe quindi esistere anche nelle precedenti revisioni del firmware
+     ed essere stato mascherato dalla concomitante perdita del collegamento radio.
+     Possibili cause: 
+     mancata lettura di accelerometri o giroscopi (problemi di I2C),
+     modifica dei coefficienti dei PID per disturbi nella telemetria (improbabile),
+     modifica di qualche variabile per overflow dello stack (più probabile, visto che 
+     si verifica dopo un po' di tempo)
+
+     Analisi navigazione:
+     L'assenza di waypoint e dei log è dovuto all'inserimento scorretto della scheda SD.
+     Inoltre il tempo nuvoloso ha ritardato l'aggancio del GPS.
+     In assenza di waypoint, la navigazione riporta l'aereo nella posizione di partenza 
+     ovvero nella posizione in cui il GPS ha agganciato per la prima volta almeno 3 
+     satelliti.
+     Questo non spiega perchè l'aereo inizia a orbitare attorno all'ultima posizione,
+     indipedentemente dalla posizione stessa.
+
+     
 \todo
      Aggiornare il PID di navigazione con frequenza maggiore, spostandolo nel task AHRS
      oppure chiamandolo anche se la funzione GPS_Parse() ritorna FALSE.
