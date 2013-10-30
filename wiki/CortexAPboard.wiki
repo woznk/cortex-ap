@@ -1,5 +1,8 @@
 == Cortex Auto Pilot Board Ver 1.0 ==
 
+https://cortex-ap.googlecode.com/svn/wiki/Images/wiring_REV1.JPG
+
+ * *X Plane setting* (source: www.skylabs.com)
  * *Inputs*
   * PPM signal from RC
 
