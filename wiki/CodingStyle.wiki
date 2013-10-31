@@ -36,15 +36,15 @@ Add prefix STRUCT_, UNION_ and ENUM_.
 #define MAX_ALTITUDE 19000 
 
 typedef struct {
-    INT8U field_a;
-    INT8U field_b;
+    uint8_t field_a;
+    uint8_t field_b;
 } STRUCT_SAMPLE;
 
 INT8U Module_Static_Variable;
 
-void Function_A (INT8U first_parameter, INT16U second_parameter)
+void Function_A (uint8_t first_parameter, uint16_t second_parameter)
 {
-     INT8U function_a_automatic_variable;
+     uint8_t function_a_automatic_variable;
      …
 }
 }}}
