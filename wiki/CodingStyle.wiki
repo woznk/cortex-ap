@@ -40,7 +40,7 @@ typedef struct {
     uint8_t field_b;
 } STRUCT_SAMPLE;
 
-INT8U Module_Static_Variable;
+uint8_t Module_Static_Variable;
 
 void Function_A (uint8_t first_parameter, uint16_t second_parameter)
 {
