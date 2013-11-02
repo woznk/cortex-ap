@@ -29,7 +29,8 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change: reversed elevator channel
+//  Change: function PPMGetMode(): NAV mode no longer overridden when joysticks
+//          are moved
 //
 //============================================================================*/
 
@@ -251,11 +252,9 @@ int16_t PPMGetChannel(uint8_t ucChannel)
 ///----------------------------------------------------------------------------
 uint8_t PPMGetMode(void)
 {
-    uint16_t ui_mode, ui_aileron, ui_elevator;
+    uint16_t ui_mode;
 
     ui_mode = uiPulseBuffer[MODE_CHANNEL];
-    ui_aileron = uiPulseBuffer[AILERON_CHANNEL];
-    ui_elevator = uiPulseBuffer[ELEVATOR_CHANNEL];
 
     if (cSignalLevel == 0) {
         return MODE_RTL;
@@ -264,11 +263,7 @@ uint8_t PPMGetMode(void)
     } else if ((ui_mode > STAB_THRESHOLD_L) &&      // mode switch in stabilized
                (ui_mode < STAB_THRESHOLD_U)) {
         return MODE_STAB;
-    } else if ((ui_mode > NAV_THRESHOLD_U) &&       // mode switch in navigation
-               (ui_aileron < REST_THRESHOLD_U) &&   // aileron joystick released
-               (ui_aileron > REST_THRESHOLD_L) &&
-               (ui_elevator < REST_THRESHOLD_U) &&  // elevator joystick released
-               (ui_elevator > REST_THRESHOLD_L)) {
+    } else if (ui_mode > NAV_THRESHOLD_U) {         // mode switch in navigation
         return MODE_NAV;
     } else {
         return MODE_UNDEFINED;
