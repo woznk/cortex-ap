@@ -244,8 +244,8 @@
 /// List of commands
 /// https://pixhawk.ethz.ch/mavlink/
 ///
-/// Change: replaced throttle value commanded by navigation task with 
-///         corresponding servo position.
+/// Change: function Mavlink_Param_Set(): corrected index of system ID and
+///         component ID positions in the received data buffer.
 ///
 //============================================================================*/
 
@@ -374,6 +374,7 @@ enum MAV_TYPE {
 
 enum MAV_COMPONENT {
 	MAV_COMP_ID_ALL=0,              /*  */
+	MAV_COMP_ID_DUMMY=1,            /*  */
 	MAV_COMP_ID_CAMERA=100,         /*  */
 	MAV_COMP_ID_SERVO1=140,         /*  */
 	MAV_COMP_ID_SERVO2=141,         /*  */
@@ -395,6 +396,9 @@ enum MAV_COMPONENT {
 	MAV_COMP_ID_IMU=200,            /*  */
 	MAV_COMP_ID_IMU_2=201,          /*  */
 	MAV_COMP_ID_IMU_3=202,          /*  */
+	MAV_COMP_ID_IMU_4=203,          /*  */
+	MAV_COMP_ID_IMU_5=204,          /*  */
+	MAV_COMP_ID_IMU_6=205,          /*  */
 	MAV_COMP_ID_GPS=220,            /*  */
 	MAV_COMP_ID_UDP_BRIDGE=240,     /*  */
 	MAV_COMP_ID_UART_BRIDGE=241,    /*  */
@@ -559,7 +563,7 @@ VAR_STATIC const uint8_t sParameter_Name[ONBOARD_PARAM_COUNT][ONBOARD_PARAM_NAME
 //VAR_STATIC const uint8_t Autopilot_Type = MAV_AUTOPILOT_GENERIC;  // Autopilot capabilities
 //VAR_STATIC const uint8_t System_Type = MAV_TYPE_FIXED_WING;       // Aircraft type
 VAR_STATIC const uint8_t System_ID = 1;                             // System ID (original: 20)
-VAR_STATIC const enum MAV_COMPONENT Component_ID = 1;               // Component ID (original: MAV_COMP_ID_IMU)
+VAR_STATIC const enum MAV_COMPONENT Component_ID = MAV_COMP_ID_DUMMY;               // Component ID (original: MAV_COMP_ID_IMU)
 
 /*---------------------------------- Globals ---------------------------------*/
 
@@ -958,8 +962,8 @@ void Mavlink_Param_Set( void ) {
 	uint8_t i, j;
 
     f_value = *(float *)(&Rx_Msg[0]);
-    if ((Rx_Msg[0] == System_ID) &&                // message is for this system
-        (Rx_Msg[1] == Component_ID)) {             // message is for this component
+    if ((Rx_Msg[4] == System_ID) &&                // message is for this system
+        (Rx_Msg[5] == Component_ID)) {             // message is for this component
         for (i = 0; i < ONBOARD_PARAM_COUNT; i++) {
             match = TRUE;
             for (j = 0; j < ONBOARD_PARAM_NAME_LENGTH; j++) {
