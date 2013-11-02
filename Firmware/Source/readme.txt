@@ -274,8 +274,7 @@
      
      vedi i todo in nav.c
 
-     10/09/13
-     Prima prova sul campo.
+     10/09/13 ----- Prima prova sul campo -----
 
      Risultato:
      Stabilizzazione discreta. Tendenza a virare a dx (assetto delle ali ? inclinazione
@@ -283,8 +282,7 @@
      Abilitando la navigazione l'aereo entra in vite perchè L'escursione degli alettoni 
      è eccessiva.
 
-     12/09/13
-     Seconda prova sul campo.
+     12/09/13 ----- Seconda prova sul campo -----
      (regolato assetto ali rispetto fusoliera, massimo angolo di bank +/- 10°)
 
      Risultato:
@@ -307,8 +305,7 @@
      Escludendo uno spegnimento temporaneo dell'elettronica (l'elettronica era accesa 
      quando l'aereo è stato recuperato) resta l'ipotesi di un blocco del micro.
 
-     14/09/13
-     Terza prova sul campo.
+     14/09/13 ----- Terza prova sul campo -----
      (sostituito DC/DC, batteria Litio separata per l'elettronica, massimo bank +/- 20°)
 
      Risultato:
@@ -330,10 +327,23 @@
         - parametri del PID di navigazione, Kp = 5 (alto) e Ki = 0,001 (basso).
         - periodo di ricalcolo PID = 1 sec (troppo lungo)
 
-     26/10/13
-     Quarta prova sul campo.
-     (revisione firmware REV2, risultato del merge con il branch NAV_PID + 
-     ricevente doppia conversione tarata in laboratorio)
+     Analisi crash:
+     Ormai da escludere problemi di alimentazione, più probabile un blocco del micro.
+     Il problema si verifica sempre alla stessa distanza e circa nella stessa zona in cui 
+     è noto esserci dei disturbi.
+     Se si tratta di un blocco del micro, la causa potrebbe essere un eccesso di interrupt
+     di cattura dovuti a disturbi sul segnale PPM proveniente dalla radio.
+
+     17/09/13
+     Stress test interrupt di cattura con generatore di segnale all'ingresso PPM.
+     GPS e 3D Radio sconnessi, nessun altra fonte di interrupt esterno.
+
+     Risultato:
+     Il sistema non fa una piega. Provata frequenza di impulsi fino a 17 MHz.
+     
+     26/10/13 ----- Quarta prova sul campo -----
+     (revisione firmware REV2, merge con il branch NAV_PID + ali con diedro 3° / 4° + 
+      ricevente doppia conversione tarata in laboratorio)
 
      Risultato:
      La stabilizzazione sembra funzioni, la navigazione no: l'aereo vira continuamente 
@@ -355,46 +365,33 @@
      La scheda SD non contiene nessun file di log.
 
      Analisi stabilizzazione:
-     Il comportamento della stabilizzazione è simile alle precedenti prove sul campo.
-     Anche in quel caso l'aereo entrava improvvisamente in vite, con la differenza che
-     questa volta è stato possibile tornare in modo manuale e recuperare l'aereo.
-     Probabilmente la qualità della ricevente ha permesso di mantenere il collegamento.
-     Il problema potrebbe quindi esistere anche nelle precedenti revisioni del firmware
-     ed essere stato mascherato dalla concomitante perdita del collegamento radio.
-     Possibili cause: 
-     mancata lettura di accelerometri o giroscopi (problemi di I2C),
-     modifica dei coefficienti dei PID per disturbi nella telemetria (improbabile),
-     modifica di qualche variabile per overflow dello stack (più probabile, visto che 
-     si verifica dopo un po' di tempo)
+     La perdita della stabilizzazione è simile alle precedenti prove sul campo.
+     Anche prima l'aereo entrava improvvisamente in vite, questa volta è stato possibile 
+     riportare in modo manuale e recuperare l'aereo (qualità della ricevente ?)
+     Il problema potrebbe esistere anche nelle precedenti revisioni del firmware
+     ed essere stato mascherato dalla perdita del collegamento radio.
 
      Analisi navigazione:
+     La navigazione non funzionava perchè il trim dell'elevatore era al minimo.
+     Infatti il codice disabilita la modalità navigazione e ritorna in modo manuale se 
+     i controlli degli alettoni e dell'elevatore non sono in posizione centrale.
      L'assenza di waypoint e dei log è dovuto all'inserimento scorretto della scheda SD.
-     Inoltre il tempo nuvoloso ha ritardato l'aggancio del GPS.
-     In assenza di waypoint, la navigazione riporta l'aereo nella posizione di partenza 
-     ovvero nella posizione in cui il GPS ha agganciato per la prima volta almeno 3 
-     satelliti.
-     Questo non spiega perchè l'aereo inizia a orbitare attorno all'ultima posizione,
-     indipedentemente dalla posizione stessa.
 
-     
-\todo
-     Aggiornare il PID di navigazione con frequenza maggiore, spostandolo nel task AHRS
-     oppure chiamandolo anche se la funzione GPS_Parse() ritorna FALSE.
-
-     Analisi crash:
-     Ormai da escludere problemi di alimentazione, più probabile un blocco del micro.
-     Il problema si verifica sempre alla stessa distanza e circa nella stessa zona in cui 
-     è noto esserci dei disturbi.
-     Se si tratta di un blocco del micro, la causa potrebbe essere un eccesso di interrupt
-     di cattura dovuti a disturbi sul segnale PPM proveniente dalla radio.
-
-     17/09/13
-     Stress test interrupt di cattura con generatore di segnale all'ingresso PPM.
-     GPS e £D Radio sconnessi, nessun altra fonte di interrupt esterno.
+     02/11/13 ----- Quinta prova sul campo -----
+     (eliminato override navigazione quando i joystick vengono mossi)
 
      Risultato:
-     Il sistema non fa una piega. Provata frequenza di impulsi fino a 17 MHz.
-     
+     Comportamento identico alla precedente prova sul campo.
+     La stabilizzazione non funziona, l'aereo oscilla a destra e a sinistra fino a 
+     diventare instabile, l'oscillazione è meno ampia se il motore è al minimo.
+     Attivando la stabilizzazione con l'aereo a terra, gli alettoni si muovono ma
+     non oscillano, facendo inclinare l'aereo gli alettoni rispondono correttamente.
+     Verificato con Andropilot l'aggancio del GPS e il caricamento dei waypoint: ok.
+
+     Analisi:
+     Probabilmente il valore di ROL_ANG_P è troppo alto. 
+     Impossibile modificarlo sul campo perchè Andropilot non era aggiornato all'ultima 
+     versione che permette di inserire valori con punto decimale.
 
 @par PID
      
