@@ -9,8 +9,8 @@
 ///
 /// \file
 ///
-// Change: increased SAMPLES_PER_SECOND to 50 Hz
-//         corrected conversion factor gains and added justification
+// Change: Modified PID coefficients from 1.0 to 0.99 to be modifiable with 
+//         DroidPlanner
 //
 //============================================================================*/
 
@@ -59,22 +59,22 @@
 #define NAV_BANK        20.0f           //!< Navigation bank angle max [deg]
 
 /* Speed PID initial gains */
-#define SPEED_KP        1.0f            //!< Speed P gain
+#define SPEED_KP        0.99f           //!< Speed P gain
 #define SPEED_KI        0.1f            //!< Speed I gain
 #define SPEED_KD        0.0f            //!< Speed D gain
 
 /* Altitude PID initial gains */
-#define ALT_KP          1.0f            //!< Altitude P gain
+#define ALT_KP          0.99f           //!< Altitude P gain
 #define ALT_KI          0.1f            //!< Altitude I gain
 #define ALT_KD          0.0f            //!< Altitude D gain
 
 /* Attitude roll PID initial gains */
-#define ROLL_KP         1.0f            //!< Roll P gain
+#define ROLL_KP         0.99f           //!< Roll P gain
 #define ROLL_KI         0.1f            //!< Roll I gain
 #define ROLL_KD         0.0f            //!< Roll D gain
 
 /* Attitude pitch PID initial gains */
-#define PITCH_KP        1.0f            //!< Pitch P gain
+#define PITCH_KP        0.99f           //!< Pitch P gain
 #define PITCH_KI        0.1f            //!< Pitch P gain
 #define PITCH_KD        0.0f            //!< Pitch D gain
 
