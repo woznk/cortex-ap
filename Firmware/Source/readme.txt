@@ -270,19 +270,22 @@
      http://www.jhuapl.edu/ott/Technologies/Copyright/SuasCode.asp
 
 
-@par Navigation
+@par Navigazione
      
      vedi i todo in nav.c
+
+@par Prove
 
      10/09/13 ----- Prima prova sul campo -----
 
      Risultato:
      Stabilizzazione discreta. Tendenza a virare a dx (assetto delle ali ? inclinazione
      del motore ? pesi ?). 
-     Abilitando la navigazione l'aereo entra in vite perchè L'escursione degli alettoni 
+     Abilitando la navigazione l'aereo entra in vite perchè l'escursione degli alettoni 
      è eccessiva.
 
      12/09/13 ----- Seconda prova sul campo -----
+
      (regolato assetto ali rispetto fusoliera, massimo angolo di bank +/- 10°)
 
      Risultato:
@@ -306,6 +309,7 @@
      quando l'aereo è stato recuperato) resta l'ipotesi di un blocco del micro.
 
      14/09/13 ----- Terza prova sul campo -----
+
      (sostituito DC/DC, batteria Litio separata per l'elettronica, massimo bank +/- 20°)
 
      Risultato:
@@ -342,12 +346,13 @@
      Il sistema non fa una piega. Provata frequenza di impulsi fino a 17 MHz.
      
      26/10/13 ----- Quarta prova sul campo -----
+
      (revisione firmware REV2, merge con il branch NAV_PID + ali con diedro 3° / 4° + 
       ricevente doppia conversione tarata in laboratorio)
 
      Risultato:
-     La stabilizzazione sembra funzioni, la navigazione no: l'aereo vira continuamente 
-     con raggio abbastanza stretto e perde quota.
+     All'inizio la stabilizzazione sembrava funzionare, la navigazione no.
+     L'aereo vira continuamente con raggio abbastanza stretto e perde quota.
      Disabilitata la navigazione per riprendere quota e riabilitata in varie posizioni 
      del campo: stesso risultato, l'aereo orbita e perde quota.
      Dopo qualche minuto di prove l'aereo entra in vite (con stabilizzazione attiva).
@@ -378,6 +383,7 @@
      L'assenza di waypoint e dei log è dovuto all'inserimento scorretto della scheda SD.
 
      02/11/13 ----- Quinta prova sul campo -----
+
      (eliminato override navigazione quando i joystick vengono mossi)
 
      Risultato:
@@ -392,6 +398,55 @@
      Probabilmente il valore di ROL_ANG_P è troppo alto. 
      Impossibile modificarlo sul campo perchè Andropilot non era aggiornato all'ultima 
      versione che permette di inserire valori con punto decimale.
+
+     09/11/13 ----- Sesta prova sul campo -----
+
+     (aumentata la frequenza del task attitude da 40 a 50 Hz,
+     aggiustati i coefficienti dei PID per poterli modificare con Droidplanner)
+
+     Risultato
+     Effettuati diversi tentativi facendo ogni volta atterrare l'aereo, modificando 
+     i parametri e rileggendoli per verifica. I parametri usati sono:
+
+     Roll Kp   Roll Ki   Pitch Kp   Pitch Ki   Max bank
+     --------------------------------------------------
+       0,5       0,1       0,99       0,1        20
+       0,1       0,1       0,99       0,1        20
+       0,7       0,1       0,99       0,1        20
+       0,5       0,4       0,99       0,1        20
+       0,5       0,1       0          0          20
+       0,5       0,1       0          0          10
+
+     La stabilizzazione non funziona in nessun caso.
+     Nella maggior parte dei casi l'aereo vira eccessivamente e perde quota.
+     In qualche caso oscilla a dx e sx e diventa instabile come nella prova 5.
+     Durante una rilettura dei parametri, questi erano tornati ai valori di default.
+
+     Analisi
+     Probabile un reset del micro, forse per intervento del watchdog.
+     Questo confermerebbe l'ipotesi alla base dei crash delle prove 2 e 3.
+
+     09/11/13
+
+     Riprodotto il problema della prova 4 disabilitando la lettura dei giroscopi.
+     Il servo degli alettoni gira bruscamente appena inserita la stabilizzazione, 
+     oscilla lentamente per qualche secondo smorzandosi fino a fermarsi.
+     Il servo dell'elevatore ruota lentamente fino a fine corsa, a volte in un senso
+     a volte nell'altro.
+     L'assetto visualizzato con Driodplanner è congruente: oscillazione attorno 
+     all'asse X, lenta inclinazione a cabrare o a picchiare fino a + / - 90°.
+     Il problema si verifica perchè il valore dei sensori non viene aggiornato 
+     ma viene comunque sottratto l'offset iniziale. Un offset non nullo provoca 
+     un veloce incremento del corrispondente valore del sensore, come succede in 
+     questo caso per l'asse X.
+     Il problema della stabilizzazione in volo sarebbe quindi dovuto a un blocco 
+     dei giroscopi. Questo, a sua volta, sarebbe dovuto ad un reset del micro che 
+     avviene durante la lettura, lasciando i giroscopi in uno stato indefinito.
+
+\todo
+
+     Riportare a 40 Hz la frequenza del task attitude.
+     Verificare l'occupazione degli stack.
 
 @par PID
      
@@ -418,7 +473,6 @@
 
         min = -(1 / Ki)
         MAX = 1 / Ki
-
 
 @par Modifiche hardware
      
