@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-//  Change: log file no longer closed when radio signal of RC is lost
+//  Change: check of GPS fix moved into function log_raw_gps()
 //
 //============================================================================*/
 
@@ -88,8 +88,8 @@ void Log_Task( void *pvParameters ) {
     // wait 10 sec for navigation task to complete reading waypoint file
     vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 10);
 
-    // wait until file system mounted and GPS got fix
-    while ((!b_FS_Ok) || (Gps_Fix() != GPS_FIX)) {
+    // halt if file system not mounted
+    while (!b_FS_Ok) {
     }
 
     // Search last log file
@@ -183,8 +183,10 @@ static void log_write(int32_t *data, uint8_t num)
 static __inline void log_raw_gps(void) {
 
     while (1) {
-        // halt if file not open GPS buffer empty
-        while ((!b_File_Ok) || (Gps_Buffer_Index() == uc_Index)) {
+        // halt if file not open, GPS buffer empty or GPS lost fix
+        while ((!b_File_Ok) || 
+               (Gps_Fix() != GPS_FIX) ||
+               (Gps_Buffer_Index() == uc_Index)) {
         }
 
         // get GPS buffer pointer
