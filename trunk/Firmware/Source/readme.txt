@@ -279,10 +279,17 @@
      10/09/13 ----- Prima prova sul campo -----
 
      Risultato:
-     Stabilizzazione discreta. Tendenza a virare a dx (assetto delle ali ? inclinazione
-     del motore ? pesi ?). 
-     Abilitando la navigazione l'aereo entra in vite perchè l'escursione degli alettoni 
-     è eccessiva.
+     Stabilizzazione discreta. Tendenza a virare a dx.
+     
+     Ipotesi:
+     - assetto delle ali 
+     - inclinazione del motore 
+     - bilanciamento del peso.
+
+     Abilitando la navigazione l'aereo entra in vite.
+
+     Ipotesi:
+     - l'escursione degli alettoni è eccessiva.
 
      12/09/13 ----- Seconda prova sul campo -----
 
@@ -302,13 +309,16 @@
 
      Analisi crash:
      Controllata la tensione di funzionamento e la corrente erogabile dal DC/DC: 
-     tensione minima 4,8 Volt, corrente 2 Ampere
+     tensione minima 4,8 Volt, corrente 2 Ampere.
      E' improbabile che la perdita di controllo sia dovuta a tensione di batteria bassa
      o a eccessivo assorbimento dai servi.
      Il log della posizione salvato nella scheda SD si interrompe poco lontano dal punto
      dell'impatto e a una quota di 150 m.
-     Escludendo uno spegnimento temporaneo dell'elettronica (l'elettronica era accesa 
-     quando l'aereo è stato recuperato) resta l'ipotesi di un blocco del micro.
+     Da escludere uno spegnimento temporaneo dell'elettronica (accesa quando l'aereo è 
+     stato recuperato).
+
+     Ipotesi:
+     - blocco del micro.
 
      14/09/13 ----- Terza prova sul campo -----
 
@@ -332,8 +342,9 @@
      longitudine ed è aggiornata a 1 Hz (GPS).
      L'angolo di bank dovrebbe quindi essere aggiornato a 20 Hz, e non avere un andamento  
      a scatti con frequenza 1 Hz.
-     Il movimento a scatti potrebbe essere dovuto a:
-        - parametri del PID di navigazione, Kp = 5 (alto) e Ki = 0,001 (basso).
+
+     Ipotesi:
+        - parametri del PID di navigazione, Kp = 5 (troppo alto) e Ki = 0,001 (basso).
         - periodo di ricalcolo PID = 1 sec (troppo lungo)
 
      Analisi crash:
@@ -402,10 +413,10 @@
      non oscillano, facendo inclinare l'aereo gli alettoni rispondono correttamente.
      Verificato con Andropilot l'aggancio del GPS e il caricamento dei waypoint: ok.
 
-     Analisi:
-     Probabilmente il valore di ROL_ANG_P è troppo alto. 
-     Impossibile modificarlo sul campo perchè Andropilot non era aggiornato all'ultima 
-     versione che permette di inserire valori con punto decimale.
+     Ipotesi:
+     - il valore di ROL_ANG_P è troppo alto. 
+       Impossibile modificarlo sul campo perchè Andropilot non era aggiornato 
+       all'ultima versione che permette di inserire valori con punto decimale.
 
      09/11/13 ----- Sesta prova sul campo -----
 
@@ -431,9 +442,9 @@
      In qualche caso oscilla a dx e sx e diventa instabile come nella prova 5.
      Durante una rilettura dei parametri, questi erano tornati ai valori di default.
 
-     Analisi
-     Probabile un reset del micro, forse per intervento del watchdog.
-     Questo confermerebbe l'ipotesi alla base dei crash delle prove 2 e 3.
+     Ipotesi
+     - reset del micro.
+       Questo confermerebbe l'ipotesi alla base dei crash delle prove 2 e 3.
 
      09/11/13
 
@@ -477,19 +488,20 @@
      - heap a 4 K bytes
 
      Risultato
-     La stabilizzazione non funziona ne' con i valori di default dei ne' modificando 
-     i valori dei PID (abbassato Kp rollio, aumentato Ki del rollio, azzerati Kp, Ki 
+     La stabilizzazione non funziona ne' con i valori di default ne' modificando i
+     valori dei PID (abbassato Kp rollio, aumentato Ki del rollio, azzerati Kp, Ki 
      del beccheggio).
      Con aereo a terra e orizzontale la telemetria indica un assetto sbagliato e che
      non si corregge nemmeno lentamente.
 
      Ipotesi:
      1. l'offset iniziale dei sensori è cambiato rispetto ai valori fissati.
-        Provato in emulazione: i valori differiscono di qualche unità.
+        Provato in emulazione: gli offset differiscono effettivamente di qualche 
+	unità rispetto ai valori fissati.
      2. gli accelerometri sono guasti.
         Provato in emulazione: gli accelerometri funzionano.
      3. il valore di ACCEL_GAIN a 0.15288f non va bene e va riportato a 0.153125f.
-     4. la lettura degli accelerometri è disturbata in volo dal motore ?
+     4. la lettura degli accelerometri è disturbata in volo dal motore
 
 
 @par PID
