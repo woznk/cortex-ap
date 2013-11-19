@@ -16,7 +16,7 @@
 ///  roll and pitch angles, without need to either subtract PI/2 from reference
 ///  point or to add PI/2 to the set point.
 ///
-// Change: mostly updated remarks
+// Change: restored sensor calibration
 //
 //============================================================================*/
 
@@ -183,7 +183,7 @@ static __inline void Attitude_Control(void);
 ///----------------------------------------------------------------------------
 void Attitude_Task(void *pvParameters)
 {
-    uint8_t j = 0;
+    uint8_t i, j;
     int16_t * p_sensor;
     portTickType Last_Wake_Time;
 
@@ -220,8 +220,6 @@ void Attitude_Task(void *pvParameters)
     PID_Init(&Pitch_Pid);
     PID_Init(&Nav_Pid);
 
-#ifdef CALIBRATE_SENSORS
-
     /* Wait until aircraft settles */
     LEDOn(BLUE);
     vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 5);
@@ -244,7 +242,6 @@ void Attitude_Task(void *pvParameters)
     for (j = 0; j < 6; j++) {                               // average
         i_Sensor_Offset[j] = i_Sensor_Offset[j] / 64;
     }
-#endif
 
     for (;;) {                                              // endless loop
         vTaskDelayUntil(&Last_Wake_Time, AHRS_DELAY);       // update @ 50 Hz
