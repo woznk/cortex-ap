@@ -18,8 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: simulator mode: increased frequency of DCM matrix transmission,
-//         decreased frequency of waypoint transmission
+// Change: increased stack sizes to 128 bytes
 //
 //============================================================================*/
 
@@ -238,10 +237,10 @@ int32_t main(void) {
      LEDOff(RED);
   }
 
-  (void)xTaskCreate(Attitude_Task, (signed portCHAR *) "Attitude", 64, NULL, mainAHRS_PRIORITY, NULL);
-  (void)xTaskCreate(disk_timerproc, (signed portCHAR *) "Disk", 32, NULL, mainDISK_PRIORITY, NULL);
+  (void)xTaskCreate(Attitude_Task, (signed portCHAR *) "Attitude", 128, NULL, mainAHRS_PRIORITY, NULL);
+  (void)xTaskCreate(disk_timerproc, (signed portCHAR *) "Disk", 128, NULL, mainDISK_PRIORITY, NULL);
   (void)xTaskCreate(Navigation_Task, (signed portCHAR *) "Navigation", 128, NULL, mainNAV_PRIORITY, NULL);
-  (void)xTaskCreate(Telemetry_Task, (signed portCHAR *) "Telemetry", 64, NULL, mainTEL_PRIORITY, NULL);
+  (void)xTaskCreate(Telemetry_Task, (signed portCHAR *) "Telemetry", 128, NULL, mainTEL_PRIORITY, NULL);
   (void)xTaskCreate(Log_Task, (signed portCHAR *) "Log", 128, NULL, mainLOG_PRIORITY, NULL);
 
   vTaskStartScheduler();                            // Start scheduler
