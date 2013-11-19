@@ -286,7 +286,9 @@
 
      12/09/13 ----- Seconda prova sul campo -----
 
-     (regolato assetto ali rispetto fusoliera, massimo angolo di bank +/- 10°)
+     Condizioni:
+     - regolato assetto ali rispetto fusoliera, 
+     - massimo angolo di bank +/- 10°
 
      Risultato:
      Stabilizzazione discreta, tende sempre a virare a dx.
@@ -310,7 +312,10 @@
 
      14/09/13 ----- Terza prova sul campo -----
 
-     (sostituito DC/DC, batteria Litio separata per l'elettronica, massimo bank +/- 20°)
+     Condizioni:
+     - sostituito DC/DC, 
+     - batteria Litio separata per l'elettronica, 
+     - massimo bank +/- 20°
 
      Risultato:
      Appena spostato il selettore su NAV, l'aereo non imposta una prua precisa.
@@ -347,8 +352,10 @@
      
      26/10/13 ----- Quarta prova sul campo -----
 
-     (revisione firmware REV2, merge con il branch NAV_PID + ali con diedro 3° / 4° + 
-      ricevente doppia conversione tarata in laboratorio)
+     Condizioni:
+     - revisione firmware REV2, merge con il branch NAV_PID 
+     - ali con diedro 3° / 4°
+     - ricevente doppia conversione tarata in laboratorio
 
      Risultato:
      All'inizio la stabilizzazione sembrava funzionare, la navigazione no.
@@ -384,7 +391,8 @@
 
      02/11/13 ----- Quinta prova sul campo -----
 
-     (eliminato override navigazione quando i joystick vengono mossi)
+     Condizioni:
+     - eliminato override navigazione quando i joystick vengono mossi
 
      Risultato:
      Comportamento identico alla precedente prova sul campo.
@@ -401,8 +409,9 @@
 
      09/11/13 ----- Sesta prova sul campo -----
 
-     (aumentata la frequenza del task attitude da 40 a 50 Hz,
-     aggiustati i coefficienti dei PID per poterli modificare con Droidplanner)
+     Condizioni:
+     - aumentata la frequenza del task attitude da 40 a 50 Hz
+     - aggiustati i coefficienti dei PID per poterli modificare con Droidplanner
 
      Risultato
      Effettuati diversi tentativi facendo ogni volta atterrare l'aereo, modificando 
@@ -436,17 +445,52 @@
      L'assetto visualizzato con Driodplanner è congruente: oscillazione attorno 
      all'asse X, lenta inclinazione a cabrare o a picchiare fino a + / - 90°.
      Il problema si verifica perchè il valore dei sensori non viene aggiornato 
-     ma viene comunque sottratto l'offset iniziale. Un offset non nullo provoca 
+     ma l'offset iniziale viene comunque sottratto. Un offset non nullo provoca 
      un veloce incremento del corrispondente valore del sensore, come succede in 
      questo caso per l'asse X.
      Il problema della stabilizzazione in volo sarebbe quindi dovuto a un blocco 
      dei giroscopi. Questo, a sua volta, sarebbe dovuto ad un reset del micro che 
      avviene durante la lettura, lasciando i giroscopi in uno stato indefinito.
 
-\todo
+     13/11/13
 
-     Riportare a 40 Hz la frequenza del task attitude.
-     Verificare l'occupazione degli stack.
+     I file di log sono vuoti perchè manca la chiusura dei file.
+     Attualmente il file viene chiuso solo quando vengono scritte MAX_SAMPLE righe.
+
+     14/11/13
+
+     Il micro potrebbe resettarsi perchè il pin di reset è flottante.
+     Togliendo il pulsante di reset, il pin RST\ non è più collegato a massa dal
+     condensatore da 100 nF (veniva sfruttato il collegamento interno del pulsante).
+     I disturbi del motore durante il volo potrebebro causare il reset.
+
+     Collegato RST\ a massa con 100 nF e a 3.3 Volt con 10 K Ohm.
+     Riportata a 40 Hz la frequenza del task attitude.
+
+     16/11/13 ----- Settima prova sul campo -----
+
+     Condizioni:
+     - frequenza del task attitude a 40 Hz, 
+     - disabilitato watchdog, 
+     - R e C sul pin RST\,
+     - 128 bytes di stack per tutti i task, 
+     - heap a 4 K bytes
+
+     Risultato
+     La stabilizzazione non funziona ne' con i valori di default dei ne' modificando 
+     i valori dei PID (abbassato Kp rollio, aumentato Ki del rollio, azzerati Kp, Ki 
+     del beccheggio).
+     Con aereo a terra e orizzontale la telemetria indica un assetto sbagliato e che
+     non si corregge nemmeno lentamente.
+
+     Ipotesi:
+     1. l'offset iniziale dei sensori è cambiato rispetto ai valori fissati.
+        Provato in emulazione: i valori differiscono di qualche unità.
+     2. gli accelerometri sono guasti.
+        Provato in emulazione: gli accelerometri funzionano.
+     3. il valore di ACCEL_GAIN a 0.15288f non va bene e va riportato a 0.153125f.
+     4. la lettura degli accelerometri è disturbata in volo dal motore ?
+
 
 @par PID
      
