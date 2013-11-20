@@ -18,10 +18,7 @@
 /// 2) Use only one data structure for SD file read/write, add a semaphore
 /// to manage multiple accesses, this will reduce RAM usage by 512 bytes.
 ///
-// Change: removed watchdog start from configuration function (watchdog started
-//         at first run of attitude task), watchdog reset flag saved in 
-//         b_watchdog_reset variable and indicated by red LED prior of task
-//         creation
+// Change: disabled watchdog 
 //
 //============================================================================*/
 
@@ -30,6 +27,7 @@
 #include "queue.h"
 
 #include "stm32f10x_rcc.h"
+#include "stm32f10x_gpio.h"
 #include "stm32f10x_wwdg.h"
 #include "misc.h"
 
@@ -213,7 +211,7 @@ int32_t main(void) {
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);   // Configure priority group
   RCC_Configuration();                              // Configure System Clocks 
   GPIO_Configuration();                             // Configure GPIO 
-  WWDG_Configuration();                             // Configure watchdog
+//  WWDG_Configuration();                             // Configure watchdog
 
   USART1_Init();              						// Initialize USART1 for telemetry
   Servo_Init();                                     // Initialize PWM timers as servo outputs
@@ -380,12 +378,13 @@ void GPIO_Configuration(void)
 ///          ~682us * (127 - 100) = 18.41ms < window < ~682us * 64 = 43.69ms
 ///
 ///----------------------------------------------------------------------------
+/*
 void WWDG_Configuration(void)
 {
-  WWDG_SetPrescaler(WWDG_Prescaler_4);    /* Set WWDG clock */
-  WWDG_SetWindowValue(100);               /* Set Window value to 100 */
+  WWDG_SetPrescaler(WWDG_Prescaler_4);    // Set WWDG clock
+  WWDG_SetWindowValue(100);               // Set Window value to 100
 }
-
+*/
 #ifdef  USE_FULL_ASSERT
 ///----------------------------------------------------------------------------
 ///
