@@ -36,8 +36,7 @@
 ///     Distance = sqrt(Delta Lon ^ 2 + Delta Lat ^ 2) * 111320
 /// \endcode
 ///
-/// Change: corrected parsing of coordinates according higher precision of
-///         uBlox GPS: 5 decimal digits instead of 4.
+/// Change: added #inclusion of misc.h
 //
 //============================================================================*/
 
@@ -57,6 +56,8 @@
 #include "pid.h"
 #include "log.h"
 #include "globals.h"
+#include "misc.h"
+
 #include "nav.h"
 
 /*--------------------------------- Definitions ------------------------------*/
