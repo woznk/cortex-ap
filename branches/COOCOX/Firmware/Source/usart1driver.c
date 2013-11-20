@@ -9,7 +9,7 @@
 ///
 /// \file
 ///
-/// Change (Lint) modified file #inclusion, removed #undef and VAR_GLOBAL, 
+/// Change added #inclusion of misc.h
 //
 //============================================================================*/
 
@@ -17,6 +17,8 @@
 
 #include "FreeRTOS.h"
 #include "stm32f10x_usart.h"
+#include "misc.h"
+
 #include "usart1driver.h"
 
 /*--------------------------------- Definitions ------------------------------*/
