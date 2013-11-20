@@ -29,9 +29,7 @@
 ///  Added counter of channel pulses with correct pulse length.
 ///  Counter is copied into a module variable for signal strength indication.
 ///
-//  Change: NAVIGATION mode enabled only if switch mode is in NAV position and 
-//          both elevator and aileron joysticks are in the rest position,
-//          #defined some explicit constants, #defined some explicit constants.
+//  Change: added #inclusion of misc.h
 //
 //============================================================================*/
 
@@ -41,6 +39,7 @@
 #include "led.h"
 #include "freertosconfig.h"
 #include "ppmdriver.h"
+#include "misc.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
