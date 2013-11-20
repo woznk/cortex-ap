@@ -16,7 +16,7 @@
 ///  roll and pitch angles, without need to either subtract PI/2 from reference
 ///  point or to add PI/2 to the set point.
 ///
-// Change: corrected repetition of blinks on blue LED
+// Change: disabled watchdog
 //
 //============================================================================*/
 
@@ -236,7 +236,7 @@ void Attitude_Task(void *pvParameters)
 
         vTaskDelayUntil(&Last_Wake_Time, AHRS_DELAY);
 
-        WWDG_SetCounter(127);                               // Update WWDG counter
+//        WWDG_SetCounter(127);                               // Update WWDG counter
 
         uc_Counter = (uc_Counter + 1) % 100;                //
         if (uc_Blink[PPMGetMode()][uc_Counter] == 1) {      //
