@@ -18,6 +18,9 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
+  *
+  * Change: added #inclusion of stm32f10x_i2c.h
+  *
   */
 
 /* Includes ------------------------------------------------------------------*/
@@ -37,6 +40,7 @@
  #include "stm32f2xx.h"
 #endif
 
+#include "stm32f10x_i2c.h"
 #include "misc.h"
 #include "cpal.h"
 
