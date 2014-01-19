@@ -1,29 +1,19 @@
-//============================================================================+
-//
-// $HeadURL: $
-// $Revision: $
-// $Date:  $
-// $Author: $
-//
-/// \brief PID controls header file
-///
-/// \file
-///
-//  Change  removed minor defects detectd by static analysis
-//
-//============================================================================*/
+/**===========================================================================+
+ *
+ * $HeadURL: $
+ * $Revision: $
+ * $Date:  $
+ * $Author: $
+ *
+ * @brief PID controls header file
+ *
+ * @file
+ *
+ * Change
+ *
+ *============================================================================*/
 
 /*--------------------------------- Definitions ------------------------------*/
-
-#ifdef VAR_STATIC
-#undef VAR_STATIC
-#endif
-#define VAR_STATIC static
-#ifdef VAR_GLOBAL
-#undef VAR_GLOBAL
-#endif
-#define VAR_GLOBAL
-
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -31,16 +21,18 @@
 
 /*----------------------------------- Types ----------------------------------*/
 
-/// PID data structure
+/* PID data structure */
 typedef struct {
-    float fGain;       ///< controller output gain
-    float fMin;        ///< min windup guard
-    float fMax;        ///< max windup guard
-    float fLastInput;  ///< last input
-    float fIntegral;   ///< integral term
-    float fKp;         ///< proportional gain
-    float fKi;         ///< integral gain
-    float fKd;         ///< derivative gain
+    float fGain;       /* controller output gain */
+    float fMin;        /* min windup guard */
+    float fMax;        /* max windup guard */
+    float fLastInput;  /* last input */
+    float fIntegral;   /* integral term */
+    float fKp;         /* proportional gain */
+    float fKi;         /* integral gain */
+    float fKd;         /* derivative gain */
+    float fSetpoint;
+    float fInput;
 } xPID;
 
 /*---------------------------------- Constants -------------------------------*/
@@ -52,4 +44,4 @@ typedef struct {
 /*--------------------------------- Prototypes -------------------------------*/
 
 void PID_Init(xPID * pxPid);
-float PID_Compute(xPID * pxPid, const float fSetpoint, const float fInput);
+float PID_Compute(xPID * pxPid);
