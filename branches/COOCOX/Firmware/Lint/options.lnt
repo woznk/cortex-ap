@@ -1,6 +1,0 @@
-// Please note -- this is a representative set of error suppression
-//                options.  Please adjust to suit your own policies
-//                See  manual (chapter LIVING WITH LINT)
-//                for further details.
-
--e502 -e713 -e737 -eau  // don't report on signed/unsigned mismatches
