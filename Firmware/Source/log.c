@@ -1,37 +1,30 @@
-//============================================================================+
-//
-// $HeadURL: $
-// $Revision: $
-// $Date:  $
-// $Author: $
-//
-/// \brief  Log manager
-///
-/// \file
-///
-//  Change: check of GPS fix moved into function log_raw_gps()
-//
-//============================================================================*/
+/**===========================================================================+
+ *
+ * $HeadURL: $
+ * $Revision: $
+ * $Date:  $
+ * $Author: $
+ *
+ * @brief log
+ *
+ * @file
+ *
+ * Change:
+ *
+ *============================================================================*/
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
+#include "ch.h"
 
-#include "stm32f10x.h"
+#include "config.h"
+#include "rc.h"
+#include "gps.h"
+#include "baro.h"
 #include "ff.h"
-#include "bmp085_driver.h"
-#include "ppmdriver.h"
-#include "nav.h"
-#include "globals.h"
 #include "log.h"
 
 /*--------------------------------- Definitions ------------------------------*/
 
-#ifndef    VAR_STATIC
-#   define VAR_STATIC static
-#endif
-
-#define MAX_SAMPLES 2000    //!< Max number of samples that can be written
+#define MAX_SAMPLES     10000
 
 /*----------------------------------- Macros ---------------------------------*/
 
@@ -43,208 +36,166 @@
 
 /*---------------------------------- Globals ---------------------------------*/
 
-//VAR_GLOBAL xQueueHandle xLog_Queue; //!< Queue for log messages
+extern bool_t fs_ready;
 
 /*----------------------------------- Locals ---------------------------------*/
 
-VAR_STATIC uint8_t uc_Index = 0;
-VAR_STATIC bool b_File_Ok = FALSE;
-VAR_STATIC UINT wWritten;
-VAR_STATIC uint8_t * p_Data;
-VAR_STATIC portTickType Last_Wake_Time;
-VAR_STATIC int32_t l_Value[8];                  //!< sample values
-VAR_STATIC uint16_t ui_Samples = 0;             //!< sample counter
-VAR_STATIC uint8_t sz_String[48];               //!< generic string
-VAR_STATIC uint8_t sz_File[16] = "log0.txt";    //!< file name
+static uint8_t sz_log_file[10] = "log0.txt";    /* log file name */
+static FIL file;                                /* file structure */
+static UINT ui_written;                         /* counter of bytes written */
+static bool_t b_file_ok = FALSE;                /* log file succesfully open */
+static uint32_t ul_samples = 0;                 /* counter of samples written */
 
 /*--------------------------------- Prototypes -------------------------------*/
 
-static void log_write(int32_t *data, uint8_t num);
-static __inline void log_raw_gps(void);
-static __inline void log_position(void);
+/*----------------------------------------------------------------------------
+ *
+ * @brief   open log file
+ * @return  -
+ * @remarks -
+ *
+ *----------------------------------------------------------------------------*/
+void Init_Log ( void ) {
 
-/*--------------------------------- Functions --------------------------------*/
+  uint8_t j;
+  bool b_found = TRUE;
 
-///----------------------------------------------------------------------------
-///
-/// \brief   log task
-/// \return  -
-/// \remarks task initially waits 20 sec to avoid contention between log file
-///          and path file, read by navigation task.
-/// \todo    replace delay with another synchonization system between log task
-///          and nav task
-///
-///----------------------------------------------------------------------------
-void Log_Task( void *pvParameters ) {
+  /* Check file system */
+  if (!fs_ready) {
+     return;
+  }
 
-    uint8_t j;
-    bool b_found = TRUE;
-//    xLog_Message message;
-
-    (void) pvParameters;
-
-    Last_Wake_Time = xTaskGetTickCount();
-
-    // wait 10 sec for navigation task to complete reading waypoint file
-    vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ * 10);
-
-    // halt if file system not mounted
-    while (!b_FS_Ok) {
+  /* Search last log file, if any */
+  for (j = 0; (j < 10) && b_found; j++) {
+    sz_log_file[3] = '0' + j;               /* Append file number */
+    if (FR_OK == f_open(&file,
+                        (const TCHAR *)sz_log_file,
+                        FA_WRITE)) {
+      b_found = TRUE;                       /* File exist */
+      (void)f_close(&file);                 /* Close file */
+    } else {
+      b_found = FALSE;                      /* File doesn't exist */
     }
+  }
 
-    // Search last log file
-    for (j = 0; (j < 10) && b_found; j++) {     //
-        sz_File[3] = '0' + j;                   // Append file number
-        if (FR_OK == f_open(&st_File, (const XCHAR *)sz_File, FA_WRITE)) {
-            b_found = TRUE;                     // File exist
-            ( void )f_close(&st_File);          // Close file
-        } else {                                //
-            b_found = FALSE;                    // File doesn't exist
-        }
+  /* Open new log file */
+  if (!b_found) {                           /* File doesn't exist */
+    if (FR_OK == f_open(&file,
+                        (const TCHAR *)sz_log_file,
+                        FA_WRITE|FA_CREATE_ALWAYS)) {
+      b_file_ok = TRUE;                     /* File succesfully open */
     }
-
-    // Open new log file
-    if (!b_found) {                             // File doesn't exist
-        if (FR_OK == f_open(&st_File, (const XCHAR *)sz_File, FA_WRITE|FA_CREATE_ALWAYS)) {
-            b_File_Ok = TRUE;                   // File succesfully open
-        }
-    }
-
-    // wait until RC is turned on
-    while (PPMGetMode() == MODE_RTL) {
-    }
-
-    if (PPMGetMode() == MODE_MANUAL) {  // mode manual
-        log_raw_gps();                  // log GPS data
-    } else {                            // mode stab or nav
-        log_position();                 // log position
-    }
-/*
-    while ( xLog_Queue != 0 ) {
-        while (xQueueReceive( xLog_Queue, &message, portMAX_DELAY ) != pdPASS) {
-        }
-        log_write(message.pcData, message.uc_length);
-    }
-*/
+  }
 }
 
+/*----------------------------------------------------------------------------
+ *
+ * @brief   writes a hexadecimal variable to SD card
+ * @param   data = pointer to variable
+ * @param   size = variable size, in bytes
+ * @return  -
+ * @remarks increases counter of samples at each function call,
+ *          closes log file if there is no file space, or if sample counter
+ *          exceeded maximum.
+ *
+ *----------------------------------------------------------------------------*/
+void Log_Write_Var ( uint8_t *data, uint8_t size ) {
 
-///----------------------------------------------------------------------------
-///
-/// \brief   writes an array of 32 bit variables to SD card
-/// \param   data = pointer to variable array
-/// \param   num = number of variables to be written
-/// \return  -
-/// \remarks increases counter of samples at each function call.
-///          closes log file if there is no file space, or if sample counter
-///          exceeded maximum.
-///
-///----------------------------------------------------------------------------
-static void log_write(int32_t *data, uint8_t num)
-{
-    int32_t l_temp;
-    uint8_t digit, i, k, j = 0;
+  uint8_t sz_string[10];
+  uint8_t msb;
+  uint8_t lsb;
+  uint8_t k;
+  uint8_t j = 0;
 
-    for (i = 0; i < num; i++) {                             // repeat for all variables
-        l_temp = *data++;                                   // get variable value
-        sz_String[j++] = ' ';                               // separate with blank space
-        for (k = 0; k < 8; k++) {                           // repeat for all 8 digits
-            digit = ((l_temp >> ((7 - k) * 4)) & 0x0000000F); // extract digit
-            if ((digit < 10) ) {                            // digit is numerical
-                sz_String[j++] = digit + '0';               // write number
-            } else {                                        // digit is alphabetical
-                sz_String[j++] = (digit - 10) + 'A';        // write letter
-            }
-        }
+  if (size > 8) {
+    size = 8;
+  }
+
+  sz_string[j++] = ' ';                         /* separate with blank space */
+  for (k = 0; k < size; k++) {                  /* repeat for all digits */
+    msb = *data++;
+    lsb = msb & 0x0F;
+    msb = (msb >> 4) & 0x0F;
+    if (msb < 10) {                             /* digit is numerical */
+      sz_string[j++] = msb + '0';               /* write number */
+    } else {                                    /* digit is alphabetical */
+      sz_string[j++] = (msb - 10) + 'A';        /* write letter */
     }
-    sz_String[j++] = '\n';                                  // terminate line
-    if (b_File_Ok) {                                        // file is open
-        ( void )f_write(&st_File, sz_String, j, &wWritten); // write line
-        if ((j != wWritten) ||                              // no file space
-            (ui_Samples >= MAX_SAMPLES)) {                  // too many samples
-            ( void )f_close(&st_File);                      // close file
-            b_File_Ok = FALSE;                              // halt logging
-        } else {                                            // write successfull
-            ui_Samples++;                                   // update sample counter
-        }
+    if (lsb < 10) {                             /* digit is numerical */
+      sz_string[j++] = lsb + '0';               /* write number */
+    } else {                                    /* digit is alphabetical */
+      sz_string[j++] = (lsb - 10) + 'A';        /* write letter */
     }
+  }
+
+  sz_string[j++] = ',';                         /* terminate line */
+  if (b_file_ok) {                              /* file is open */
+    f_write(&file, sz_string, j, &ui_written);  /* write line */
+    if ((j != ui_written) ||                    /* no file space */
+        (ul_samples >= MAX_SAMPLES)) {          /* too many samples */
+      f_close(&file);                           /* close file */
+      b_file_ok = FALSE;                        /* halt logging */
+    } else {                                    /* write successfull */
+      ul_samples++;                             /* update sample counter */
+    }
+  }
 }
 
-///----------------------------------------------------------------------------
-///
-/// \brief
-/// \param   -
-/// \return  -
-/// \remarks
-///
-///
-///
-///----------------------------------------------------------------------------
-static __inline void log_raw_gps(void) {
+/*----------------------------------------------------------------------------
+ *
+ * @brief   writes a character to SD card
+ * @param   ch = character
+ * @return  -
+ * @remarks closes log file if there is no file space
+ *
+ *----------------------------------------------------------------------------*/
+void Log_Write_Ch ( uint8_t ch ) {
 
-    while (1) {
-        // halt if file not open, GPS buffer empty or GPS lost fix
-        while ((!b_File_Ok) || 
-               (Gps_Fix() != GPS_FIX) ||
-               (Gps_Buffer_Index() == uc_Index)) {
-        }
-
-        // get GPS buffer pointer
-        p_Data = Gps_Buffer_Pointer();
-
-        // log raw GPS buffer
-        (void)f_write(&st_File, p_Data, (BUFFER_LENGTH / 2), &wWritten);
-
-        // update index
-        uc_Index = (uc_Index + (BUFFER_LENGTH / 2)) % BUFFER_LENGTH;
-
-        if (((BUFFER_LENGTH / 2) != wWritten) || // no file space
-             (++ui_Samples >= MAX_SAMPLES)) {    // too many samples
-            ( void )f_close(&st_File);           // close file
-            b_File_Ok = FALSE;                   // halt GPS logging
-        }
-    }
-}
-
-///----------------------------------------------------------------------------
-///
-/// \brief
-/// \param   -
-/// \return  -
-/// \remarks
-///
-///
-///
-///----------------------------------------------------------------------------
-static __inline void log_position(void) {
-
-    while (1) {
-
-        // wake up once every second
-        vTaskDelayUntil(&Last_Wake_Time, configTICK_RATE_HZ);
-
-        // halt if file not open
-        while (!b_File_Ok) {
-        }
-
-        l_Value [0] = Gps_Latitude();           // get latitude
-        l_Value [1] = Gps_Longitude();          // get longitude
-        l_Value [2] = (int32_t)Gps_Alt_M();     // get GPS altitude
-        l_Value [3] = BMP085_Get_Altitude();    // get baro altitude
-        log_write(l_Value, 4);                  // log position
+  if (b_file_ok) {                          /* file is open     */
+    f_write(&file, &ch, 1, &ui_written);    /* write character  */
+    if (1 != ui_written) {                  /* no file space    */
+      f_close(&file);                       /* close file       */
+      b_file_ok = FALSE;                    /* halt logging     */
+    } else {                                /* write successfull */
 
     }
+  }
 }
 
-///----------------------------------------------------------------------------
-///
-/// \brief   float to ASCII conversion
-/// \param   f_val = value to be converted
-/// \param   p_string = pointer to destination string
-/// \return  length of resulting string
-/// \remarks -
-///
-///----------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
+ *
+ * @brief   writes a string to SD card
+ * @param   psz_str = pointer to string
+ * @param   uc_len = string length
+ * @return  -
+ * @remarks limits number of characters to 200,
+ *          closes log file if there is no file space
+ *
+ *----------------------------------------------------------------------------*/
+void Log_Write_Str ( uint8_t * psz_str, uint8_t uc_len ) {
+
+  if (uc_len > 200) { uc_len = 200; }
+
+  if (b_file_ok) {                                  /* file is open     */
+    f_write(&file, psz_str, uc_len, &ui_written);   /* write string     */
+    if (uc_len != ui_written) {                     /* no file space    */
+      f_close(&file);                               /* close file       */
+      b_file_ok = FALSE;                            /* halt logging     */
+    } else {                                        /* write successfull */
+
+    }
+  }
+}
+
+/*----------------------------------------------------------------------------
+ *
+ * @brief   float to ASCII conversion
+ * @param   f_val = value to be converted
+ * @param   p_string = pointer to destination string
+ * @return  length of resulting string
+ * @remarks -
+ *
+ *----------------------------------------------------------------------------*/
 uint8_t ftoa (float f_val, uint8_t * p_string) {
 
     int32_t l_temp, l_sign = 1L;
@@ -279,4 +230,3 @@ uint8_t ftoa (float f_val, uint8_t * p_string) {
 
     return uc_length;
 }
-
