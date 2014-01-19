@@ -1,22 +1,11 @@
 [Signal 1]
-DispName=fSet
+DispName=\..
 PlotType=0
 Color=255
 ValHex=0
 MinDec=1
-MinVal=-5.
+MinVal=0.
 MaxDec=1
-MaxVal=5.
-Mask=-1
-Offset=0
-[Signal 2]
-DispName=fOut
-PlotType=0
-Color=32768
-ValHex=0
-MinDec=1
-MinVal=-5.
-MaxDec=1
-MaxVal=5.
+MaxVal=0.13491400000000001
 Mask=-1
 Offset=0
